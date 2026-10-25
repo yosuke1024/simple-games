@@ -1,3 +1,4 @@
+import { PlayTogetherButton, type PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 /**
  * Home (docs/DOTS_AND_BOXES_RULES.md §1, §4): three boards, a choice of side,
  * and nothing between the player and the first line.
@@ -22,7 +23,7 @@ import { useDotsAndBoxes } from '../../state/GameContext';
 import { BoxMark } from '../components/DotsAndBoxesBoard';
 import { SIZE_KEY } from '../sizeKey';
 
-export function DotsAndBoxesHomeScreen() {
+export function DotsAndBoxesHomeScreen(together: PlayTogetherProps = {}) {
   const {
     navigate,
     session,
@@ -127,6 +128,8 @@ export function DotsAndBoxesHomeScreen() {
             {t('dotsAndBoxesGoSecond')}
           </button>
         </div>
+
+        <PlayTogetherButton {...together} />
 
         <nav className="home-chips">
           <button type="button" className="home-chip" onClick={() => navigate('stats')}>

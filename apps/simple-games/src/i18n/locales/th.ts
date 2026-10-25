@@ -1,6 +1,9 @@
 import type { Messages } from './en';
 
 export const th: Messages = {
+  playTogether: 'เล่นกับคนอื่น',
+  returnToTogether: 'กลับไปเล่นด้วยกัน',
+  playTogetherNote: 'เชื่อมต่อกับคนที่อยู่ใกล้เพื่อแข่งขัน',
   tagline: 'เล่นออฟไลน์ได้ ไม่ต้องมีบัญชี ไม่มีกำแพงเก็บเงิน',
 
   resume: 'เล่นต่อ',

@@ -1,6 +1,9 @@
 import type { Messages } from './en';
 
 export const zhHans: Messages = {
+  playTogether: '和他人一起玩',
+  returnToTogether: '返回对战',
+  playTogetherNote: '连接附近的人，一起对战。',
   tagline: '离线可玩。无需账号。没有付费墙。',
 
   resume: '继续',

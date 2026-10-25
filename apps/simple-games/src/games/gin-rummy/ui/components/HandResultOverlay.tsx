@@ -13,7 +13,9 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { useResultReveal } from '@/ui/useResultReveal';
-import { CPU, YOU, type HandOutcome, type Meld, type Seat } from '../../game';
+import { CPU, YOU, type Seat } from '../../game/types';
+import type { HandOutcome } from '../../game/engine';
+import type { Meld } from '../../game/melds';
 import { cardListLabel } from './cardText';
 
 export interface HandResultOverlayProps {
@@ -21,6 +23,10 @@ export interface HandResultOverlayProps {
   /** Match points after this hand, indexed by seat — already moved. */
   scores: readonly [number, number];
   onNext: () => void;
+  names?: readonly string[];
+  localSeat?: Seat;
+  nextDisabled?: boolean;
+  inline?: boolean;
 }
 
 const TITLE_KEYS = {
@@ -30,7 +36,15 @@ const TITLE_KEYS = {
   dead: 'ginHandDeadTitle',
 } as const;
 
-export function HandResultOverlay({ outcome, scores, onNext }: HandResultOverlayProps) {
+export function HandResultOverlay({
+  outcome,
+  scores,
+  onNext,
+  names,
+  localSeat = YOU,
+  nextDisabled = false,
+  inline = false,
+}: HandResultOverlayProps) {
   const { t } = useSettings();
   // The screen mounts this the moment the hand is decided, so mounting is
   // the moment: the knock gets its beat before the settlement covers it
@@ -39,6 +53,8 @@ export function HandResultOverlay({ outcome, scores, onNext }: HandResultOverlay
   if (!revealed) return null;
 
   const title = t(TITLE_KEYS[outcome.kind]);
+  const peer = localSeat === YOU ? CPU : YOU;
+  const name = (seat: Seat) => names?.[seat] ?? t(seat === YOU ? 'ginYou' : 'ginCpu');
   const dead = outcome.kind === 'dead';
 
   /** The two splits, told from the player's side rather than the knocker's. */
@@ -56,34 +72,41 @@ export function HandResultOverlay({ outcome, scores, onNext }: HandResultOverlay
   const laidOff = outcome.layoffs.map((layoff) => layoff.card);
 
   return (
-    <div className="overlay overlay-result">
-      <div className="dialog result" role="alertdialog" aria-modal="true" aria-label={title}>
+    <div className={inline ? 'gr-settlement-inline' : 'overlay overlay-result'}>
+      <div
+        className="dialog result"
+        role={inline ? 'region' : 'alertdialog'}
+        aria-modal={inline ? undefined : true}
+        aria-label={title}
+      >
         <h2 className="dialog-title">{title}</h2>
         <p className="dialog-body">
           {dead
             ? t('ginHandDeadBody')
-            : outcome.winner === YOU
-              ? t('ginHandYouTook', { points: outcome.points })
-              : t('ginHandCpuTook', { points: outcome.points })}
+            : names
+              ? `${name(outcome.winner ?? localSeat)} +${outcome.points}`
+              : outcome.winner === YOU
+                ? t('ginHandYouTook', { points: outcome.points })
+                : t('ginHandCpuTook', { points: outcome.points })}
         </p>
 
         {dead ? null : (
           <dl className="gr-settlement">
             <div className="gr-settlement-row">
-              <dt>{t('ginYourMelds')}</dt>
+              <dt>{names ? name(localSeat) : t('ginYourMelds')}</dt>
               <dd>
-                <span className="gr-settlement-melds">{meldLine(YOU)}</span>
+                <span className="gr-settlement-melds">{meldLine(localSeat)}</span>
                 <span className="gr-settlement-deadwood">
-                  {t('ginDeadwood')} {deadwoodOfSeat(YOU)}
+                  {t('ginDeadwood')} {deadwoodOfSeat(localSeat)}
                 </span>
               </dd>
             </div>
             <div className="gr-settlement-row">
-              <dt>{t('ginCpuMelds')}</dt>
+              <dt>{names ? name(peer) : t('ginCpuMelds')}</dt>
               <dd>
-                <span className="gr-settlement-melds">{meldLine(CPU)}</span>
+                <span className="gr-settlement-melds">{meldLine(peer)}</span>
                 <span className="gr-settlement-deadwood">
-                  {t('ginDeadwood')} {deadwoodOfSeat(CPU)}
+                  {t('ginDeadwood')} {deadwoodOfSeat(peer)}
                 </span>
               </dd>
             </div>
@@ -100,17 +123,23 @@ export function HandResultOverlay({ outcome, scores, onNext }: HandResultOverlay
 
         <dl className="result-facts">
           <div>
-            <dt>{t('ginYou')}</dt>
-            <dd>{scores[YOU]}</dd>
+            <dt>{name(localSeat)}</dt>
+            <dd>{scores[localSeat]}</dd>
           </div>
           <div>
-            <dt>{t('ginCpu')}</dt>
-            <dd>{scores[CPU]}</dd>
+            <dt>{name(peer)}</dt>
+            <dd>{scores[peer]}</dd>
           </div>
         </dl>
 
         <div className="result-actions">
-          <button type="button" className="btn btn-primary" onClick={onNext} autoFocus>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={onNext}
+            disabled={nextDisabled}
+            autoFocus={!inline}
+          >
             {t('ginNextHand')}
           </button>
         </div>

@@ -1,5 +1,6 @@
 import type { NearbyMessages } from './en';
 export const ja: NearbyMessages = {
+  playerTurn: '{name}の番',
   playTogether: '誰かと遊ぶ',
   closeChat: 'チャットを閉じる',
   unreadChat: 'チャット（未読あり）',
@@ -41,12 +42,12 @@ export const ja: NearbyMessages = {
   chatOn: 'チャットあり',
   chatOff: 'チャットなし',
   game: 'ゲーム',
-  roomHint: 'Yacht を選んで、一緒に遊びましょう。チャットは必要なときに開けます。',
-  propose: 'Yacht を提案する',
-  proposed: 'Yacht の準備',
+  roomHint: '{game} を選んで、一緒に遊びましょう。チャットは必要なときに開けます。',
+  propose: '{game} を提案する',
+  proposed: '{game} の準備',
   ready: '準備できました',
   waitingReady: '相手の準備を待っています',
-  hostSelects: 'どちらのプレイヤーも Yacht を提案できます。',
+  hostSelects: 'どちらのプレイヤーも {game} を提案できます。',
   rematch: 'もう一局を提案する',
   returnRoom: '集まりに戻る',
   message: 'メッセージ',
@@ -71,7 +72,7 @@ export const ja: NearbyMessages = {
   leaveBody: '両方の端末で集まりが終了します。履歴はこの端末に残ります。',
   cancel: 'キャンセル',
   ended: '接続が終了しました。',
-  retry: 'Yacht に戻る',
+  retry: '{game} に戻る',
   timeout: '時間内に応答がありませんでした。両端末の準備ができたら、もう一度始めてください。',
   connectionError:
     '接続できませんでした。両端末の Bluetooth・Wi-Fi・アプリの権限を確認してから、もう一度お試しください。',

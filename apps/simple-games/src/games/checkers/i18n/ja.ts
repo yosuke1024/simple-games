@@ -1,6 +1,8 @@
 import type { CheckersMessages } from './en';
 
 export const ja: CheckersMessages = {
+  checkersSquareNamedKing: '{row}行{col}列:{name}のキング',
+  checkersSquareNamedMan: '{row}行{col}列:{name}の駒',
   checkersName: 'Checkers',
   checkersChooseOpponent: '対戦相手を選ぶ',
   checkersDifficulty_easy: 'やさしい',

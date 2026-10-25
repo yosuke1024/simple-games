@@ -1,5 +1,8 @@
 # Nim — rules and implementation
 
+**2026-10-25 更新:** nativeの「誰かと遊ぶ」を追加。以下のCPU専用の操作・Undo・保存の記述は通常モードに適用し、近隣対戦は末尾の節を正とする。
+オーナーの「13本すべてをアプリに収録する」に従い、Webベータから正式収録へ変更し保存スキーマを凍結する。以下の旧ベータ段階の記録は履歴であり、2週間の安定稼働や実機検証を達成した意味ではない。
+
 Updated: 2026-10-23. Web early release. Canonical rules for this implementation.
 
 ## Play
@@ -63,3 +66,15 @@ counts beyond the selected row are disabled. Take and Undo share one compact row
 The title, turn/difficulty strip, board and controls fit above the Web ad reserve on
 360×740, while short screens retain scrolling. This changes presentation, not rules,
 CPU choices or the persisted schema.
+
+## Nearby Play（2026-10-25）
+
+hostを先手とする。CPU戦と同じ4山の初期配置生成を使うため、完全最善手では先手が勝てる配置であり、公平な勝率を保証するものではない。最後の石を取った側が勝つ。`NimPlaySurface`をCPU戦と共有し、山選択→個数→確認で進める。得点は無く、履歴にも仮の0点を出さない。
+
+ゲームtopの「誰かと遊ぶ」→募集／参加→host承認→双方Ready→同じ盤面・操作へ進む。
+ゲームは集まりの終了まで固定。一方的なUndoは設けず、終局後は双方Readyで再戦する。
+募集時のチャット有無は既定OFFで双方へ適用し、ONだけ会話ボタン・未読印・端末内会話履歴を使う。
+ゲームtopへ戻る操作やアプリ切替では明示終了せず、一時切断後は同じ相手と保持した局面から続ける。
+プロセス終了からの復元は未対応。結果・中断はNearby専用のローカル履歴に残し、
+通常CPU戦のセーブ・統計・Club送信・バックアップには混ぜない。
+技術と通信の正本は[nearby-multiplayer.md](architecture/nearby-multiplayer.md)。今回の実機検証は未実施。

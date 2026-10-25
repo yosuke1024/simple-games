@@ -1,6 +1,8 @@
 import type { ReversiMessages } from './en';
 
 export const hi: ReversiMessages = {
+  reversiPassNamed: '{name} की कोई चाल नहीं है — दूसरा खिलाड़ी फिर खेलेगा',
+  reversiCellNamed: 'पंक्ति {row}, स्तंभ {col}: {name} की गोटी',
   reversiName: 'Reversi',
   reversiChooseOpponent: 'अपना प्रतिद्वंद्वी चुनें',
   reversiDifficulty_easy: 'आसान',

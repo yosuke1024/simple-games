@@ -56,58 +56,70 @@ PixApps が運用する Public Club House は
 
 ## アプリと収録ゲーム
 
-アプリは 1 つだけで、現在 41 本のゲームを収録しています。
+アプリは 1 つだけで、現在 45 本のゲームを収録しています。
 
 - appId: `com.pixapps.simplegames`
 - appName: `Simple Games: Offline Games`(ランチャー表示名: `Simple Games`)
 - パス: [apps/simple-games](apps/simple-games)
 
+2026-10-25のオーナー判断でChess / Nested Tic-Tac-Toe / Scopa / Nimを正式収録へ変更しました。
+以下のWeb公開経緯は当時の記録です。現在のコードは正式45本＋Webベータ21本＝66本です。
+Android / iOSでは1対1ターン制13本の各ゲームtopから「誰かと遊ぶ」で近くの相手を募集・検索できます。
+Bluetoothまたは同一Wi-Fi、host承認と双方Readyで元のゲーム画面を使います。募集時のチャットは既定OFF、ONなら任意の会話と端末内履歴を使えます。
+対象: Yacht / Reversi / Connect Four / Gomoku / Checkers / Gin Rummy / Mancala / Dominoes /
+Dots and Boxes / Chess / Nested Tic-Tac-Toe / Scopa / Nim。Web版は引き続きCPU戦です。
+今回のストア配布と13本の実機確認は未完了です。
+
 並び順はコレクションホームの表示順(`apps/simple-games/src/app/registry.ts`)です。
 フォルダはすべて `apps/simple-games/src/games/` 以下にあります。
 
-| ゲーム                               | フォルダ             | 進行                                     | 無料・無制限の助け                                 | ルール文書                                                         |
-| ------------------------------------ | -------------------- | ---------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------ |
-| Sudoku(ナンプレ)                     | `sudoku/`            | 100 レベル + デイリー + フリープレイ     | Undo / Hint                                        | [docs/SUDOKU_RULES.md](docs/SUDOKU_RULES.md)                       |
-| Solitaire(クロンダイク)              | `solitaire/`         | フリー配札 + デイリー配札                | Undo / Hint(定石の合法手)                          | [docs/SOLITAIRE_RULES.md](docs/SOLITAIRE_RULES.md)                 |
-| Spider Solitaire                     | `spider-solitaire/`  | フリー配札 + デイリー配札(スート数 3 種) | Undo / Hint(定石の合法手)                          | [docs/SPIDER_SOLITAIRE_RULES.md](docs/SPIDER_SOLITAIRE_RULES.md)   |
-| FreeCell                             | `freecell/`          | フリー配札 + デイリー配札                | Undo(Hint なし)                                    | [docs/FREECELL_RULES.md](docs/FREECELL_RULES.md)                   |
-| Hearts(ハーツ)                       | `hearts/`            | CPU 対局・難易度 3 種(デイリーなし)      | 出せる札の表示(Undo / Hint なし)                   | [docs/HEARTS_RULES.md](docs/HEARTS_RULES.md)                       |
-| Gin Rummy(ジンラミー)                | `gin-rummy/`         | CPU 対局・難易度 3 種(デイリーなし)      | メルド整理とデッドウッド表示(Undo / Hint なし)     | [docs/GIN_RUMMY_RULES.md](docs/GIN_RUMMY_RULES.md)                 |
-| Minesweeper                          | `minesweeper/`       | 難易度 3 種 + デイリー                   | Hint(Undo なし)                                    | [docs/MINESWEEPER_RULES.md](docs/MINESWEEPER_RULES.md)             |
-| Mahjong Solitaire(麻雀ソリティア)    | `mahjong-solitaire/` | 100 レベル + デイリー                    | Undo / Hint(取れる一致ペア)                        | [docs/MAHJONG_SOLITAIRE_RULES.md](docs/MAHJONG_SOLITAIRE_RULES.md) |
-| 2048                                 | `2048/`              | エンドレス(レベルなし)                   | Undo(Hint なし)                                    | [docs/GAME_2048_RULES.md](docs/GAME_2048_RULES.md)                 |
-| Block Puzzle                         | `block-puzzle/`      | エンドレス(レベルなし)                   | Undo(Hint なし)                                    | [docs/BLOCK_PUZZLE_RULES.md](docs/BLOCK_PUZZLE_RULES.md)           |
-| Ludo(西洋すごろく)                   | `ludo/`              | CPU 対局・難易度 3 種(デイリーなし)      | 動かせるコマの常時表示(Undo / Hint なし)           | [docs/LUDO_RULES.md](docs/LUDO_RULES.md)                           |
-| Checkers(チェッカー)                 | `checkers/`          | CPU 対局・難易度 3 種(デイリーなし)      | Undo + 動かせる駒と行き先の表示(Hint なし)         | [docs/CHECKERS_RULES.md](docs/CHECKERS_RULES.md)                   |
-| Reversi                              | `reversi/`           | CPU 対局・難易度 3 種(デイリーなし)      | Undo(Hint なし)                                    | [docs/REVERSI_RULES.md](docs/REVERSI_RULES.md)                     |
-| Connect Four                         | `connect-four/`      | CPU 対局・難易度 3 種(デイリーなし)      | Undo(Hint なし)                                    | [docs/CONNECT_FOUR_RULES.md](docs/CONNECT_FOUR_RULES.md)           |
-| Gomoku(五目並べ)                     | `gomoku/`            | CPU 対局・難易度 3 種(デイリーなし)      | Undo(Hint なし)                                    | [docs/GOMOKU_RULES.md](docs/GOMOKU_RULES.md)                       |
-| Bubble Pop                           | `bubble-pop/`        | 100 レベル(デイリーなし)                 | 常時フル軌道ガイド(Undo / Hint なし)               | [docs/BUBBLE_POP_RULES.md](docs/BUBBLE_POP_RULES.md)               |
-| Brick Breaker                        | `brick-breaker/`     | 100 レベル(デイリーなし)                 | 同じ盤面への即時リトライ(Undo / Hint なし)         | [docs/BRICK_BREAKER_RULES.md](docs/BRICK_BREAKER_RULES.md)         |
-| Nonogram                             | `nonogram/`          | 100 レベル + デイリー + フリープレイ     | Hint(Undo なし)                                    | [docs/NONOGRAM_RULES.md](docs/NONOGRAM_RULES.md)                   |
-| Takuzu(バイナリーパズル)             | `takuzu/`            | 100 レベル + デイリー + フリープレイ     | Hint(Undo なし)                                    | [docs/TAKUZU_RULES.md](docs/TAKUZU_RULES.md)                       |
-| Futoshiki(不等式)                    | `futoshiki/`         | 100 レベル + デイリー + フリープレイ     | Undo / Hint                                        | [docs/FUTOSHIKI_RULES.md](docs/FUTOSHIKI_RULES.md)                 |
-| Kakuro(クロスサム)                   | `kakuro/`            | 100 レベル + デイリー + フリープレイ     | Undo / Hint                                        | [docs/KAKURO_RULES.md](docs/KAKURO_RULES.md)                       |
-| Number Match                         | `number-match/`      | 100 レベル + デイリー + フリープレイ     | Undo / Hint                                        | [docs/NUMBER_MATCH_RULES.md](docs/NUMBER_MATCH_RULES.md)           |
-| Quick Math(計算ドリル)               | `quick-math/`        | 100 レベル + デイリー                    | 無制限の解き直し + 途中保存(Undo / Hint なし)      | [docs/QUICK_MATH_RULES.md](docs/QUICK_MATH_RULES.md)               |
-| Schulte Table(順番タッチ)            | `schulte-table/`     | 100 レベル + デイリー                    | 同じ面への即時リトライ(Undo / Hint なし)           | [docs/SCHULTE_TABLE_RULES.md](docs/SCHULTE_TABLE_RULES.md)         |
-| Number Recall(位置記憶)              | `number-recall/`     | 100 レベル + デイリー                    | 同レベル・新配置への即時リトライ(Undo / Hint なし) | [docs/NUMBER_RECALL_RULES.md](docs/NUMBER_RECALL_RULES.md)         |
-| Water Sort                           | `water-sort/`        | 100 レベル + デイリー + フリープレイ     | Undo / Hint(ソルバー証明付き)                      | [docs/WATER_SORT_RULES.md](docs/WATER_SORT_RULES.md)               |
-| Sliding Puzzle                       | `sliding-puzzle/`    | 100 レベル + デイリー                    | Undo(Hint なし)                                    | [docs/SLIDING_PUZZLE_RULES.md](docs/SLIDING_PUZZLE_RULES.md)       |
-| Memory Match(神経衰弱)               | `memory-match/`      | 難易度 3 種 + デイリー                   | 同じ盤面への再挑戦(Undo / Hint なし)               | [docs/MEMORY_MATCH_RULES.md](docs/MEMORY_MATCH_RULES.md)           |
-| Sky Fighter                          | `sky-fighter/`       | 100 レベル(デイリーなし)                 | 同じレベルへの即時リトライ(Undo / Hint なし)       | [docs/SKY_FIGHTER_RULES.md](docs/SKY_FIGHTER_RULES.md)             |
-| Bunny Hop                            | `bunny-hop/`         | エンドレス(レベルなし)                   | 次のランへの即時リトライ(Undo / Hint なし)         | [docs/BUNNY_HOP_RULES.md](docs/BUNNY_HOP_RULES.md)                 |
-| Crown Grid(王冠配置パズル)           | `crown-grid/`        | 難易度 3 種 + デイリー                   | Hint(Undo なし)                                    | [docs/CROWN_GRID_RULES.md](docs/CROWN_GRID_RULES.md)               |
-| Number Path(数字の一筆書き)          | `number-path/`       | 難易度 3 種 + デイリー                   | Undo / Hint(証明付きの次の 1 マス)                 | [docs/NUMBER_PATH_RULES.md](docs/NUMBER_PATH_RULES.md)             |
-| Shape Regions(図形分割)              | `shape-regions/`     | 難易度 3 種 + デイリー                   | Undo / Hint                                        | [docs/SHAPE_REGIONS_RULES.md](docs/SHAPE_REGIONS_RULES.md)         |
-| Yacht(サイコロ)                      | `yacht/`             | CPU 対戦(12 手番ずつ)                    | なし(3 回まで振り直せる)                           | [docs/YACHT_RULES.md](docs/YACHT_RULES.md)                         |
-| Mancala(種まき・CPU 対戦)            | `mancala/`           | CPU 3 段階                               | Undo                                               | [docs/MANCALA_RULES.md](docs/MANCALA_RULES.md)                     |
-| Dominoes(牌つなぎ・CPU 対戦)         | `dominoes/`          | CPU 1 段階                               | なし                                               | [docs/DOMINOES_RULES.md](docs/DOMINOES_RULES.md)                   |
-| Hit & Blow(推理)                     | `hit-and-blow/`      | 難易度 3 種                              | なし(推測は無制限)                                 | [docs/HIT_AND_BLOW_RULES.md](docs/HIT_AND_BLOW_RULES.md)           |
-| Dots and Boxes(陣取り・CPU)          | `dots-and-boxes/`    | 盤 3 サイズ                              | Undo                                               | [docs/DOTS_AND_BOXES_RULES.md](docs/DOTS_AND_BOXES_RULES.md)       |
-| Binary Balance(二値配置・リンクつき) | `binary-balance/`    | 難易度 3 種 + デイリー                   | Hint(Undo なし)                                    | [docs/BINARY_BALANCE_RULES.md](docs/BINARY_BALANCE_RULES.md)       |
-| Sudoku 6×6(小さな数独)               | `sudoku-6x6/`        | 難易度 3 種 + デイリー                   | Undo / Hint / メモ                                 | [docs/SUDOKU_6X6_RULES.md](docs/SUDOKU_6X6_RULES.md)               |
-| Box Regions(長方形分割)              | `box-regions/`       | 難易度 3 種 + デイリー                   | Undo / Hint                                        | [docs/BOX_REGIONS_RULES.md](docs/BOX_REGIONS_RULES.md)             |
+| ゲーム                               | フォルダ              | 進行                                     | 無料・無制限の助け                                 | ルール文書                                                         |
+| ------------------------------------ | --------------------- | ---------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------ |
+| Sudoku(ナンプレ)                     | `sudoku/`             | 100 レベル + デイリー + フリープレイ     | Undo / Hint                                        | [docs/SUDOKU_RULES.md](docs/SUDOKU_RULES.md)                       |
+| Solitaire(クロンダイク)              | `solitaire/`          | フリー配札 + デイリー配札                | Undo / Hint(定石の合法手)                          | [docs/SOLITAIRE_RULES.md](docs/SOLITAIRE_RULES.md)                 |
+| Spider Solitaire                     | `spider-solitaire/`   | フリー配札 + デイリー配札(スート数 3 種) | Undo / Hint(定石の合法手)                          | [docs/SPIDER_SOLITAIRE_RULES.md](docs/SPIDER_SOLITAIRE_RULES.md)   |
+| FreeCell                             | `freecell/`           | フリー配札 + デイリー配札                | Undo(Hint なし)                                    | [docs/FREECELL_RULES.md](docs/FREECELL_RULES.md)                   |
+| Hearts(ハーツ)                       | `hearts/`             | CPU 対局・難易度 3 種(デイリーなし)      | 出せる札の表示(Undo / Hint なし)                   | [docs/HEARTS_RULES.md](docs/HEARTS_RULES.md)                       |
+| Gin Rummy(ジンラミー)                | `gin-rummy/`          | CPU 対局・難易度 3 種(デイリーなし)      | メルド整理とデッドウッド表示(Undo / Hint なし)     | [docs/GIN_RUMMY_RULES.md](docs/GIN_RUMMY_RULES.md)                 |
+| Minesweeper                          | `minesweeper/`        | 難易度 3 種 + デイリー                   | Hint(Undo なし)                                    | [docs/MINESWEEPER_RULES.md](docs/MINESWEEPER_RULES.md)             |
+| Mahjong Solitaire(麻雀ソリティア)    | `mahjong-solitaire/`  | 100 レベル + デイリー                    | Undo / Hint(取れる一致ペア)                        | [docs/MAHJONG_SOLITAIRE_RULES.md](docs/MAHJONG_SOLITAIRE_RULES.md) |
+| 2048                                 | `2048/`               | エンドレス(レベルなし)                   | Undo(Hint なし)                                    | [docs/GAME_2048_RULES.md](docs/GAME_2048_RULES.md)                 |
+| Block Puzzle                         | `block-puzzle/`       | エンドレス(レベルなし)                   | Undo(Hint なし)                                    | [docs/BLOCK_PUZZLE_RULES.md](docs/BLOCK_PUZZLE_RULES.md)           |
+| Ludo(西洋すごろく)                   | `ludo/`               | CPU 対局・難易度 3 種(デイリーなし)      | 動かせるコマの常時表示(Undo / Hint なし)           | [docs/LUDO_RULES.md](docs/LUDO_RULES.md)                           |
+| Checkers(チェッカー)                 | `checkers/`           | CPU 対局・難易度 3 種(デイリーなし)      | Undo + 動かせる駒と行き先の表示(Hint なし)         | [docs/CHECKERS_RULES.md](docs/CHECKERS_RULES.md)                   |
+| Reversi                              | `reversi/`            | CPU 対局・難易度 3 種(デイリーなし)      | Undo(Hint なし)                                    | [docs/REVERSI_RULES.md](docs/REVERSI_RULES.md)                     |
+| Connect Four                         | `connect-four/`       | CPU 対局・難易度 3 種(デイリーなし)      | Undo(Hint なし)                                    | [docs/CONNECT_FOUR_RULES.md](docs/CONNECT_FOUR_RULES.md)           |
+| Gomoku(五目並べ)                     | `gomoku/`             | CPU 対局・難易度 3 種(デイリーなし)      | Undo(Hint なし)                                    | [docs/GOMOKU_RULES.md](docs/GOMOKU_RULES.md)                       |
+| Bubble Pop                           | `bubble-pop/`         | 100 レベル(デイリーなし)                 | 常時フル軌道ガイド(Undo / Hint なし)               | [docs/BUBBLE_POP_RULES.md](docs/BUBBLE_POP_RULES.md)               |
+| Brick Breaker                        | `brick-breaker/`      | 100 レベル(デイリーなし)                 | 同じ盤面への即時リトライ(Undo / Hint なし)         | [docs/BRICK_BREAKER_RULES.md](docs/BRICK_BREAKER_RULES.md)         |
+| Nonogram                             | `nonogram/`           | 100 レベル + デイリー + フリープレイ     | Hint(Undo なし)                                    | [docs/NONOGRAM_RULES.md](docs/NONOGRAM_RULES.md)                   |
+| Takuzu(バイナリーパズル)             | `takuzu/`             | 100 レベル + デイリー + フリープレイ     | Hint(Undo なし)                                    | [docs/TAKUZU_RULES.md](docs/TAKUZU_RULES.md)                       |
+| Futoshiki(不等式)                    | `futoshiki/`          | 100 レベル + デイリー + フリープレイ     | Undo / Hint                                        | [docs/FUTOSHIKI_RULES.md](docs/FUTOSHIKI_RULES.md)                 |
+| Kakuro(クロスサム)                   | `kakuro/`             | 100 レベル + デイリー + フリープレイ     | Undo / Hint                                        | [docs/KAKURO_RULES.md](docs/KAKURO_RULES.md)                       |
+| Number Match                         | `number-match/`       | 100 レベル + デイリー + フリープレイ     | Undo / Hint                                        | [docs/NUMBER_MATCH_RULES.md](docs/NUMBER_MATCH_RULES.md)           |
+| Quick Math(計算ドリル)               | `quick-math/`         | 100 レベル + デイリー                    | 無制限の解き直し + 途中保存(Undo / Hint なし)      | [docs/QUICK_MATH_RULES.md](docs/QUICK_MATH_RULES.md)               |
+| Schulte Table(順番タッチ)            | `schulte-table/`      | 100 レベル + デイリー                    | 同じ面への即時リトライ(Undo / Hint なし)           | [docs/SCHULTE_TABLE_RULES.md](docs/SCHULTE_TABLE_RULES.md)         |
+| Number Recall(位置記憶)              | `number-recall/`      | 100 レベル + デイリー                    | 同レベル・新配置への即時リトライ(Undo / Hint なし) | [docs/NUMBER_RECALL_RULES.md](docs/NUMBER_RECALL_RULES.md)         |
+| Water Sort                           | `water-sort/`         | 100 レベル + デイリー + フリープレイ     | Undo / Hint(ソルバー証明付き)                      | [docs/WATER_SORT_RULES.md](docs/WATER_SORT_RULES.md)               |
+| Sliding Puzzle                       | `sliding-puzzle/`     | 100 レベル + デイリー                    | Undo(Hint なし)                                    | [docs/SLIDING_PUZZLE_RULES.md](docs/SLIDING_PUZZLE_RULES.md)       |
+| Memory Match(神経衰弱)               | `memory-match/`       | 難易度 3 種 + デイリー                   | 同じ盤面への再挑戦(Undo / Hint なし)               | [docs/MEMORY_MATCH_RULES.md](docs/MEMORY_MATCH_RULES.md)           |
+| Sky Fighter                          | `sky-fighter/`        | 100 レベル(デイリーなし)                 | 同じレベルへの即時リトライ(Undo / Hint なし)       | [docs/SKY_FIGHTER_RULES.md](docs/SKY_FIGHTER_RULES.md)             |
+| Bunny Hop                            | `bunny-hop/`          | エンドレス(レベルなし)                   | 次のランへの即時リトライ(Undo / Hint なし)         | [docs/BUNNY_HOP_RULES.md](docs/BUNNY_HOP_RULES.md)                 |
+| Crown Grid(王冠配置パズル)           | `crown-grid/`         | 難易度 3 種 + デイリー                   | Hint(Undo なし)                                    | [docs/CROWN_GRID_RULES.md](docs/CROWN_GRID_RULES.md)               |
+| Number Path(数字の一筆書き)          | `number-path/`        | 難易度 3 種 + デイリー                   | Undo / Hint(証明付きの次の 1 マス)                 | [docs/NUMBER_PATH_RULES.md](docs/NUMBER_PATH_RULES.md)             |
+| Shape Regions(図形分割)              | `shape-regions/`      | 難易度 3 種 + デイリー                   | Undo / Hint                                        | [docs/SHAPE_REGIONS_RULES.md](docs/SHAPE_REGIONS_RULES.md)         |
+| Yacht(サイコロ)                      | `yacht/`              | CPU 対戦(12 手番ずつ)                    | なし(3 回まで振り直せる)                           | [docs/YACHT_RULES.md](docs/YACHT_RULES.md)                         |
+| Mancala(種まき・CPU 対戦)            | `mancala/`            | CPU 3 段階                               | Undo                                               | [docs/MANCALA_RULES.md](docs/MANCALA_RULES.md)                     |
+| Dominoes(牌つなぎ・CPU 対戦)         | `dominoes/`           | CPU 1 段階                               | なし                                               | [docs/DOMINOES_RULES.md](docs/DOMINOES_RULES.md)                   |
+| Hit & Blow(推理)                     | `hit-and-blow/`       | 難易度 3 種                              | なし(推測は無制限)                                 | [docs/HIT_AND_BLOW_RULES.md](docs/HIT_AND_BLOW_RULES.md)           |
+| Dots and Boxes(陣取り・CPU)          | `dots-and-boxes/`     | 盤 3 サイズ                              | Undo                                               | [docs/DOTS_AND_BOXES_RULES.md](docs/DOTS_AND_BOXES_RULES.md)       |
+| Binary Balance(二値配置・リンクつき) | `binary-balance/`     | 難易度 3 種 + デイリー                   | Hint(Undo なし)                                    | [docs/BINARY_BALANCE_RULES.md](docs/BINARY_BALANCE_RULES.md)       |
+| Sudoku 6×6(小さな数独)               | `sudoku-6x6/`         | 難易度 3 種 + デイリー                   | Undo / Hint / メモ                                 | [docs/SUDOKU_6X6_RULES.md](docs/SUDOKU_6X6_RULES.md)               |
+| Box Regions(長方形分割)              | `box-regions/`        | 難易度 3 種 + デイリー                   | Undo / Hint                                        | [docs/BOX_REGIONS_RULES.md](docs/BOX_REGIONS_RULES.md)             |
+| Chess(チェス)                        | `chess/`              | CPU 3段階・先後選択 / 近隣対戦           | CPU戦Undo・合法手表示                              | [ルール](docs/CHESS_RULES.md)                                      |
+| Nested Tic-Tac-Toe                   | `nested-tic-tac-toe/` | CPU 3段階・先後選択 / 近隣対戦           | CPU戦Undo・打てる小盤表示                          | [ルール](docs/NESTED_TIC_TAC_TOE_RULES.md)                         |
+| Scopa                                | `scopa/`              | 11点先取・CPU / 近隣対戦                 | 取れる札の表示                                     | [ルール](docs/SCOPA_RULES.md)                                      |
+| Nim                                  | `nim/`                | CPU 3段階 / 近隣対戦                     | CPU戦Undo                                          | [ルール](docs/NIM_RULES.md)                                        |
 
 「フリープレイ」は、レベルの坂とデイリーの隣にある**ティアを選んで新しい盤面を引く入口**です
 (2026-09-03 追加)。ティアはレベル 10 / 50 / 95 と同じ生成条件で seed だけが違い、レベル進行にも
@@ -202,7 +214,7 @@ Mancala と Dots and Boxes は完全情報の CPU 対戦なので Undo を持ち
 
 ### Web 先行公開(ベータ)
 
-**現在のコードは正式収録41本＋Web先行公開20本＝61本。** No. 57〜61 は
+**この組を追加した当時は正式収録41本＋Web先行公開20本＝61本。現在は上記の45本＋21本です。** No. 57〜61 は
 2026-10-23 の追加です。公開と検証の記録は
 [今回の追加記録](docs/plans/2026-10-23-five-games-57-61.md)を参照してください。
 
@@ -211,7 +223,6 @@ Mancala と Dots and Boxes は完全情報の CPU 対戦なので Undo を持ち
 | Light Grid    | 自分と上下左右の点灯を反転し、すべて消す     | Undo・再挑戦・解に基づくHint | [ルール](docs/LIGHT_GRID_RULES.md)  |
 | Color Flood   | 左上から同じ色の領域を広げる。手数の上限なし | Undo・同じ盤面に再挑戦       | [ルール](docs/COLOR_FLOOD_RULES.md) |
 | Three Peaks   | 1つ違いの札を重ね、3つの山を取り除く         | Undo・同じ配札に再挑戦       | [ルール](docs/THREE_PEAKS_RULES.md) |
-| Nim           | 1つの山から石を取り、最後の石を取れば勝ち    | CPUとの1往復をUndo           | [ルール](docs/NIM_RULES.md)         |
 | Knight’s Tour | ナイトの動きで全マスを1回ずつ訪れる          | 合法手表示・Undo・再挑戦     | [ルール](docs/KNIGHT_TOUR_RULES.md) |
 
 42〜46 本目の新作 5 本は、**Web 版だけの先行公開(ベータ)**向けにこのリポジトリで実装しました
@@ -252,13 +263,12 @@ Cloudflare Pages の Git 連携によるもので、このリポジトリから�
 冒頭と §12)。上の 41 本には数えず、
 ストア掲載文にも載せず、Club House にも登録しません。
 
-| ゲーム    | カテゴリ     | 内容                                                                                                                                | フォルダ     | 進行                                                                   | 無料・無制限の助け                                                        | ルール文書                                         |
-| --------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------- |
-| Chess     | ボードゲーム | 8×8 の盤で CPU と指す標準のチェス(駒の動き・キャスリング・アンパッサン・昇格は FIDE のとおり)。詰み・ステイルメイト・引き分けは自動 | `chess/`     | CPU 3 段階(Easy / Normal / Hard、先後を選べる。デイリーなし。途中保存) | Undo(自分と CPU の 2 手を 1 組、再開後も)/ 合法手の点(Hint なし)          | [docs/CHESS_RULES.md](docs/CHESS_RULES.md)         |
-| Gem Swap  | パズル       | 8×8 の盤で隣り合う 2 つの宝石を入れ替え、同じ種類を縦横に 3 つ以上並べて消す。1 ラウンドは成立した入れ替え 30 回                    | `gem-swap/`  | Free Play(5 色 / 6 色、デイリーなし。途中保存)                         | Undo(ラウンドの中で無制限。同じ盤面でもう一度)                            | [docs/GEM_SWAP_RULES.md](docs/GEM_SWAP_RULES.md)   |
-| Pipe Link | ロジック     | 格子のタイルを回してパイプをつなぎ、水源からすべてのタイルへ水を通す                                                                | `pipe-link/` | 難易度 3 種(5×5 / 7×7 / 8×8)+ デイリー(途中保存)                       | Undo / Hint(盤面から証明できる 1 枚)                                      | [docs/PIPE_LINK_RULES.md](docs/PIPE_LINK_RULES.md) |
-| Bounce Up | アーケード   | 足場に乗るたびに自動で跳ね、左右に動いて上の足場へ登っていく。記録は登った最大の高さ                                                | `bounce-up/` | エンドレス(足場の幅 Normal / Wide、デイリーなし。途中保存なし)         | なし(確認なしの即時リトライと、❚❚・Wide)                                  | [docs/BOUNCE_UP_RULES.md](docs/BOUNCE_UP_RULES.md) |
-| Echo Pads | ドリル       | 光って鳴るパッドの順番を覚え、同じ順番にタップして返す                                                                              | `echo-pads/` | Levels 22(4 / 6 パッド × 目標長 4〜14)+ デイリー(途中保存)             | 聞き直し(入力の前と失敗の後)/ Pace 3 段(Calm / Normal / Quick。Hint なし) | [docs/ECHO_PADS_RULES.md](docs/ECHO_PADS_RULES.md) |
+| ゲーム    | カテゴリ   | 内容                                                                                                             | フォルダ     | 進行                                                           | 無料・無制限の助け                                                        | ルール文書                                         |
+| --------- | ---------- | ---------------------------------------------------------------------------------------------------------------- | ------------ | -------------------------------------------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------- |
+| Gem Swap  | パズル     | 8×8 の盤で隣り合う 2 つの宝石を入れ替え、同じ種類を縦横に 3 つ以上並べて消す。1 ラウンドは成立した入れ替え 30 回 | `gem-swap/`  | Free Play(5 色 / 6 色、デイリーなし。途中保存)                 | Undo(ラウンドの中で無制限。同じ盤面でもう一度)                            | [docs/GEM_SWAP_RULES.md](docs/GEM_SWAP_RULES.md)   |
+| Pipe Link | ロジック   | 格子のタイルを回してパイプをつなぎ、水源からすべてのタイルへ水を通す                                             | `pipe-link/` | 難易度 3 種(5×5 / 7×7 / 8×8)+ デイリー(途中保存)               | Undo / Hint(盤面から証明できる 1 枚)                                      | [docs/PIPE_LINK_RULES.md](docs/PIPE_LINK_RULES.md) |
+| Bounce Up | アーケード | 足場に乗るたびに自動で跳ね、左右に動いて上の足場へ登っていく。記録は登った最大の高さ                             | `bounce-up/` | エンドレス(足場の幅 Normal / Wide、デイリーなし。途中保存なし) | なし(確認なしの即時リトライと、❚❚・Wide)                                  | [docs/BOUNCE_UP_RULES.md](docs/BOUNCE_UP_RULES.md) |
+| Echo Pads | ドリル     | 光って鳴るパッドの順番を覚え、同じ順番にタップして返す                                                           | `echo-pads/` | Levels 22(4 / 6 パッド × 目標長 4〜14)+ デイリー(途中保存)     | 聞き直し(入力の前と失敗の後)/ Pace 3 段(Calm / Normal / Quick。Hint なし) | [docs/ECHO_PADS_RULES.md](docs/ECHO_PADS_RULES.md) |
 
 52〜56 本目の新作 5 本(Overtake / Make the Target / Nested Tic-Tac-Toe / Scopa / Tangram)は、同じ
 **Web 版だけの先行公開(ベータ)**向けにこのリポジトリで実装しました(2026-10-20 に着手、2026-10-21 に
@@ -288,13 +298,11 @@ Nested Tic-Tac-Toe / Tangram の 3 本を 2026-10-22(JST、UTC では 2026-10-21
 Three Peaks に差し替えます)。
 上の 41 本には数えず、ストア掲載文にも載せず、Club House にも登録しません。
 
-| ゲーム             | カテゴリ     | 内容                                                                                                                                              | フォルダ              | 進行                                                                     | 無料・無制限の助け                                         | ルール文書                                                           |
-| ------------------ | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------- | -------------------------------------------------------------------- |
-| Overtake           | アーケード   | 縦に流れる道路で車線を選び、混んだ所だけ速度をゆるめて、ペースの違う 3 台より先にゴールする。砂と三角コーンは当たっても止まらず、少し遅くなるだけ | `overtake/`           | Levels 100(1 位でクリア、デイリーなし。三角コーンは Lv6、砂は Lv16 から) | なし(確認なしの即時・同一コースの再走と、Buttons の形・▼)  | [docs/OVERTAKE_RULES.md](docs/OVERTAKE_RULES.md)                     |
-| Make the Target    | パズル       | 並んだ数字を 2 つずつ + − × ÷ でまとめ、最後の 1 つを目標の数にぴたりと合わせる                                                                   | `make-the-target/`    | 難易度 3 種(4〜5 枚)+ デイリー                                           | Undo / Restart(Hint なし。放棄後に解を 1 つ見る — 暫定)    | [docs/MAKE_THE_TARGET_RULES.md](docs/MAKE_THE_TARGET_RULES.md)       |
-| Nested Tic-Tac-Toe | ボードゲーム | 3×3 の小盤を 3×3 に並べた盤で CPU と三目並べ。打ったマスの位置が相手の次の小盤を決める                                                            | `nested-tic-tac-toe/` | CPU 3 段階(Easy / Normal / Hard、先後を選べる。デイリーなし)             | Undo / 打てる小盤の常時表示(Hint なし)                     | [docs/NESTED_TIC_TAC_TOE_RULES.md](docs/NESTED_TIC_TAC_TOE_RULES.md) |
-| Scopa              | カード       | 40 枚の札で、場の札を数で取り合う CPU との対戦カード                                                                                              | `scopa/`              | 1 局 = 11 点先取(CPU 1 段階、デイリーなし)                               | 取れる手札とプリミエラの最良札の常時表示(Undo / Hint なし) | [docs/SCOPA_RULES.md](docs/SCOPA_RULES.md)                           |
-| Tangram            | パズル       | 7 枚の駒を回し・裏返して置き、影絵を隙間なく埋める                                                                                                | `tangram/`            | 図形集 3 ティア(v1 は 34 図形)+ デイリー                                 | Undo / Easy の内側の線・Medium の固定 2 枚(Hint なし)      | [docs/TANGRAM_RULES.md](docs/TANGRAM_RULES.md)                       |
+| ゲーム          | カテゴリ   | 内容                                                                                                                                              | フォルダ           | 進行                                                                     | 無料・無制限の助け                                        | ルール文書                                                     |
+| --------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------ | --------------------------------------------------------- | -------------------------------------------------------------- |
+| Overtake        | アーケード | 縦に流れる道路で車線を選び、混んだ所だけ速度をゆるめて、ペースの違う 3 台より先にゴールする。砂と三角コーンは当たっても止まらず、少し遅くなるだけ | `overtake/`        | Levels 100(1 位でクリア、デイリーなし。三角コーンは Lv6、砂は Lv16 から) | なし(確認なしの即時・同一コースの再走と、Buttons の形・▼) | [docs/OVERTAKE_RULES.md](docs/OVERTAKE_RULES.md)               |
+| Make the Target | パズル     | 並んだ数字を 2 つずつ + − × ÷ でまとめ、最後の 1 つを目標の数にぴたりと合わせる                                                                   | `make-the-target/` | 難易度 3 種(4〜5 枚)+ デイリー                                           | Undo / Restart(Hint なし。放棄後に解を 1 つ見る — 暫定)   | [docs/MAKE_THE_TARGET_RULES.md](docs/MAKE_THE_TARGET_RULES.md) |
+| Tangram         | パズル     | 7 枚の駒を回し・裏返して置き、影絵を隙間なく埋める                                                                                                | `tangram/`         | 図形集 3 ティア(v1 は 34 図形)+ デイリー                                 | Undo / Easy の内側の線・Medium の固定 2 枚(Hint なし)     | [docs/TANGRAM_RULES.md](docs/TANGRAM_RULES.md)                 |
 
 後続候補は上の 15 本の正式収録判断まで**ありません**(以前は 42〜46 の 5 本の判断までと
 書いていましたが、2026-10-19 と 2026-10-20 に作者の判断で、その判断の前に 47〜56 の 10 本に
@@ -410,7 +418,7 @@ Android / iOS のビルド手順は [apps/simple-games/README.md](apps/simple-ga
 
 ## 多言語
 
-**One app. Many games. Many languages.** 現在は 14 言語・2,207 キー(シェル 125 + ゲーム別 2,082 — 正式収録 41 本の 1,393、Web 先行公開で 2026-10-19 から配信中の 42〜46 の 5 本の 230、47〜51 の 5 本の 229(2026-10-23(JST)から配信中)、52〜56 の 5 本の 230(2026-10-22 から配信中)。Club House の 122 キーは別カタログ。2026-10-22 に各 `en.ts` の最上位キーを数えた)
+**One app. Many games. Many languages.** 2026-10-22時点の計測は14言語・2,207キー(シェル 125 + ゲーム別 2,082 — 正式収録 41 本の 1,393、Web 先行公開で 2026-10-19 から配信中の 42〜46 の 5 本の 230、47〜51 の 5 本の 229(2026-10-23(JST)から配信中)、52〜56 の 5 本の 230(2026-10-22 から配信中)。Club House の 122 キーは別カタログ。2026-10-22 に各 `en.ts` の最上位キーを数えた)
 (en / ja / hi / th / id / vi / ko / zh-hans / zh-hant / es / pt-br / fr / de / tr)。
 中国語は書記体系で解決し(zh-TW / zh-HK / zh-Hant → zh-hant、zh / zh-CN / zh-SG → zh-hans)、
 pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条件を満たすまで見送っています。
@@ -504,10 +512,10 @@ Invaders / Falling Blocks / Paddle Rally / Hanoi Towers / Maze Escape を追加�
 正式収録41本に加え、Web先行公開は25本になる。詳細と公開記録は
 [追加と公開の記録](docs/plans/2026-10-23-five-games-62-66.md)。
 
-| ゲーム | 規則 |
-| --- | --- |
-| Invaders | [INVADERS_RULES.md](docs/INVADERS_RULES.md) |
+| ゲーム         | 規則                                                    |
+| -------------- | ------------------------------------------------------- |
+| Invaders       | [INVADERS_RULES.md](docs/INVADERS_RULES.md)             |
 | Falling Blocks | [FALLING_BLOCKS_RULES.md](docs/FALLING_BLOCKS_RULES.md) |
-| Paddle Rally | [PADDLE_RALLY_RULES.md](docs/PADDLE_RALLY_RULES.md) |
-| Hanoi Towers | [HANOI_TOWERS_RULES.md](docs/HANOI_TOWERS_RULES.md) |
-| Maze Escape | [MAZE_ESCAPE_RULES.md](docs/MAZE_ESCAPE_RULES.md) |
+| Paddle Rally   | [PADDLE_RALLY_RULES.md](docs/PADDLE_RALLY_RULES.md)     |
+| Hanoi Towers   | [HANOI_TOWERS_RULES.md](docs/HANOI_TOWERS_RULES.md)     |
+| Maze Escape    | [MAZE_ESCAPE_RULES.md](docs/MAZE_ESCAPE_RULES.md)       |

@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { useCallback, useEffect, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { GameRootProps } from './registry';
+import type { NearbyGameId } from './nearbyGate';
 
 const state = vi.hoisted(() => ({
   native: true,
@@ -92,7 +93,7 @@ function RetainedPeer({
   onActiveChange,
   onRegisterStop,
 }: {
-  gameId: 'yacht';
+  gameId: NearbyGameId;
   visible: boolean;
   onExit: () => void;
   onActiveChange: (active: boolean) => void;
@@ -219,6 +220,20 @@ describe('multiplayer is entered through the supported game', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Play with someone' }));
     expect(screen.getByText('Turn 1')).toBeVisible();
     expect(state.mounted).toHaveBeenCalledTimes(2);
+  });
+  it('returns to the existing gathering from another supported game without changing its rules', () => {
+    renderShell();
+    openPeer();
+    fireEvent.click(screen.getByRole('button', { name: 'Connect' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Play a turn' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back to game' }));
+    fireEvent.click(screen.getByRole('button', { name: 'All games' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Reversi' }).at(-1)!);
+    fireEvent.click(screen.getByRole('button', { name: 'Return to match' }));
+    expect(screen.getByRole('heading', { name: 'yacht with someone' })).toBeVisible();
+    expect(screen.getByText('Turn 2')).toBeVisible();
+    expect(state.mounted).toHaveBeenCalledTimes(1);
+    expect(state.stopped).not.toHaveBeenCalled();
   });
   it('awaits the retained connection stop before clearing its local history', async () => {
     let finishStop!: () => void;

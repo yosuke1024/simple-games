@@ -1,6 +1,8 @@
 import type { ReversiMessages } from './en';
 
 export const th: ReversiMessages = {
+  reversiPassNamed: '{name} ไม่มีช่องให้ลง — อีกฝ่ายได้เล่นอีกครั้ง',
+  reversiCellNamed: 'แถว {row} คอลัมน์ {col}: หมากของ {name}',
   reversiName: 'Reversi',
   reversiChooseOpponent: 'เลือกคู่ต่อสู้',
   reversiDifficulty_easy: 'ง่าย',

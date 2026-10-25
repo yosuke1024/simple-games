@@ -1,3 +1,4 @@
+import { PlayTogetherButton, type PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
@@ -6,7 +7,7 @@ import { GameArtwork } from '@/ui/components/GameArtwork';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { MODES, type Mode } from '../../game';
 import { useNim } from '../../state/GameContext';
-export function HomeScreen() {
+export function HomeScreen(together: PlayTogetherProps = {}) {
   const { t } = useSettings();
   const { session, preferredMode, startNewGame, resumeGame, navigate, exitToCollection } = useNim();
   const [pending, setPending] = useState<Mode | null>(null);
@@ -40,6 +41,8 @@ export function HomeScreen() {
               {current === mode ? <span className="btn-note">{t('resume')}</span> : null}
             </button>
           ))}
+          <PlayTogetherButton {...together} />
+
           <nav className="home-chips">
             <button type="button" className="home-chip" onClick={() => navigate('stats')}>
               {t('statistics')}

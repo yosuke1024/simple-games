@@ -11,6 +11,7 @@
 // Register this game's 14-locale catalog the moment the chunk loads,
 // before anything below renders (issue #38, src/i18n/registry.ts).
 import '../i18n';
+import type { PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';
 import { loadRecord } from '../../../storage/repo';
@@ -32,7 +33,7 @@ import { ConnectFourHomeScreen } from './screens/HomeScreen';
 import { ConnectFourStatsScreen } from './screens/StatsScreen';
 import { ConnectFourTutorialScreen } from './screens/TutorialScreen';
 
-export function ConnectFourScreens() {
+export function ConnectFourScreens(props: PlayTogetherProps) {
   const { screen } = useConnectFour();
   switch (screen) {
     case 'tutorial':
@@ -43,7 +44,7 @@ export function ConnectFourScreens() {
       return <ConnectFourStatsScreen />;
     case 'home':
     default:
-      return <ConnectFourHomeScreen />;
+      return <ConnectFourHomeScreen {...props} />;
   }
 }
 
@@ -54,7 +55,7 @@ interface LoadedData {
   session: ConnectFourSession | null;
 }
 
-export interface ConnectFourRootProps {
+export interface ConnectFourRootProps extends PlayTogetherProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
   /**
@@ -86,7 +87,13 @@ async function loadRecords(kv: KVStore): Promise<LoadedData> {
   return { stats, flags, prefs, session };
 }
 
-export function ConnectFourRoot({ onExit, entry, kv = preferencesKV }: ConnectFourRootProps) {
+export function ConnectFourRoot({
+  onExit,
+  entry,
+  kv = preferencesKV,
+  onPlayTogether,
+  playTogetherActive,
+}: ConnectFourRootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
@@ -99,7 +106,7 @@ export function ConnectFourRoot({ onExit, entry, kv = preferencesKV }: ConnectFo
       onExit={onExit}
       entry={entry}
     >
-      <ConnectFourScreens />
+      <ConnectFourScreens onPlayTogether={onPlayTogether} playTogetherActive={playTogetherActive} />
     </ConnectFourProvider>
   );
 }

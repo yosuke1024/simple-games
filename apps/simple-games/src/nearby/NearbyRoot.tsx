@@ -1,29 +1,30 @@
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { SUPPORT_EMAIL } from '@simple-games/brand';
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useSettings } from '../state/SettingsContext';
 import { ConfirmDialog } from '../ui/components/ConfirmDialog';
 import { IconBack, IconClose } from '../ui/components/icons';
-import { useGameKeys } from '../ui/useGameKeys';
-import {
-  YachtPlaySurface,
-  type DiceRoll,
-  type SheetFlash,
-} from '../games/yacht/ui/components/YachtPlaySurface';
 import { NearbyController, type Setup } from './controller';
-import { clearHistory, deleteGathering, loadHistory, type Gathering } from './history';
+import {
+  clearHistory,
+  deleteGathering,
+  loadHistory,
+  savedGameId,
+  savedGameResult,
+  type Gathering,
+} from './history';
 import { useNearbyText } from './i18n';
-import { isChatText, isPlayerName, type Session } from './session';
-import { CATEGORIES, count, finished, totals, turn, type Match } from './yacht';
+import { isChatText, isPlayerName } from './session';
+import { GAME_NAME_KEYS, GAME_TITLES, loadNearbyGame, type NearbyGame } from './games';
+import type { NearbyGameId } from './gameTypes';
 import './nearby.css';
 
 type Screen = 'home' | 'setup' | 'active' | 'history' | 'detail';
 type Question = 'leave' | 'delete' | 'clear' | 'block' | null;
-type Text = ReturnType<typeof useNearbyText>;
 
 export interface NearbyRootProps {
-  gameId: 'yacht';
+  gameId: NearbyGameId;
   onExit: () => void;
   /** Kept mounted by the app while a connection is active on another screen. */
   visible?: boolean;
@@ -31,17 +32,37 @@ export interface NearbyRootProps {
   onRegisterStop?: (stop: (() => Promise<void>) | null) => void;
 }
 
-export function NearbyRoot({
+export function NearbyRoot(props: NearbyRootProps) {
+  const Loaded = useMemo(
+    () =>
+      lazy(async () => {
+        const game = await loadNearbyGame(props.gameId);
+        return { default: (inner: NearbyRootProps) => <NearbyGameRoot {...inner} game={game} /> };
+      }),
+    [props.gameId],
+  );
+  return (
+    <Suspense fallback={<div className="screen" aria-busy="true" />}>
+      <Loaded {...props} />
+    </Suspense>
+  );
+}
+
+function NearbyGameRoot({
   gameId,
+  game,
   onExit,
   visible = true,
   onActiveChange,
   onRegisterStop,
-}: NearbyRootProps) {
+}: NearbyRootProps & { game: NearbyGame }) {
   const n = useNearbyText();
-  const { locale } = useSettings();
+  const { locale, t } = useSettings();
+  const gameTitle = t(GAME_NAME_KEYS[gameId]);
+  const [boardSize, setBoardSize] = useState<3 | 4 | 5>(3);
   const [screen, setScreen] = useState<Screen>('home');
   const [setup, setSetup] = useState<Setup>({
+    gameId,
     host: true,
     name: '',
     public: false,
@@ -147,6 +168,17 @@ export function NearbyRoot({
   }, []);
 
   const session = controller?.session;
+  const gameStatus = !session?.match
+    ? ''
+    : session.suspended
+      ? n('reconnecting')
+      : session.pending
+        ? n('pending')
+        : session.matchComplete
+          ? session.result!.winner === 'draw'
+            ? n('draw')
+            : n('won', { name: session.names[session.result!.winner as 0 | 1]! })
+          : n('playerTurn', { name: session.names[session.adapter.turn(session.match.state)]! });
   const active = controller !== null && controller.state !== 'ended';
   const inRoom = screen === 'active' && active && !!session?.paired;
   const chatEnabled = session?.chatEnabled === true;
@@ -183,9 +215,15 @@ export function NearbyRoot({
 
   const begin = () => {
     if (!visible || active || !isPlayerName(setup.name.trim()) || !accepted || busy) return;
-    const next = new NearbyController({ ...setup, name: setup.name.trim() }, () => {
-      if (live.current) render((v) => v + 1);
-    });
+    const adapter = game.makeAdapter ? game.makeAdapter(boardSize) : game.adapter;
+    const next = new NearbyController(
+      { ...setup, name: setup.name.trim() },
+      () => {
+        if (live.current) render((v) => v + 1);
+      },
+      undefined,
+      adapter,
+    );
     controllerRef.current = next;
     setController(next);
     setHidden(false);
@@ -259,7 +297,7 @@ export function NearbyRoot({
   return (
     <div
       ref={containerRef}
-      className="screen nearby-screen accent-yacht"
+      className={`screen nearby-screen accent-${gameId}`}
       hidden={!visible}
       inert={!visible}
       data-game={gameId}
@@ -269,7 +307,7 @@ export function NearbyRoot({
           <button className="icon-btn" aria-label={n('back')} onClick={back}>
             <IconBack />
           </button>
-          <h1 className="nearby-title">Yacht</h1>
+          <h1 className="nearby-title">{gameTitle}</h1>
           {inRoom && chatEnabled ? (
             <button
               ref={chatButtonRef}
@@ -330,6 +368,19 @@ export function NearbyRoot({
             }}
           >
             <h2>{n(setup.host ? 'create' : 'join')}</h2>
+            {setup.host && game.makeAdapter && (
+              <label className="nearby-field">
+                {t('dotsAndBoxesChooseBoard')}
+                <select
+                  value={boardSize}
+                  onChange={(e) => setBoardSize(Number(e.target.value) as 3 | 4 | 5)}
+                >
+                  <option value={3}>3 × 3</option>
+                  <option value={4}>4 × 4</option>
+                  <option value={5}>5 × 5</option>
+                </select>
+              </label>
+            )}
             <label className="nearby-field">
               {n('name')}
               <input
@@ -435,7 +486,7 @@ export function NearbyRoot({
                 {controller.reason !== 'ended' && <p role="status">{n(controller.reason)}</p>}
                 {controller.gathering && <p className="nearby-note">{n('localNote')}</p>}
                 <button className="btn btn-primary" onClick={() => setScreen('home')}>
-                  {n('retry')}
+                  {n('retry', { game: gameTitle })}
                 </button>
               </>
             ) : session && (session.paired || controller.state === 'reconnecting') ? (
@@ -455,7 +506,7 @@ export function NearbyRoot({
                   <section className="nearby-card">
                     {session.gameProposed || !session.match ? (
                       <>
-                        <h3>{n('proposed')}</h3>
+                        <h3>{n('proposed', { game: gameTitle })}</h3>
                         <button
                           className="btn btn-primary"
                           disabled={
@@ -485,11 +536,27 @@ export function NearbyRoot({
                   </section>
                 )}
                 {!chatOpen && session.match && (
-                  <YachtBoard
-                    session={session}
-                    n={n}
-                    interactive={visible && question === null && !session.suspended}
-                  />
+                  <section className="nearby-board" aria-label={gameTitle}>
+                    <p className="nearby-game-status" role="status">
+                      {gameStatus}
+                    </p>
+                    <game.Board
+                      key={`${gameId}:${session.match.round}`}
+                      match={session.match}
+                      seat={session.host ? 0 : 1}
+                      names={session.names}
+                      statusLabel={gameStatus}
+                      canAct={visible && foreground && question === null && session.canAct}
+                      act={(action) => session.act(action)}
+                    />
+                    {session.result &&
+                      !['chess', 'nim', 'yacht', 'gin-rummy', 'scopa'].includes(gameId) && (
+                        <p className="nearby-game-score">
+                          {session.names[0]} {session.result.scores[0]} · {session.names[1]}{' '}
+                          {session.result.scores[1]}
+                        </p>
+                      )}
+                  </section>
                 )}
                 {chatOpen && (
                   <section
@@ -502,7 +569,7 @@ export function NearbyRoot({
                     </h2>
                     {session.gameProposed && (
                       <button className="btn btn-secondary" onClick={closeChat}>
-                        {n('proposed')} · {n('openGame')}
+                        {n('proposed', { game: gameTitle })} · {n('openGame')}
                       </button>
                     )}
                     <div
@@ -678,11 +745,21 @@ export function NearbyRoot({
             {storageError && <p role="alert">{n('storageError')}</p>}
             {detail.games.map((game) => (
               <section className="nearby-card" key={game.round}>
-                <h3>Yacht · {game.round}</h3>
-                <p>{n(game.finished ? 'completed' : 'interrupted')}</p>
+                <h3>
+                  {GAME_TITLES[savedGameId(game)]} · {game.round}
+                </h3>
                 <p>
-                  {detail.names[0]} {game.scores[0]} · {detail.names[1]} {game.scores[1]}
+                  {!game.finished
+                    ? n('interrupted')
+                    : savedGameResult(game).winner === 'draw'
+                      ? n('draw')
+                      : n('won', { name: detail.names[savedGameResult(game).winner as 0 | 1] })}
                 </p>
+                {!['chess', 'nim'].includes(savedGameId(game)) && (
+                  <p>
+                    {detail.names[0]} {game.scores[0]} · {detail.names[1]} {game.scores[1]}
+                  </p>
+                )}
               </section>
             ))}
             {detail.messages.map((m) => (
@@ -716,103 +793,6 @@ export function NearbyRoot({
         }}
       />
     </div>
-  );
-}
-
-function YachtBoard({
-  session: s,
-  n,
-  interactive,
-}: {
-  session: Session;
-  n: Text;
-  interactive: boolean;
-}) {
-  const { t } = useSettings();
-  const m = s.match!;
-  const seat = s.host ? 0 : 1;
-  const opponent = seat === 0 ? 1 : 0;
-  const points = totals(m);
-  const previous = useRef<Match>(m);
-  const [lastRoll, setLastRoll] = useState<DiceRoll | null>(null);
-  const [flash, setFlash] = useState<SheetFlash | null>(null);
-  useEffect(() => {
-    const before = previous.current;
-    previous.current = m;
-    if (m.round !== before.round) {
-      setLastRoll(null);
-      setFlash(null);
-      return;
-    }
-    if (m.rolls > before.rolls)
-      setLastRoll({ rollIndex: m.revision, rolled: before.held.map((held) => !held) });
-    for (const player of [seat, opponent]) {
-      const category = CATEGORIES.findIndex(
-        (_, i) => before.scores[player]![i] === null && m.scores[player]![i] !== null,
-      );
-      if (category !== -1) {
-        setFlash({
-          seat: player === seat ? 'player' : 'cpu',
-          category: CATEGORIES[category]!,
-          key: m.revision,
-        });
-        break;
-      }
-    }
-  }, [m, seat, opponent]);
-  const canAct = interactive && !s.suspended && s.canAct;
-  const canRoll = canAct && m.rolls < 3 && !m.held.every(Boolean);
-  const canHold = canAct && m.rolls > 0 && m.rolls < 3;
-  useGameKeys((event) => {
-    if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) return false;
-    if ((event.key === 'r' || event.key === 'R') && canRoll) {
-      s.act({ kind: 'roll' });
-      return true;
-    }
-    const index = Number(event.key) - 1;
-    if (canHold && Number.isInteger(index) && index >= 0 && index < 5) {
-      s.act({ kind: 'hold', index });
-      return true;
-    }
-    return false;
-  }, canAct);
-  const status = s.suspended
-    ? n('reconnecting')
-    : s.pending
-      ? n('pending')
-      : s.matchComplete
-        ? points[0] === points[1]
-          ? n('draw')
-          : n('won', { name: s.names[points[0]! > points[1]! ? 0 : 1]! })
-        : n('turn', { name: s.names[turn(m)]!, rolls: m.rolls });
-  return (
-    <section className="nearby-board" aria-label="Yacht">
-      <div className="nearby-game-status">
-        <strong>{Math.min(count(m.scores[seat]) + 1, 12)}/12</strong>
-        <p role="status">{status}</p>
-      </div>
-      <YachtPlaySurface
-        dice={m.dice}
-        held={m.held}
-        rolled={m.rolls > 0}
-        rollsUsed={m.rolls}
-        canHold={canHold}
-        canRoll={canRoll}
-        playing={canAct}
-        lastRoll={lastRoll}
-        onRoll={() => s.act({ kind: 'roll' })}
-        onToggle={(index) => s.act({ kind: 'hold', index })}
-        onScore={(category) => s.act({ kind: 'score', category })}
-        scores={m.scores[seat]}
-        cpuScores={m.scores[opponent]}
-        total={points[seat]!}
-        cpuTotal={points[opponent]!}
-        names={[s.name, s.peerName]}
-        columnLabels={[t('yachtYou'), n('opponent')]}
-        flash={flash}
-        waitingLabel={finished(m) && !s.pending ? n('completed') : status}
-      />
-    </section>
   );
 }
 

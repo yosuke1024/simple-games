@@ -364,6 +364,9 @@ describe('keyboard (issue #93)', () => {
 });
 
 describe('a full match (§1, §7)', () => {
+  // All twelve CPU turns run the real expectimax and UI timer beats. Like
+  // the CPU sweeps, this can exceed 5s when other suites share the machine;
+  // allow the full match to finish without timing out an active React act.
   it('ends on a result, books the outcome, and clears the save', async () => {
     vi.useFakeTimers();
     try {
@@ -405,7 +408,7 @@ describe('a full match (§1, §7)', () => {
     } finally {
       vi.useRealTimers();
     }
-  });
+  }, 30_000);
 });
 
 describe('home', () => {

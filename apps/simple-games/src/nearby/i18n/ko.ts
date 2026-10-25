@@ -2,6 +2,7 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const ko: NearbyMessages = {
+  playerTurn: '{name}의 차례',
   playTogether: '다른 사람과 플레이',
   closeChat: '채팅 닫기',
   unreadChat: '채팅, 읽지 않은 메시지 있음',
@@ -43,12 +44,12 @@ export const ko: NearbyMessages = {
   chatOn: '채팅 사용함',
   chatOff: '채팅 사용 안 함',
   game: '게임',
-  roomHint: 'Yacht를 선택해 함께 플레이하세요. 채팅은 필요할 때 열 수 있습니다.',
-  propose: 'Yacht 제안',
-  proposed: 'Yacht 시작 준비',
+  roomHint: '{game}를 선택해 함께 플레이하세요. 채팅은 필요할 때 열 수 있습니다.',
+  propose: '{game} 제안',
+  proposed: '{game} 시작 준비',
   ready: '준비됐어요',
   waitingReady: '상대방의 준비를 기다리는 중',
-  hostSelects: '어느 플레이어든 Yacht를 제안할 수 있습니다.',
+  hostSelects: '어느 플레이어든 {game}를 제안할 수 있습니다.',
   rematch: '한 판 더 제안',
   returnRoom: '모임으로 돌아가기',
   message: '메시지',
@@ -73,7 +74,7 @@ export const ko: NearbyMessages = {
   leaveBody: '두 참가자 모두의 모임이 종료됩니다. 내 기록은 이 기기에 남습니다.',
   cancel: '취소',
   ended: '연결이 종료되었습니다.',
-  retry: 'Yacht로 돌아가기',
+  retry: '{game}로 돌아가기',
   timeout: '시간 내에 응답이 없었습니다. 두 기기가 준비되면 다시 시작하세요.',
   connectionError:
     '연결할 수 없습니다. 두 기기의 Bluetooth 또는 Wi-Fi와 앱 권한을 확인한 후 다시 시도하세요.',

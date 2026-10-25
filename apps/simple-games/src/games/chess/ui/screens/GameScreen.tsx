@@ -22,7 +22,7 @@
  * promotion picker or the result card is up, `.game-content` is inert and the
  * keys are off (src/test/modalIsolationWiring.test.ts).
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { haptics } from '@/services/haptics';
 import { sounds } from '@/services/sound';
 import { useSettings } from '@/state/SettingsContext';
@@ -30,92 +30,38 @@ import { BannerSlot } from '@/ui/components/BannerSlot';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconRetry, IconUndo } from '@/ui/components/icons';
 import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
-import {
-  WHITE,
-  canUndo,
-  isCapture,
-  isInCheck,
-  isOver,
-  isPlayerTurn,
-  legalTargets,
-  selectableSquares,
-  statusOf,
-} from '../../game';
+import { WHITE, canUndo, isCapture, isInCheck, isOver, isPlayerTurn, statusOf } from '../../game';
 import { useChess } from '../../state/GameContext';
+import { useChessSelection } from '../useChessSelection';
 import { ChessBoard } from '../components/ChessBoard';
 import { PromotionPicker } from '../components/PromotionPicker';
 import { ChessResultOverlay } from '../components/ResultOverlay';
-
-interface PendingPromotion {
-  readonly from: number;
-  readonly to: number;
-}
 
 export function ChessGameScreen() {
   const { session, lastMove, lastResult, playMove, applyUndo, goHome, startNewGame } = useChess();
   const { t } = useSettings();
   const [confirmNewGame, setConfirmNewGame] = useState(false);
-  const [selected, setSelected] = useState<number | null>(null);
-  const [promotion, setPromotion] = useState<PendingPromotion | null>(null);
-
   const over = session ? isOver(session) : false;
   const playersTurn = session ? isPlayerTurn(session) : false;
-
-  // Everything the player may do right now, from the rules and nothing else.
-  const selectable = useMemo(() => (session ? selectableSquares(session) : []), [session]);
-  const targets = useMemo(
-    () => (session && selected !== null ? legalTargets(session, selected) : []),
-    [session, selected],
-  );
-
-  // A selection cannot outlive the position it was made in.
-  useEffect(() => {
-    if (!playersTurn) {
-      setSelected(null);
-      setPromotion(null);
-    }
-  }, [playersTurn]);
-
-  const play = useCallback(
-    (from: number, to: number, kind = 0) => {
+  const selection = useChessSelection(
+    session?.game.legal ?? [],
+    playersTurn,
+    `${session?.seed}:${session?.game.moves.length}`,
+    (from, to, kind) => {
       if (playMove(from, to, kind)) {
-        setSelected(null);
-        setPromotion(null);
         sounds.select();
         void haptics.tap();
       }
     },
-    [playMove],
   );
-
-  const onSquare = useCallback(
-    (square: number) => {
-      if (!playersTurn || selected === null) {
-        if (playersTurn && selectable.includes(square)) setSelected(square);
-        return;
-      }
-      const target = targets.find((candidate) => candidate.to === square);
-      if (target) {
-        // The move does not exist until its piece is chosen (§4).
-        if (target.promotion) setPromotion({ from: selected, to: square });
-        else play(selected, square);
-        return;
-      }
-      // Not a destination: picking another piece up, or putting this one
-      // back down. Neither is a mistake, so neither makes a sound (§4).
-      if (selectable.includes(square) && square !== selected) setSelected(square);
-      else setSelected(null);
-    },
-    [play, playersTurn, selectable, selected, targets],
-  );
+  const { selected, promotion, selectable, targets, onSquare } = selection;
 
   const onUndo = useCallback(() => {
     if (applyUndo()) {
-      setSelected(null);
-      setPromotion(null);
+      selection.clear();
       sounds.undo();
     }
-  }, [applyUndo]);
+  }, [applyUndo, selection]);
 
   // The CPU's move arrives outside any tap, so its sound is played off the
   // move record; a capture — either side's — adds `match` on top (§9). One
@@ -244,10 +190,8 @@ export function ChessGameScreen() {
       <PromotionPicker
         open={promotion !== null}
         color={session.playerColor}
-        onPick={(kind) => {
-          if (promotion) play(promotion.from, promotion.to, kind);
-        }}
-        onCancel={() => setPromotion(null)}
+        onPick={selection.pickPromotion}
+        onCancel={selection.cancelPromotion}
       />
     </div>
   );

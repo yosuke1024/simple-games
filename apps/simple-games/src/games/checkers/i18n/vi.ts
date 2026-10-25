@@ -1,6 +1,8 @@
 import type { CheckersMessages } from './en';
 
 export const vi: CheckersMessages = {
+  checkersSquareNamedKing: 'Hàng {row}, cột {col}: quân vua của {name}',
+  checkersSquareNamedMan: 'Hàng {row}, cột {col}: quân của {name}',
   checkersName: 'Checkers',
   checkersChooseOpponent: 'Chọn đối thủ',
   checkersDifficulty_easy: 'Dễ',

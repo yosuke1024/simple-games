@@ -1,6 +1,8 @@
 import type { ReversiMessages } from './en';
 
 export const de: ReversiMessages = {
+  reversiPassNamed: '{name} kann nicht ziehen — die andere Person ist erneut dran',
+  reversiCellNamed: 'Zeile {row}, Spalte {col}: Scheibe von {name}',
   reversiName: 'Reversi',
   reversiChooseOpponent: 'Gegner wählen',
   reversiDifficulty_easy: 'Leicht',

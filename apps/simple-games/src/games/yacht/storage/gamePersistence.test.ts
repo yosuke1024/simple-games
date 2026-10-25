@@ -71,11 +71,13 @@ describe('resuming a saved match (§8)', () => {
     expect(await loadSavedGame(createMemoryKV())).toBeNull();
   });
 
+  // The fixture plays all twelve real CPU turns. Give it the same loaded-
+  // machine allowance as the CPU sweeps rather than a 5s timing assertion.
   it('does not bring back a finished match', async () => {
     const session = playToFinish('yacht-persist-full');
     expect(statusOf(session)).toBe('finished');
     expect(await loadSavedGame(saved(toPersisted(session, 1)))).toBeNull();
-  });
+  }, 30_000);
 });
 
 describe('discarding a record play could not have produced (§8)', () => {

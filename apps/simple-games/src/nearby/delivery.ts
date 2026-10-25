@@ -1,4 +1,4 @@
-import { integer, record } from './yacht';
+import { integer, record } from './gameTypes';
 
 /** A bounded, in-memory outbox for one approved gathering. Physical reconnects
  * use new encryption keys, but replay the same logical messages exactly once. */

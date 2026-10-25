@@ -1,3 +1,4 @@
+import type { Target } from '../../game/session';
 /**
  * The 8×8 board (docs/CHESS_RULES.md §1, §4, §9).
  *
@@ -46,8 +47,7 @@ import {
   squareName,
   type Move,
   type Piece,
-  type Target,
-} from '../../game';
+} from '../../game/types';
 import type { LastMove } from '../../state/GameContext';
 import { ChessPiece } from './ChessPiece';
 

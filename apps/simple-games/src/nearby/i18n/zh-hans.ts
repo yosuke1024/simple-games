@@ -2,6 +2,7 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const zhHans: NearbyMessages = {
+  playerTurn: '轮到 {name}',
   playTogether: '与他人同玩',
   closeChat: '关闭聊天',
   unreadChat: '聊天，有未读消息',
@@ -43,12 +44,12 @@ export const zhHans: NearbyMessages = {
   chatOn: '聊天已启用',
   chatOff: '聊天已关闭',
   game: '游戏',
-  roomHint: '选择 Yacht 一起玩。需要时再打开聊天。',
-  propose: '提议玩Yacht',
-  proposed: 'Yacht准备开始',
+  roomHint: '选择 {game} 一起玩。需要时再打开聊天。',
+  propose: '提议玩{game}',
+  proposed: '{game}准备开始',
   ready: '我准备好了',
   waitingReady: '等待另一位玩家',
-  hostSelects: '任何一位玩家都可以提议玩 Yacht。',
+  hostSelects: '任何一位玩家都可以提议玩 {game}。',
   rematch: '提议再玩一局',
   returnRoom: '返回聚会',
   message: '消息',
@@ -73,7 +74,7 @@ export const zhHans: NearbyMessages = {
   leaveBody: '聚会将在双方设备上结束。你的本地历史记录会保留在此设备上。',
   cancel: '取消',
   ended: '连接已结束。',
-  retry: '返回 Yacht',
+  retry: '返回 {game}',
   timeout: '未能及时收到响应。两台设备准备好后请重新开始。',
   connectionError: '无法连接。请检查两台设备的Bluetooth或Wi-Fi和应用权限，然后重试。',
   declined: '加入申请已被拒绝。',

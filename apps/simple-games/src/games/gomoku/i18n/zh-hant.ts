@@ -1,6 +1,7 @@
 import type { GomokuMessages } from './en';
 
 export const zhHant: GomokuMessages = {
+  gomokuPointNamed: '第{row}列第{col}欄：{name}的棋子',
   gomokuName: 'Gomoku',
   gomokuChooseOpponent: '選擇對手',
   gomokuDifficulty_easy: '簡單',

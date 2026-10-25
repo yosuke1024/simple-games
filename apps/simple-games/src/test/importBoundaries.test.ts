@@ -4,8 +4,9 @@
  * script anyone can skip is not a gate):
  *
  *   1. `games/A/` never imports from `games/B/`. Games do not know each other.
- *   2. Only `app/registry.ts` and code inside `src/games/` may import from
- *      `src/games/` at all — the shell reaches no deeper than the registry.
+ *   2. The shell reaches games only through `app/registry.ts`. Nearby's
+ *      per-game adapters may share the matching game's pure rules and visual
+ *      surface, without reaching CPU, providers, persistence or Club at runtime.
  *   3. Each game's `storage/keys.ts` and `challenge/contract.ts` import
  *      nothing. They are the game files the registry pulls eagerly, and a
  *      single import here could tow the whole game back into the home's
@@ -84,6 +85,7 @@ interface Import {
   // former may reach `club/`). `kind` names the form that produced the entry;
   // `dynamic` is untouched, so rule 4 is unchanged.
   kind: 'static' | 'import()' | 'glob';
+  typeOnly?: boolean;
 }
 
 /**
@@ -113,7 +115,7 @@ interface Import {
 function importsOf(file: string): Import[] {
   const dir = dirname(file);
   const out: Import[] = [];
-  const push = (specifier: string, dynamic: boolean, kind: Import['kind']) => {
+  const push = (specifier: string, dynamic: boolean, kind: Import['kind'], typeOnly = false) => {
     const resolved = specifier.startsWith('.')
       ? resolve(dir, specifier)
       : specifier.startsWith('@/')
@@ -121,7 +123,7 @@ function importsOf(file: string): Import[] {
         : specifier.startsWith('/')
           ? resolve(APP_ROOT, specifier.slice(1))
           : null;
-    out.push({ file, specifier, resolved, dynamic, kind });
+    out.push({ file, specifier, resolved, dynamic, kind, typeOnly });
   };
 
   const source = ts.createSourceFile(
@@ -152,7 +154,21 @@ function importsOf(file: string): Import[] {
       (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
       node.moduleSpecifier !== undefined
     ) {
-      for (const specifier of literalsOf(node.moduleSpecifier)) push(specifier, false, 'static');
+      const typeOnly = ts.isImportDeclaration(node)
+        ? !!node.importClause &&
+          (node.importClause.isTypeOnly ||
+            (!node.importClause.name &&
+              !!node.importClause.namedBindings &&
+              ts.isNamedImports(node.importClause.namedBindings) &&
+              node.importClause.namedBindings.elements.length > 0 &&
+              node.importClause.namedBindings.elements.every((entry) => entry.isTypeOnly)))
+        : node.isTypeOnly ||
+          (!!node.exportClause &&
+            ts.isNamedExports(node.exportClause) &&
+            node.exportClause.elements.length > 0 &&
+            node.exportClause.elements.every((entry) => entry.isTypeOnly));
+      for (const specifier of literalsOf(node.moduleSpecifier))
+        push(specifier, false, 'static', typeOnly);
     }
     // `const x: import('y').T` — an import in type position. Erased at
     // build time, so it tows no chunk, but the layering rules are about who
@@ -163,7 +179,8 @@ function importsOf(file: string): Import[] {
       // Erased at build time, so it tows no *chunk* — but rule 5 cares who
       // may know whom, not what survives to the bundle, so this counts as
       // 'static' like the declaration forms above, not as a real `import()`.
-      for (const specifier of literalsOf(node.argument.literal)) push(specifier, false, 'static');
+      for (const specifier of literalsOf(node.argument.literal))
+        push(specifier, false, 'static', true);
     }
     if (ts.isCallExpression(node)) {
       // Dynamic `import('y')`.
@@ -197,6 +214,52 @@ const files = listSourceFiles(SRC);
 const allImports = files.flatMap(importsOf);
 const gamesDir = join(SRC, 'games') + sep;
 const registryFile = join(SRC, 'app', 'registry.ts');
+const nearbyIds = new Set([
+  'yacht',
+  'reversi',
+  'connect-four',
+  'gomoku',
+  'checkers',
+  'gin-rummy',
+  'mancala',
+  'dominoes',
+  'dots-and-boxes',
+  'chess',
+  'nested-tic-tac-toe',
+  'scopa',
+  'nim',
+]);
+const nearbyGameOf = (file: string): string | null => {
+  const match = /^nearby\/games\/([^/]+?)(?:View)?\.(?:ts|tsx)$/.exec(rel(file));
+  return match && nearbyIds.has(match[1]!) ? match[1]! : null;
+};
+function nearbyGameImport(entry: Import): boolean {
+  if (!entry.resolved || entry.kind !== 'static') return false;
+  const targetGame = gameOf(entry.resolved);
+  if (!targetGame || !nearbyIds.has(targetGame)) return false;
+  const path = entry.resolved.slice(join(gamesDir, targetGame).length + 1);
+  const pure = /^game\//.test(path) && !/(?:^|\/)(?:cpu|ai)(?:[/.]|$)/i.test(path);
+  // These two regression suites compare nearby with the ordinary CPU game.
+  // They are never runtime roots; no production importer gains this exception.
+  const testImports: Record<string, readonly string[]> = {
+    'nearby/games/hidden-games.test.ts': ['gin-rummy/game/cpu'],
+    'nearby/games/hidden-views.test.tsx': [
+      'gin-rummy/ui/GinRummyRoot',
+      'dominoes/ui/DominoesRoot',
+      'scopa/ui/ScopaRoot',
+    ],
+  };
+  if (testImports[rel(entry.file)]?.includes(`${targetGame}/${path}`)) return true;
+  // Protocol test fixtures may compare adapters against their pure rule engines.
+  if (entry.file.startsWith(join(SRC, 'nearby', 'games') + sep) && isTestInfra(entry.file))
+    return pure;
+  if (nearbyGameOf(entry.file) !== targetGame) return false;
+  return (
+    pure ||
+    /^i18n(?:\/|$)/.test(path) ||
+    /^ui\/(?:components\/|hooks\/|use[A-Z][^/]*$|selection$|[^/]+\.css$)/.test(path)
+  );
+}
 
 /**
  * The one glob shape issue #38's i18n tests use to aggregate every game's
@@ -273,9 +336,8 @@ function crossGameOffenders(imports: Import[]): Import[] {
 }
 
 /**
- * Rule 2: only `app/registry.ts`, code inside `src/games/`, and the issue #38
- * i18n aggregator (GAME_I18N_GLOB, from recognised test files) reach into
- * `src/games/`.
+ * Rule 2: the registry, game-owned code, scoped Nearby adapters/tests, and
+ * the issue #38 i18n test aggregator may reach into `src/games/`.
  */
 function gamesReachOffenders(imports: Import[]): Import[] {
   return imports.filter((entry) => {
@@ -284,19 +346,7 @@ function gamesReachOffenders(imports: Import[]): Import[] {
       entry.kind === 'glob' ? globMayReachGames(entry.resolved) : gameOf(entry.resolved) !== null;
     if (!reaches) return false;
     if (gameOf(entry.file) !== null || entry.file === registryFile) return false;
-    if (
-      entry.file === join(SRC, 'nearby', 'yacht.ts') &&
-      entry.kind === 'static' &&
-      ['engine', 'types'].some((name) => entry.resolved === join(gamesDir, 'yacht', 'game', name))
-    )
-      return false;
-    // Reuse the CPU game's pure visual surface, never its provider or persistence.
-    if (
-      entry.file === join(SRC, 'nearby', 'NearbyRoot.tsx') &&
-      entry.kind === 'static' &&
-      entry.resolved === join(gamesDir, 'yacht', 'ui', 'components', 'YachtPlaySurface')
-    )
-      return false;
+    if (nearbyGameImport(entry)) return false;
     // issue #38: the i18n tests glob every game's catalog to test it as a
     // whole. Exempt only this exact resolved target, and only from
     // recognised test files — a shell file (or any other glob shape,
@@ -398,12 +448,62 @@ function nearbyOffenders(imports: Import[]): Import[] {
       head.startsWith(directory) ||
       (entry.kind === 'glob' && directory.startsWith(head));
     if (!reaches) return false;
+    if (
+      entry.typeOnly &&
+      entry.file.startsWith(appDir) &&
+      entry.resolved === join(root, 'gameTypes')
+    )
+      return false;
     return !(
       entry.file === join(SRC, 'app', 'nearbyGate.ts') &&
       entry.kind === 'import()' &&
       ['NearbyRoot', 'history'].some((name) => entry.resolved === join(root, name))
     );
   });
+}
+
+/** Follow runtime imports and re-exports, including directory barrels. Type-only
+ * GameContext/LastMove references disappear at build time and are not runtime edges. */
+function nearbyRuntimeOffenders(imports: Import[], roots: string[]): string[] {
+  const byFile = new Map<string, Import[]>();
+  for (const entry of imports) {
+    const list = byFile.get(entry.file) ?? [];
+    list.push(entry);
+    byFile.set(entry.file, list);
+  }
+  const violations: string[] = [];
+  const seen = new Set<string>();
+  const visit = (file: string, chain: string[]) => {
+    if (seen.has(file)) return;
+    seen.add(file);
+    for (const entry of byFile.get(file) ?? []) {
+      if (!entry.resolved || entry.typeOnly) continue;
+      const path = rel(entry.resolved);
+      if (
+        entry.kind === 'glob' ||
+        /^(?:club(?:\/|$)|ui\/(?:clubBridge|components\/ClubResultAction)(?:\.|$))/.test(path) ||
+        /^games\/[^/]+\/(?:storage|state|challenge)(?:\/|$)/.test(path) ||
+        /^games\/[^/]+\/game\/(?:[^/]+\/)*(?:cpu|ai)(?:[/.]|$)/i.test(path) ||
+        // Nim's original module combines rules and CPU functions. Nearby uses
+        // its shared position leaf; the ordinary game's API stays unchanged.
+        /^games\/nim\/game(?:\/index)?(?:\.ts)?$/.test(path) ||
+        /^games\/[^/]+\/ui\/(?:screens\/|[^/]*Root(?:\.|$))/.test(path)
+      ) {
+        violations.push([...chain, path].join(' -> '));
+        continue;
+      }
+      const target = [
+        entry.resolved,
+        `${entry.resolved}.ts`,
+        `${entry.resolved}.tsx`,
+        join(entry.resolved, 'index.ts'),
+        join(entry.resolved, 'index.tsx'),
+      ].find((p) => byFile.has(p));
+      if (target) visit(target, [...chain, rel(target)]);
+    }
+  };
+  for (const root of roots) visit(root, [rel(root)]);
+  return violations;
 }
 
 describe('import boundaries (docs/ARCHITECTURE.md)', () => {
@@ -445,58 +545,205 @@ describe('import boundaries (docs/ARCHITECTURE.md)', () => {
     ];
     expect(listed(nearbyOffenders(probeImports(probes)))).toEqual(expectedOffenders(probes));
   });
-  it('limits Nearby to pure Yacht rules and the shared visual surface', () => {
+  it('limits each Nearby adapter to its own pure rules and visual surface', () => {
     const probes: Probe[] = [
+      {
+        file: 'nearby/games/chess.ts',
+        specifier: '../../games/chess/game/engine',
+        kind: 'static',
+        verdict: 'ok',
+      },
+      {
+        file: 'nearby/games/chessView.tsx',
+        specifier: '../../games/chess/ui/components/ChessBoard',
+        kind: 'static',
+        verdict: 'ok',
+      },
+      {
+        file: 'nearby/games/chessView.tsx',
+        specifier: '../../games/chess/ui/useChessSelection',
+        kind: 'static',
+        verdict: 'ok',
+      },
+      {
+        file: 'nearby/games/chessView.tsx',
+        specifier: '../../games/chess/i18n',
+        kind: 'static',
+        verdict: 'ok',
+      },
+      {
+        file: 'nearby/games/chessView.tsx',
+        specifier: '../../games/chess/ui/chess.css',
+        kind: 'static',
+        verdict: 'ok',
+      },
+      {
+        file: 'nearby/games/chessView.tsx',
+        specifier: '../../games/chess/ui/screens/GameScreen',
+        kind: 'static',
+        verdict: 'offender',
+      },
+      {
+        file: 'nearby/games/chess.ts',
+        specifier: '../../games/chess/game/cpu',
+        kind: 'static',
+        verdict: 'offender',
+      },
+      {
+        file: 'nearby/games/chess.ts',
+        specifier: '../../games/chess/state/GameContext',
+        kind: 'static',
+        verdict: 'offender',
+      },
+      {
+        file: 'nearby/games/chess.ts',
+        specifier: '../../games/chess/storage/gamePersistence',
+        kind: 'static',
+        verdict: 'offender',
+      },
+      {
+        file: 'nearby/games/chess.ts',
+        specifier: '../../games/scopa/game/engine',
+        kind: 'static',
+        verdict: 'offender',
+      },
+      {
+        file: 'nearby/games/chess.ts',
+        specifier: '../../games/chess/game/*',
+        kind: 'glob',
+        verdict: 'offender',
+      },
+      {
+        file: 'nearby/games/public-games.test.ts',
+        specifier: '../../games/scopa/game/engine',
+        kind: 'static',
+        verdict: 'ok',
+      },
+      {
+        file: 'nearby/games/public-games.test.ts',
+        specifier: '../../games/scopa/game/cpu',
+        kind: 'static',
+        verdict: 'offender',
+      },
+      {
+        file: 'nearby/games/hidden-games.test.ts',
+        specifier: '../../games/gin-rummy/game/cpu',
+        kind: 'static',
+        verdict: 'ok',
+      },
+      {
+        file: 'nearby/games/hidden-views.test.tsx',
+        specifier: '../../games/gin-rummy/ui/GinRummyRoot',
+        kind: 'static',
+        verdict: 'ok',
+      },
+      {
+        file: 'nearby/games/gin-rummy.ts',
+        specifier: '../../games/gin-rummy/ui/GinRummyRoot',
+        kind: 'static',
+        verdict: 'offender',
+      },
+      {
+        file: 'nearby/games/hidden-views.test.tsx',
+        specifier: '../../games/chess/ui/ChessRoot',
+        kind: 'static',
+        verdict: 'offender',
+      },
       {
         file: 'nearby/NearbyRoot.tsx',
         specifier: '../games/yacht/ui/components/YachtPlaySurface',
         kind: 'static',
-        verdict: 'ok',
-      },
-      {
-        file: 'nearby/NearbyRoot.tsx',
-        specifier: '../games/yacht/ui/screens/GameScreen',
-        kind: 'static',
-        verdict: 'offender',
-      },
-      {
-        file: 'nearby/NearbyRoot.tsx',
-        specifier: '../games/yacht/state/GameContext',
-        kind: 'static',
-        verdict: 'offender',
-      },
-      {
-        file: 'nearby/yacht.ts',
-        specifier: '../games/yacht/game/engine',
-        kind: 'static',
-        verdict: 'ok',
-      },
-      {
-        file: 'nearby/yacht.ts',
-        specifier: '../games/yacht/game/types',
-        kind: 'static',
-        verdict: 'ok',
-      },
-      {
-        file: 'nearby/yacht.ts',
-        specifier: '../games/yacht/storage/gamePersistence',
-        kind: 'static',
-        verdict: 'offender',
-      },
-      {
-        file: 'nearby/NearbyRoot.tsx',
-        specifier: '../games/yacht/game/engine',
-        kind: 'static',
-        verdict: 'offender',
-      },
-      {
-        file: 'nearby/yacht.ts',
-        specifier: '../games/*/game/*',
-        kind: 'glob',
         verdict: 'offender',
       },
     ];
     expect(listed(gamesReachOffenders(probeImports(probes)))).toEqual(expectedOffenders(probes));
+  });
+  it('keeps CPU, ordinary game persistence/providers and Club out of the Nearby runtime graph', () => {
+    const roots = files.filter(
+      (file) => file.startsWith(join(SRC, 'nearby') + sep) && !isTestInfra(file),
+    );
+    expect(roots.length).toBeGreaterThan(20);
+    expect(nearbyRuntimeOffenders(allImports, roots)).toEqual([]);
+  });
+  it('finds forbidden runtime imports through a re-export barrel but ignores erased types', () => {
+    const imports = probeImports([
+      {
+        file: 'nearby/games/chessView.tsx',
+        specifier: '../../games/chess/ui/components/Board',
+        kind: 'static',
+        verdict: 'ok',
+      },
+      {
+        file: 'games/chess/ui/components/Board.tsx',
+        specifier: '../../game',
+        kind: 'static',
+        verdict: 'ok',
+      },
+      {
+        file: 'games/chess/game/index.ts',
+        specifier: './cpu',
+        kind: 'static',
+        verdict: 'offender',
+      },
+      {
+        file: 'games/chess/game/index.ts',
+        specifier: '../storage/save',
+        kind: 'static',
+        verdict: 'offender',
+      },
+      {
+        file: 'games/chess/game/index.ts',
+        specifier: '../state/GameContext',
+        kind: 'static',
+        verdict: 'offender',
+      },
+      {
+        file: 'games/chess/game/index.ts',
+        specifier: '../../../ui/clubBridge',
+        kind: 'static',
+        verdict: 'offender',
+      },
+      {
+        file: 'games/chess/game/index.ts',
+        specifier: '../../nim/game/index',
+        kind: 'static',
+        verdict: 'offender',
+      },
+    ]);
+    expect(nearbyRuntimeOffenders(imports, [join(SRC, 'nearby/games/chessView.tsx')])).toHaveLength(
+      5,
+    );
+    for (const entry of imports.slice(2)) entry.typeOnly = true;
+    expect(nearbyRuntimeOffenders(imports, [join(SRC, 'nearby/games/chessView.tsx')])).toEqual([]);
+  });
+  it('distinguishes executable imports from erased type-only declarations', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'sg-nearby-types-'));
+    const file = join(dir, 'probe.ts');
+    try {
+      writeFileSync(
+        file,
+        [
+          "import type { LastMove } from './context';",
+          "import { type LastResult } from './result';",
+          "export type { State } from './state';",
+          "export { type View } from './view';",
+          "type Inline = import('./inline').State;",
+          "export * from './cpu';",
+          "import { type State, apply } from './mixed';",
+        ].join('\n'),
+      );
+      expect(importsOf(file).map((entry) => entry.typeOnly)).toEqual([
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+      ]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
   it('found a believable amount of code to check', () => {
     // A refactor that breaks the scanner must fail loudly, not pass emptily.
@@ -508,7 +755,7 @@ describe('import boundaries (docs/ARCHITECTURE.md)', () => {
     expect(listed(crossGameOffenders(allImports))).toEqual([]);
   });
 
-  it('only the registry, the games themselves, and the i18n test aggregator reach into src/games/', () => {
+  it('only the registry, games, scoped Nearby adapters/tests and i18n aggregator reach into src/games/', () => {
     expect(listed(gamesReachOffenders(allImports))).toEqual([]);
   });
 

@@ -1,6 +1,7 @@
 import type { GomokuMessages } from './en';
 
 export const hi: GomokuMessages = {
+  gomokuPointNamed: 'पंक्ति {row}, स्तंभ {col}: {name} का पत्थर',
   gomokuName: 'Gomoku',
   gomokuChooseOpponent: 'अपना प्रतिद्वंद्वी चुनें',
   gomokuDifficulty_easy: 'आसान',

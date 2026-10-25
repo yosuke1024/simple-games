@@ -1,3 +1,4 @@
+import type { BoardView } from '../../game/session';
 /**
  * The big board (docs/NESTED_TIC_TAC_TOE_RULES.md §1, §2, §6, §10).
  *
@@ -32,13 +33,13 @@ import {
   DRAWN,
   EMPTY,
   OPEN,
-  type BoardView,
   type Mark,
-} from '../../game';
+} from '../../game/types';
 import type { LastMove } from '../../state/GameContext';
 import { NestedMark } from './NestedMark';
 
 export interface NestedBoardProps {
+  opponentName?: string;
   view: BoardView;
   playerMark: Mark;
   /** True on the player's turn of a live match: the frames show and legal cells are enabled. */
@@ -55,6 +56,7 @@ type SmallLabel =
   | 'nestedTicTacToeSmallDrawn';
 
 export const NestedBoard = memo(function NestedBoard({
+  opponentName,
   view,
   playerMark,
   playersTurn,
@@ -101,7 +103,12 @@ export const NestedBoard = memo(function NestedBoard({
             key={board}
             className="nt-small"
             role="group"
-            aria-label={t(labelKey, { board: board + 1 })}
+            aria-label={t(
+              labelKey === 'nestedTicTacToeSmallCpu' && opponentName
+                ? 'nestedTicTacToeSmallOpponent'
+                : labelKey,
+              { board: board + 1, player: opponentName ?? '' },
+            )}
             data-state={state === OPEN ? 'open' : state === DRAWN ? 'drawn' : owner}
             data-playable={isPlayable ? 'true' : undefined}
             data-win={inLine ? (view.smalls[board] === playerMark ? 'mine' : 'cpu') : undefined}
@@ -112,7 +119,7 @@ export const NestedBoard = memo(function NestedBoard({
               const value = view.cells[cell]!;
               const isLegal = legal.has(cell);
               const arrived = lastMove !== null && lastMove.placed === cell;
-              const names = { board: board + 1, square: place + 1 };
+              const names = { board: board + 1, square: place + 1, player: opponentName ?? '' };
               const label =
                 value === EMPTY
                   ? isLegal
@@ -123,8 +130,18 @@ export const NestedBoard = memo(function NestedBoard({
                       ? t('nestedTicTacToeCellYourCross', names)
                       : t('nestedTicTacToeCellYourCircle', names)
                     : value === CROSS
-                      ? t('nestedTicTacToeCellCpuCross', names)
-                      : t('nestedTicTacToeCellCpuCircle', names);
+                      ? t(
+                          opponentName
+                            ? 'nestedTicTacToeCellOpponentCross'
+                            : 'nestedTicTacToeCellCpuCross',
+                          names,
+                        )
+                      : t(
+                          opponentName
+                            ? 'nestedTicTacToeCellOpponentCircle'
+                            : 'nestedTicTacToeCellCpuCircle',
+                          names,
+                        );
               return (
                 <button
                   key={cell}

@@ -1,6 +1,8 @@
 import type { CheckersMessages } from './en';
 
 export const ptBR: CheckersMessages = {
+  checkersSquareNamedKing: 'Linha {row}, coluna {col}: dama de {name}',
+  checkersSquareNamedMan: 'Linha {row}, coluna {col}: peça de {name}',
   checkersName: 'Checkers',
   checkersChooseOpponent: 'Escolha seu adversário',
   checkersDifficulty_easy: 'Fácil',

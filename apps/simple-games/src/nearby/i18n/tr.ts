@@ -2,6 +2,7 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const tr: NearbyMessages = {
+  playerTurn: 'Sıra {name} oyuncusunda',
   playTogether: 'Biriyle oyna',
   closeChat: 'Sohbeti kapat',
   unreadChat: 'Sohbet, okunmamış mesajlar',
@@ -43,12 +44,12 @@ export const tr: NearbyMessages = {
   chatOn: 'Sohbet açık',
   chatOff: 'Sohbet kapalı',
   game: 'Oyun',
-  roomHint: 'Birlikte oynamak için Yacht seçin. Sohbet isteğe bağlıdır.',
-  propose: 'Yacht öner',
-  proposed: 'Yacht başlamaya hazır',
+  roomHint: 'Birlikte oynamak için {game} seçin. Sohbet isteğe bağlıdır.',
+  propose: '{game} öner',
+  proposed: '{game} başlamaya hazır',
   ready: 'Hazırım',
   waitingReady: 'Diğer oyuncu bekleniyor',
-  hostSelects: 'Her iki oyuncu da Yacht önerebilir.',
+  hostSelects: 'Her iki oyuncu da {game} önerebilir.',
   rematch: 'Yeni bir oyun öner',
   returnRoom: 'Buluşmaya dön',
   message: 'Mesaj',
@@ -73,7 +74,7 @@ export const tr: NearbyMessages = {
   leaveBody: 'Buluşma iki katılımcı için de biter. Yerel geçmişin bu cihazda kalır.',
   cancel: 'İptal',
   ended: 'Bağlantı sona erdi.',
-  retry: 'Yacht’a dön',
+  retry: '{game}’a dön',
   timeout: 'Zamanında yanıt alınamadı. İki cihaz hazır olduğunda yeniden başlayın.',
   connectionError:
     "Bağlanılamadı. İki cihazda da Bluetooth veya Wi-Fi'yi ve uygulama izinlerini kontrol edip yeniden deneyin.",

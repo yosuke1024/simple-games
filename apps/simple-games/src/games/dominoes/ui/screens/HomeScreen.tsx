@@ -9,6 +9,7 @@
  * asks with the shell's own reviewed wording.
  */
 import { useState } from 'react';
+import { PlayTogetherButton, type PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
@@ -17,7 +18,7 @@ import { IconChart } from '@/ui/components/icons';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { useDominoes } from '../../state/GameContext';
 
-export function DominoesHomeScreen() {
+export function DominoesHomeScreen(props: PlayTogetherProps) {
   const { navigate, stats, canResume, startNewGame, resumeGame, exitToCollection } = useDominoes();
   const { t } = useSettings();
   const [confirmReplace, setConfirmReplace] = useState(false);
@@ -62,6 +63,8 @@ export function DominoesHomeScreen() {
             {note ? <span className="btn-note">{note}</span> : null}
           </button>
         )}
+
+        <PlayTogetherButton {...props} />
 
         <nav className="home-chips">
           <button type="button" className="home-chip" onClick={() => navigate('stats')}>

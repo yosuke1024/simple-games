@@ -21,7 +21,8 @@
 import { memo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { useReducedMotion } from '@/ui/useReducedMotion';
-import { isDouble, lineEnds, tileId, type End, type Line } from '../../game';
+import { isDouble, lineEnds, tileId } from '../../game/engine';
+import type { End, Line } from '../../game/types';
 import { TileFace } from './TileFace';
 
 export interface DominoesLineProps {

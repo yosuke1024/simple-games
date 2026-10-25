@@ -1,6 +1,8 @@
 import type { CheckersMessages } from './en';
 
 export const hi: CheckersMessages = {
+  checkersSquareNamedKing: 'पंक्ति {row}, स्तंभ {col}: {name} का राजा',
+  checkersSquareNamedMan: 'पंक्ति {row}, स्तंभ {col}: {name} की गोटी',
   checkersName: 'Checkers',
   checkersChooseOpponent: 'अपना प्रतिद्वंद्वी चुनें',
   checkersDifficulty_easy: 'आसान',

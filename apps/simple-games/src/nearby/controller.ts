@@ -1,4 +1,6 @@
 import type { PluginListenerHandle } from '@capacitor/core';
+import { isNearbyGameId, NEARBY_GAME_CODES } from '../app/nearbyGameIds';
+import type { GameAdapter, NearbyGameId, Random } from './gameTypes';
 import { Channel } from './channel';
 import { Delivery } from './delivery';
 import {
@@ -10,18 +12,17 @@ import {
 } from './history';
 import {
   nearbyPlugin,
-  randomDie,
   randomId,
   type NativeEvent,
   type NearbyPlugin,
   type Transport,
 } from './native';
 import { Session } from './session';
-import { totals } from './yacht';
 
 export interface Setup {
   host: boolean;
   chatEnabled: boolean;
+  gameId: NearbyGameId;
   name: string;
   transport: Transport;
   public: boolean;
@@ -30,6 +31,7 @@ export type EndReason = 'ended' | 'timeout' | 'connectionError' | 'declined' | '
 // Native plugins are singletons. An old permission/start completion must never
 // close a newer gathering. The map also permits independent test devices.
 const owners = new WeakMap<NearbyPlugin, NearbyController>();
+const random: Random = () => crypto.getRandomValues(new Uint32Array(1))[0]! / 0x100000000;
 
 /** Owns exactly one user-started connection; opening history never instantiates it. */
 export class NearbyController {
@@ -63,6 +65,7 @@ export class NearbyController {
   private restarting = false;
   private authenticated = false;
   private deliveryPending = 0;
+  private readonly gameId: NearbyGameId;
   private delivery = new Delivery(
     (plain) => this.session?.receive(plain),
     () => this.observe(),
@@ -72,10 +75,19 @@ export class NearbyController {
     readonly setup: Setup,
     private readonly changed: () => void,
     private readonly plugin: NearbyPlugin = nearbyPlugin,
-  ) {}
+    private readonly adapter?: GameAdapter,
+  ) {
+    this.gameId = setup.gameId;
+  }
 
   async start() {
     if (this.state !== 'idle') return;
+    if (!isNearbyGameId(this.gameId) || (this.adapter?.id ?? 'yacht') !== this.gameId) {
+      this.state = 'ended';
+      this.reason = 'connectionError';
+      this.changed();
+      return;
+    }
     this.active = true;
     this.state = 'starting';
     this.changed();
@@ -83,7 +95,7 @@ export class NearbyController {
     if (old && old !== this) await old.stop();
     if (!this.active) return;
     owners.set(this.plugin, this);
-    this.label = `${this.setup.public ? 'P' : 'F'}-${randomId().slice(0, 6).toUpperCase()}`;
+    this.label = `${this.setup.public ? 'P' : 'F'}-${NEARBY_GAME_CODES[this.gameId]}${randomId().slice(0, 4).toUpperCase()}`;
     this.changed();
     try {
       this.data = await loadHistory(this.plugin);
@@ -99,10 +111,11 @@ export class NearbyController {
       this.session = new Session({
         host: this.setup.host,
         chatEnabled: this.setup.chatEnabled,
+        adapter: this.adapter,
         name: this.setup.name,
         nonce: randomId(),
         identity: this.data.identity,
-        die: randomDie,
+        random,
         send: (wire) => this.delivery.send(wire),
         changed: () => this.observe(),
       });
@@ -332,7 +345,9 @@ export class NearbyController {
     if (event.type === 'peer' && (this.state === 'discovering' || this.state === 'reconnecting')) {
       if (typeof event.id !== 'string' || typeof event.name !== 'string' || event.id.length > 256)
         return;
-      const name = /^[PF]-[A-F0-9]{6}$/.test(event.name) ? event.name : 'Nearby Play';
+      const name = event.name.toUpperCase();
+      if (!/^[PF]-[A-F0-9]{6}$/.test(name) || name.slice(2, 4) !== NEARBY_GAME_CODES[this.gameId])
+        return;
       if (this.state === 'reconnecting') {
         // Discovery metadata selects a candidate; only its cryptographic proof
         // can resume this gathering, even when another device copies the label.
@@ -446,11 +461,19 @@ export class NearbyController {
       const existing = gathering.games.find((g) => g.round === match.round);
       // Store start/end, not every intermediate board or die roll.
       if (!existing)
-        gathering.games.push({ round: match.round, at: now, finished: false, scores: [0, 0] });
+        gathering.games.push({
+          gameId: session.gameId,
+          round: match.round,
+          at: now,
+          finished: false,
+          scores: [0, 0],
+          winner: null,
+        });
       if (session.matchComplete || session.closed) {
         const game = gathering.games.find((g) => g.round === match.round)!;
         game.finished = session.matchComplete;
-        game.scores = totals(match) as [number, number];
+        game.scores = session.result!.scores;
+        game.winner = session.matchComplete ? session.result!.winner : null;
       }
     }
     if (!this.active && gathering.endedAt === undefined) gathering.endedAt = now;

@@ -1,6 +1,7 @@
 import type { GomokuMessages } from './en';
 
 export const th: GomokuMessages = {
+  gomokuPointNamed: 'แถว {row} คอลัมน์ {col}: หมากของ {name}',
   gomokuName: 'Gomoku',
   gomokuChooseOpponent: 'เลือกคู่แข่ง',
   gomokuDifficulty_easy: 'ง่าย',

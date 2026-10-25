@@ -30,14 +30,14 @@
 > 試用の言葉は書かない(Basic は未提供で、Trial の枠は運用で変わる)。**v1.5.0 の公開と同時に**、
 > 人間の承認の後で Console に反映する。v1.4.2 / v1.4.3 はテスト版なので掲載文は変えていない。
 
-> 掲載は収録ゲーム 41 本(Sudoku / Solitaire / Spider Solitaire / FreeCell /
+> 掲載は収録ゲーム 45 本(Sudoku / Solitaire / Spider Solitaire / FreeCell /
 > Mahjong Solitaire / Hearts / Gin Rummy / Minesweeper / Ludo / 2048 /
 > Block Puzzle / Checkers / Reversi / Connect Four / Gomoku / Bubble Pop /
 > Brick Breaker / Nonogram / Takuzu / Futoshiki /
 > Kakuro / Number Match / Quick Math / Schulte Table / Number Recall /
 > Water Sort / Sliding Puzzle / Memory Match / Sky Fighter / Bunny Hop /
 > Crown Grid / Number Path / Shape Regions / Yacht / Mancala / Dominoes /
-> Hit & Blow / Dots and Boxes / Binary Balance / Sudoku 6×6 / Box Regions)の
+> Hit & Blow / Dots and Boxes / Binary Balance / Sudoku 6×6 / Box Regions / Chess / Nested Tic-Tac-Toe / Scopa / Nim)の
 > 状態で書いてある。`src/app/registry.ts` の収録数と食い違ったらこちらが古い。
 >
 > **ドリル 3 本(Quick Math / Schulte Table / Number Recall)の掲載文では、
@@ -59,7 +59,7 @@
 > 3 本は 2026-10-22 から Web 版で配信中、残る 2 本も 2026-10-22 に製品オーナーの指示で `'web-beta'` にし、
 > 同日に Web 版で配信を始めた)。2026-10-19 からの組は 2026-10-22 に先行公開向けに実装した(registry では
 > 5 本とも `channel: 'web-beta'`。2026-10-23(JST、UTC では 2026-10-22 17:33)から Web 版で配信中)。名前はどれも同じ理由でここに書かない
-> (一覧は registry の `channel` と計画書)。掲載は正式収録の 41 本のままで、"46 本" とも
+> (一覧は registry の `channel` と計画書)。この段落の当時の掲載は正式収録41本で、"46 本" とも
 > "51 本" とも "56 本" とも書かない。
 >
 > **練習セット 5 本(Crown Grid / Number Path / Binary Balance / Sudoku 6×6 /
@@ -67,6 +67,9 @@
 > (名前の規則は下の「使用禁止表現」と [docs/BRAND.md](../../../docs/BRAND.md)
 > 「自社タイトルと比較対象の名前」)。LP や専用入口では「どれに近いか」を説明に
 > 必要な範囲で書いてよいが、ストアの掲載文はゲーム名の一覧と事実だけにとどめる。
+
+> **2026-10-25:** オーナーの正式収録判断に従いChess / Nested Tic-Tac-Toe / Scopa / Nimを追加し45本に更新。
+> これは次の収録版向けの掲載ドラフトであり、Console反映・ストア公開はまだ行っていない。
 
 ## タイトル候補(優先順)
 
@@ -192,6 +195,10 @@ INCLUDED GAMES
 • Binary Balance
 • Sudoku 6×6
 • Box Regions
+• Chess
+• Nested Tic-Tac-Toe
+• Scopa
+• Nim
 
 No game feature is locked behind a payment, and there is no subscription. Hints and undo are free wherever a game has them — no limit on how often you use them, and never an ad to watch first.
 

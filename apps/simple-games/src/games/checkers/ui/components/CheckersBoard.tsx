@@ -16,6 +16,7 @@
  * on flashes once, and a crowning pops its ring. Reduced Motion turns all of
  * it off and the pieces are simply where they landed (§10).
  */
+import type { Move } from '../../game/engine';
 import { memo, type CSSProperties } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { useReducedMotion } from '@/ui/useReducedMotion';
@@ -29,9 +30,7 @@ import {
   rowOf,
   sideOf,
   type Board,
-  type Move,
-} from '../../game';
-import type { LastMove } from '../../state/GameContext';
+} from '../../game/types';
 
 /** Per square travelled, so a jump does not take a step's time (§10). */
 const SLIDE_MS_PER_SQUARE = 110;
@@ -60,7 +59,8 @@ export interface CheckersBoardProps {
   movable: readonly number[];
   /** False while a dialog is up or the match is over: nothing is pressable. */
   playing: boolean;
-  lastMove: LastMove | null;
+  lastMove: { move: Move; crowned: boolean; stepId: number } | null;
+  opponentName?: string;
   onSquare: (cell: number) => void;
 }
 
@@ -72,6 +72,7 @@ export const CheckersBoard = memo(function CheckersBoard({
   playing,
   lastMove,
   onSquare,
+  opponentName,
 }: CheckersBoardProps) {
   const { t } = useSettings();
   const reducedMotion = useReducedMotion();
@@ -111,8 +112,12 @@ export const CheckersBoard = memo(function CheckersBoard({
                   ? t('checkersSquareYourKing', { row, col })
                   : t('checkersSquareYourMan', { row, col })
               : isKing(piece)
-                ? t('checkersSquareCpuKing', { row, col })
-                : t('checkersSquareCpuMan', { row, col });
+                ? opponentName
+                  ? t('checkersSquareNamedKing', { row, col, name: opponentName })
+                  : t('checkersSquareCpuKing', { row, col })
+                : opponentName
+                  ? t('checkersSquareNamedMan', { row, col, name: opponentName })
+                  : t('checkersSquareCpuMan', { row, col });
 
         return (
           <button

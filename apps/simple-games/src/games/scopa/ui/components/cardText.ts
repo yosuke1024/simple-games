@@ -5,7 +5,7 @@
  * translation keys, not glyphs left to the screen reader's mercy (§11.2).
  */
 import type { MessageKey, TranslateVars } from '@/i18n';
-import { faceOf, suitOf, type Card } from '../../game';
+import { faceOf, suitOf, type Card } from '../../game/cards';
 
 const SUIT_KEYS = [
   'scopaSuit_spades',

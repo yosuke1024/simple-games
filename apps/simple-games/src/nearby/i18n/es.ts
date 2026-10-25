@@ -2,6 +2,7 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const es: NearbyMessages = {
+  playerTurn: 'Turno de {name}',
   playTogether: 'Jugar con alguien',
   closeChat: 'Cerrar chat',
   unreadChat: 'Chat, mensajes sin leer',
@@ -45,12 +46,12 @@ export const es: NearbyMessages = {
   chatOn: 'Chat activado',
   chatOff: 'Chat desactivado',
   game: 'Juego',
-  roomHint: 'Elige Yacht para jugar juntos. El chat es opcional.',
-  propose: 'Proponer Yacht',
-  proposed: 'Yacht está listo para empezar',
+  roomHint: 'Elige {game} para jugar juntos. El chat es opcional.',
+  propose: 'Proponer {game}',
+  proposed: '{game} está listo para empezar',
   ready: 'Estoy listo',
   waitingReady: 'Esperando al otro jugador',
-  hostSelects: 'Cualquiera de los dos jugadores puede proponer Yacht.',
+  hostSelects: 'Cualquiera de los dos jugadores puede proponer {game}.',
   rematch: 'Proponer otra partida',
   returnRoom: 'Volver al encuentro',
   message: 'Mensaje',
@@ -76,7 +77,7 @@ export const es: NearbyMessages = {
     'El encuentro terminará para ambos participantes. Tu historial local permanecerá en este dispositivo.',
   cancel: 'Cancelar',
   ended: 'La conexión ha terminado.',
-  retry: 'Volver a Yacht',
+  retry: 'Volver a {game}',
   timeout: 'No hubo respuesta a tiempo. Vuelvan a empezar cuando ambos dispositivos estén listos.',
   connectionError:
     'No se pudo conectar. Revisen Bluetooth o Wi-Fi y los permisos de la app en ambos dispositivos y vuelvan a intentarlo.',

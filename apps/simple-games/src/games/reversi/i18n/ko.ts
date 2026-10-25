@@ -1,6 +1,8 @@
 import type { ReversiMessages } from './en';
 
 export const ko: ReversiMessages = {
+  reversiPassNamed: '{name}이 놓을 곳이 없어 상대가 한 번 더 둡니다',
+  reversiCellNamed: '{row}행 {col}열: {name}의 돌',
   reversiName: 'Reversi',
   reversiChooseOpponent: '상대 선택',
   reversiDifficulty_easy: '쉬움',

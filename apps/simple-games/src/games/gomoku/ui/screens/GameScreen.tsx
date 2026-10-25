@@ -23,6 +23,7 @@ import { IconBack, IconRetry, IconUndo } from '@/ui/components/icons';
 import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
 import { BLACK, canUndo, cpuColorOf } from '../../game';
 import { useGomoku } from '../../state/GameContext';
+import { useGomokuSelection } from '../useGomokuSelection';
 import { GomokuBoard } from '../components/GomokuBoard';
 import { GomokuResultOverlay } from '../components/GomokuResultOverlay';
 
@@ -30,39 +31,27 @@ export function GomokuGameScreen() {
   const { session, stats, lastMove, playCell, applyUndo, goHome, startNewGame } = useGomoku();
   const { t } = useSettings();
   const [confirmNewGame, setConfirmNewGame] = useState(false);
-  const [pending, setPending] = useState<number | null>(null);
 
   const over = session ? session.status !== 'playing' : false;
   const playersTurn = session ? session.toMove === session.playerColor && !over : false;
 
-  // A mark cannot outlive the turn it was made in.
-  useEffect(() => {
-    if (!playersTurn) setPending(null);
-  }, [playersTurn]);
-
-  const onPoint = useCallback(
+  const place = useCallback(
     (cell: number) => {
-      if (!playersTurn) return;
-      if (pending !== cell) {
-        // Aiming. Not a move, so no sound — nothing has happened yet.
-        setPending(cell);
-        return;
-      }
-      if (playCell(cell)) {
-        setPending(null);
-        sounds.select();
-        void haptics.tap();
-      }
+      if (!playCell(cell)) return false;
+      sounds.select();
+      void haptics.tap();
+      return true;
     },
-    [pending, playCell, playersTurn],
+    [playCell],
   );
+  const { pending, onPoint, clearSelection } = useGomokuSelection(playersTurn, place);
 
   const onUndo = useCallback(() => {
     if (applyUndo()) {
-      setPending(null);
+      clearSelection();
       sounds.undo();
     }
-  }, [applyUndo]);
+  }, [applyUndo, clearSelection]);
 
   // The CPU's reply arrives outside any tap of ours, so its sound is played
   // off the move record. One effect run per move: the counter is the identity.

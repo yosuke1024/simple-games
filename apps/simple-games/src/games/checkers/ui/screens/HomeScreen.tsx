@@ -12,6 +12,7 @@
  * That is the one thing here worth asking about first.
  */
 import { useState } from 'react';
+import { PlayTogetherButton, type PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
@@ -20,7 +21,7 @@ import { IconChart } from '@/ui/components/icons';
 import { DIFFICULTIES, type Difficulty } from '../../game';
 import { useCheckers } from '../../state/GameContext';
 
-export function CheckersHomeScreen() {
+export function CheckersHomeScreen(props: PlayTogetherProps) {
   const {
     navigate,
     session,
@@ -119,6 +120,8 @@ export function CheckersHomeScreen() {
             {t('checkersGoSecond')}
           </button>
         </div>
+
+        <PlayTogetherButton {...props} />
 
         <nav className="home-chips">
           <button type="button" className="home-chip" onClick={() => navigate('stats')}>

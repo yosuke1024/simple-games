@@ -76,8 +76,8 @@ export interface Deal {
  * to the CPU, fourteen face down in the order they will be drawn. The hands
  * are sorted for reading; the boneyard keeps its shuffled order.
  */
-export function dealFromSeed(seed: string): Deal {
-  const deck = shuffled(ALL_TILES, createRng(seed));
+export function dealFromSeed(seed: string, random: () => number = createRng(seed)): Deal {
+  const deck = shuffled(ALL_TILES, random);
   return {
     playerHand: sortTiles(deck.slice(0, HAND_SIZE)),
     cpuHand: sortTiles(deck.slice(HAND_SIZE, 2 * HAND_SIZE)),

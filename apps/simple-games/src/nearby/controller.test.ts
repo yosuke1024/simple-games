@@ -68,12 +68,12 @@ async function setup() {
   const a = native(),
     b = native();
   const host = create(
-    { host: true, name: 'A', public: true, chatEnabled: true, transport: 'ble' },
+    { host: true, name: 'A', public: true, chatEnabled: true, gameId: 'yacht', transport: 'ble' },
     () => {},
     a.plugin,
   );
   const guest = create(
-    { host: false, name: 'B', public: false, chatEnabled: true, transport: 'ble' },
+    { host: false, name: 'B', public: false, chatEnabled: true, gameId: 'yacht', transport: 'ble' },
     () => {},
     b.plugin,
   );
@@ -99,10 +99,55 @@ afterEach(async () => {
   vi.useRealTimers();
 });
 describe('nearby lifecycle and persistence', () => {
+  it('filters discovery by the selected game and never connects an unlisted peer', async () => {
+    const p = native();
+    const controller = create(
+      {
+        host: false,
+        name: 'A',
+        public: false,
+        chatEnabled: false,
+        gameId: 'yacht',
+        transport: 'ble',
+      },
+      () => {},
+      p.plugin,
+    );
+    await controller.start();
+    p.event({ type: 'peer', id: 'other-game', name: 'P-0A1234' });
+    p.event({ type: 'peer', id: 'old-label', name: 'Nearby Play' });
+    p.event({ type: 'peer', id: 'same-game', name: 'F-01ABCD' });
+    await settle();
+    expect(controller.peers).toEqual([{ id: 'same-game', name: 'F-01ABCD' }]);
+    await controller.connect('other-game');
+    expect(p.plugin.connect).not.toHaveBeenCalled();
+    await controller.connect('same-game');
+    expect(p.plugin.connect).toHaveBeenCalledExactlyOnceWith({ peerId: 'same-game' });
+  });
+  it('rejects a mismatched selected game and adapter before opening the radio', async () => {
+    const p = native();
+    const controller = create(
+      { host: true, name: 'A', public: false, chatEnabled: false, gameId: 'nim', transport: 'ble' },
+      () => {},
+      p.plugin,
+    );
+    await controller.start();
+    expect(controller.state).toBe('ended');
+    expect(controller.reason).toBe('connectionError');
+    expect(controller.session).toBeNull();
+    expect(p.plugin.start).not.toHaveBeenCalled();
+  });
   it('does no radio work on construction; approves, chats, starts Yacht and retains history after disconnect', async () => {
     const p = native();
     create(
-      { host: true, name: 'A', public: false, chatEnabled: true, transport: 'ble' },
+      {
+        host: true,
+        name: 'A',
+        public: false,
+        chatEnabled: true,
+        gameId: 'yacht',
+        transport: 'ble',
+      },
       () => {},
       p.plugin,
     );
@@ -190,7 +235,14 @@ describe('nearby lifecycle and persistence', () => {
         }),
     );
     const controller = create(
-      { host: true, name: 'A', public: false, chatEnabled: true, transport: 'ble' },
+      {
+        host: true,
+        name: 'A',
+        public: false,
+        chatEnabled: true,
+        gameId: 'yacht',
+        transport: 'ble',
+      },
       () => {},
       p.plugin,
     );
@@ -219,6 +271,7 @@ describe('nearby lifecycle and persistence', () => {
       name: 'A',
       public: false,
       chatEnabled: true,
+      gameId: 'yacht',
       transport: 'ble',
     } as const;
     const old = create(options, () => {}, p.plugin);
@@ -252,7 +305,14 @@ describe('nearby lifecycle and persistence', () => {
     async (attack) => {
       const p = native();
       const controller = create(
-        { host: false, name: 'A', public: false, chatEnabled: true, transport: 'ble' },
+        {
+          host: false,
+          name: 'A',
+          public: false,
+          chatEnabled: true,
+          gameId: 'yacht',
+          transport: 'ble',
+        },
         () => {},
         p.plugin,
       );

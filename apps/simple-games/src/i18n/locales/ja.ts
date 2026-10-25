@@ -1,6 +1,9 @@
 import type { Messages } from './en';
 
 export const ja: Messages = {
+  playTogether: '誰かと遊ぶ',
+  returnToTogether: '対戦に戻る',
+  playTogetherNote: '近くの人と接続して対戦',
   tagline: 'オフラインで遊べる。アカウント不要。機能課金なし。',
 
   resume: '続きから',

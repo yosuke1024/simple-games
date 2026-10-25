@@ -3,6 +3,9 @@
  * All other locales must provide every key (enforced by the Messages type).
  */
 export const en = {
+  playTogether: 'Play with someone',
+  returnToTogether: 'Back to multiplayer',
+  playTogetherNote: 'Connect with someone nearby for a match.',
   tagline: 'Works offline. No account. No paywalls.',
 
   // Home

@@ -1,3 +1,4 @@
+import type { LastMove } from '../../game/session';
 /**
  * The board (docs/DOTS_AND_BOXES_RULES.md §2, §10).
  *
@@ -33,8 +34,7 @@ import {
   hEdge,
   vEdge,
   type Board,
-  type LastMove,
-} from '../../game';
+} from '../../game/types';
 
 /** The owner's mark on a closed box (§10): drawn, not typed — no glyph to translate. */
 export function BoxMark({ owner }: { owner: 'you' | 'cpu' }) {
@@ -50,6 +50,7 @@ export function BoxMark({ owner }: { owner: 'you' | 'cpu' }) {
 }
 
 export interface DotsAndBoxesBoardProps {
+  opponentName?: string;
   board: Board;
   /** False while the CPU draws: the open edges answer nothing (§4). */
   playersTurn: boolean;
@@ -58,6 +59,7 @@ export interface DotsAndBoxesBoardProps {
 }
 
 export const DotsAndBoxesBoard = memo(function DotsAndBoxesBoard({
+  opponentName,
   board,
   playersTurn,
   lastMove,
@@ -125,7 +127,12 @@ export const DotsAndBoxesBoard = memo(function DotsAndBoxesBoard({
           .join(' ')}
         role="img"
         aria-label={
-          mine ? t('dotsAndBoxesLineYours', { line }) : t('dotsAndBoxesLineCpu', { line })
+          mine
+            ? t('dotsAndBoxesLineYours', { line })
+            : t(opponentName ? 'dotsAndBoxesLineOpponent' : 'dotsAndBoxesLineCpu', {
+                line,
+                player: opponentName ?? '',
+              })
         }
       />
     );
@@ -169,7 +176,10 @@ export const DotsAndBoxesBoard = memo(function DotsAndBoxesBoard({
               key={key}
               className="db-box db-box-cpu"
               role="img"
-              aria-label={t('dotsAndBoxesBoxCpu', place)}
+              aria-label={t(opponentName ? 'dotsAndBoxesBoxOpponent' : 'dotsAndBoxesBoxCpu', {
+                ...place,
+                player: opponentName ?? '',
+              })}
             >
               <BoxMark owner="cpu" />
             </span>

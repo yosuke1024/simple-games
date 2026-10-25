@@ -603,3 +603,37 @@ describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウ
     }
   });
 });
+
+describe('nearby entry preserves the CPU game', () => {
+  it('does not offer a connection without the shell callback', async () => {
+    renderGame(tutorialDone);
+    await screen.findByRole('button', { name: /Easy/ });
+    expect(
+      screen.queryByRole('button', { name: /Play with someone|Back to multiplayer/ }),
+    ).not.toBeInTheDocument();
+  });
+  it.each([false, true])('only invokes the shell with an active gathering=%s', async (active) => {
+    for (const [key, value] of Object.entries(tutorialDone)) deviceStore.set(key, value);
+    const saved = JSON.stringify(
+      toPersisted(createSession('easy', BLACK, 'gomoku-nearby-entry'), 1),
+    );
+    deviceStore.set(GM_STORAGE_KEYS.game, saved);
+    const onPlayTogether = vi.fn();
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <GomokuRoot onExit={vi.fn()} onPlayTogether={onPlayTogether} playTogetherActive={active} />
+      </SettingsProvider>,
+    );
+    await screen.findByRole('button', { name: /Easy/ });
+    await act(async () => undefined);
+    const before = new Map(deviceStore);
+    fireEvent.click(
+      screen.getByRole('button', { name: active ? /Back to multiplayer/ : /Play with someone/ }),
+    );
+    await act(async () => undefined);
+    expect(onPlayTogether).toHaveBeenCalledTimes(1);
+    expect(deviceStore).toEqual(before);
+    expect(deviceStore.get(GM_STORAGE_KEYS.game)).toBe(saved);
+    expect(screen.queryByRole('group', { name: /Gomoku board/ })).not.toBeInTheDocument();
+  });
+});

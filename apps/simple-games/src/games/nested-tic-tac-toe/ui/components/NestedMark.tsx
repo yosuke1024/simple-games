@@ -6,7 +6,7 @@
  * comes from the element it sits in; the shapes differ, so colour is never
  * the only cue. Decorative: the cell's own label names the mark.
  */
-import { CROSS, type Mark } from '../../game';
+import { CROSS, type Mark } from '../../game/types';
 
 export function NestedMark({
   mark,

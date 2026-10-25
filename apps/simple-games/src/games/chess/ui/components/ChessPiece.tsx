@@ -14,7 +14,7 @@
  */
 import { memo } from 'react';
 import { CHESS_PIECE_BASE_PATH, KnightArtwork } from '@/ui/components/KnightArtwork';
-import { BISHOP, KING, KNIGHT, PAWN, QUEEN, ROOK } from '../../game';
+import { BISHOP, KING, KNIGHT, PAWN, QUEEN, ROOK } from '../../game/types';
 
 function Shape({ kind }: { kind: number }) {
   switch (kind) {

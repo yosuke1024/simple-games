@@ -12,31 +12,38 @@
  */
 import { memo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
-import {
-  captureSummary,
-  CPU,
-  SEVEN_OF_DIAMONDS,
-  YOU,
-  type BySeat,
-  type DealState,
-  type Seat,
-} from '../../game';
+import { captureSummary } from '../../game/engine';
+import { SEVEN_OF_DIAMONDS } from '../../game/cards';
+import { CPU, YOU, type BySeat, type DealState, type Seat } from '../../game/types';
 import { MiniCard, ScopaMark } from './CardFace';
 import { SuitIcon } from './suits';
 
 export interface CaptureBandProps {
-  deal: DealState;
+  deal?: DealState;
+  view?: Pick<DealState, 'dealer' | 'captured' | 'scopas'> & { opponentCount: number };
+  localSeat?: Seat;
+  names?: readonly string[];
   scores: BySeat<number>;
   /** The side whose scopa was just announced, for a moment's emphasis. */
   flash: Seat | null;
 }
 
-export const CaptureBand = memo(function CaptureBand({ deal, scores, flash }: CaptureBandProps) {
+export const CaptureBand = memo(function CaptureBand({
+  deal,
+  view,
+  scores,
+  flash,
+  localSeat = YOU,
+  names,
+}: CaptureBandProps) {
   const { t } = useSettings();
 
+  const shown = view ?? (deal ? { ...deal, opponentCount: deal.hands[CPU].length } : null);
+  if (!shown) return null;
+  const peer = localSeat === YOU ? CPU : YOU;
   const row = (seat: Seat) => {
-    const summary = captureSummary(deal, seat);
-    const who = seat === YOU ? t('scopaYou') : t('scopaCpu');
+    const summary = captureSummary(shown, seat);
+    const who = names?.[seat] ?? (seat === YOU ? t('scopaYou') : t('scopaCpu'));
     // One sentence per row, owned by the catalog: the 7♦ and the dealer are
     // filled into it from their own keys, which carry their own punctuation,
     // so each language orders and joins them itself (§12).
@@ -47,9 +54,9 @@ export const CaptureBand = memo(function CaptureBand({ deal, scores, flash }: Ca
       diamonds: summary.diamonds,
       scopas: summary.scopas,
       settebello: summary.settebello ? t('scopaBandSettebello') : '',
-      dealer: deal.dealer === seat ? t('scopaBandDealer') : '',
+      dealer: shown.dealer === seat ? t('scopaBandDealer') : '',
     });
-    const held = deal.hands[CPU].length;
+    const held = shown.opponentCount;
     return (
       <div
         className={`sc-band-row ${flash === seat ? 'sc-band-flash' : ''}`}
@@ -63,7 +70,7 @@ export const CaptureBand = memo(function CaptureBand({ deal, scores, flash }: Ca
           {scores[seat]}
         </span>
         <span
-          className={`sc-dealer ${deal.dealer === seat ? '' : 'sc-dealer-off'}`}
+          className={`sc-dealer ${shown.dealer === seat ? '' : 'sc-dealer-off'}`}
           aria-hidden="true"
         />
         <span className="sc-band-tally" aria-hidden="true">
@@ -86,9 +93,13 @@ export const CaptureBand = memo(function CaptureBand({ deal, scores, flash }: Ca
             {summary.scopas}
           </span>
         </span>
-        {seat === CPU ? (
-          <span className="sc-backs" role="img" aria-label={t('scopaCpuHandLabel', { n: held })}>
-            {deal.hands[CPU].map((_, index) => (
+        {seat === peer ? (
+          <span
+            className="sc-backs"
+            role="img"
+            aria-label={names ? `${who} · ${held}` : t('scopaCpuHandLabel', { n: held })}
+          >
+            {Array.from({ length: held }, (_, index) => (
               <span key={index} className="sc-back" />
             ))}
           </span>
@@ -99,8 +110,8 @@ export const CaptureBand = memo(function CaptureBand({ deal, scores, flash }: Ca
 
   return (
     <div className="sc-band">
-      {row(CPU)}
-      {row(YOU)}
+      {row(peer)}
+      {row(localSeat)}
     </div>
   );
 });

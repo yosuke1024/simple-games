@@ -1,6 +1,8 @@
 import type { ReversiMessages } from './en';
 
 export const tr: ReversiMessages = {
+  reversiPassNamed: '{name} hamle yapamıyor — diğer oyuncu tekrar oynar',
+  reversiCellNamed: 'Satır {row}, sütun {col}: {name} adlı oyuncunun taşı',
   reversiName: 'Reversi',
   reversiChooseOpponent: 'Rakibini seç',
   reversiDifficulty_easy: 'Kolay',

@@ -1,18 +1,19 @@
 import {
-  apply,
-  finished,
   integer,
-  isAction,
-  isMatch,
-  newMatch,
+  isGameResult,
   record,
-  turn,
-  type Action,
-  type Match,
-} from './yacht';
+  type GameAdapter,
+  type GameResult,
+  type NearbyMatch,
+  type Random,
+  type Seat,
+} from './gameTypes';
+import { adapter as yachtAdapter } from './games/yacht';
 
 export const MAX_FRAME_BYTES = 4096;
-export const PROTOCOL_VERSION = 5;
+// Leave room for delivery seq/ACK before the channel's 2800-byte plaintext cap.
+export const MAX_MESSAGE_BYTES = 2600;
+export const PROTOCOL_VERSION = 6;
 export const MAX_CHAT_CHARACTERS = 160;
 export const MAX_CHAT_MESSAGES = 1000;
 const token = (v: unknown): v is string => typeof v === 'string' && /^[a-f0-9]{32}$/.test(v);
@@ -42,7 +43,9 @@ export interface Options {
   name: string;
   nonce: string;
   identity: string;
-  die: () => number;
+  adapter?: GameAdapter;
+  random?: Random;
+  die?: () => number; // Compatibility seam for deterministic Yacht tests.
   send: (message: Wire) => void;
   changed: () => void;
 }
@@ -51,6 +54,7 @@ export interface Options {
 export class Session {
   readonly host: boolean;
   readonly name: string;
+  readonly adapter: GameAdapter;
   peerName = '';
   peerIdentity = '';
   sid = '';
@@ -60,7 +64,7 @@ export class Session {
   messages: ChatMessage[] = [];
   localReady = false;
   peerReady = false;
-  match: Match | null = null;
+  match: NearbyMatch | null = null;
   pending = false;
   closed = '';
   suspended = false;
@@ -78,18 +82,40 @@ export class Session {
   private lastReceivedText = '';
   private approvalSent = false;
   private roomChatEnabled: boolean;
+  private fullState: unknown;
+  private guestMatch: NearbyMatch | null = null;
+  private readonly random: Random;
 
   constructor(private readonly options: Options) {
     if (!token(options.nonce) || !token(options.identity) || !isPlayerName(options.name))
       throw new Error('Invalid session identity');
     this.host = options.host;
     this.name = options.name;
+    this.adapter = options.adapter ?? yachtAdapter;
+    this.random = () => {
+      const value = options.random
+        ? options.random()
+        : options.die
+          ? (options.die() - 1) / 6
+          : Math.random();
+      if (!Number.isFinite(value) || value < 0 || value >= 1) throw new Error('Invalid host RNG');
+      return value;
+    };
     // Only the host chooses the immutable room policy. A guest learns it from
     // the first host hello; its local setup can never enable room chat.
     this.roomChatEnabled = options.host && options.chatEnabled === true;
   }
   get paired() {
     return !!this.peerNonce && this.admission === 'approved' && !this.closed;
+  }
+  get gameId() {
+    return this.adapter.id;
+  }
+  get seat(): Seat {
+    return this.host ? 0 : 1;
+  }
+  get result(): GameResult | null {
+    return this.match ? this.adapter.result(this.match.state) : null;
   }
   get chatPending() {
     return this.pendingChatSeq !== 0;
@@ -105,15 +131,15 @@ export class Session {
       this.paired &&
       !this.suspended &&
       this.match !== null &&
-      !finished(this.match) &&
+      !this.adapter.finished(this.match.state) &&
       !this.pending &&
-      turn(this.match) === (this.host ? 0 : 1)
+      this.adapter.turn(this.match.state) === this.seat
     );
   }
   get matchComplete() {
     return !!(
       this.match &&
-      finished(this.match) &&
+      this.adapter.finished(this.match.state) &&
       (!this.host || this.acknowledgedStateSeq === this.stateSeq)
     );
   }
@@ -121,8 +147,8 @@ export class Session {
     return this.host ? [this.name, this.peerName] : [this.peerName, this.name];
   }
   private send(type: string, fields: Record<string, unknown> = {}) {
-    const wire: Wire = { v: PROTOCOL_VERSION, type, sid: this.sid, ...fields };
-    if (new TextEncoder().encode(JSON.stringify(wire)).length > MAX_FRAME_BYTES)
+    const wire: Wire = { v: PROTOCOL_VERSION, type, sid: this.sid, gameId: this.gameId, ...fields };
+    if (new TextEncoder().encode(JSON.stringify(wire)).length > MAX_MESSAGE_BYTES)
       throw new Error('Frame limit');
     this.options.send(wire);
   }
@@ -135,6 +161,7 @@ export class Session {
     this.options.send({
       v: PROTOCOL_VERSION,
       type: 'hello',
+      gameId: this.gameId,
       name: this.name,
       host: this.host,
       nonce: this.options.nonce,
@@ -190,7 +217,7 @@ export class Session {
     this.proposedRound = round;
     this.gameProposed = true;
     this.localReady = this.peerReady = false;
-    this.send('game-proposal', { round, game: 'yacht' });
+    this.send('game-proposal', { round });
     this.changed();
   }
   ready() {
@@ -223,27 +250,112 @@ export class Session {
       this.end('Round limit');
       return;
     }
-    this.match = newMatch(round);
+    try {
+      if (!this.setFullState(this.adapter.create(this.random), round, 0)) return;
+    } catch {
+      this.end('Invalid game state');
+      return;
+    }
     this.gameProposed = false;
     this.localReady = this.peerReady = false;
     this.publish();
   }
   private publish() {
-    if (!this.match || this.pending) return;
+    if (!this.guestMatch || this.pending) return;
     if (this.stateSeq >= 1000000) {
       this.end('State sequence limit');
       return;
     }
     // Native send acceptance is not proof that the peer received this snapshot.
     this.pending = true;
-    this.send('state', { match: this.match, ack: this.receivedSeq, stateSeq: ++this.stateSeq });
+    this.send('state', {
+      match: this.guestMatch,
+      ack: this.receivedSeq,
+      stateSeq: ++this.stateSeq,
+    });
   }
-  act(action: Action) {
-    if (!isAction(action) || !this.canAct || !this.match) return;
+  private setFullState(full: unknown, round: number, revision: number): boolean {
+    // Clone projections even when a public-information adapter returns full
+    // directly. UI state and transmitted snapshots must not alias host secrets.
+    const projection = (seat: Seat): NearbyMatch => ({
+      gameId: this.gameId,
+      round,
+      revision,
+      state: JSON.parse(JSON.stringify(this.adapter.project(full, seat))),
+    });
+    try {
+      const local = projection(0),
+        guest = projection(1);
+      if (!this.validMatch(local) || !this.validMatch(guest)) throw new Error('Invalid projection');
+      if (
+        this.adapter.turn(local.state) !== this.adapter.turn(guest.state) ||
+        JSON.stringify(this.adapter.result(local.state)) !==
+          JSON.stringify(this.adapter.result(guest.state))
+      )
+        throw new Error('Inconsistent projection');
+      const frame = {
+        v: PROTOCOL_VERSION,
+        type: 'state',
+        sid: this.sid,
+        gameId: this.gameId,
+        match: guest,
+        ack: 1000000,
+        stateSeq: 1000000,
+      };
+      if (new TextEncoder().encode(JSON.stringify(frame)).length > MAX_MESSAGE_BYTES)
+        throw new Error('Projection limit');
+      this.fullState = full;
+      this.match = local;
+      this.guestMatch = guest;
+      return true;
+    } catch {
+      this.end('Invalid game state');
+      return false;
+    }
+  }
+  private validMatch(value: unknown): value is NearbyMatch {
+    try {
+      if (!(
+        record(value) &&
+        value.gameId === this.gameId &&
+        Object.keys(value).length === 4 &&
+        integer(value.round, 1, 10000) &&
+        integer(value.revision, 0, 100000) &&
+        this.adapter.isView(value.state)
+      ))
+        return false;
+      const result = this.adapter.result(value.state);
+      const finished = this.adapter.finished(value.state);
+      return (
+        integer(this.adapter.turn(value.state), 0, 1) &&
+        typeof finished === 'boolean' &&
+        isGameResult(result) &&
+        finished === (result.winner !== null)
+      );
+    } catch {
+      return false;
+    }
+  }
+  private applyAction(seat: Seat, action: unknown): boolean {
+    if (
+      !this.match ||
+      this.adapter.finished(this.match.state) ||
+      this.adapter.turn(this.match.state) !== seat ||
+      this.match.revision >= 100000
+    )
+      return false;
+    try {
+      const next = this.adapter.apply(this.fullState, seat, action, this.random);
+      return next !== null && this.setFullState(next, this.match.round, this.match.revision + 1);
+    } catch {
+      this.end('Invalid game state');
+      return false;
+    }
+  }
+  act(action: unknown) {
+    if (!this.adapter.isAction(action) || !this.canAct || !this.match) return;
     if (this.host) {
-      const next = apply(this.match, 0, action, this.options.die);
-      if (!next) return;
-      this.match = next;
+      if (!this.applyAction(0, action)) return;
       this.publish();
     } else {
       this.pending = true;
@@ -321,7 +433,7 @@ export class Session {
     }
     let v: unknown;
     try {
-      if (new TextEncoder().encode(raw).length > MAX_FRAME_BYTES || /[\r\n]/.test(raw))
+      if (new TextEncoder().encode(raw).length > MAX_MESSAGE_BYTES || /[\r\n]/.test(raw))
         throw new Error();
       v = JSON.parse(raw);
     } catch {
@@ -330,6 +442,10 @@ export class Session {
     }
     if (!record(v) || v.v !== PROTOCOL_VERSION || typeof v.type !== 'string') {
       this.end('Protocol mismatch');
+      return;
+    }
+    if (v.gameId !== this.gameId) {
+      this.end('Wrong game');
       return;
     }
     if (v.type === 'hello') {
@@ -396,7 +512,6 @@ export class Session {
       return;
     } else if (v.type === 'game-proposal') {
       if (
-        v.game !== 'yacht' ||
         !integer(v.round, 1, 10000) ||
         v.round !== (this.match?.round ?? 0) + 1 ||
         this.pending ||
@@ -452,7 +567,7 @@ export class Session {
         !integer(v.seq, 1, 1000000) ||
         !integer(v.revision, 0, 100000) ||
         !integer(v.round, 1, 10000) ||
-        !isAction(v.action)
+        !this.adapter.isAction(v.action)
       ) {
         this.end('Invalid command');
         return;
@@ -462,7 +577,11 @@ export class Session {
         // An already acknowledged snapshot stays acknowledged. Starting another ACK
         // wait here could race with the guest's next command already in transit.
         if (!this.pending)
-          this.send('state', { match: this.match, ack: this.receivedSeq, stateSeq: this.stateSeq });
+          this.send('state', {
+            match: this.guestMatch,
+            ack: this.receivedSeq,
+            stateSeq: this.stateSeq,
+          });
         return;
       }
       if (this.pending) {
@@ -475,12 +594,16 @@ export class Session {
       }
       this.receivedSeq = v.seq;
       if (v.round === this.match.round && v.revision === this.match.revision) {
-        const next = apply(this.match, 1, v.action, this.options.die);
-        if (next) this.match = next;
+        this.applyAction(1, v.action);
+        if (this.closed) return;
       }
       this.publish();
     } else if (v.type === 'state' && !this.host) {
-      if (!isMatch(v.match) || !integer(v.ack, 0, this.seq) || !integer(v.stateSeq, 1, 1000000)) {
+      if (
+        !this.validMatch(v.match) ||
+        !integer(v.ack, 0, this.seq) ||
+        !integer(v.stateSeq, 1, 1000000)
+      ) {
         this.end('Invalid state');
         return;
       }
@@ -503,8 +626,7 @@ export class Session {
           incoming.round !== this.proposedRound ||
           !this.localReady ||
           !this.peerReady ||
-          incoming.revision !== 0 ||
-          JSON.stringify(incoming) !== JSON.stringify(newMatch(round + 1))
+          incoming.revision !== 0
         ) {
           this.end('Unexpected new match');
           return;

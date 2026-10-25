@@ -6,6 +6,8 @@ import {
   saveGathering,
   validateHistory,
   blockIdentity,
+  savedGameId,
+  savedGameResult,
   type Gathering,
 } from './history';
 function store() {
@@ -59,6 +61,49 @@ async function slowStore() {
 }
 
 describe('device-only nearby history', () => {
+  it('keeps legacy v1 Yacht intact while storing explicit game results in new records', async () => {
+    const io = store();
+    await loadHistory(io);
+    const legacy = gathering();
+    await saveGathering(legacy, io);
+    const current = gathering();
+    current.id = 'b'.repeat(32);
+    current.games = [
+      { gameId: 'gin-rummy', round: 1, at: 100, finished: true, scores: [500, 200], winner: 0 },
+      { gameId: 'chess', round: 2, at: 105, finished: true, scores: [0, 0], winner: 'draw' },
+      { gameId: 'nim', round: 3, at: 110, finished: false, scores: [0, 0], winner: null },
+    ];
+    await saveGathering(current, io);
+    const saved = await loadHistory(io);
+    expect(saved.version).toBe(1);
+    expect(saved.gatherings).toEqual([current, legacy]);
+    expect(savedGameId(legacy.games[0]!)).toBe('yacht');
+    expect(savedGameResult(legacy.games[0]!)).toEqual({ scores: [40, 32], winner: 0 });
+    expect(savedGameResult(current.games[1]!)).toEqual({ scores: [0, 0], winner: 'draw' });
+    expect(savedGameResult(current.games[2]!)).toEqual({ scores: [0, 0], winner: null });
+  });
+  it.each([
+    { gameId: 'unknown', winner: 0 },
+    { gameId: 'chess' },
+    { winner: 0 },
+    { gameId: 'chess', winner: 2 },
+    { gameId: 'chess', winner: null },
+    { gameId: 'chess', winner: 0, scores: [NaN, 0] },
+    { gameId: 'chess', winner: 0, scores: [1000001, 0] },
+    { gameId: 'chess', winner: 0, finished: false },
+  ])(
+    'refuses an invalid new result without overwriting existing v1 history (%#)',
+    async (fields) => {
+      const io = store();
+      await loadHistory(io);
+      const legacy = gathering();
+      await saveGathering(legacy, io);
+      const before = (await io.readHistory()).data;
+      const invalid = { ...legacy, games: [{ ...legacy.games[0], ...fields }] };
+      await expect(saveGathering(invalid as Gathering, io)).rejects.toThrow('History full');
+      expect((await io.readHistory()).data).toBe(before);
+    },
+  );
   it('retains transcripts after closing and rereading, independently of other participants', async () => {
     const a = store(),
       b = store();

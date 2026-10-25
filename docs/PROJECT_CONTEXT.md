@@ -42,10 +42,14 @@ Design philosophy:
 ### Collection
 
 - 1つの `Simple Games: Offline Games` として提供する。
-- 現在の正式収録は **41 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ。
-  本数はここで数える)。`GAMES` の全 66 エントリには、下の `channel: 'web-beta'` の 25 本(Web 先行公開中の
-  No. 42〜46・No. 47〜51・No. 52〜56・No. 57〜61・No. 62〜66)も含まれる。
+- 現在の正式収録は **45 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ。
+  本数はここで数える)。`GAMES` の全 66 エントリには、下の `channel: 'web-beta'` の 21 本(Web 先行公開中の
+  No. 42〜66 のうち、下記4本を除くタイトル)も含まれる。
   `'in-development'` のエントリはいま無い。
+- 2026-10-25、オーナーの「13本すべてをアプリに収録する」という明示判断で、Chess /
+  Nested Tic-Tac-Toe / Scopa / Nim の4本を正式収録へ変更した。以下の各組の公開経緯は当時の記録で、
+  この4本の現在のチャンネルは正式収録である。2週間の安定稼働の達成を意味しない。
+  保存スキーマを凍結し、実機確認・掲載反映・ストア配布の完了は別に記録する。
 - 2026-10-02 に、Web 版で先行公開していた新作 11 本(Crown Grid / Number Path /
   Shape Regions、2026-09-26、issue #194。Yacht / Mancala / Dominoes / Hit & Blow /
   Dots and Boxes、2026-09-27、issue #197。Binary Balance / Sudoku 6×6 / Box Regions、
@@ -139,9 +143,9 @@ Design philosophy:
 
 2026-10-25、オーナーが製品実装を指示し、1.5.1 の実機フィードバック後に入口を改定。
 native の対応ゲームのトップに **「誰かと遊ぶ」** を置き、近くの相手と Bluetooth／同一 Wi-Fi で
-遊ぶことを短く補足する。最初の対応は Yacht だけ。コレクションの独立した Nearby 入口は
+遊ぶことを短く補足する。対応は1対1ターン制の13本（Yacht / Reversi / Connect Four / Gomoku / Checkers / Gin Rummy / Mancala / Dominoes / Dots and Boxes / Chess / Nested Tic-Tac-Toe / Scopa / Nim）。コレクションの独立した Nearby 入口は
 削除し、Club House からも開始しない。他ゲームに未実装のボタンを置かない。
-ゲーム選択済み → 募集／参加 → host承認 → 双方Ready → 既存 Yacht と共通の画面で対局。
+ゲーム選択済み → 募集／参加 → host承認 → 双方Ready → 各ゲームの既存CPU戦と共通の盤面・操作で対局。
 初回に同じゲームをもう一度提案する操作は求めない。接続を画面から分離し、ゲームトップへ
 戻っても保持する。同じ入口から進行中の対戦へ戻れ、明示的な退出／解散で接続を終える。
 終局後は結果と再戦を主にし、双方Readyで再戦する。募集時にhostがチャットの有無を選び、
@@ -359,7 +363,7 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 - game の変更: 対象 `*_RULES.md`
 - storage / migration: `ARCHITECTURE.md` + 対象 game rules
 - backup / restore: `architecture/backup.md`(保存領域の所有と復元の安全性)
-- nearby(`src/nearby/`、隔離実験の `prototypes/nearby/`): `PRODUCT_PRINCIPLES.md`「Nearby Play」+ `OFFLINE_POLICY.md` + `architecture/nearby-multiplayer.md`。Yacht の変更は `YACHT_RULES.md` も読む。
+- nearby(`src/nearby/`、隔離実験の `prototypes/nearby/`): `PRODUCT_PRINCIPLES.md`「Nearby Play」+ `OFFLINE_POLICY.md` + `architecture/nearby-multiplayer.md`。各ゲーム変更では対応する `*_RULES.md` も読む。
 - club house(`src/club/`、Public / Private、対応ゲームの `challenge/`): `PRODUCT_PRINCIPLES.md`「Club House」+ `architecture/club.md`
 - ads / purchase: `ADS_POLICY.md`
 - Android acquisition measurement (Meta, `android/app/src/metaOn` / `metaOff`, `.github/scripts/check-principles.sh` §8): `PRODUCT_PRINCIPLES.md`「Android の獲得計測(Meta)」+ `META_ANDROID_ACQUISITION.md`

@@ -22,8 +22,9 @@ import { BannerSlot } from '@/ui/components/BannerSlot';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconRetry, IconUndo } from '@/ui/components/icons';
 import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
-import { canUndo, currentMoves, CPU, PLAYER } from '../../game';
+import { canUndo, currentMoves, CPU, PLAYER, type Move } from '../../game';
 import { useCheckers } from '../../state/GameContext';
+import { useCheckersSelection } from '../useCheckersSelection';
 import { CheckersBoard } from '../components/CheckersBoard';
 import { CheckersResultOverlay } from '../components/CheckersResultOverlay';
 
@@ -31,64 +32,35 @@ export function CheckersGameScreen() {
   const { session, stats, lastMove, playStep, applyUndo, goHome, startNewGame } = useCheckers();
   const { t } = useSettings();
   const [confirmNewGame, setConfirmNewGame] = useState(false);
-  const [selected, setSelected] = useState<number | null>(null);
 
   const over = session ? session.status !== 'playing' : false;
   const playersTurn = session ? session.toMove === PLAYER && !over : false;
 
   // Everything the player may do right now, from the rules and nothing else.
   const moves = useMemo(() => (session ? currentMoves(session) : []), [session]);
-  const movable = useMemo(
-    () => (playersTurn ? [...new Set(moves.map((move) => move.from))] : []),
-    [moves, playersTurn],
-  );
-
-  // Mid-sequence the piece is not a choice: the same one must jump on, so it
-  // is held for the player rather than asking them to pick it again (§2).
   const forcedFrom = session?.pendingJumpFrom ?? null;
-  useEffect(() => {
-    if (forcedFrom !== null) setSelected(forcedFrom);
-  }, [forcedFrom]);
-
-  // A selection cannot outlive the position it was made in.
-  useEffect(() => {
-    if (!playersTurn) setSelected(null);
-  }, [playersTurn]);
-
-  const targets = useMemo(
-    () =>
-      selected === null
-        ? []
-        : moves.filter((move) => move.from === selected).map((move) => move.to),
-    [moves, selected],
-  );
-
-  const onSquare = useCallback(
-    (cell: number) => {
-      if (!playersTurn) return;
-      const move =
-        selected === null ? null : moves.find((m) => m.from === selected && m.to === cell);
-      if (move) {
-        if (playStep(move)) {
-          sounds.select();
-          void haptics.tap();
-        }
-        return;
-      }
-      // Not a destination: either picking a piece up, or putting it back
-      // down. Neither is a mistake, so neither makes a sound (§10).
-      if (movable.includes(cell)) setSelected(cell === selected ? null : cell);
-      else if (selected !== null && forcedFrom === null) setSelected(null);
+  const play = useCallback(
+    (move: Move) => {
+      if (!playStep(move)) return false;
+      sounds.select();
+      void haptics.tap();
+      return true;
     },
-    [forcedFrom, movable, moves, playStep, playersTurn, selected],
+    [playStep],
+  );
+  const { selected, targets, movable, onSquare, clearSelection } = useCheckersSelection(
+    playersTurn,
+    moves,
+    forcedFrom,
+    play,
   );
 
   const onUndo = useCallback(() => {
     if (applyUndo()) {
-      setSelected(null);
+      clearSelection();
       sounds.undo();
     }
-  }, [applyUndo]);
+  }, [applyUndo, clearSelection]);
 
   // The CPU's steps arrive outside any tap of ours, so their sounds are
   // played off the move record. One effect run per step: the counter is the

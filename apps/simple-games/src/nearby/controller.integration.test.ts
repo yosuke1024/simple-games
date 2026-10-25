@@ -4,6 +4,9 @@ import { setImmediate as nextTurn } from 'node:timers/promises';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NearbyController } from './controller';
 import { loadHistory } from './history';
+import type { GameAdapter } from './gameTypes';
+import { adapter as ginAdapter, type GinView } from './games/gin-rummy';
+import type { Match as YachtMatch } from './yacht';
 import * as nativeModule from './native';
 import type { NativeEvent, NearbyPlugin } from './native';
 
@@ -48,11 +51,24 @@ function native() {
   return { plugin, emit, frames, sent };
 }
 
-function controller(host: boolean, plugin: NearbyPlugin, chatEnabled = true) {
+function controller(
+  host: boolean,
+  plugin: NearbyPlugin,
+  chatEnabled = true,
+  adapter?: GameAdapter,
+) {
   const value = new NearbyController(
-    { host, name: host ? 'Host' : 'Guest', public: true, chatEnabled, transport: 'ble' },
+    {
+      host,
+      name: host ? 'Host' : 'Guest',
+      public: true,
+      chatEnabled,
+      gameId: adapter?.id ?? 'yacht',
+      transport: 'ble',
+    },
     () => {},
     plugin,
+    adapter,
   );
   controllers.push(value);
   return value;
@@ -69,11 +85,11 @@ async function until(condition: () => boolean, deliver: () => void = () => {}) {
   }
 }
 
-async function pair(chatEnabled = true) {
+async function pair(chatEnabled = true, adapter?: GameAdapter) {
   const a = native();
   const b = native();
-  const host = controller(true, a.plugin, chatEnabled);
-  const guest = controller(false, b.plugin);
+  const host = controller(true, a.plugin, chatEnabled, adapter);
+  const guest = controller(false, b.plugin, true, adapter);
   const deliver = () => {
     while (a.frames.length) b.emit({ type: 'data', data: a.frames.shift()! });
     while (b.frames.length) a.emit({ type: 'data', data: b.frames.shift()! });
@@ -116,6 +132,89 @@ afterEach(async () => {
 });
 
 describe('nearby controller with the real encrypted channel', () => {
+  it('resumes a private-hand game after a lost guest command without redealing or replacing either projection', async () => {
+    // Dealer zero makes the guest act first; all shuffling remains host-owned.
+    const create = vi.fn(() => ginAdapter.create(() => 0.25));
+    const adapter: GameAdapter = { ...ginAdapter, create };
+    const { a, b, host, guest, pump, drain } = await pair(false, adapter);
+    expect(host.label).toMatch(/^P-06[A-F0-9]{4}$/);
+    expect(host.session!.gameId).toBe('gin-rummy');
+    expect(guest.session!.gameId).toBe('gin-rummy');
+    // Possessing a private game channel never implies host approval.
+    guest.session!.ready();
+    expect(guest.session!.match).toBeNull();
+    expect(create).not.toHaveBeenCalled();
+    host.session!.approve();
+    await pump(() => host.state === 'room' && guest.state === 'room');
+    host.session!.proposeGame();
+    await pump(() => guest.session!.gameProposed);
+    host.session!.ready();
+    guest.session!.ready();
+    await pump(() => !!guest.session!.match && !host.session!.pending);
+    await drain();
+    const hostCards = [...(host.session!.match!.state as GinView).cards];
+    const guestCards = [...(guest.session!.match!.state as GinView).cards];
+    const upcard = (guest.session!.match!.state as GinView).discardTop!;
+    expect(hostCards.some((card) => guestCards.includes(card))).toBe(false);
+    expect(guest.session!.canAct).toBe(true);
+    guest.session!.act({ kind: 'take-upcard' });
+    await until(() => b.frames.length > 0);
+    a.frames.length = b.frames.length = 0; // Drop the encrypted command, then lose the radio.
+    a.emit({ type: 'disconnected', reason: 'radio off' });
+    b.emit({ type: 'disconnected', reason: 'radio off' });
+    await until(() => host.state === 'reconnecting' && guest.state === 'reconnecting');
+    const oldHost = host.session;
+    const oldGuest = guest.session;
+    await vi.advanceTimersByTimeAsync(3001);
+    await until(
+      () =>
+        vi.mocked(a.plugin.start).mock.calls.length === 2 &&
+        vi.mocked(b.plugin.start).mock.calls.length === 2,
+    );
+    // Metadata for another game's room must not start a recovery connection.
+    b.emit({ type: 'peer', id: 'wrong-game', name: host.label.replace('P-06', 'P-01') });
+    await nextTurn();
+    expect(b.plugin.connect).toHaveBeenCalledTimes(1);
+    b.emit({ type: 'peer', id: 'same-room-new-address', name: host.label });
+    await until(() => vi.mocked(b.plugin.connect).mock.calls.length === 2);
+    a.emit({ type: 'connected' });
+    b.emit({ type: 'connected' });
+    await pump(
+      () =>
+        host.state === 'room' &&
+        guest.state === 'room' &&
+        guest.session!.match!.revision === 1 &&
+        !host.session!.pending &&
+        !guest.session!.pending,
+    );
+    await drain();
+    expect(host.session).toBe(oldHost);
+    expect(guest.session).toBe(oldGuest);
+    expect(create).toHaveBeenCalledTimes(1);
+    const hostView = host.session!.match!.state as GinView;
+    const guestView = guest.session!.match!.state as GinView;
+    expect(hostView.seat).toBe(0);
+    expect(guestView.seat).toBe(1);
+    expect(hostView.cards).toEqual(hostCards);
+    expect([...guestView.cards].sort((x, y) => x - y)).toEqual(
+      [...guestCards, upcard].sort((x, y) => x - y),
+    );
+    expect(hostView.cards.some((card) => guestView.cards.includes(card))).toBe(false);
+    expect(hostView.opponentCount).toBe(11);
+    expect(guestView.opponentCount).toBe(10);
+    expect(host.session!.result).toEqual(guest.session!.result);
+    expect(host.session!.sendChat('disabled')).toBe(false);
+    expect(guest.session!.sendChat('disabled')).toBe(false);
+    // Summary storage contains the selected game, never either hand or the deck.
+    for (const device of [a, b]) {
+      const saved = await loadHistory(device.plugin);
+      expect(saved.gatherings[0]!.messages).toEqual([]);
+      expect(saved.gatherings[0]!.games).toEqual([
+        expect.objectContaining({ gameId: 'gin-rummy', round: 1, winner: null, finished: false }),
+      ]);
+      expect(JSON.stringify(saved)).not.toMatch(/"(?:cards|hands|deck|stock|seed)":/);
+    }
+  });
   it('delivers a rejection before the bounded native disconnect', async () => {
     const { a, host, guest, pump } = await pair();
     const sentBefore = a.sent.length;
@@ -198,9 +297,11 @@ describe('nearby controller with the real encrypted channel', () => {
         !host.session!.pending,
     );
     expect(guest.session!.match).toEqual(host.session!.match);
-    expect(host.session!.match!.rolls).toBe(1);
-    expect(host.session!.match!.dice).toHaveLength(5);
-    expect(host.session!.match!.dice.every((value) => value >= 1 && value <= 6)).toBe(true);
+    expect((host.session!.match!.state as YachtMatch).rolls).toBe(1);
+    expect((host.session!.match!.state as YachtMatch).dice).toHaveLength(5);
+    expect(
+      (host.session!.match!.state as YachtMatch).dice.every((value) => value >= 1 && value <= 6),
+    ).toBe(true);
   });
 
   it('does not let a stale start completion stop the next owner of the native plugin', async () => {
@@ -371,7 +472,7 @@ describe('approved gathering survives a physical interruption', () => {
       );
       expect(host.session!.match).toEqual(guest.session!.match);
       expect(host.session!.match!.revision).toBe(loss === 'guest command' ? 3 : 1);
-      expect(host.session!.match!.rolls).toBe(1);
+      expect((host.session!.match!.state as YachtMatch).rolls).toBe(1);
       expect(host.gathering!.id).toBe(gatheringId);
       expect(host.session!.chatEnabled).toBe(chatEnabled);
       expect(guest.session!.chatEnabled).toBe(chatEnabled);
@@ -383,7 +484,10 @@ describe('approved gathering survives a physical interruption', () => {
       else {
         expect(host.session!.sendChat('still disabled')).toBe(false);
         host.session!.act({ kind: 'hold', index: 0 });
-        await pump(() => guest.session!.match!.held[0] === true && !host.session!.pending);
+        await pump(
+          () =>
+            (guest.session!.match!.state as YachtMatch).held[0] === true && !host.session!.pending,
+        );
         expect(host.session!.match).toEqual(guest.session!.match);
         for (const device of [a, b]) {
           const saved = await loadHistory(device.plugin);

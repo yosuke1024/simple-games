@@ -1,3 +1,4 @@
+import { PlayTogetherButton, type PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 /**
  * Home (docs/NESTED_TIC_TAC_TOE_RULES.md §1): three opponents, who moves
  * first, and nothing between the player and the board. There is no level
@@ -28,7 +29,7 @@ import { CIRCLE, CROSS, DIFFICULTIES, type Difficulty } from '../../game';
 import { useNestedTicTacToe } from '../../state/GameContext';
 import { NestedMark } from '../components/NestedMark';
 
-export function NestedTicTacToeHomeScreen() {
+export function NestedTicTacToeHomeScreen(together: PlayTogetherProps = {}) {
   const {
     navigate,
     session,
@@ -121,6 +122,8 @@ export function NestedTicTacToeHomeScreen() {
             {t('nestedTicTacToePlaySecond')}
           </button>
         </div>
+
+        <PlayTogetherButton {...together} />
 
         <nav className="home-chips">
           <button type="button" className="home-chip" onClick={() => navigate('stats')}>

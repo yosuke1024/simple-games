@@ -238,6 +238,13 @@ export function App() {
   const openPlayTogether = useCallback(() => {
     const current = viewRef.current;
     if (nearbyReset.current || current.kind !== 'game' || !nearbyAvailable(current.gameId)) return;
+    // A gathering belongs to one selected game. Returning through another game's
+    // home must never replace its adapter or silently abandon the existing peer.
+    if (nearbyActiveRef.current) {
+      releaseSound();
+      show({ kind: 'nearby' });
+      return;
+    }
     nearbyOrigin.current = { ...current, entry: 'collection' };
     releaseSound();
     setNearbyGame(current.gameId);
@@ -677,7 +684,7 @@ export function App() {
                 {...(!nearbyResetting && nearbyAvailable(gameId)
                   ? {
                       onPlayTogether: openPlayTogether,
-                      playTogetherActive: nearbyGame === gameId && nearbyActive,
+                      playTogetherActive: nearbyActive,
                     }
                   : {})}
               />

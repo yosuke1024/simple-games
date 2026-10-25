@@ -7,6 +7,8 @@
  * proper noun and is never translated (docs/I18N_POLICY.md).
  */
 export const en = {
+  reversiPassNamed: '{name} has no move — the other player goes again',
+  reversiCellNamed: 'Row {row}, column {col}: {name}’s disc',
   reversiName: 'Reversi',
   reversiChooseOpponent: 'Choose your opponent',
   reversiDifficulty_easy: 'Easy',

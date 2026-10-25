@@ -2,6 +2,7 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const th: NearbyMessages = {
+  playerTurn: 'ตาของ {name}',
   playTogether: 'เล่นกับคนอื่น',
   closeChat: 'ปิดแชต',
   unreadChat: 'แชต มีข้อความที่ยังไม่ได้อ่าน',
@@ -43,12 +44,12 @@ export const th: NearbyMessages = {
   chatOn: 'เปิดใช้แชท',
   chatOff: 'ปิดใช้แชท',
   game: 'เกม',
-  roomHint: 'เลือก Yacht เพื่อเล่นด้วยกัน เปิดแชทได้เมื่อต้องการ',
-  propose: 'เสนอเล่น Yacht',
-  proposed: 'Yacht พร้อมเริ่ม',
+  roomHint: 'เลือก {game} เพื่อเล่นด้วยกัน เปิดแชทได้เมื่อต้องการ',
+  propose: 'เสนอเล่น {game}',
+  proposed: '{game} พร้อมเริ่ม',
   ready: 'ฉันพร้อมแล้ว',
   waitingReady: 'กำลังรอผู้เล่นอีกคน',
-  hostSelects: 'ผู้เล่นคนใดก็เสนอเล่น Yacht ได้',
+  hostSelects: 'ผู้เล่นคนใดก็เสนอเล่น {game} ได้',
   rematch: 'เสนอเล่นอีกตา',
   returnRoom: 'กลับสู่วงพบปะ',
   message: 'ข้อความ',
@@ -73,7 +74,7 @@ export const th: NearbyMessages = {
   leaveBody: 'วงพบปะจะจบลงสำหรับทั้งสองคน ประวัติของคุณจะยังอยู่ในเครื่องนี้',
   cancel: 'ยกเลิก',
   ended: 'การเชื่อมต่อสิ้นสุดแล้ว',
-  retry: 'กลับไปที่ Yacht',
+  retry: 'กลับไปที่ {game}',
   timeout: 'ไม่ได้รับคำตอบภายในเวลา เริ่มใหม่เมื่อทั้งสองเครื่องพร้อม',
   connectionError:
     'เชื่อมต่อไม่ได้ ตรวจสอบ Bluetooth หรือ Wi-Fi และสิทธิ์ของแอปทั้งสองเครื่อง แล้วลองอีกครั้ง',

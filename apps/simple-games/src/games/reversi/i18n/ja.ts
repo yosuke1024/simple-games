@@ -1,6 +1,8 @@
 import type { ReversiMessages } from './en';
 
 export const ja: ReversiMessages = {
+  reversiPassNamed: '{name}に置ける場所がなく、相手がもう一度打ちます',
+  reversiCellNamed: '{row}行{col}列:{name}の石',
   reversiName: 'Reversi',
   reversiChooseOpponent: '対戦相手を選ぶ',
   reversiDifficulty_easy: 'やさしい',

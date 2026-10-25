@@ -1,3 +1,4 @@
+import type { PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 /**
  * Mancala's root: loads the game's own records (local, fast, offline), then
  * mounts the provider and screens. The shell knows nothing beyond this
@@ -32,7 +33,7 @@ import { MancalaHomeScreen } from './screens/HomeScreen';
 import { MancalaStatsScreen } from './screens/StatsScreen';
 import { MancalaTutorialScreen } from './screens/TutorialScreen';
 
-export function MancalaScreens() {
+export function MancalaScreens(together: PlayTogetherProps = {}) {
   const { screen } = useMancala();
   switch (screen) {
     case 'tutorial':
@@ -43,7 +44,7 @@ export function MancalaScreens() {
       return <MancalaStatsScreen />;
     case 'home':
     default:
-      return <MancalaHomeScreen />;
+      return <MancalaHomeScreen {...together} />;
   }
 }
 
@@ -54,7 +55,7 @@ interface LoadedData {
   session: MancalaSession | null;
 }
 
-export interface MancalaRootProps {
+export interface MancalaRootProps extends PlayTogetherProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
   /**
@@ -86,7 +87,13 @@ async function loadRecords(kv: KVStore): Promise<LoadedData> {
   return { stats, flags, prefs, session };
 }
 
-export function MancalaRoot({ onExit, entry, kv = preferencesKV }: MancalaRootProps) {
+export function MancalaRoot({
+  onExit,
+  entry,
+  onPlayTogether,
+  playTogetherActive,
+  kv = preferencesKV,
+}: MancalaRootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
@@ -99,7 +106,7 @@ export function MancalaRoot({ onExit, entry, kv = preferencesKV }: MancalaRootPr
       onExit={onExit}
       entry={entry}
     >
-      <MancalaScreens />
+      <MancalaScreens onPlayTogether={onPlayTogether} playTogetherActive={playTogetherActive} />
     </MancalaProvider>
   );
 }

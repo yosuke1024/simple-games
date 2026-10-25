@@ -1,3 +1,4 @@
+import type { PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 /**
  * Nested Tic-Tac-Toe's root: loads the game's own records (local, fast,
  * offline), then mounts the provider and routes its screens. The shell knows
@@ -32,7 +33,7 @@ import { NestedTicTacToeHomeScreen } from './screens/HomeScreen';
 import { NestedTicTacToeStatsScreen } from './screens/StatsScreen';
 import { NestedTicTacToeTutorialScreen } from './screens/TutorialScreen';
 
-export function NestedTicTacToeScreens() {
+export function NestedTicTacToeScreens(together: PlayTogetherProps = {}) {
   const { screen } = useNestedTicTacToe();
   switch (screen) {
     case 'tutorial':
@@ -43,7 +44,7 @@ export function NestedTicTacToeScreens() {
       return <NestedTicTacToeStatsScreen />;
     case 'home':
     default:
-      return <NestedTicTacToeHomeScreen />;
+      return <NestedTicTacToeHomeScreen {...together} />;
   }
 }
 
@@ -54,7 +55,7 @@ interface LoadedData {
   session: NestedSession | null;
 }
 
-export interface NestedTicTacToeRootProps {
+export interface NestedTicTacToeRootProps extends PlayTogetherProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
   /**
@@ -89,6 +90,8 @@ async function loadRecords(kv: KVStore): Promise<LoadedData> {
 export function NestedTicTacToeRoot({
   onExit,
   entry,
+  onPlayTogether,
+  playTogetherActive,
   kv = preferencesKV,
 }: NestedTicTacToeRootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
@@ -103,7 +106,10 @@ export function NestedTicTacToeRoot({
       onExit={onExit}
       entry={entry}
     >
-      <NestedTicTacToeScreens />
+      <NestedTicTacToeScreens
+        onPlayTogether={onPlayTogether}
+        playTogetherActive={playTogetherActive}
+      />
     </NestedTicTacToeProvider>
   );
 }

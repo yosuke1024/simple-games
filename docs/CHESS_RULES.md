@@ -1,5 +1,8 @@
 # Chess — 正式ゲームルール
 
+**2026-10-25 更新:** nativeの「誰かと遊ぶ」を追加。以下のCPU専用の操作・Undo・保存の記述は通常モードに適用し、近隣対戦は末尾の節を正とする。
+オーナーの「13本すべてをアプリに収録する」に従い、Webベータから正式収録へ変更し保存スキーマを凍結する。以下の旧ベータ段階の記録は履歴であり、2週間の安定稼働や実機検証を達成した意味ではない。
+
 この文書が Chess の仕様の正本である。実装(`apps/simple-games/src/games/chess/`)・テスト・Quick Rules は
 ここに従い、コードはここへ `§n` で言及する。挙動を変えるときは、同じコミットでこの文書を直す。着手前の計画は
 [plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md](plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md)
@@ -983,3 +986,15 @@ CSS は `ui/chess.css`(接頭辞 `ch-`)。
 4. 難易度の手応え(Easy の弱さ・Normal と Hard の差)を、Web ベータの反応で見直すか(§5.1・§13)。
 5. CPU の手番でバックグラウンドから戻ったとき、タップなしに 450ms で指すか、次のタップを待つか(§5。Nested
    Tic-Tac-Toe・Scopa と同じ問い)。いまは前者。
+
+## Nearby Play（2026-10-25）
+
+hostを白、guestを黒とする。黒側は盤を回転する。`ChessBoard`、`PromotionPicker`、`useChessSelection`でCPU戦と駒選択・行き先・昇格操作を共有する。合法手と勝敗は既存record/engineで判定し、hostが手順・反復履歴を保持する。相手へはFEN・直前手・手数・終局理由を送り、全棋譜を毎回送らない。
+
+ゲームtopの「誰かと遊ぶ」→募集／参加→host承認→双方Ready→同じ盤面・操作へ進む。
+ゲームは集まりの終了まで固定。一方的なUndoは設けず、終局後は双方Readyで再戦する。
+募集時のチャット有無は既定OFFで双方へ適用し、ONだけ会話ボタン・未読印・端末内会話履歴を使う。
+ゲームtopへ戻る操作やアプリ切替では明示終了せず、一時切断後は同じ相手と保持した局面から続ける。
+プロセス終了からの復元は未対応。結果・中断はNearby専用のローカル履歴に残し、
+通常CPU戦のセーブ・統計・Club送信・バックアップには混ぜない。
+技術と通信の正本は[nearby-multiplayer.md](architecture/nearby-multiplayer.md)。今回の実機検証は未実施。

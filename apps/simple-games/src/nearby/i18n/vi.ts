@@ -2,6 +2,7 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const vi: NearbyMessages = {
+  playerTurn: 'Lượt của {name}',
   playTogether: 'Chơi cùng người khác',
   closeChat: 'Đóng trò chuyện',
   unreadChat: 'Trò chuyện, có tin nhắn chưa đọc',
@@ -44,12 +45,12 @@ export const vi: NearbyMessages = {
   chatOn: 'Có trò chuyện',
   chatOff: 'Không trò chuyện',
   game: 'Trò chơi',
-  roomHint: 'Chọn Yacht để chơi cùng nhau. Trò chuyện là tùy chọn.',
-  propose: 'Đề xuất Yacht',
-  proposed: 'Yacht đã sẵn sàng bắt đầu',
+  roomHint: 'Chọn {game} để chơi cùng nhau. Trò chuyện là tùy chọn.',
+  propose: 'Đề xuất {game}',
+  proposed: '{game} đã sẵn sàng bắt đầu',
   ready: 'Tôi sẵn sàng',
   waitingReady: 'Đang chờ người chơi kia',
-  hostSelects: 'Một trong hai người chơi đều có thể đề xuất Yacht.',
+  hostSelects: 'Một trong hai người chơi đều có thể đề xuất {game}.',
   rematch: 'Đề xuất ván khác',
   returnRoom: 'Quay lại buổi gặp',
   message: 'Tin nhắn',
@@ -75,7 +76,7 @@ export const vi: NearbyMessages = {
     'Buổi gặp sẽ kết thúc với cả hai người. Lịch sử cục bộ của bạn vẫn ở trên thiết bị này.',
   cancel: 'Hủy',
   ended: 'Kết nối đã kết thúc.',
-  retry: 'Quay lại Yacht',
+  retry: 'Quay lại {game}',
   timeout: 'Không có phản hồi kịp thời. Hãy bắt đầu lại khi cả hai thiết bị sẵn sàng.',
   connectionError:
     'Không thể kết nối. Kiểm tra Bluetooth hoặc Wi-Fi và quyền của ứng dụng trên cả hai thiết bị rồi thử lại.',

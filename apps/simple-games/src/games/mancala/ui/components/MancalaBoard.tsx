@@ -1,3 +1,4 @@
+import type { LastMove } from '../../game/session';
 /**
  * The board (docs/MANCALA_RULES.md §1, §2, §10): the CPU's store on the left,
  * six pits a side in two rows, the player's store on the right. The CPU's row
@@ -27,9 +28,8 @@ import {
   PITS_PER_SIDE,
   PLAYER_STORE,
   storeOf,
-  type LastMove,
   type Pits,
-} from '../../game';
+} from '../../game/types';
 
 /** More than this many dots stops being countable at a glance (§10). */
 const MAX_DOTS = 12;
@@ -51,6 +51,7 @@ function Seeds({ count }: { count: number }) {
 }
 
 export interface MancalaBoardProps {
+  opponentName?: string;
   pits: Pits;
   /** False on the CPU's turn, while a dialog is up, or once it is over. */
   playable: boolean;
@@ -59,6 +60,7 @@ export interface MancalaBoardProps {
 }
 
 export const MancalaBoard = memo(function MancalaBoard({
+  opponentName,
   pits,
   playable,
   lastMove,
@@ -103,7 +105,10 @@ export const MancalaBoard = memo(function MancalaBoard({
       <div
         className="mc-store mc-store-cpu"
         role="img"
-        aria-label={t('mancalaStoreCpu', { count: pits[CPU_STORE]! })}
+        aria-label={t(opponentName ? 'mancalaStoreOpponent' : 'mancalaStoreCpu', {
+          count: pits[CPU_STORE]!,
+          player: opponentName ?? '',
+        })}
       >
         <span className="mc-mark mc-mark-cpu" aria-hidden="true" />
         <span className="mc-store-count" aria-hidden="true">
@@ -121,7 +126,11 @@ export const MancalaBoard = memo(function MancalaBoard({
             className="mc-pit mc-pit-cpu"
             style={at(1, column)}
             role="img"
-            aria-label={t('mancalaPitCpu', { n: column + 1, count })}
+            aria-label={t(opponentName ? 'mancalaPitOpponent' : 'mancalaPitCpu', {
+              n: column + 1,
+              count,
+              player: opponentName ?? '',
+            })}
           >
             <span className="mc-count" aria-hidden="true">
               {count}

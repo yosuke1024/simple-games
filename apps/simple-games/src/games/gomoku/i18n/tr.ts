@@ -1,6 +1,7 @@
 import type { GomokuMessages } from './en';
 
 export const tr: GomokuMessages = {
+  gomokuPointNamed: 'Satır {row}, sütun {col}: {name} adlı oyuncunun taşı',
   gomokuName: 'Gomoku',
   gomokuChooseOpponent: 'Rakibini seç',
   gomokuDifficulty_easy: 'Kolay',

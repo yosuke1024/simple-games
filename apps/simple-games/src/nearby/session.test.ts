@@ -9,6 +9,18 @@ import {
   type Wire,
 } from './session';
 import { apply, CATEGORIES, finished, isMatch, newMatch, turn } from './yacht';
+import type { NearbyMatch } from './gameTypes';
+
+const roomMatch = (round: number): NearbyMatch => ({
+  gameId: 'yacht',
+  round,
+  revision: 0,
+  state: newMatch(1),
+});
+function yachtView(session: Session) {
+  if (!isMatch(session.match?.state)) throw new Error('Missing Yacht view');
+  return session.match.state;
+}
 
 function pair(
   options: { hostChatEnabled?: boolean; guestChatEnabled?: boolean } = { hostChatEnabled: true },
@@ -180,6 +192,7 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
         receiver.receive(
           JSON.stringify({
             v: PROTOCOL_VERSION,
+            gameId: 'yacht',
             type,
             sid: receiver.sid,
             seq: 1,
@@ -220,7 +233,7 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
     p.host.ready();
     p.guest.ready();
     p.flush();
-    expect(p.host.match).toEqual(newMatch(1));
+    expect(p.host.match).toEqual(roomMatch(1));
     expect(p.host.messages).toHaveLength(2);
     expect(p.guest.messages).toHaveLength(2);
     expect(
@@ -253,7 +266,14 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
       const p = pair();
       p.connect();
       p.host.receive(
-        JSON.stringify({ v: PROTOCOL_VERSION, type, sid: p.host.sid, seq: 1, text: 'hidden' }),
+        JSON.stringify({
+          v: PROTOCOL_VERSION,
+          gameId: 'yacht',
+          type,
+          sid: p.host.sid,
+          seq: 1,
+          text: 'hidden',
+        }),
       );
       expect(p.host.closed).toBe('Admission required');
       expect(p.host.messages).toEqual([]);
@@ -266,7 +286,13 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
       const p = pair();
       p.connect();
       p.host.receive(
-        JSON.stringify({ v: PROTOCOL_VERSION, type, sid: p.host.sid, approved: true }),
+        JSON.stringify({
+          v: PROTOCOL_VERSION,
+          gameId: 'yacht',
+          type,
+          sid: p.host.sid,
+          approved: true,
+        }),
       );
       expect(p.host.closed).not.toBe('');
       expect(p.host.admission).toBe('pending');
@@ -322,7 +348,9 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
   ])('rejects malformed, skipped or unsent chat frames (%#)', (fields) => {
     const p = pair();
     p.admit();
-    p.host.receive(JSON.stringify({ v: PROTOCOL_VERSION, sid: p.host.sid, ...fields }));
+    p.host.receive(
+      JSON.stringify({ v: PROTOCOL_VERSION, gameId: 'yacht', sid: p.host.sid, ...fields }),
+    );
     expect(p.host.closed).not.toBe('');
     expect(p.host.messages).toEqual([]);
   });
@@ -379,15 +407,22 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
     const p = pair();
     p.admit();
     p.host.match = {
-      ...newMatch(10000),
+      ...roomMatch(10000),
       revision: 48,
-      scores: [Array(12).fill(0), Array(12).fill(0)],
+      state: {
+        ...newMatch(1),
+        revision: 48,
+        scores: [
+          CATEGORIES.map((category) => (category === 'choice' ? 5 : 0)),
+          CATEGORIES.map((category) => (category === 'choice' ? 5 : 0)),
+        ],
+      },
     };
     p.host.proposeGame();
     expect(p.host.closed).toBe('Round limit');
     expect(p.host.match.round).toBe(10000);
   });
-  it.each([1, 2, 3, 4])(
+  it.each([1, 2, 3, 4, 5])(
     'rejects protocol version %s rather than mixing older peers into admission',
     (v) => {
       const p = pair();
@@ -420,7 +455,7 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
     p.guest.ready();
     p.flush();
     expect(p.host.closed || p.guest.closed).toBe('');
-    expect(p.host.match).toEqual(newMatch(1));
+    expect(p.host.match).toEqual(roomMatch(1));
     expect(p.guest.match).toEqual(p.host.match);
   });
   it('bounds buffering before the connection is usable', () => {
@@ -460,7 +495,7 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
     expect(p.host.match).toBeNull();
     p.host.ready();
     p.flush();
-    expect(p.host.match).toEqual(newMatch(1));
+    expect(p.host.match).toEqual(roomMatch(1));
     expect(p.guest.match).toEqual(p.host.match);
   });
   it('completes 24 turns, shares exact scores, preserves holds, limits rolls, and requires mutual rematch readiness', () => {
@@ -484,13 +519,13 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
         expect(JSON.stringify(p.host.match)).toBe(before);
         actor.act({ kind: 'score', category });
         p.flush();
-        expect(isMatch(p.guest.match)).toBe(true);
+        expect(isMatch(p.guest.match?.state)).toBe(true);
         expect(p.host.match).toEqual(p.guest.match);
         expect(p.host.closed || p.guest.closed).toBe('');
       }
-    expect(finished(p.host.match!)).toBe(true);
-    expect(p.host.match!.scores[0]).toEqual([0, 0, 0, 0, 0, 30, 0, 24, 0, 0, 30, 50]);
-    expect(p.host.match!.scores[1]).toEqual(p.host.match!.scores[0]);
+    expect(finished(yachtView(p.host))).toBe(true);
+    expect(yachtView(p.host).scores[0]).toEqual([0, 0, 0, 0, 0, 30, 0, 24, 0, 0, 30, 50]);
+    expect(yachtView(p.host).scores[1]).toEqual(yachtView(p.host).scores[0]);
     expect(p.die).toHaveBeenCalledTimes(24 * 3 * 5);
     expect(p.guestDie).not.toHaveBeenCalled();
     expect(p.host.sendChat('また遊ぼう')).toBe(true);
@@ -502,7 +537,7 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
     expect(p.host.match!.round).toBe(1);
     p.host.ready();
     p.flush();
-    expect(p.host.match).toEqual(newMatch(2));
+    expect(p.host.match).toEqual(roomMatch(2));
     expect(p.guest.match).toEqual(p.host.match);
   });
   it('requires receipt of the initial state before any host RNG or action', () => {
@@ -515,7 +550,7 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
     p.deliver(); // host Ready
     p.deliver(); // guest Ready creates the initial state
     expect(p.host.pending).toBe(true);
-    expect(p.host.match).toEqual(newMatch(1));
+    expect(p.host.match).toEqual(roomMatch(1));
     p.host.act({ kind: 'roll' });
     expect(p.die).not.toHaveBeenCalled();
     expect(p.guest.match).toBeNull();
@@ -589,7 +624,7 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
     p.flush();
     expect(p.host.closed || p.guest.closed).toBe('');
     expect(p.host.pending || p.guest.pending).toBe(false);
-    expect(p.host.match!.held[0]).toBe(true);
+    expect(yachtView(p.host).held[0]).toBe(true);
     expect(p.guest.match).toEqual(p.host.match);
     expect(p.die).toHaveBeenCalledTimes(draws);
   });
@@ -606,7 +641,7 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
           if (category !== 'yacht' || actor === p.host) p.flush();
         }
       p.deliver(); // last guest command
-      expect(finished(p.host.match!)).toBe(true);
+      expect(finished(yachtView(p.host))).toBe(true);
       expect(p.host.matchComplete).toBe(false);
       expect(p.host.pending).toBe(true);
       p.host.ready();
@@ -624,7 +659,7 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
       p.guest.ready();
       p.host.ready();
       p.flush();
-      expect(p.host.match).toEqual(newMatch(2));
+      expect(p.host.match).toEqual(roomMatch(2));
       expect(p.guest.match).toEqual(p.host.match);
       expect(p.host.pending).toBe(false);
       expect(p.host.chatEnabled).toBe(hostChatEnabled);
@@ -645,7 +680,13 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
     p.host.act({ kind: 'roll' });
     const before = structuredClone(p.host.match);
     p.host.receive(
-      JSON.stringify({ v: PROTOCOL_VERSION, type: 'state-ack', sid: p.host.sid, ...fields }),
+      JSON.stringify({
+        v: PROTOCOL_VERSION,
+        gameId: 'yacht',
+        type: 'state-ack',
+        sid: p.host.sid,
+        ...fields,
+      }),
     );
     expect(p.host.closed).not.toBe('');
     expect(p.host.match).toEqual(before);
@@ -658,6 +699,7 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
     p.host.receive(
       JSON.stringify({
         v: PROTOCOL_VERSION,
+        gameId: 'yacht',
         type: 'command',
         sid: p.host.sid,
         round: 1,
@@ -683,6 +725,7 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
     p.host.receive(
       JSON.stringify({
         v: PROTOCOL_VERSION,
+        gameId: 'yacht',
         type: 'command',
         sid: p.host.sid,
         round: 1,
@@ -747,9 +790,10 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
     '{',
     JSON.stringify({ v: 1, type: 'hello' }),
     ' '.repeat(4097),
-    JSON.stringify({ v: PROTOCOL_VERSION, type: 'command', sid: 'wrong', seq: 1 }),
+    JSON.stringify({ v: PROTOCOL_VERSION, gameId: 'yacht', type: 'command', sid: 'wrong', seq: 1 }),
     JSON.stringify({
       v: PROTOCOL_VERSION,
+      gameId: 'yacht',
       type: 'state',
       sid: 'a'.repeat(32),
       match: newMatch(1),
@@ -757,6 +801,7 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
     }),
     JSON.stringify({
       v: PROTOCOL_VERSION,
+      gameId: 'yacht',
       type: 'command',
       sid: 'a'.repeat(32),
       round: 1,
@@ -779,6 +824,7 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
     p.host.receive(
       JSON.stringify({
         v: PROTOCOL_VERSION,
+        gameId: 'yacht',
         type: 'hello',
         host: true,
         name: 'Second host',
@@ -800,9 +846,10 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
       p.guest.receive(
         JSON.stringify({
           v: PROTOCOL_VERSION,
+          gameId: 'yacht',
           type: 'state',
           sid: p.guest.sid,
-          match,
+          match: { ...roomMatch(1), revision: match.revision, state: match },
           ack: 0,
           stateSeq: 2,
         }),

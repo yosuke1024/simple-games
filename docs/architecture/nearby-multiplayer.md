@@ -16,7 +16,7 @@ Updated: 2026-10-25 / issue #268
 旧PoC記録の「製品へ導入しない」「保存しない」「前面限定」は当時の状態であり、現在の製品契約ではない。
 
 - native の対応ゲームtopに「誰かと遊ぶ」を置き、近くの相手とBluetooth／同一Wi-Fiで遊ぶことを
-  短く補足する。最初はYachtだけ。コレクションの独立Nearby入口を削除し、Club Houseからも
+  短く補足する。対応は Yacht / Reversi / Connect Four / Gomoku / Checkers / Gin Rummy / Mancala / Dominoes / Dots and Boxes / Chess / Nested Tic-Tac-Toe / Scopa / Nim の13本。コレクションの独立Nearby入口を削除し、Club Houseからも
   開始しない。未対応ゲームには未実装のボタンを出さない。
   ゲームはシェルから渡されたcallbackを呼び、`src/app/nearbyGate.ts` からだけ動的に
   `src/nearby/` を読み込む。ゲームからNearbyをimportしない。
@@ -37,8 +37,8 @@ Updated: 2026-10-25 / issue #268
   会話ボタン・未読表示・送信欄を出さず、Sessionでもメッセージの送受信を認めない。
   ONのチャットは「会話」ボタンから任意に開く。ゲームと同格のタブにはしない。
   受信で会話を自動表示しない。終局後は結果と再戦を主にし、接続を保持して双方Readyで再戦する。
-  将来は同じ相手と別ゲームへ続けられる構成とするが、今回はYachtのみで、ゲーム切替機能は含めない。
-- 仲間／公開の発見labelは `F-` / `P-` + ランダム6桁hex。個人名を広告に含めない。
+  集まりは開始時のゲームに固定し、別ゲームへ続ける切替機能は含めない。
+- 仲間／公開の発見labelは `F-` / `P-` + ゲーム識別2桁hex + ランダム4桁hex。同じゲームだけを発見一覧に出す。個人名を広告に含めない。
   どちらもhost承認必須。labelは公開される番号で、招待秘密や本人証明ではない。
 - native plugin名 `NearbyPlay`。BLE UUIDは `9b5d2000/2001/2002-7a4c-4e13-a280-75d53c01a268`、
   Bonjourは `_sgnearplay._tcp`。PoCと混在させない。native最大4096 UTF-8 bytes + LF、20byte BLE。
@@ -50,8 +50,8 @@ Updated: 2026-10-25 / issue #268
   比較コードは誤接続確認の補助。公開鍵の commitment 段階がない短縮hashなので、
   **コードが一致しても本人認証・能動的な中間者攻撃への耐性は保証しない**。
   仲間同士はコードも見比べるが、認証済み／安全な相手などとは表示しない。
-- room wire v5（v4およびv3/1.5.1とは混在不可）。helloに表示名・host/guest・sessionnonce・ローカルブロック用install ID。
-  hostのhelloにはチャット可否を必須とし、guestが部屋の設定を上書きすることは認めない。
+- room wire v6（v5以前および1.5.1とは混在不可）。helloに表示名・host/guest・sessionnonce・ローカルブロック用install ID。
+  hello・admission・各対局wireでgameIdを照合する。hostのhelloにはチャット可否を必須とし、guestが部屋の設定を上書きすることは認めない。
   admission／admission-ackでも同じ設定を照合し、不一致は承認しない。
   hostのadmissionとguestのadmission-ack完了前はチャット・Ready・対局操作を認めない。
   install IDは端末内に作るランダム値で、OS識別子を使わずサーバーへ蓄積しない。
@@ -60,7 +60,7 @@ Updated: 2026-10-25 / issue #268
   ONのチャットはUnicode160文字、制御文字／双方向制御／不正surrogate拒否。各方向1件だけ
   未ACKで送信できる。独立したchat seq/ACKで受信済みを示し、既読とは呼ばない。
   送受合計1000件で接続終了。チャットACKでstateのpendingを解除しない。
-- Yachtの合法手・乱数・採点はhostが確定。初期／各操作／最終stateのACKを待つ旧v2の
+- 各ゲームの合法手・乱数・採点はhostが確定。初期／各操作／最終stateのACKを待つ旧v2の
   契約を継承する。host終局はACK待ち、guestは検証済み終局受信で確定。host改造耐性は無い。
 - 探索60秒、接続／鍵交換15秒、承認待ち60秒。helloで相手が定まる前の失敗や承認待ちの期限超過は終了する。
   承認後のstate/chat/admission ACK各15秒とdeliveryの最古未ACK15秒は、物理切断と同様に
@@ -84,9 +84,20 @@ Updated: 2026-10-25 / issue #268
   検知した場合の相手の即時検知は保証しない。実際のOS切断通知は実機で確認する。
   LANの背景維持も保証しない。プロセス終了・強制終了・端末再起動からの復元は未対応。
   退出・解散・ブロック・protocol違反は終了し、以後の自動再接続はしない。
-- `nearby/yacht.ts` が既存 `games/yacht/game/{engine,types}` の純粋な採点と型へ到達し、
-  `NearbyRoot.tsx` は `games/yacht/ui/components/YachtPlaySurface` をCPU戦と共有する。
-  それ以外のゲーム内部参照はしない。通常のYacht state/storage/Club bridgeは使わない。
+- `nearby/games.ts` が選択ゲームのadapterとViewだけをlazy loadする。`nearby/games/<id>.ts` は
+  同じゲームの純粋engine/typesを使い、Viewは既存の盤面・手札・操作hook・i18n・CSSを共有する。
+  別ゲームやCPU・通常ゲームのstate/provider/storage・Clubへのruntime依存は禁止する。
+  境界テストはbarrelを含む推移的runtime依存も確認する。旧`nearby/yacht.ts`は互換re-export。
+- hostの完全状態と各席へ投影した公開状態を分離する。Gin Rummy / Dominoes / Scopaは自分の手札、
+  相手の枚数、場札、公開結果だけを投影し、seed・山札順・未公開の相手手札を送らない。
+  配札はhostの乱数関数を直接使い、32bitのseedから手札を推測できる形に縮約しない。
+  Ginの精算時に両手札が公開されることはゲーム規則による。
+- 各対局はgameId/round/revisionを持つ。Session JSON上限2600 UTF-8 bytes、delivery込み2800、
+  native暗号文4096の各上限を維持する。Chessは盤面FENと終局理由・直前手だけを送る。
+  手順履歴・三fold反復判定はhostが保持する。切断時も同じhost状態を保持する。
+- 公開盤面ゲームはhostが先手。カード・Dominoesは既存の配札・開始規則に従う。
+  Dots and Boxesは募集時に3×3 / 4×4 / 5×5を選び、再戦も同じサイズ。一方的なUndoは無い。
+  通常CPU戦の保存・統計・Club結果を更新しない。履歴にはgameId/勝敗を追加し、旧v1 Yacht履歴も読める。
 
 背景制約の一次資料:
 [Apple Core Bluetooth Background Processing](https://developer.apple.com/library/archive/documentation/NetworkingInternetWeb/Conceptual/CoreBluetooth_concepts/CoreBluetoothBackgroundProcessingForIOSApps/PerformingTasksWhileYourAppIsInTheBackground.html)、
@@ -118,7 +129,7 @@ session鍵・native接続先は保存しない。参加前申請は履歴化し�
 
 今回の導線は、両端末で次を確認する。記載しただけでは完了としない。
 
-- Yacht topの入口だけから募集／参加でき、初回の重複提案操作なしでhost承認・双方Readyを経て
+- 対応13本それぞれのtopの入口から募集／参加でき、初回の重複提案操作なしでhost承認・双方Readyを経て
   共通画面へ進む。コレクション・Club・未対応ゲーム・Webに開始入口を残さない。
 - ゲームtopへ戻ってから同じ入口で同じ盤面へ戻れる。会話を閉じる・結果へ進む・再戦する操作で
   接続を終了せず、明示退出／解散では接続資源を解放する。

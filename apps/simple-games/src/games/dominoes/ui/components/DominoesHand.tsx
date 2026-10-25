@@ -12,7 +12,8 @@
  */
 import { memo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
-import { legalEnds, needsEndChoice, sameTile, tileId, type Line, type Tile } from '../../game';
+import { legalEnds, needsEndChoice, sameTile, tileId } from '../../game/engine';
+import type { Line, Tile } from '../../game/types';
 import { TileFace } from './TileFace';
 
 export interface DominoesHandProps {

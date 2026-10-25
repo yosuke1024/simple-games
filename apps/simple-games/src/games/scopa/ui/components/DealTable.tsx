@@ -7,14 +7,24 @@
  * the deciding deal's table instead of a settlement of its own.
  */
 import { useSettings } from '@/state/SettingsContext';
-import { CPU, YOU, type DealOutcome, type Seat } from '../../game';
+import { CPU, YOU, type Seat } from '../../game/types';
+import type { DealOutcome } from '../../game/engine';
 
 const NOBODY = '—';
 
-export function DealTable({ outcome }: { outcome: DealOutcome }) {
+export function DealTable({
+  outcome,
+  names,
+  localSeat = YOU,
+}: {
+  outcome: DealOutcome;
+  names?: readonly string[];
+  localSeat?: Seat;
+}) {
   const { t } = useSettings();
-  const who = (seat: Seat | null): string =>
-    seat === null ? NOBODY : seat === YOU ? t('scopaYou') : t('scopaCpu');
+  const peer = localSeat === YOU ? CPU : YOU;
+  const name = (seat: Seat): string => names?.[seat] ?? t(seat === YOU ? 'scopaYou' : 'scopaCpu');
+  const who = (seat: Seat | null): string => (seat === null ? NOBODY : name(seat));
   const primiera = (seat: Seat): string => {
     const tally = outcome.primiera[seat];
     return tally.suits === 4
@@ -25,36 +35,36 @@ export function DealTable({ outcome }: { outcome: DealOutcome }) {
     {
       key: 'cards',
       label: t('scopaCatCards'),
-      you: String(outcome.cards[YOU]),
-      cpu: String(outcome.cards[CPU]),
+      you: String(outcome.cards[localSeat]),
+      cpu: String(outcome.cards[peer]),
       point: who(outcome.awards.cards),
     },
     {
       key: 'diamonds',
       label: t('scopaCatDiamonds'),
-      you: String(outcome.diamonds[YOU]),
-      cpu: String(outcome.diamonds[CPU]),
+      you: String(outcome.diamonds[localSeat]),
+      cpu: String(outcome.diamonds[peer]),
       point: who(outcome.awards.diamonds),
     },
     {
       key: 'settebello',
       label: '7♦',
-      you: outcome.awards.settebello === YOU ? '✓' : NOBODY,
-      cpu: outcome.awards.settebello === CPU ? '✓' : NOBODY,
+      you: outcome.awards.settebello === localSeat ? '✓' : NOBODY,
+      cpu: outcome.awards.settebello === peer ? '✓' : NOBODY,
       point: who(outcome.awards.settebello),
     },
     {
       key: 'primiera',
       label: t('scopaCatPrimiera'),
-      you: primiera(YOU),
-      cpu: primiera(CPU),
+      you: primiera(localSeat),
+      cpu: primiera(peer),
       point: who(outcome.awards.primiera),
     },
     {
       key: 'scopa',
       label: t('scopaCatScopa'),
-      you: String(outcome.scopas[YOU]),
-      cpu: String(outcome.scopas[CPU]),
+      you: String(outcome.scopas[localSeat]),
+      cpu: String(outcome.scopas[peer]),
       point: '',
     },
   ];
@@ -66,8 +76,8 @@ export function DealTable({ outcome }: { outcome: DealOutcome }) {
           <th scope="col">
             <span className="visually-hidden">{t('scopaColCategory')}</span>
           </th>
-          <th scope="col">{t('scopaYou')}</th>
-          <th scope="col">{t('scopaCpu')}</th>
+          <th scope="col">{name(localSeat)}</th>
+          <th scope="col">{name(peer)}</th>
           <th scope="col">{t('scopaColPoint')}</th>
         </tr>
       </thead>
@@ -84,8 +94,8 @@ export function DealTable({ outcome }: { outcome: DealOutcome }) {
       <tfoot>
         <tr>
           <th scope="row">{t('scopaDealPoints')}</th>
-          <td>+{outcome.points[YOU]}</td>
-          <td>+{outcome.points[CPU]}</td>
+          <td>+{outcome.points[localSeat]}</td>
+          <td>+{outcome.points[peer]}</td>
           <td />
         </tr>
       </tfoot>

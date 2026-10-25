@@ -1,6 +1,8 @@
 import type { CheckersMessages } from './en';
 
 export const th: CheckersMessages = {
+  checkersSquareNamedKing: 'แถว {row} คอลัมน์ {col}: ฮอสของ {name}',
+  checkersSquareNamedMan: 'แถว {row} คอลัมน์ {col}: หมากของ {name}',
   checkersName: 'Checkers',
   checkersChooseOpponent: 'เลือกคู่แข่ง',
   checkersDifficulty_easy: 'ง่าย',
