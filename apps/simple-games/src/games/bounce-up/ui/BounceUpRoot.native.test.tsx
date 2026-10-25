@@ -19,7 +19,7 @@ import { settingsSchema } from '@/storage/schemas';
 import { stubAnimationFrames, stubCanvas2d } from '@/test/lifecycle';
 import { BO_STORAGE_KEYS, type Stats } from '../storage/schemas';
 import { BounceUpRoot } from './BounceUpRoot';
-import { layOutCanvas, pump, runState } from './test-driver';
+import { holdEntropy, layOutCanvas, pump, runState } from './test-driver';
 
 const { deviceStore, appMock } = vi.hoisted(() => {
   type Listener = (event: unknown) => void;
@@ -85,7 +85,12 @@ const boardLabel = () =>
 let restores: Array<() => void> = [];
 
 beforeEach(() => {
-  restores = [stubCanvas2d(), stubAnimationFrames(), layOutCanvas()];
+  // The tower is a function of the seed, and the provider's seed is `Date.now`
+  // and `Math.random` (state/GameContext.tsx `freshSeed`): with the second
+  // loose, a few seeds in a hundred put a platform within reach of the first 60
+  // steps and the booked height is 16 or 18, not 15 — no clock is involved. The test-driver's convention is to
+  // hold both (BounceUpRoot.test.tsx does).
+  restores = [stubCanvas2d(), stubAnimationFrames(), layOutCanvas(), holdEntropy()];
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date('2026-10-22T09:00:00Z'));
 });
