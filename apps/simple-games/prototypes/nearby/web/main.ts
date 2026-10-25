@@ -119,15 +119,18 @@ function render() {
   el('peerName').textContent = `相手 / Peer: ${s.peerName}`;
   el('code').textContent = s.code;
   button('confirm').disabled = s.localConsent || !active;
-  button('ready').hidden = !s.paired || !!(s.match && !finished(s.match));
-  button('ready').disabled = s.localReady || !active;
+  button('ready').hidden = !s.paired || !!(s.match && !s.matchComplete);
+  button('ready').disabled = s.pending || s.localReady || !active;
   button('ready').textContent = s.localReady
     ? '相手の Ready を待っています / Waiting'
     : s.match
       ? 'もう一局 / Ready for rematch'
       : '準備できました / Ready';
   button('ping').hidden = !s.paired;
-  if (s.paired) el('status').textContent = '双方で接続を確認しました / Confirmed';
+  if (s.paired)
+    el('status').textContent = s.pending
+      ? '相手の受信確認を待っています / Waiting for peer'
+      : '双方で接続を確認しました / Confirmed';
   if (s.closed) el('status').textContent = s.closed;
   button('stop').disabled = !active;
   if (s.pending && !commandTimer)
@@ -155,7 +158,9 @@ function render() {
   el('turn').textContent = s.closed
     ? '対局終了 / Session ended'
     : finished(m)
-      ? '対局完了 / Finished'
+      ? s.matchComplete
+        ? '対局完了 / Finished'
+        : '相手の受信確認を待っています / Waiting for peer'
       : `${s.names[turn(m)]} の番 / Turn · ${m.rolls}/3 · rev ${m.revision}`;
   el('dice').replaceChildren(
     ...m.dice.map((face, index) => {
@@ -195,7 +200,7 @@ function render() {
   const [a, b] = totals(m);
   el('total0').textContent = String(a);
   el('total1').textContent = String(b);
-  el('result').textContent = finished(m)
+  el('result').textContent = s.matchComplete
     ? a === b
       ? '引き分け / Draw'
       : `${s.names[a! > b! ? 0 : 1]} の勝ち / Wins`

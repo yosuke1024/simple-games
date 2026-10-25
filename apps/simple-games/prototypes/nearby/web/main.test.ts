@@ -2,6 +2,8 @@
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { PROTOCOL_VERSION, Session, type Wire } from './session';
+import { CATEGORIES } from '../../../src/games/yacht/game/types';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 type NativeEvent =
@@ -75,6 +77,45 @@ function settleDeferred(pending: ReturnType<typeof deferred<void>>, outcome: 're
   if (outcome === 'resolve') pending.resolve(undefined);
   else pending.reject(new Error('Previous session failed late'));
 }
+async function beginWithGuest(dropInitialAck = false) {
+  let dropAcks = dropInitialAck;
+  const guestMessages: Wire[] = [];
+  const guest = new Session({
+    name: 'Guest',
+    host: false,
+    nonce: 'b'.repeat(32),
+    die: () => {
+      throw new Error('Guest RNG');
+    },
+    changed: () => {},
+    send: (wire) => {
+      guestMessages.push(wire);
+      if (wire.type !== 'state-ack' || !dropAcks)
+        emit(0, { type: 'data', data: JSON.stringify(wire) });
+    },
+  });
+  native.plugin.send.mockImplementation(async ({ data }) => {
+    guest.receive(data);
+  });
+  await open();
+  await start();
+  guest.start();
+  emit(0, { type: 'connected' });
+  await settle();
+  button('confirm').click();
+  guest.confirm();
+  await settle();
+  button('ready').click();
+  guest.ready();
+  await settle();
+  return {
+    guest,
+    guestMessages,
+    dropAcks: () => {
+      dropAcks = true;
+    },
+  };
+}
 
 beforeEach(() => {
   vi.resetModules();
@@ -145,7 +186,7 @@ describe('PoC native UI lifecycle', () => {
     emit(0, {
       type: 'data',
       data: JSON.stringify({
-        v: 1,
+        v: PROTOCOL_VERSION,
         type: 'hello',
         name: '近くの相手',
         host: false,
@@ -171,7 +212,7 @@ describe('PoC native UI lifecycle', () => {
     emit(0, {
       type: 'data',
       data: JSON.stringify({
-        v: 1,
+        v: PROTOCOL_VERSION,
         type: 'confirm',
         sid: hello.nonce,
         nonce: remoteNonce,
@@ -183,6 +224,99 @@ describe('PoC native UI lifecycle', () => {
     await vi.advanceTimersByTimeAsync(15_000);
     expect(native.plugin.stop).not.toHaveBeenCalled();
   });
+
+  it('times out the initial state despite native send acceptance', async () => {
+    await beginWithGuest(true);
+    expect(element('turn').textContent).toContain('rev 0');
+    expect(element('status').textContent).toContain('Waiting for peer');
+    expect(button('roll').disabled).toBe(true);
+    expect(button('ready').disabled).toBe(true);
+    await vi.advanceTimersByTimeAsync(14_999);
+    expect(native.plugin.stop).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(native.plugin.stop).toHaveBeenCalledTimes(1);
+    expect(element('status').textContent).toContain('Command timeout');
+    expect(element('turn').textContent).toContain('Session ended');
+    expect(button('start').disabled).toBe(false);
+  });
+
+  it('sends no idle heartbeat and bounds an unacknowledged host action without extending its timer', async () => {
+    const p = await beginWithGuest();
+    const idleSends = native.plugin.send.mock.calls.length;
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(native.plugin.send).toHaveBeenCalledTimes(idleSends);
+    expect(native.plugin.stop).not.toHaveBeenCalled();
+    p.dropAcks();
+    button('roll').click();
+    await settle();
+    expect(element('turn').textContent).toContain('rev 1');
+    expect(button('roll').disabled).toBe(true);
+    expect(element('status').textContent).toContain('Waiting for peer');
+    const pendingSends = native.plugin.send.mock.calls.length;
+    button('roll').click();
+    element('scores').querySelector('button')!.click();
+    await settle();
+    expect(native.plugin.send).toHaveBeenCalledTimes(pendingSends);
+    await vi.advanceTimersByTimeAsync(10_000);
+    const oldAck = p.guestMessages.find((wire) => wire.type === 'state-ack')!;
+    emit(0, { type: 'data', data: JSON.stringify(oldAck) });
+    p.guest.ping(); // Unrelated valid traffic causes render, but cannot restart the ACK timer.
+    await settle();
+    expect(element('status').textContent).toContain('Waiting for peer');
+    await vi.advanceTimersByTimeAsync(4_999);
+    expect(native.plugin.stop).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(native.plugin.stop).toHaveBeenCalledTimes(1);
+    expect(element('status').textContent).toContain('Command timeout');
+    expect(element('result').textContent).toBe('');
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(native.plugin.start).toHaveBeenCalledTimes(1);
+    expect(native.plugin.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(['acknowledged', 'timeout'] as const)(
+    'withholds the final result and rematch until the final state is %s',
+    async (outcome) => {
+      const p = await beginWithGuest();
+      for (const category of CATEGORIES) {
+        button('roll').click();
+        await settle();
+        element('scores')
+          .querySelector<HTMLButtonElement>(`button[aria-label^="Score ${category}:"]`)!
+          .click();
+        await settle();
+        p.guest.act({ kind: 'roll' });
+        await settle();
+        if (category === 'yacht') p.dropAcks();
+        p.guest.act({ kind: 'score', category });
+        await settle();
+      }
+      expect(element('turn').textContent).toContain('Waiting for peer');
+      expect(element('turn').textContent).not.toMatch(/Finished|rev /);
+      expect(element('result').textContent).toBe('');
+      expect(button('ready').hidden).toBe(true);
+      expect(button('ready').disabled).toBe(true);
+      button('ready').click();
+      if (outcome === 'acknowledged') {
+        const finalAck = p.guestMessages.filter((wire) => wire.type === 'state-ack').at(-1)!;
+        emit(0, { type: 'data', data: JSON.stringify(finalAck) });
+        await settle();
+        expect(element('turn').textContent).toContain('Finished');
+        expect(element('result').textContent).toMatch(/Draw|Wins/);
+        expect(button('ready').hidden).toBe(false);
+        expect(button('ready').disabled).toBe(false);
+        await vi.advanceTimersByTimeAsync(15_000);
+        expect(native.plugin.stop).not.toHaveBeenCalled();
+      } else {
+        await vi.advanceTimersByTimeAsync(15_000);
+        expect(native.plugin.stop).toHaveBeenCalledTimes(1);
+        expect(element('turn').textContent).toContain('Session ended');
+        expect(element('result').textContent).toBe('');
+        expect(button('ready').hidden).toBe(true);
+        expect(button('ready').disabled).toBe(true);
+      }
+    },
+  );
 
   it('removes a delayed old listener without overwriting the restarted session listener', async () => {
     const oldRegistration = deferred<Handle>();

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Session, type Wire } from './session';
+import { PROTOCOL_VERSION, Session, type Wire } from './session';
 import { apply, finished, isMatch, newMatch, turn } from './yacht';
 import { CATEGORIES } from '../../../src/games/yacht/game/types';
 
@@ -38,6 +38,11 @@ function pair() {
       ({ host, guest })[target].receive(JSON.stringify(wire));
     }
   };
+  const deliver = () => {
+    const { target, wire } = queue.shift()!;
+    ({ host, guest })[target].receive(JSON.stringify(wire));
+    return wire;
+  };
   const connect = () => {
     host.start();
     guest.start();
@@ -55,7 +60,7 @@ function pair() {
     guest.ready();
     flush();
   };
-  return { host, guest, die, guestDie, sent, flush, connect, consent, begin };
+  return { host, guest, die, guestDie, queue, sent, deliver, flush, connect, consent, begin };
 }
 
 describe('two-peer host-authoritative Yacht PoC', () => {
@@ -142,13 +147,172 @@ describe('two-peer host-authoritative Yacht PoC', () => {
     expect(p.host.match).toEqual(newMatch(2));
     expect(p.guest.match).toEqual(p.host.match);
   });
+  it('requires receipt of the initial state before any host RNG or action', () => {
+    const p = pair();
+    p.consent();
+    p.host.ready();
+    p.guest.ready();
+    p.deliver(); // host Ready
+    p.deliver(); // guest Ready creates the initial state
+    expect(p.host.pending).toBe(true);
+    expect(p.host.match).toEqual(newMatch(1));
+    p.host.act({ kind: 'roll' });
+    expect(p.die).not.toHaveBeenCalled();
+    expect(p.guest.match).toBeNull();
+    p.deliver(); // state received, ACK still in transit
+    expect(p.guest.match).toEqual(p.host.match);
+    expect(p.host.canAct).toBe(false);
+    p.deliver();
+    expect(p.host.pending).toBe(false);
+    expect(p.host.canAct).toBe(true);
+  });
+  it('blocks repeated host actions and ignores old ACKs until the exact state is acknowledged', () => {
+    const p = pair();
+    p.begin();
+    const oldAck = p.sent.find(({ wire }) => wire.type === 'state-ack')!.wire;
+    p.host.act({ kind: 'roll' });
+    const before = structuredClone(p.host.match);
+    const sent = p.sent.length;
+    p.host.act({ kind: 'roll' });
+    p.host.act({ kind: 'hold', index: 0 });
+    p.host.act({ kind: 'score', category: 'ones' });
+    p.host.ready();
+    p.host.receive(JSON.stringify(oldAck));
+    p.host.receive(JSON.stringify(oldAck));
+    expect(p.host.pending).toBe(true);
+    expect(p.host.match).toEqual(before);
+    expect(p.host.localReady).toBe(false);
+    expect(p.sent).toHaveLength(sent);
+    expect(p.die).toHaveBeenCalledTimes(5);
+    p.deliver();
+    expect(p.host.pending).toBe(true);
+    const ack = p.deliver();
+    expect(p.host.canAct).toBe(true);
+    p.host.receive(JSON.stringify(ack));
+    expect(p.host.closed).toBe('');
+    p.host.act({ kind: 'hold', index: 0 });
+    p.host.receive(JSON.stringify(ack));
+    expect(p.host.pending).toBe(true);
+    p.flush();
+    expect(p.host.pending).toBe(false);
+  });
+  it('orders the guest state ACK before its next command and bounds duplicate replies', () => {
+    const p = pair();
+    p.begin();
+    p.host.act({ kind: 'roll' });
+    p.flush();
+    p.host.act({ kind: 'score', category: 'ones' });
+    p.deliver();
+    p.guest.act({ kind: 'roll' });
+    expect(p.queue.map(({ wire }) => wire.type)).toEqual(['state-ack', 'command']);
+    p.deliver();
+    const command = p.deliver();
+    const before = structuredClone(p.host.match);
+    const draws = p.die.mock.calls.length;
+    p.host.receive(JSON.stringify(command));
+    p.host.receive(JSON.stringify(command));
+    expect(p.queue).toHaveLength(1);
+    const firstState = p.queue[0]!.wire;
+    p.flush();
+    p.host.receive(JSON.stringify(command));
+    expect(p.host.pending).toBe(false);
+    expect(p.queue[0]!.wire.stateSeq).toBe(firstState.stateSeq);
+    p.flush();
+    expect(p.host.pending || p.guest.pending).toBe(false);
+    expect(p.host.closed || p.guest.closed).toBe('');
+    expect(p.host.match).toEqual(before);
+    expect(p.guest.match).toEqual(before);
+    expect(p.die).toHaveBeenCalledTimes(draws);
+    // A duplicate may arrive while the guest's next command is already in transit.
+    p.guest.act({ kind: 'hold', index: 0 });
+    p.host.receive(JSON.stringify(command));
+    p.flush();
+    expect(p.host.closed || p.guest.closed).toBe('');
+    expect(p.host.pending || p.guest.pending).toBe(false);
+    expect(p.host.match!.held[0]).toBe(true);
+    expect(p.guest.match).toEqual(p.host.match);
+    expect(p.die).toHaveBeenCalledTimes(draws);
+  });
+  it('keeps the final result and rematch unconfirmed until its ACK arrives', () => {
+    const p = pair();
+    p.begin();
+    for (const category of CATEGORIES)
+      for (const actor of [p.host, p.guest]) {
+        actor.act({ kind: 'roll' });
+        p.flush();
+        actor.act({ kind: 'score', category });
+        if (category !== 'yacht' || actor === p.host) p.flush();
+      }
+    p.deliver(); // last guest command
+    expect(finished(p.host.match!)).toBe(true);
+    expect(p.host.matchComplete).toBe(false);
+    expect(p.host.pending).toBe(true);
+    p.host.ready();
+    expect(p.host.localReady).toBe(false);
+    p.deliver(); // final state
+    p.guest.ready();
+    expect(p.queue.map(({ wire }) => wire.type)).toEqual(['state-ack', 'ready']);
+    p.host.ready();
+    expect(p.host.match!.round).toBe(1);
+    expect(p.host.localReady).toBe(false);
+    p.deliver(); // ACK
+    expect(p.host.matchComplete).toBe(true);
+    p.host.ready();
+    p.flush();
+    expect(p.host.match).toEqual(newMatch(2));
+    expect(p.guest.match).toEqual(p.host.match);
+    expect(p.host.pending).toBe(false);
+  });
+  it.each([
+    { stateSeq: 0, round: 1, revision: 1 },
+    { stateSeq: 3, round: 1, revision: 1 },
+    { stateSeq: 2, round: 2, revision: 1 },
+    { stateSeq: 2, round: 1, revision: 0 },
+    { stateSeq: 2, round: 1, revision: '1' },
+  ])('rejects malformed or mismatched state ACKs (%#)', (fields) => {
+    const p = pair();
+    p.begin();
+    p.host.act({ kind: 'roll' });
+    const before = structuredClone(p.host.match);
+    p.host.receive(
+      JSON.stringify({ v: PROTOCOL_VERSION, type: 'state-ack', sid: p.host.sid, ...fields }),
+    );
+    expect(p.host.closed).not.toBe('');
+    expect(p.host.match).toEqual(before);
+    expect(p.die).toHaveBeenCalledTimes(5);
+  });
+  it('rejects an unacknowledged next command and v1 peers explicitly', () => {
+    const p = pair();
+    p.begin();
+    p.host.act({ kind: 'roll' });
+    p.host.receive(
+      JSON.stringify({
+        v: PROTOCOL_VERSION,
+        type: 'command',
+        sid: p.host.sid,
+        round: 1,
+        revision: 1,
+        seq: 1,
+        action: { kind: 'roll' },
+      }),
+    );
+    expect(p.host.closed).toContain('acknowledgement required');
+    expect(p.die).toHaveBeenCalledTimes(5);
+    const old = pair();
+    old.host.start();
+    old.host.receive(
+      JSON.stringify({ v: 1, type: 'hello', name: 'Old', host: false, nonce: 'b'.repeat(32) }),
+    );
+    expect(old.host.closed).toBe('Protocol mismatch');
+    expect(old.host.peerName).toBe('');
+  });
   it('rejects a remote operation on the host turn without consuming RNG or accepting a forged seat', () => {
     const p = pair();
     p.begin();
     const before = structuredClone(p.host.match);
     p.host.receive(
       JSON.stringify({
-        v: 1,
+        v: PROTOCOL_VERSION,
         type: 'command',
         sid: p.host.sid,
         round: 1,
@@ -161,10 +325,11 @@ describe('two-peer host-authoritative Yacht PoC', () => {
     expect(p.host.match).toEqual(before);
     expect(p.die).not.toHaveBeenCalled();
   });
-  it('ignores duplicates, stale revisions and commands from the previous round', () => {
+  it('ignores duplicates, stale revisions and commands for a different round', () => {
     const p = pair();
     p.begin();
     p.host.act({ kind: 'roll' });
+    p.flush();
     p.host.act({ kind: 'score', category: 'ones' });
     p.flush();
     p.guest.act({ kind: 'roll' });
@@ -176,11 +341,17 @@ describe('two-peer host-authoritative Yacht PoC', () => {
     p.flush();
     expect(p.host.match).toEqual(before);
     expect(p.die).toHaveBeenCalledTimes(draws);
-    p.host.receive(JSON.stringify({ ...command, seq: 2 }));
-    p.host.receive(
-      JSON.stringify({ ...command, seq: 3, round: 2, revision: p.host.match!.revision }),
-    );
+    p.guest.act({ kind: 'roll' });
+    const stale = p.queue.shift()!.wire;
+    p.host.receive(JSON.stringify({ ...stale, revision: command.revision }));
+    p.flush();
+    p.guest.act({ kind: 'roll' });
+    const wrongRound = p.queue.shift()!.wire;
+    p.host.receive(JSON.stringify({ ...wrongRound, round: 2 }));
+    p.flush();
     expect(p.host.match).toEqual(before);
+    expect(p.host.pending || p.guest.pending).toBe(false);
+    expect(p.host.closed || p.guest.closed).toBe('');
     expect(p.die).toHaveBeenCalledTimes(draws);
   });
   it('sends a >MTU ping only on request and accepts one corresponding pong', () => {
@@ -198,6 +369,7 @@ describe('two-peer host-authoritative Yacht PoC', () => {
     const p = pair();
     p.begin();
     p.host.act({ kind: 'roll' });
+    p.flush();
     p.host.act({ kind: 'score', category: 'ones' });
     p.flush();
     const before = structuredClone(p.guest.match);
@@ -214,12 +386,18 @@ describe('two-peer host-authoritative Yacht PoC', () => {
   });
   it.each([
     '{',
-    JSON.stringify({ v: 2, type: 'hello' }),
+    JSON.stringify({ v: 1, type: 'hello' }),
     ' '.repeat(4097),
-    JSON.stringify({ v: 1, type: 'command', sid: 'wrong', seq: 1 }),
-    JSON.stringify({ v: 1, type: 'state', sid: 'a'.repeat(32), match: newMatch(1), ack: 0 }),
+    JSON.stringify({ v: PROTOCOL_VERSION, type: 'command', sid: 'wrong', seq: 1 }),
     JSON.stringify({
-      v: 1,
+      v: PROTOCOL_VERSION,
+      type: 'state',
+      sid: 'a'.repeat(32),
+      match: newMatch(1),
+      ack: 0,
+    }),
+    JSON.stringify({
+      v: PROTOCOL_VERSION,
       type: 'command',
       sid: 'a'.repeat(32),
       round: 1,
@@ -241,7 +419,7 @@ describe('two-peer host-authoritative Yacht PoC', () => {
     p.host.start();
     p.host.receive(
       JSON.stringify({
-        v: 1,
+        v: PROTOCOL_VERSION,
         type: 'hello',
         host: true,
         name: 'Second host',
@@ -260,7 +438,16 @@ describe('two-peer host-authoritative Yacht PoC', () => {
       const p = pair();
       p.begin();
       const before = structuredClone(p.guest.match);
-      p.guest.receive(JSON.stringify({ v: 1, type: 'state', sid: p.guest.sid, match, ack: 0 }));
+      p.guest.receive(
+        JSON.stringify({
+          v: PROTOCOL_VERSION,
+          type: 'state',
+          sid: p.guest.sid,
+          match,
+          ack: 0,
+          stateSeq: 2,
+        }),
+      );
       expect(p.guest.closed).not.toBe('');
       expect(p.guest.match).toEqual(before);
     }

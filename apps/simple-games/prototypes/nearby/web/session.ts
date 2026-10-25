@@ -12,6 +12,7 @@ import {
 } from './yacht';
 
 export const MAX_FRAME_BYTES = 4096;
+export const PROTOCOL_VERSION = 2;
 const token = (v: unknown): v is string => typeof v === 'string' && /^[a-f0-9]{32}$/.test(v);
 const playerName = (v: unknown): v is string =>
   typeof v === 'string' &&
@@ -19,7 +20,7 @@ const playerName = (v: unknown): v is string =>
   v.length > 0 &&
   v.length <= 24 &&
   !/[\u0000-\u001f\u007f]/.test(v);
-export type Wire = Record<string, unknown> & { v: 1; type: string };
+export type Wire = Record<string, unknown> & { v: typeof PROTOCOL_VERSION; type: string };
 export interface Options {
   host: boolean;
   name: string;
@@ -47,6 +48,9 @@ export class Session {
   private peerNonce = '';
   private seq = 0;
   private receivedSeq = 0;
+  private stateSeq = 0;
+  private acknowledgedStateSeq = 0;
+  private stateCommandAck = 0;
   private started = false;
   private earlyFrame: string | null = null;
   private pingId = 0;
@@ -70,11 +74,18 @@ export class Session {
       turn(this.match) === (this.host ? 0 : 1)
     );
   }
+  get matchComplete() {
+    return !!(
+      this.match &&
+      finished(this.match) &&
+      (!this.host || this.acknowledgedStateSeq === this.stateSeq)
+    );
+  }
   get names() {
     return this.host ? [this.name, this.peerName] : [this.peerName, this.name];
   }
   private send(type: string, fields: Record<string, unknown> = {}) {
-    this.options.send({ v: 1, type, sid: this.sid, ...fields });
+    this.options.send({ v: PROTOCOL_VERSION, type, sid: this.sid, ...fields });
   }
   private changed() {
     this.options.changed();
@@ -83,7 +94,7 @@ export class Session {
     if (this.started || this.closed) return;
     this.started = true;
     this.options.send({
-      v: 1,
+      v: PROTOCOL_VERSION,
       type: 'hello',
       name: this.name,
       host: this.host,
@@ -102,14 +113,15 @@ export class Session {
     this.changed();
   }
   ready() {
-    if (!this.paired || this.localReady || (this.match && !finished(this.match))) return;
+    if (!this.paired || this.pending || this.localReady || (this.match && !this.matchComplete))
+      return;
     this.localReady = true;
     this.send('ready', { round: this.match?.round ?? 0 });
     this.tryStart();
     this.changed();
   }
   private tryStart() {
-    if (!this.host || !this.paired || !this.localReady || !this.peerReady) return;
+    if (!this.host || !this.paired || this.pending || !this.localReady || !this.peerReady) return;
     const round = (this.match?.round ?? 0) + 1;
     if (round > 10000) {
       this.end('Round limit');
@@ -120,7 +132,14 @@ export class Session {
     this.publish();
   }
   private publish() {
-    this.send('state', { match: this.match, ack: this.receivedSeq });
+    if (!this.match || this.pending) return;
+    if (this.stateSeq >= 1000000) {
+      this.end('State sequence limit');
+      return;
+    }
+    // Native send acceptance is not proof that the peer received this snapshot.
+    this.pending = true;
+    this.send('state', { match: this.match, ack: this.receivedSeq, stateSeq: ++this.stateSeq });
   }
   act(action: Action) {
     if (!isAction(action) || !this.canAct || !this.match) return;
@@ -172,7 +191,7 @@ export class Session {
       this.end('Malformed frame');
       return;
     }
-    if (!record(v) || v.v !== 1 || typeof v.type !== 'string') {
+    if (!record(v) || v.v !== PROTOCOL_VERSION || typeof v.type !== 'string') {
       this.end('Protocol mismatch');
       return;
     }
@@ -215,14 +234,37 @@ export class Session {
     } else if (v.type === 'ready') {
       if (
         v.round !== (this.match?.round ?? 0) ||
+        this.pending ||
         this.peerReady ||
-        (this.match && !finished(this.match))
+        (this.match && !this.matchComplete)
       ) {
         this.end('Unexpected ready');
         return;
       }
       this.peerReady = true;
       this.tryStart();
+    } else if (v.type === 'state-ack' && this.host) {
+      if (
+        !integer(v.stateSeq, 1, this.stateSeq) ||
+        !integer(v.round, 1, 10000) ||
+        !integer(v.revision, 0, 100000)
+      ) {
+        this.end('Invalid state acknowledgement');
+        return;
+      }
+      // Old or repeated ACKs cannot release a newer pending state or extend its timer.
+      if (v.stateSeq <= this.acknowledgedStateSeq) return;
+      if (
+        !this.pending ||
+        v.stateSeq !== this.stateSeq ||
+        v.round !== this.match?.round ||
+        v.revision !== this.match.revision
+      ) {
+        this.end('State acknowledgement mismatch');
+        return;
+      }
+      this.acknowledgedStateSeq = v.stateSeq;
+      this.pending = false;
     } else if (v.type === 'command' && this.host) {
       if (
         !this.match ||
@@ -236,7 +278,14 @@ export class Session {
       }
       // Duplicate or late commands never consume RNG or change scores. Reply with current truth.
       if (v.seq <= this.receivedSeq) {
-        this.publish();
+        // An already acknowledged snapshot stays acknowledged. Starting another ACK
+        // wait here could race with the guest's next command already in transit.
+        if (!this.pending)
+          this.send('state', { match: this.match, ack: this.receivedSeq, stateSeq: this.stateSeq });
+        return;
+      }
+      if (this.pending) {
+        this.end('State acknowledgement required before command');
         return;
       }
       if (v.seq !== this.receivedSeq + 1) {
@@ -250,11 +299,22 @@ export class Session {
       }
       this.publish();
     } else if (v.type === 'state' && !this.host) {
-      if (!isMatch(v.match) || !integer(v.ack, 0, this.seq)) {
+      if (!isMatch(v.match) || !integer(v.ack, 0, this.seq) || !integer(v.stateSeq, 1, 1000000)) {
         this.end('Invalid state');
         return;
       }
       const incoming = v.match;
+      if (v.stateSeq < this.stateSeq) return;
+      if (
+        v.stateSeq > this.stateSeq + 1 ||
+        v.ack < this.stateCommandAck ||
+        (v.stateSeq === this.stateSeq &&
+          (v.ack !== this.stateCommandAck ||
+            JSON.stringify(incoming) !== JSON.stringify(this.match)))
+      ) {
+        this.end('State sequence mismatch');
+        return;
+      }
       const round = this.match?.round ?? 0;
       if (incoming.round === round + 1) {
         if (
@@ -282,7 +342,15 @@ export class Session {
         return;
       }
       this.match = incoming;
+      this.stateSeq = v.stateSeq;
+      this.stateCommandAck = v.ack;
       if (v.ack === this.seq) this.pending = false;
+      // Enqueue the ACK before changed() can enable a guest command or rematch Ready.
+      this.send('state-ack', {
+        stateSeq: this.stateSeq,
+        round: incoming.round,
+        revision: incoming.revision,
+      });
     } else if (
       v.type === 'ping' &&
       integer(v.id, 1, 1000000) &&
