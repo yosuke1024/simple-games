@@ -4,6 +4,7 @@ export const hi: Messages = {
   playTogether: 'किसी के साथ खेलें',
   returnToTogether: 'मल्टीप्लेयर पर लौटें',
   playTogetherNote: 'पास मौजूद किसी व्यक्ति से जुड़कर मुकाबला करें।',
+  playTogetherAppOnlyNote: 'केवल ऐप में उपलब्ध है।',
   tagline: 'ऑफ़लाइन खेलें। कोई खाता नहीं। कोई पेवॉल नहीं।',
 
   resume: 'जारी रखें',

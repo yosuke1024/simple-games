@@ -6,6 +6,7 @@ export const en = {
   playTogether: 'Play with someone',
   returnToTogether: 'Back to multiplayer',
   playTogetherNote: 'Connect with someone nearby for a match.',
+  playTogetherAppOnlyNote: 'Available in the app only.',
   tagline: 'Works offline. No account. No paywalls.',
 
   // Home

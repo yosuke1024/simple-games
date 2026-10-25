@@ -5,17 +5,25 @@ export interface PlayTogetherProps {
   playTogetherActive?: boolean;
 }
 
-/** The shell supplies availability; games never load a connection implementation. */
+/** Web advertises the app feature without loading or starting a connection. */
 export function PlayTogetherButton({
   onPlayTogether,
   playTogetherActive = false,
 }: PlayTogetherProps) {
   const { t } = useSettings();
-  if (!onPlayTogether) return null;
+  const appOnly = import.meta.env.MODE === 'web';
+  if (!appOnly && !onPlayTogether) return null;
   return (
-    <button type="button" className="btn btn-secondary btn-big" onClick={onPlayTogether}>
-      {t(playTogetherActive ? 'returnToTogether' : 'playTogether')}
-      <span className="btn-note">{t('playTogetherNote')}</span>
+    <button
+      type="button"
+      className={`btn btn-secondary btn-big${appOnly ? ' play-together-app-only' : ''}`}
+      disabled={appOnly}
+      onClick={appOnly ? undefined : onPlayTogether}
+    >
+      {t(!appOnly && playTogetherActive ? 'returnToTogether' : 'playTogether')}
+      <span className="btn-note">
+        {t(appOnly ? 'playTogetherAppOnlyNote' : 'playTogetherNote')}
+      </span>
     </button>
   );
 }

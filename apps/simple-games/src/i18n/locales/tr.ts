@@ -4,6 +4,7 @@ export const tr: Messages = {
   playTogether: 'Biriyle oyna',
   returnToTogether: 'Birlikte oyuna dön',
   playTogetherNote: 'Bir maç için yakındaki biriyle bağlan.',
+  playTogetherAppOnlyNote: 'Yalnızca uygulamada kullanılabilir.',
   tagline: 'Çevrimdışı çalışır. Hesap yok. Ödeme duvarı yok.',
 
   resume: 'Devam et',

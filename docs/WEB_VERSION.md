@@ -23,6 +23,13 @@
 registryは正式45本・Webベータ21本・合計66本。以下の公開経緯は当時の記録であり、
 この4本の現在の配信区分は本節が優先する。安定稼働2週間の条件を満たした扱いにはしない。
 Nearbyの対人戦はnative限定で、Webは従来のCPU戦を引き続き提供する。
+Webの対応13本（Yacht / Reversi / Connect Four / Gomoku / Checkers / Gin Rummy / Mancala /
+Dominoes / Dots and Boxes / Chess / Nested Tic-Tac-Toe / Scopa / Nim）のトップには、無効な
+「誰かと遊ぶ」ボタンと「アプリ専用の機能です」を表示する。英語は “Play with someone” と
+“Available in the app only.”。この表示はアプリの機能を知らせるもので、接続画面への遷移や
+ストアの自動起動は行わない。WebにはNearbyの実行コード・通信chunkを含めず、探索・権限要求・
+接続・Nearby履歴読取を行わない。ネットワーク状態による表示・有効化の判定は無く、オフラインでも
+説明を表示する。未対応ゲームにはこのボタンを出さない。
 この変更時点ではlandingのカード・許容リスト、実機試験、ストア配布は未完了である。
 
 ## 役割分担
@@ -34,12 +41,13 @@ Nearbyの対人戦はnative限定で、Webは従来のCPU戦を引き続き提�
 | 広告       | ディスプレイ広告ほか([ADS_POLICY.md](ADS_POLICY.md)「Web 版」。既定は無効)                                                                               | Anchored Adaptive Banner 1 枠のみ                                                                               |
 | 課金       | なし(完全無料)                                                                                                                                           | $3.99 買い切りで広告永久削除                                                                                    |
 | 計測       | サイト共通のページ解析(下の「計測」節。実装済み・既定は無効)                                                                                             | なし — Analytics を入れないことがアプリの約束([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))                   |
-| ゲーム内容 | 正式収録の45本＋先行公開対象の21本（registryの合計66本）。実際の配信版・開始日は下の「先行公開」節とリンク先の公開記録を参照。正式収録ゲームに機能差なし | 正式収録の45本（registryで`channel`を持たないエントリ）。新作は先行公開で検証後に収録（2026-10-02に11本を収録） |
+| ゲーム内容 | 正式収録の45本＋先行公開対象の21本（registryの合計66本）。実際の配信版・開始日は下の「先行公開」節とリンク先の公開記録を参照。ソロ / CPU 戦は共通、近隣対戦はアプリ専用表示のみ | 正式収録の45本（registryで`channel`を持たないエントリ）。新作は先行公開で検証後に収録（2026-10-02に11本を収録） |
 
 **Play instantly on the web. Play quietly and offline in the app.**
 
-ゲーム機能に差を付けない。広告視聴でも課金でも解放される機能は、どちらの版にも
-存在しない(`docs/PRODUCT_PRINCIPLES.md`)。新作の**収録タイミング**だけは版で
+通常のソロ / CPU 戦は両版で共通とする。近隣対戦はOSの通信機能を使うアプリ限定の任意機能で、
+Webでは上記の無効ボタンと説明を表示する。広告視聴でも課金でも解放される機能は、どちらの版にも
+存在しない(`docs/PRODUCT_PRINCIPLES.md`)。新作の**収録タイミング**も版で
 異なる(Web が先 — 下の「先行公開(ベータ)」)。これは無料の先行であって、
 支払い・広告視聴・アカウントの対価ではない。
 
@@ -147,7 +155,7 @@ https://pixapps.ai/simple-games/play/?game=sudoku → Sudoku
 
 **native では動かない。** 実装は `app/webRoute.ts` と `app/App.tsx` にあり、
 `Capacitor.isNativePlatform()` の**実行時ガード**で切る(下の「実装上の約束」の
-原則どおりで、ビルド時ゲートの例外 3 つは増やしていない)。アプリには住所欄が
+原則どおりで、この経路にビルド時ゲートは追加しない)。アプリには住所欄が
 無く、同じ操作はハードウェア戻るボタンが既に持っている
 ([ARCHITECTURE.md](ARCHITECTURE.md)「ハードウェア戻るボタン」)。
 App Links / Universal Links は導入しない。
@@ -787,7 +795,7 @@ earned prompt だったが、Web 版を広告の着地先・主要な入口と�
 小さく、遮らない。
 
 - **Web 版のみ。** 実行時ガード(`Capacitor.isNativePlatform()`)で、上の
-  「実装上の約束」どおりビルド時ゲートの例外は 3 つのまま増やしていない。
+  「実装上の約束」どおり、このカードにビルド時ゲートは追加しない。
   native では表示も、保存も、追加の通信も**一切ない**。
 - **初回訪問から、毎回出す。** 0 局でも出る。プレイ回数・訪問回数・入り方
   (`?game=<id>` の直着地かどうか)で出し分けない。**閾値も frequency cap も
@@ -867,21 +875,26 @@ I18N_POLICY.md の高リスクキー 5 番(無料・オフライン・paywall �
   巨大なプラグイン基盤や過剰な抽象化を作らない。
 - web と native の違いは**実行時ガード**で表現する。ビルドを不必要に分岐させない
   (公開ソースと配信物が対応していることが、この製品の証明手段そのもの)。
-  例外は **Web 広告・計測・サイトクロームの 3 つ**だけで、いずれも
+  **Web 広告・計測・サイトクロームの 3 つ**は例外で、いずれも
   `--mode web` のビルド時ゲートに置く。その分離は
   `.github/scripts/check-dist-ads-separation.sh` が**ビルド成果物**で機械検証する
   (native 側に不在・web 側に存在。ビルドが要るので grep だけの
   `check-principles.sh` とは別スクリプトになっており、CI の verify ジョブが呼ぶ)。
-  **URL ルーティングは 4 つ目の例外にしていない**(上の「URL(ゲーム別の入口)」)。
+  2026-10-25、**native限定のNearby実行コードの除外と、そのアプリ専用案内**を追加の例外とする。
+  `ui/components/PlayTogetherButton.tsx` の `import.meta.env.MODE === 'web'` は、
+  共通ボタンを無効な案内表示へ変えるだけのビルド時分岐である。ゲームごとの分岐や追加props、
+  Webの接続機能は増やさず、Yachtを含む対応13本で同じ部品を使う。接続の可否と起動は引き続き
+  シェルが所有し、Web成果物にNearby runtimeが入らないことを確認する。オンライン判定は使わない。
+  **URL ルーティングは例外に加えていない**(上の「URL(ゲーム別の入口)」)。
   外部の SDK もサイト側の資産も持ち込まず、native では 1 行も走らない実行時ガードで
   足りるものを、成果物の分離検査が要る側へ移す理由がないため。Android の
   ホーム画面ショートカット(issue #110)と iOS の Quick Actions(issue #114)も
   同じ理由でビルドゲートではなく実行時ガード側に置く
   (`Capacitor.getPlatform() === 'android'` / `=== 'ios'`)。
-  **Club House(Public / Private、issue #161)も 4 つ目にしない**(2026-09-09 の issue #176、
+  **Club House(Public / Private、issue #161)もビルド時ゲートにしない**(2026-09-09 の issue #176、
   2026-09-30 の `simple-games-club#1`)。
   native にも Web にも同じコードが入り、有効化した端末でだけ動く実行時ゲート側である。
-  ただし通信を持つ唯一の層なので、実行時ガードだけに頼らず、到達経路で不在を示す —
+  ただしインターネット通信を持つ層なので、実行時ガードだけに頼らず、到達経路で不在を示す —
   `src/club/` へは `src/app/` からの動的 `import()` だけ、チャンクは独立、初期グラフに
   入らない([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Club House」の「機械で示すこと」)。
   Club House が Web ビルドを同梱して配るのは**そのデプロイ上**の話で、

@@ -4,6 +4,7 @@ export const de: Messages = {
   playTogether: 'Mit jemandem spielen',
   returnToTogether: 'Zurück zum Mehrspieler',
   playTogetherNote: 'Verbinde dich mit jemandem in der Nähe für eine Partie.',
+  playTogetherAppOnlyNote: 'Nur in der App verfügbar.',
   tagline: 'Offline spielbar. Kein Konto. Keine Paywall.',
 
   resume: 'Weiter',

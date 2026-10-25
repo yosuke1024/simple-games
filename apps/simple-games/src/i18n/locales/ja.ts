@@ -4,6 +4,7 @@ export const ja: Messages = {
   playTogether: '誰かと遊ぶ',
   returnToTogether: '対戦に戻る',
   playTogetherNote: '近くの人と接続して対戦',
+  playTogetherAppOnlyNote: 'アプリ専用の機能です',
   tagline: 'オフラインで遊べる。アカウント不要。機能課金なし。',
 
   resume: '続きから',

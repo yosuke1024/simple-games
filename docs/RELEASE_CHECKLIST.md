@@ -17,6 +17,9 @@ Google Play への公開前に、この順で確認する。
 - [ ] Android / iPhoneで13本の一局、チャットON/OFF、背景移行、切断→復帰、終局→再戦を確認。
 - [ ] 320px幅・large text・VoiceOver/TalkBack・低速端末・翻訳の人間レビュー。
 - [ ] landingの正式一覧・ガイド導線・ストア説明の反映。
+- [ ] Webの対応13本のtopに無効な「誰かと遊ぶ」と「アプリ専用の機能です」を表示し、
+      接続画面へ遷移しない。英語は “Play with someone” / “Available in the app only.”。
+      Web成果物にNearbyの実行コード・通信chunkが無く、探索・権限要求・接続・履歴読取が発生しない。
 - [ ] version/build採番、内部テスト/TestFlight配布、配布後の上記再確認。
 
 旧PoC・1.5.1の成功を今回13本の実機成功としない。プロセス終了からの復元は未対応。
