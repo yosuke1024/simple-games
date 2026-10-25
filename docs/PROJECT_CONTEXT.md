@@ -148,7 +148,9 @@ B8 は iOS background / 復帰、B9 は双方向 1 KB ping と Android Bluetooth
 L3 では Wi-Fi OFF 後の次の host 操作から state ACK timeout まで 15,009 ms で終了した。
 wire v1 の完走・部分試験・不具合の履歴は作業記録へ分けて保持する。
 周期 heartbeat は追加せず、無操作中の即時切断検知を保証しない。初期 / 最終 ACK 欠落、
-画面ロック、OS 資源の全解放、電池、配布サイズは未確認。追加端末と WAN を切れる router は
+画面ロック、OS 資源の全解放、電池は未確認。Android の隔離 staging の release 比較では
+配布推定 +32,983 bytes を確認した（条件・監査結果は作業記録）。
+製品 UX 未統合で、実 install size と正式な +500 KB gate は未検証。追加端末と WAN を切れる router は
 用意できておらず、同 OS / 旧 OS / advertising 非対応端末・3〜4 台・WAN なし LAN は未実施。
 Phase 0 は原則・資料調査と一部端末の確認まで、Phase 1 は上記 2 台の BLE / LAN 試験中、
 Phase 2 はデモ段階であり、Epic は未完了。

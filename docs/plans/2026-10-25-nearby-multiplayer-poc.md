@@ -19,7 +19,7 @@ issue: [#268](https://github.com/yosuke1024/simple-games/issues/268)
 | Epic の段階 | この対応で用意するもの | 完了と扱わないもの |
 | --- | --- | --- |
 | Phase 0 | Core の任意の近隣通信を許容する canonical の更新、公式資料、2 台の role と検証 matrix、Android / iPhone 各 1 台の機種・OS 確認 | 旧 OS・低価格・advertising 非対応端末を含む台帳の確定と実測。Phase 0 全体は一部未完了。 |
-| Phase 1 | BLE / LAN native adapter、共通 framing、相互確認。v2 の B8 / B9 で BLE の両方向接続、B9 で双方向 ping。v1 の B1〜B3 / L1 / L2 と v2 の L3 の結果も別に保持 | 他の端末・OS 組み合わせ、WAN なし LAN、安定性、3〜4 台、電池、Android +500 KB の達成。 |
+| Phase 1 | BLE / LAN native adapter、共通 framing、相互確認。v2 の B8 / B9 で BLE の両方向接続、B9 で双方向 ping。隔離 staging の release 容量を事前見積もり。v1 の B1〜B3 / L1 / L2 と v2 の L3 の結果も別に保持 | 他の端末・OS 組み合わせ、WAN なし LAN、安定性、3〜4 台、電池、製品 UX 統合後の実 install size と正式な Android +500 KB 判定。 |
 | Phase 2 | v1 の B1 / B2 / L1 / L2 と v2 の L3 / B8 / B9 で各 24 手番を完走し、各 121 公開 DOM 盤面と最終結果が一致。再戦、Android / iOS の background、Android Bluetooth OFF、L3 の次操作後の state ACK timeout による終了と自動再開なしを確認 | 初期 / 最終 ACK 欠落の実機確認、WAN なし LAN の完走、その他の対局中の異常系・資源解放、製品 UI、多言語・accessibility、製品導入。 |
 | Phase 3 | 必要な release gate の文書化 | Connect Four / Reversi への展開、3〜4 人検証、正式公開。 |
 
@@ -33,7 +33,7 @@ issue: [#268](https://github.com/yosuke1024/simple-games/issues/268)
 ないことも観測した。後続の B1 では iPhone advertise / game guest と Android browse /
 game host で発見・接続・相互確認と双方向 1 KB ping に成功し、Yacht の 24 手番を完走した。
 最終結果は両端末で 28 対 35、iPhone 勝利の表示が一致。両端末の記録を回収し、公開 DOM
-盤面 121 / 121 件の一致を比較検査で確認した。WAN なし LAN・電池・配布サイズは未実施。
+盤面 121 / 121 件の一致を比較検査で確認した。WAN なし LAN・電池・製品 UX 統合後の容量の正式判定は未実施。
 
 B2 では同じ無線 role のまま iPhone を game host、Android を guest にし、日本語の表示名と
 確認コードを双方で確認して 24 手番を完走した。全 121 公開 DOM 盤面が一致し、最終 51 対 34、
@@ -190,7 +190,7 @@ LAN の必須 gate（W1〜W4）の条件は **同一 Wi-Fi、WAN / インター�
 | 重複 / 古い revision / 順序逆転 / 手番外 command | RNG・得点・手番を誤って進めない | 未実施 |
 | 2 人で Ready / 再戦 | 両者の Ready で新 round。前 round の操作を採用しない | v1 の B2 は初回・再戦とも片方の Ready だけでは開始しない。v2 の L3 / B8 / B9 でも双方 Ready で rev 0 に戻り、B8 / B9 は host の Roll 後の rev 1 と出目一致を確認。前 round の古い操作を実機へ注入する試験は未実施。 |
 
-## Android 配布サイズと性能 — 未測定
+## Android 容量の事前見積もり — 確認済み、正式判定は未実施
 
 **+500 KB は初期の挑戦目標であって、達成値ではない。** 同一条件の変更前後の release AAB
 から device spec に対応する配布 / install size を測る。署名、ABI、density、language、
@@ -200,17 +200,51 @@ build variant、minify、version、使用した bundletool / SDK と計測手順
 同じ基準 commit から baseline と組込候補を用意し、同じ release 設定（R8 / resource shrink
 を含む）・同一テスト署名で AAB → device APK set を作れば、製品の release key なしでも
 事前評価できる。`bundletool get-size total` は配布サイズの推定 min / max であり、install size
-ではない。現在の未着手項目は候補に含める UI / protocol / native 権限の組込範囲、比較 AAB ペアと
-測定スクリプトの用意であり、製品の署名鍵の入手を待ち条件にはしない。
+ではない。製品の署名鍵の入手を待ち条件にはしない。
 
 測定準備として、既存 Gradle cache の bundletool 1.18.1 で A2 の device spec を取得した
 （`arm64-v8a`、density 480、API 37）。保存先は PoC の
 `measurements/device-spec-pixel9pro-api37.json`（gitignored）。GL extension 取得の warning が
-出ている。これは実機構成の取得であり、release 配布差分 / install size の計算・実測は未実施。
+出ている。下記の staging 見積もりはこの spec を利用する。実 install size は未測定。
+
+### 製品導入前の隔離 staging 比較 — 最終 JSON / 同梱監査 PASS
+
+source head `704e6e770710262ddf649dc5761d1e4bcb9c254d` の製品ソースを隔離 staging に複製し、
+baseline と candidate を release build した。candidate に含めるのは native BLE / LAN plugin、
+登録、権限、既存 PoC の別 HTML entry であり、製品入口と最終 UX は未統合。通常の製品ソースを
+変更・配布した結果ではない。再現条件は以下のとおり。
+
+| 条件 | 共通設定 |
+| --- | --- |
+| native build | Java 21.0.12、AGP 8.13.0、Gradle 8.14.3、compile / target 36、min 24 |
+| release 設定 | R8 / resource shrink 有効、version 0.0.0（code 1）、広告 disabled、Meta off |
+| 署名 | 両者に同じ新規テスト署名を使用。製品の署名鍵は使用していない。 |
+| 配布推定 | bundletool 1.18.1、aapt2 36.1.0、保存済み Pixel 9 Pro / API 37 spec（arm64-v8a、480 dpi、ja-JP / en-JP） |
+
+| 事前見積もりの測定値 | baseline (bytes) | candidate (bytes) | 差分 (bytes) |
+| --- | ---: | ---: | ---: |
+| device APK set の download estimate（MIN = MAX） | 5,099,338 | 5,132,321 | +32,983 |
+| release AAB ファイル自体（補助値） | 7,646,887 | 7,701,072 | +54,185 |
+
+両 release build が成功し、監査時点で元 source 不変、全既存製品 assets の一致、独立 entry の
+追加 3 assets と wire v2 マーカー、R8 後 DEX の登録 plugin / BLE / LAN の残存、想定 6 権限と
+optional BLE だけの manifest 差分、native 依存の一致、全 APK の同一署名検証が PASS。
+通常 home は変更しておらず、製品への導入判断は含まない。
+
+最終記録は PoC の `build/size-study/result.json`。実ファイルの SHA-256
+`db82db6e34423311f3877e26295358503e52860014321160d185966d1428cc33` と数値・監査項目を照合した。
+同 directory の `study.py` と logs はローカルの ignored 生成物で、計測 script の tracked 追加はない。
+
+これは **製品導入前の容量見積もり**。download estimate の増分は +32,983 bytes だが、端末への
+install は行っておらず、実 install size、製品 UX 統合後の増分、他の device spec、本番署名 / 広告設定と
+正式な **+500 KB gate は未検証**。device spec 取得時に GL extensions が得られず、texture compression
+targeting も未確認である。AAB 自体の増分 +54,185 bytes を配布増分や install size と読み替えない。
+
+### 製品 UX 統合後の正式判定と性能 — 未実施
 
 | 測定対象 | 基準 commit / 値 | 変更後 commit / 値 | 差分・判定 |
 | --- | --- | --- | --- |
-| release AAB の同一 device spec 配布サイズ | 未測定 | 未測定 | 未測定 |
+| 製品 UX 統合後の同一 device spec 配布サイズ | 未測定 | 未測定 | 未測定 |
 | 同一 device の install size | 未測定 | 未測定 | 未測定 |
 | universal APK (補助値) | 未測定 | 未測定 | 未測定 |
 | 起動時間 / メモリ / 電池 | 未測定 | 未測定 | 未測定 |
@@ -399,8 +433,9 @@ B9 の両端末の正規化した公開盤面列の SHA-256 は共通で、
 B8 の iOS background、B9 の Android Bluetooth OFF、L3 の Wi-Fi OFF 後の次操作からの
 15,009 ms の state ACK timeout で終了し、復帰 / 無線復元後も自動再開しなかった。
 v1 の B1 / B2 / L1 / L2 の完走、B3 の部分試験と修正前の不具合は独立した履歴として保持する。
-初期 / 最終 ACK 欠落、画面ロック、他の未試験異常系、OS 資源の全解放、消費電力、release 配布 /
-install size は未確認。利用可能な実機は A2 / I2 だけで追加端末はなく、WAN を切れる router もない。
+初期 / 最終 ACK 欠落、画面ロック、他の未試験異常系、OS 資源の全解放、消費電力は未確認。
+容量は隔離 staging の事前見積もりを実施したが、製品 UX 統合後の配布増分・実 install size・正式な
++500 KB 判定は未実施。利用可能な実機は A2 / I2 だけで追加端末はなく、WAN を切れる router もない。
 同 OS / 旧 OS / 低価格 / advertising 非対応端末、3〜4 台と WAN なし LAN は設備待ちの未実施。
 L1 / L2 / L3 の通常 Wi-Fi の結果を WAN なし条件の代用にはしない。
 

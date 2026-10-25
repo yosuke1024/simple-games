@@ -187,7 +187,13 @@ devices, 3–4 players, and WAN-disconnected LAN remain untested. A WAN-disconne
 router is not available. Initial/final state-ACK loss, lock, power, and full OS resource
 release still need evidence.
 
-Android's **+500 KB remains an unmeasured target**. Before product integration is accepted,
+An audited pre-integration release staging comparison estimated a download increase
+of **32,983 bytes**; the AAB file itself increased by 54,185 bytes. It compares product
+source with and without the native plugin, registration, permissions, and a separate
+PoC HTML entry. The normal product home is unchanged, final product UX is not
+integrated, and no device installation was performed. Conditions, artifacts, and
+limitations are recorded in [the work log](../../../../docs/plans/2026-10-25-nearby-multiplayer-poc.md).
+Android's **+500 KB gate remains unverified**. Before product integration is accepted,
 compare release AABs of the actual app with identical build settings and bundletool
 device specs, including device install sizes. Matching test signing keys are sufficient
 for a preliminary comparison; a production release key is not a prerequisite.

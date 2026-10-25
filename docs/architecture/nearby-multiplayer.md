@@ -35,7 +35,9 @@ wire v1 の B1 / B2 / L1 / L2 の完走、B3 の部分試験、NSD / 状態 ACK 
 作業記録に保持し、v2 の証拠へ転用しない。
 LAN の WAN 遮断操作は行っていない。利用可能な実機は上記 2 台だけで、WAN を切れる router も
 用意できていない。他の端末・OS、同 OS、advertising 非対応、3〜4 台、WAN なし LAN は未実施。
-初期 / 最終 ACK 欠落、画面ロック、OS 資源の全解放、電池、配布サイズも未確認。
+初期 / 最終 ACK 欠落、画面ロック、OS 資源の全解放、電池も未確認。Android の隔離 staging による
+容量見積もりは監査済み（配布推定 +32,983 bytes）だが、製品 UX 統合後の増分・実 install size・
+正式な +500 KB gate は未検証。条件と最終 JSON の参照は作業記録に保持する。
 実施条件と結果は作業記録を参照し、コードや自動テストの成功を実機成功と読み替えない。
 Epic #268 はこの PoC だけでは完了しない。
 
@@ -206,6 +208,7 @@ host と guest の 2 人が 12 手番ずつ遊ぶ。既存の `scoreFor` と採�
    Android の変更前後の release AAB から同一 device spec の配布 / install size を比べる。
    +500 KB は挑戦目標であり、達成した事実ではない。PoC APK と製品 APK の単純比較、
    Web gzip、debug APK で代用しない。増分が超えたら理由・代替案を記録して採否を判断する。
+   製品入口 / UX 未統合の隔離 staging 見積もりは作業記録へ別記し、正式判定や実 install size の代用にしない。
 6. **製品境界**: 通常起動と Web で探索・権限要求・通信がないこと、製品の lazy-load /
    size gate と既存ゲーム・保存が退行しないことを確認する。native 権限説明、多言語、
    accessibility、プライバシーと平文通信の扱いを製品化前に完了する。
