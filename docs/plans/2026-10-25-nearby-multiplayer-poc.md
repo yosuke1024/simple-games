@@ -19,8 +19,8 @@ issue: [#268](https://github.com/yosuke1024/simple-games/issues/268)
 | Epic の段階 | この対応で用意するもの | 完了と扱わないもの |
 | --- | --- | --- |
 | Phase 0 | Core の任意の近隣通信を許容する canonical の更新、公式資料、2 台の role と検証 matrix、Android / iPhone 各 1 台の機種・OS 確認 | 旧 OS・低価格・advertising 非対応端末を含む台帳の確定と実測。Phase 0 全体は一部未完了。 |
-| Phase 1 | BLE / LAN native adapter、共通 framing、相互確認、手動の双方向 message 試験 | 実機接続、安定性、3〜4 台、電池、Android +500 KB の達成。 |
-| Phase 2 | 既存採点を使う host 主導の 2 人 Yacht デモ | 実機での一局完走、製品 UI、多言語・accessibility、製品導入。 |
+| Phase 1 | BLE / LAN native adapter、共通 framing、相互確認。B1 の Android ↔ iOS BLE 接続 1 回と、各方向 1 回の 1 KB ping に成功 | 他の通信ロール・OS 組み合わせ、WAN なし LAN、安定性、3〜4 台、電池、Android +500 KB の達成。 |
+| Phase 2 | 既存採点を使う host 主導の 2 人 Yacht デモ。B1 の実機 24 手番を完走し、両画面の最終 28 対 35・iPhone 勝利が一致 | 全 121 公開盤面の厳密な相互照合、WAN なし LAN の完走、再戦・対局中の異常系、製品 UI、多言語・accessibility、製品導入。 |
 | Phase 3 | 必要な release gate の文書化 | Connect Four / Reversi への展開、3〜4 人検証、正式公開。 |
 
 **Epic を close / complete にしない。** コードの自動検証と物理端末の試験結果を分ける。
@@ -30,12 +30,17 @@ issue: [#268](https://github.com/yosuke1024/simple-games/issues/268)
 探索の 60 秒 timeout、advertise 開始 callback、接続前の background / 復帰、権限拒否時の
 終了・再試行・再許可後の探索開始まで確認した。iPhone 11 は初回の署名準備不足を解消し、
 署名付きビルド・署名検証・インストール・起動に成功。Start 未操作の初回画面で権限ダイアログが
-ないことも観測した。2 台間の通信・一局完走・電池・配布サイズは未実施。
+ないことも観測した。後続の B1 では iPhone advertise / game guest と Android browse /
+game host で発見・接続・相互確認と双方向 1 KB ping に成功し、Yacht の 24 手番を完走した。
+最終結果は両端末で 28 対 35、iPhone 勝利の表示が一致。全 121 公開盤面の厳密照合は
+hash で確認中であり、WAN なし LAN・電池・配布サイズは未実施。
 
 B1 の開始準備では両端末で Start を操作したが、相手の発見・接続へ進む前に 60 秒で終了した。
-iOS の advertising 開始や OS の Bluetooth 許可ダイアログは直接確認できていない。
-許可待ちの可能性について利用者へ確認中で、許可後に明示再試行する。この準備中の timeout は
-接続失敗率の試行数に含めない。
+その時点の iOS advertising 開始や OS の Bluetooth 許可ダイアログは直接確認できておらず、
+許可待ちだったかは未確定。この準備中の timeout は接続失敗率の試行数に含めない。
+利用者が iPhone の初回 Bluetooth 許可をしたと回答した後の明示再試行で、1 回の接続成功を
+記録した。機内モード ON / Bluetooth ON / Wi-Fi OFF は両端末で利用者が確認し、Android は
+ADB の設定値 `1 / 1 / 0` でも確認した。終局後も Android で同じ設定値を再確認した。
 
 ## 設計判断
 
@@ -53,7 +58,7 @@ iOS の advertising 開始や OS の Bluetooth 許可ダイアログは直接確
   host 自身による改造への対策ではない。通信の切断・background は終了し、保存や再開はしない。
 - 3〜4 人、秘密手札、host 移譲、自動再接続、BLE / LAN 間移行、製品 UI は後段で判断する。
 
-## 実機台帳 — 2 台の機種・OS を確認、相互接続は未実施
+## 実機台帳 — B1 の Android ↔ iOS BLE 接続を 1 回確認
 
 2026-10-25 に下記 A2 / I2 を確認した。未確認の欄を推測で埋めず、API の capability 値や
 エミュレータ / Simulator の実行を advertising・端末間通信の実証にしない。
@@ -61,10 +66,10 @@ iOS の advertising 開始や OS の Bluetooth 許可ダイアログは直接確
 | ID | 機種 | OS / build | BLE advertising の実際の結果 | 備考 |
 | --- | --- | --- | --- | --- |
 | A1 | 未確認 | 未確認 | 未確認 | API 24–30 の旧権限世代を含める。 |
-| A2 | Pixel 9 Pro | Android 17 / API 37 / CP3A.260905.009 | 明示 Start 後の advertising 開始 callback を確認。相手からの発見は未実施 | `1131072b`、target 36 の PoC debug APK。browse の 60 秒 timeout と、接続前の background / 復帰を単体確認。低価格 Android の検証は別途必要。 |
+| A2 | Pixel 9 Pro | Android 17 / API 37 / CP3A.260905.009 | 明示 Start 後の advertising 開始 callback を確認。この role での相手からの発見は未実施 | `1131072b`、target 36 の PoC debug APK。browse / game host で I2 との B1 接続・双方向 ping に成功。低価格 Android の検証は別途必要。 |
 | A3 | 未確認 | 未確認 | 未確認 | advertising 非対応の実機が必要。模擬失敗だけで代用しない。 |
 | I1 | 未確認 | 未確認 | 未確認 | iOS の最小サポート付近。 |
-| I2 | iPhone 11 | iOS 26.6.2 / 23G90 | Start を試行したが開始 callback は未確認。準備中に 60 秒 timeout | Developer Mode 有効、USB 接続を確認。初回の署名準備不足を解消し、PoC の署名付きビルド・署名検証・実機インストール・起動に成功。OS の Bluetooth 許可状態は確認中。 |
+| I2 | iPhone 11 | iOS 26.6.2 / 23G90 | advertise / game guest で A2 からの発見・B1 接続・双方向 ping に成功 | Developer Mode 有効、USB 接続、署名付き PoC の導入・起動を確認。利用者の初回 Bluetooth 許可の回答後に明示再試行。準備中の timeout は履歴として下記に保持。 |
 | AP1 | 未確認 | firmware 未確認 | 対象外 | WAN を外せる同一 LAN、AP isolation を切替できるもの。 |
 
 実施時は app commit、app ID、build variant、権限の初期状態、位置情報設定、Bluetooth /
@@ -72,21 +77,21 @@ Wi-Fi の ON/OFF、周囲の電波条件、試行数を併記する。現在の 
 targetSdk・compileSdk 36、iOS deployment target 15.0。target 37 に上げる際は Android 17 の
 `ACCESS_LOCAL_NETWORK` と NSD picker の選択を再確認する。
 
-## 接続と対局の matrix — 全行未実施
+## 接続と対局の matrix — B1 を 1 局完走、全盤面照合は進行中
 
 BLE 条件は **機内モード ON、Bluetooth 明示 ON、Wi-Fi OFF、インターネットなし**。
 LAN 条件は **同一 Wi-Fi、WAN / インターネットなし**。機内利用は航空会社・乗務員の指示に従う。
 
 | ID | 方式 / 組み合わせ | 通信ロールと論理 host | 必須の確認 | 結果 |
 | --- | --- | --- | --- | --- |
-| B1 | BLE Android ↔ iOS | iOS advertise / Android browse、game host は Android | 発見、両者確認、双方向、大きな message、一局 24 手番 | 接続未試行。開始準備中に両端末で 60 秒 timeout。iOS advertising 開始・OS 許可状態が未確認のため、接続失敗率には計上しない。 |
+| B1 | BLE Android ↔ iOS | iOS advertise / Android browse、game host は Android | 発見、両者確認、双方向、大きな message、一局 24 手番 | 接続 1 回、両者 Confirm、各方向 1 回の 1 KB ping と 24 手番完走。最終 28 対 35・iPhone 勝利が一致。全 121 盤面の厳密照合は進行中。準備中の timeout は接続失敗率に含めない。 |
 | B2 | BLE Android ↔ iOS | B1 と同じ通信ロール、game host は iOS | host と無線 role の独立 | 未実施 |
 | B3 | BLE Android ↔ iOS | Android advertise / iOS browse | Android peripheral の対応端末 | 未実施 |
 | B4 | BLE Android ↔ Android | 成功する側が advertise、game host を交替 | 両方向、旧/新 OS、低価格機 | 未実施 |
 | B5 | BLE Android ↔ Android | 片方 advertising 非対応 | advertise 可能な相手を使う手動 fallback | 未実施 |
 | B6 | BLE Android ↔ Android | 両方 advertising 非対応 | BLE 不可を説明し、LAN / 終了を選べる | 未実施 |
 | B7 | BLE iOS ↔ iOS | advertise / browse を交替 | 最小付近 / 現行 OS、両方向、一局 | 未実施 |
-| W1 | LAN Android ↔ iOS | listen / browse と game host を交替 | WAN なしの発見、双方向、一局 | 未実施 |
+| W1 | LAN Android ↔ iOS | listen / browse と game host を交替 | WAN なしの発見、双方向、一局 | 未実施。利用者から通常の Wi-Fi のみ利用可能と回答があり、WAN なしの条件をまだ用意できていない。 |
 | W2 | LAN Android ↔ Android | listen / browse を交替 | 同 OS、一局 | 未実施 |
 | W3 | LAN iOS ↔ iOS | listen / browse を交替 | 同 OS、一局 | 未実施 |
 | W4 | LAN AP isolation / multicast 制限 | W1 の同じ設定 | timeout、説明、退出、資源解放 | 未実施 |
@@ -103,7 +108,7 @@ LAN 条件は **同一 Wi-Fi、WAN / インターネットなし**。機内利�
 | BLE 権限拒否 / 取り消し | 接続を始めず / 終了し、再試行か退出を選べる | A2: PoC だけの権限を revoke 後、OS ダイアログで拒否。探索を始めずエラーを示して開始可能な画面へ戻り、拒否状態の再試行も同様。接続中の取り消し・iOS は未実施。 |
 | Android API 24–30、位置情報拒否 / OFF | 原因を区別できる範囲で説明し、待ち続けない | 未実施 |
 | iOS LAN 権限拒否 / 再許可 | 許可待ちと権限拒否・timeout を扱い、明示再試行できる | 未実施 |
-| OS 権限ダイアログ | 通常の background 終了と区別して、許可後の操作が行き詰まらない | A2: 明示 Start browse で Nearby devices ダイアログを表示し、許可後の探索開始と拒否後の終了を確認。PoC の `user-set` / `user-fixed` フラグを clear 後、通常の OS ダイアログで再許可し、再び探索開始を確認。I2: Start 後に timeout。OS ダイアログを直接観測しておらず、許可待ちかは未確定。接続中の取り消しは未実施。 |
+| OS 権限ダイアログ | 通常の background 終了と区別して、許可後の操作が行き詰まらない | A2: 明示 Start browse で Nearby devices ダイアログを表示し、許可後の探索開始と拒否後の終了を確認。PoC の `user-set` / `user-fixed` フラグを clear 後、通常の OS ダイアログで再許可し、再び探索開始を確認。I2: 利用者の初回許可の回答後、明示再試行で B1 接続成功。OS ダイアログ自体は直接観測していない。接続中の取り消しは未実施。 |
 | Bluetooth OFF / 相手が離れる / 相手のアプリ終了 | session 終了。古い操作を再適用しない | 未実施 |
 | Wi-Fi 切断 / ネットワーク変更 | TCP と discovery を閉じ、局を勝手に移行しない | 未実施 |
 | background / 画面ロック / 復帰 | session 終了。復帰時に自動接続・再開をしない | A2: 接続前の advertise 待受け中に HOME で background へ移し、開始可能な状態へ復帰。前面復帰時も状態・ログが変わらず自動再開なし。対局中・画面ロック・iOS・全資源解放の実証は未実施。 |
@@ -139,7 +144,7 @@ Web gzip、debug APK、ソースコード行数を配布サイズとして示さ
 
 - Phase 0 の実機台帳を確定する。
 - Phase 1 の BLE / LAN 実測、低価格端末、advertising 非対応の fallback、サイズを確認する。
-- Phase 2 の 2 台 Yacht を両方式で完走し、切断や不正操作で進行が壊れないことを確認する。
+- Phase 2 の B1 完走記録の全盤面を照合し、WAN なし LAN でも完走する。再戦・切断・不正操作で進行が壊れないことを確認する。
 - 製品向けの接続保護・プライバシー説明、権限文言、多言語、accessibility、入口を設計・検証する。
 - 通常製品・Web への混入ゼロ、ソロ / CPU 戦、保存、lazy-load / size gate を確認する。
 - Phase 3 の別ゲーム・3〜4 人を段階的に検証する。未検証の組み合わせを公開文面へ書かない。
@@ -189,7 +194,15 @@ A2 の以下の操作は、同じコード `1131072b` から作成した同じ P
 | A2 / I2 / BLE 試験の設定 | 利用者が両端末の機内モード ON / Bluetooth ON / Wi-Fi OFF を完了したと回答。A2 は ADB の設定値でも順に `1 / 1 / 0` を確認。 | I2 の設定は本人の回答による確認。設定完了を相互接続成功とは扱わない。 |
 | I2 / Web Inspector 接続 | 利用者の Web Inspector ON の回答後、Safari から PoC の Inspector へ接続成功。DOM 上の入力を `iPhone` / `ble` / `advertise` / `host=false` に準備した。 | PoC の画面操作の準備を確認。Bluetooth 相互接続の証拠ではない。 |
 | A2 / I2 / B1 開始準備中の timeout | 両端末で Start。I2 は `Starting` と一時的な radio label を表示した後、60 秒で `TIMEOUT: Discovery expired; start again explicitly.`。A2 も `discovery-timeout` で開始可能な画面へ戻り、peers は空だった。 | iOS の advertising 開始は未確認。相手は発見できておらず、接続は未試行。iOS の OS Bluetooth ダイアログ自体を直接観測していないため、許可待ちは推測であり確定原因ではない。接続失敗率へ計上しない。 |
+| A2 / I2 / B1 明示再試行・接続 | 利用者が iPhone の初回 Bluetooth 許可をしたと回答後、I2 advertise / game guest、A2 browse / game host で明示再試行。A2 が相手を発見し、UI で選択すると両端末が `Transport connected`。hello は A2 が TX 92 / RX 94 bytes、I2 が TX 94 / RX 92 bytes。 | 許可後の接続 1 回成功。準備中の timeout と区別し、他の role・端末・方式や長時間の安定性へ一般化しない。 |
+| A2 / I2 / B1 相互確認 | 両画面のテスト用プレイヤー名 `Pixel` / `iPhone` と確認コードの一致を確認。両方の UI で Confirm を操作し、双方 `Confirmed`。 | 利用者の相互確認が成立。平文コードによる誤接続防止の試験であり、暗号化・本人認証・MITM 耐性の実証ではない。 |
+| A2 / I2 / B1 双方向 ping | 1 KB payload（wire 1082 bytes）の ping を各方向 1 回実行。A2 起点の往復 5434 ms、I2 起点の往復 617 ms。pong は 69 bytes。 | この接続での双方向 message を確認。各方向 1 回の観測値であり、平均・分布・接続遅延・切断率・最大 4096-byte message の検証にはしない。 |
+| A2 / I2 / B1 24 手番完走 | 両端末で 121 件の公開盤面（rev 0〜119 と Finished）を記録。各端末 60 回の UI click（12 手番 × roll → 最初の die を hold → roll → roll → score）で完走し、両端末の記録は `issues: []`。最終 28 対 35、iPhone 勝利の表示が一致した。 | 1 局の完走と最終結果の一致を確認。全 121 盤面の厳密な相互一致はこの時点では未検証で、hash による照合中。 |
+| A2 / B1 記録の保存・時刻 | 全 JSON を PoC の `build/measurements/android-b1.json` に保存。helper 開始は 03:53:51.148 UTC、自動操作開始 03:54:46.061 UTC、終局 03:58:09.567 UTC。helper 開始から初期 rev 0 は 31.359 秒後、終局は 258.419 秒後。 | ローカルの試験記録。相対時刻は Android 側の時間のみで、端末間の同期や通信遅延を示さない。iOS の全 JSON は CUA / Safari timeout により Mac へ未書き出し。 |
+| A2 / B1 終局後の無操作・無線設定 | 04:01:14.935 UTC にも `Confirmed` / `Finished` / Ready enabled を確認。終局から 3 分以上の無操作で状態を維持し、log 末尾に追加 ping 等なし。Android の機内モード / Bluetooth / Wi-Fi 設定値も `1 / 1 / 0` を再確認した。 | この接続で終局後の無操作により timeout しなかったことを確認。長時間の安定性、background、全通信の capture、電池測定の証拠ではない。 |
 
-この記録時点では、iPhone の Bluetooth 許可状態を利用者へ確認中。許可後に明示再試行する予定。
-相互接続、両方式の一局完走、3〜4 台、消費電力、release 配布 / install size は未実施のまま。
+この記録時点では B1 を 1 局完走し、全公開盤面の hash 照合を進めている。再戦、接続中の
+background 等の異常系、他の BLE 組み合わせ、WAN なし LAN、3〜4 台、消費電力、
+release 配布 / install size は未実施。利用者から通常の Wi-Fi のみ利用可能と回答があり、
+WAN を切った実機 LAN gate は満たしていない。
 端末所有者の個人名、serial / UDID、Wi-Fi 名、開発 Team ID、証明書 ID は記録しない。

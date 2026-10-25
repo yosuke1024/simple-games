@@ -23,8 +23,11 @@ Club House への加入・結果送信とは独立する。Web は対象外。
 
 最初の範囲は **2 台の発見・相互確認・双方向メッセージと Yacht のデモ**である。
 3〜4 台、他のゲーム、秘密手札、途中復帰、host 移譲、BLE / LAN 間の自動移行は範囲外。
-実機接続、一局の完走、電池、配布サイズは未確認。コードや自動テストの成功を実機成功と
-読み替えない。Epic #268 はこの PoC だけでは完了しない。
+Pixel 9 Pro / iPhone 11 の BLE 発見・相互確認・1 KB の双方向通信と、Yacht の
+24 手番完走・最終結果一致を実機で確認した（1 局）。全更新の照合、他の組み合わせ、
+LAN、電池、配布サイズは検証中または未確認。
+実施条件と結果は作業記録を参照し、コードや自動テストの成功を実機成功と読み替えない。
+Epic #268 はこの PoC だけでは完了しない。
 
 ## 2. 構成と依存方向
 
@@ -56,7 +59,7 @@ hello でゲーム host がちょうど 1 台であることを確認する。2 
 
 | 組み合わせ | PoC で試す通信ロール | 非対応時 |
 | --- | --- | --- |
-| Android ↔ iOS | iOS が peripheral / advertise、Android が central / browse を優先。ゲーム host はどちらでもよい。 | Android advertising 非対応でも、この向きは候補になる。成立は実機待ち。 |
+| Android ↔ iOS | iOS が peripheral / advertise、Android が central / browse を優先。ゲーム host はどちらでもよい。 | Pixel 9 Pro / iPhone 11 では発見・双方向通信を確認。他の組み合わせと advertising 非対応 Android は実機待ち。 |
 | Android ↔ Android | advertising が成功する側を peripheral、他方を central にする。 | 両方が advertising 非対応なら BLE は使えない。同一 LAN を案内する。 |
 | iOS ↔ iOS | 片方 peripheral、他方 central。 | 権限・無線状態・接続失敗を示して終了できる。 |
 | 同一 LAN | 片方 listen / advertise、他方 browse / connect。 | WAN は不要。AP isolation や multicast 制限で発見・接続できない場合がある。 |
