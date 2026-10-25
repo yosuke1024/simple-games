@@ -71,6 +71,7 @@ import {
   clearNearbyLocalData,
   getNearbyRoot,
   nearbyAvailable,
+  nearbyDiscoveryAvailable,
   resetNearbyRoot,
   type NearbyGameId,
 } from './nearbyGate';
@@ -188,12 +189,13 @@ export function App() {
   // Mount this feature only after a supported game's explicit request. Keep
   // that one instance across navigation so Back does not end a peer session.
   const [nearbyGame, setNearbyGame] = useState<NearbyGameId | null>(null);
+  const [nearbyBrowsing, setNearbyBrowsing] = useState(false);
   const [nearbyActive, setNearbyActive] = useState(false);
   const nearbyActiveRef = useRef(false);
   const nearbyStop = useRef<(() => Promise<void>) | null>(null);
   const nearbyReset = useRef<Promise<void> | null>(null);
   const [nearbyResetting, setNearbyResetting] = useState(false);
-  const nearbyOrigin = useRef<Extract<View, { kind: 'game' }> | null>(null);
+  const nearbyOrigin = useRef<Extract<View, { kind: 'game' | 'collection' }> | null>(null);
   const [nearbyNonce, setNearbyNonce] = useState(0);
 
   /**
@@ -247,13 +249,27 @@ export function App() {
     }
     nearbyOrigin.current = { ...current, entry: 'collection' };
     releaseSound();
+    setNearbyBrowsing(false);
     setNearbyGame(current.gameId);
+    show({ kind: 'nearby' });
+  }, [show]);
+  const findNearbyOpponent = useCallback(() => {
+    if (nearbyReset.current || !nearbyDiscoveryAvailable()) return;
+    releaseSound();
+    if (!nearbyActiveRef.current) {
+      nearbyOrigin.current = { kind: 'collection' };
+      setNearbyGame(null);
+      setNearbyBrowsing(true);
+    }
     show({ kind: 'nearby' });
   }, [show]);
   const returnFromNearby = useCallback(() => {
     releaseSound();
-    show(nearbyOrigin.current ?? { kind: 'game', gameId: 'yacht', entry: 'collection' });
-    if (!nearbyActiveRef.current) setNearbyGame(null);
+    show(nearbyOrigin.current ?? { kind: 'collection' });
+    if (!nearbyActiveRef.current) {
+      setNearbyGame(null);
+      setNearbyBrowsing(false);
+    }
   }, [show]);
   const resetNearbyData = useCallback(() => {
     if (nearbyReset.current) return nearbyReset.current;
@@ -264,6 +280,7 @@ export function App() {
     const stop = nearbyStop.current;
     noteNearbyActive(false);
     setNearbyGame(null);
+    setNearbyBrowsing(false);
     setNearbyResetting(true);
     const task = (async () => {
       await stop?.();
@@ -621,12 +638,12 @@ export function App() {
     };
   }, [goCollection, view.kind]);
 
-  const NearbyRoot = nearbyGame ? getNearbyRoot() : null;
+  const NearbyRoot = nearbyGame || nearbyBrowsing ? getNearbyRoot() : null;
   const nearbyVisible = view.kind === 'nearby';
   return (
     <ClubBridgeContext.Provider value={bridge}>
       {nearbyVisible ? null : renderView()}
-      {NearbyRoot && nearbyGame && (
+      {NearbyRoot && (
         <div hidden={!nearbyVisible} inert={!nearbyVisible}>
           <GameErrorBoundary
             key={nearbyNonce}
@@ -642,7 +659,9 @@ export function App() {
               fallback={<GameLoadingFallback onExit={returnFromNearby} active={nearbyVisible} />}
             >
               <NearbyRoot
+                key={nearbyBrowsing ? 'browser' : nearbyGame}
                 gameId={nearbyGame}
+                onGameSelected={setNearbyGame}
                 visible={nearbyVisible}
                 onExit={returnFromNearby}
                 onActiveChange={noteNearbyActive}
@@ -726,6 +745,10 @@ export function App() {
         <CollectionHomeScreen
           onOpenGame={openGame}
           onOpenSettings={openSettings}
+          onFindOpponent={
+            !nearbyResetting && nearbyDiscoveryAvailable() ? findNearbyOpponent : undefined
+          }
+          nearbyActive={nearbyActive}
           dismissReviewPrompt={reviewPromptOpen ? closeReviewPrompt : null}
           onOpenClub={openClub}
           clubConnections={connections}

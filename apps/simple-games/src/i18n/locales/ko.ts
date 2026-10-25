@@ -1,6 +1,9 @@
 import type { Messages } from './en';
 
 export const ko: Messages = {
+  findNearbyOpponents: '주변 모집 찾기',
+  findNearbyOpponentsNote: 'Bluetooth 또는 같은 Wi-Fi · 여러 게임에서 찾기',
+
   playTogether: '다른 사람과 플레이',
   returnToTogether: '함께 플레이로 돌아가기',
   playTogetherNote: '가까운 사람과 연결해 대결하세요.',

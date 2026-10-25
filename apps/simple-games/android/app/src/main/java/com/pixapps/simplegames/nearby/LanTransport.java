@@ -12,6 +12,7 @@ import android.net.nsd.NsdServiceInfo;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import java.io.InputStream;
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -19,8 +20,6 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayDeque;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -38,7 +37,13 @@ final class LanTransport implements Transport {
         public void post(Runnable callback, long delay) { main.postDelayed(callback, delay); }
         public void remove(Runnable callback) { main.removeCallbacks(callback); }
     });
-    private final Map<String, NsdServiceInfo> peers = new LinkedHashMap<>();
+    private final DiscoveryIndex<NsdServiceInfo> peers = new DiscoveryIndex<>("lan-");
+    private DiscoveryIndex.Peer<NsdServiceInfo> selected;
+    private NsdManager.ResolveListener pendingResolution;
+    private Runnable resolutionTimeout;
+    private boolean foreground = true;
+    private byte[] listing;
+    private final Runnable maintenance = this::maintainDiscovery;
     private final ArrayDeque<byte[]> frames = new ArrayDeque<>();
     private final AtomicInteger inbound = new AtomicInteger();
     private final AtomicInteger pendingCallbacks = new AtomicInteger();
@@ -56,12 +61,10 @@ final class LanTransport implements Transport {
     private boolean advertising;
     private boolean discovering;
     private boolean registering;
-    private boolean resolving;
     private boolean ready;
     private boolean writing;
     private String label;
     private String chosenName;
-    private int nextPeerId;
     private final Runnable discoveryTimeout = () -> fail("discovery-timeout", "Discovery ended after 60 seconds; start again to retry");
     private final Runnable connectTimeout = () -> fail("connect-timeout", "LAN resolve or connection timed out");
     private final Runnable writeTimeout = () -> fail("write-timeout", "LAN write timed out");
@@ -74,7 +77,7 @@ final class LanTransport implements Transport {
 
     LanTransport(Context context, Events events) { this.context = context; this.events = events; }
 
-    public void start(boolean advertise, String label) throws Exception {
+    public void start(boolean advertise, String label, byte[] listing) throws Exception {
         connectivity = context.getSystemService(ConnectivityManager.class);
         nsd = context.getSystemService(NsdManager.class);
         if (connectivity == null || nsd == null) throw new IllegalStateException("LAN services unavailable");
@@ -89,6 +92,7 @@ final class LanTransport implements Transport {
         if (wifi == null) throw new IllegalStateException("Join the same Wi-Fi LAN first (IPv4 required)");
         this.advertising = advertise;
         this.label = "NP-" + label;
+        this.listing = listing;
         active = true;
         connectivity.registerNetworkCallback(new NetworkRequest.Builder()
             .addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build(), networkCallback);
@@ -100,6 +104,7 @@ final class LanTransport implements Transport {
             if (Build.VERSION.SDK_INT >= 33) nsd.discoverServices(TYPE, NsdManager.PROTOCOL_DNS_SD, wifi, main::post, discovery);
             else nsd.discoverServices(TYPE, NsdManager.PROTOCOL_DNS_SD, discovery);
             events.status("Wi-Fi LAN discovery started (60-second limit)");
+            deadlines.post(maintenance, 1_000);
         }
     }
 
@@ -125,6 +130,7 @@ final class LanTransport implements Transport {
                 run(() -> {
                     NsdServiceInfo info = new NsdServiceInfo();
                     info.setServiceName(label); info.setServiceType(TYPE); info.setPort(created.getLocalPort());
+                    if (listing != null) info.setAttribute("listing", ListingPayload.decode(listing));
                     if (Build.VERSION.SDK_INT >= 33) info.setNetwork(wifi);
                     registering = true;
                     nsd.registerService(info, NsdManager.PROTOCOL_DNS_SD, registration);
@@ -139,15 +145,93 @@ final class LanTransport implements Transport {
     }
 
     public void connect(String peerId) {
-        if (!active || advertising || resolving || socket != null) throw new IllegalStateException("LAN is not available for another connection");
-        NsdServiceInfo peer = peers.get(peerId);
-        if (peer == null) throw new IllegalArgumentException("Select a discovered LAN peer");
-        chosenName = peer.getServiceName();
-        resolving = true;
+        if (!active || advertising || selected != null || socket != null) throw new IllegalStateException("LAN is not available for another connection");
+        DiscoveryIndex.Peer<NsdServiceInfo> peer = peers.byId(peerId);
+        if (peer == null || !peer.announced) throw new IllegalArgumentException("Select a current discovered LAN peer");
+        selected = peer;
+        chosenName = peer.value.getServiceName();
         deadlines.remove(discoveryTimeout);
         stopDiscovery();
         deadlines.post(connectTimeout, 15_000);
-        nsd.resolveService(peer, resolution);
+        // API 24-33 cannot cancel resolveService. Finish the one bounded metadata
+        // request before resolving the user's choice; never overlap NSD resolves.
+        if (pendingResolution == null) resolve(peer);
+    }
+
+    private void maintainDiscovery() {
+        if (!active || !discovering || !foreground) return;
+        // NSD does not repeat onServiceFound like BLE advertisements. Retain the
+        // bounded candidate until onServiceLost, but withdraw unverified metadata
+        // after 15 seconds so an old name is not kept visible indefinitely.
+        for (DiscoveryIndex.Peer<NsdServiceInfo> peer : peers.expireListings(SystemClock.elapsedRealtime()))
+            events.peerLost(peer.id);
+        pumpResolution();
+        deadlines.post(maintenance, 1_000);
+    }
+    private void pumpResolution() {
+        if (!active || pendingResolution != null) return;
+        if (selected != null) { resolve(selected); return; }
+        if (!discovering || !foreground) return;
+        DiscoveryIndex.Peer<NsdServiceInfo> peer = peers.nextProbe(SystemClock.elapsedRealtime());
+        if (peer != null) resolve(peer);
+    }
+    private void updateListing(DiscoveryIndex.Peer<NsdServiceInfo> peer, String value, boolean succeeded) {
+        if (succeeded) {
+            if (peers.publish(peer, value, SystemClock.elapsedRealtime())) events.peer(peer.id, peer.label, value);
+        } else if (peers.withdraw(peer)) events.peerLost(peer.id);
+    }
+    private void resolve(DiscoveryIndex.Peer<NsdServiceInfo> peer) {
+        final class Resolution implements NsdManager.ResolveListener {
+            private boolean expired;
+            private final Runnable timeout = () -> {
+                if (pendingResolution != this) return;
+                expired = true;
+                updateListing(peer, null, false);
+                if (Build.VERSION.SDK_INT >= 34) {
+                    try { nsd.stopServiceResolution(this); } catch (Exception ignored) { /* Keep the single in-flight slot until its callback. */ }
+                }
+                // No retry loop while an older Android resolver still owns its slot.
+                // The overall discovery/connect deadline remains independently bounded.
+            };
+            private boolean finish() {
+                if (pendingResolution != this) return false;
+                deadlines.remove(timeout); pendingResolution = null; resolutionTimeout = null; return true;
+            }
+            public void onResolveFailed(NsdServiceInfo info, int code) { run(() -> {
+                if (!finish()) return;
+                updateListing(peer, null, false);
+                if (selected == peer) fail("resolve-failed", "LAN resolution failed: " + code);
+                else pumpResolution();
+            }); }
+            public void onResolutionStopped(NsdServiceInfo info) { run(() -> { if (finish()) pumpResolution(); }); }
+            public void onStopResolutionFailed(NsdServiceInfo info, int code) { /* Original resolution still owns the slot. */ }
+            public void onServiceResolved(NsdServiceInfo info) { run(() -> {
+                if (!finish()) return;
+                if (expired) { pumpResolution(); return; }
+                boolean matching = peer.value.getServiceName().equals(info.getServiceName()) &&
+                    TYPE.equals(NsdServiceType.normalize(info.getServiceType())) &&
+                    (Build.VERSION.SDK_INT < 33 || info.getNetwork() == null || wifi.equals(info.getNetwork()));
+                if (matching && peers.contains(peer)) {
+                    peer.lastSeen = SystemClock.elapsedRealtime();
+                    byte[] raw = info.getAttributes().get("listing");
+                    String value = ListingPayload.decode(raw);
+                    updateListing(peer, value, raw == null || value != null);
+                } else updateListing(peer, null, false);
+                if (selected == peer) connectResolved(info);
+                else pumpResolution();
+            }); }
+        }
+        Resolution attempt = new Resolution();
+        pendingResolution = attempt;
+        resolutionTimeout = attempt.timeout;
+        deadlines.post(resolutionTimeout, 5_000);
+        try { nsd.resolveService(peer.value, attempt); }
+        catch (Exception error) {
+            deadlines.remove(resolutionTimeout); pendingResolution = null; resolutionTimeout = null;
+            updateListing(peer, null, false);
+            if (selected == peer) fail("resolve-failed", "LAN resolution could not start");
+            // The maintenance tick advances remaining discovery candidates.
+        }
     }
 
     private final NsdManager.DiscoveryListener discovery = new NsdManager.DiscoveryListener() {
@@ -159,15 +243,19 @@ final class LanTransport implements Transport {
         public void onStopDiscoveryFailed(String type, int code) { run(() -> fail("discovery-stop-failed", "LAN discovery could not stop: " + code)); }
         public void onServiceFound(NsdServiceInfo info) { run(() -> {
             String label = DiscoveryLabel.fromServiceName(info.getServiceName());
-            if (!discovering || !TYPE.equals(NsdServiceType.normalize(info.getServiceType())) || label == null || peers.size() >= 16) return;
-            for (NsdServiceInfo existing : peers.values()) if (existing.getServiceName().equals(info.getServiceName())) return;
+            if (!discovering || !TYPE.equals(NsdServiceType.normalize(info.getServiceType())) || label == null) return;
             if (Build.VERSION.SDK_INT >= 33 && info.getNetwork() != null && !wifi.equals(info.getNetwork())) return;
-            String id = "lan-" + (++nextPeerId);
-            peers.put(id, info);
-            events.peer(id, label);
+            DiscoveryIndex.Peer<NsdServiceInfo> peer = peers.seen(info.getServiceName(), info, label, SystemClock.elapsedRealtime());
+            if (peer == null) return;
+            if (!DiscoveryLabel.metadataCapable(peer.label) && peers.publish(peer, null, SystemClock.elapsedRealtime()))
+                events.peer(peer.id, peer.label, null);
+            pumpResolution();
         }); }
-        public void onServiceLost(NsdServiceInfo info) { run(() ->
-            peers.entrySet().removeIf(entry -> entry.getValue().getServiceName().equals(info.getServiceName()))); }
+        public void onServiceLost(NsdServiceInfo info) { run(() -> {
+            if (!discovering) return;
+            DiscoveryIndex.Peer<NsdServiceInfo> lost = peers.remove(info.getServiceName());
+            if (lost != null && lost.announced) events.peerLost(lost.id);
+        }); }
     };
 
     private final NsdManager.RegistrationListener registration = new NsdManager.RegistrationListener() {
@@ -183,10 +271,7 @@ final class LanTransport implements Transport {
         public void onUnregistrationFailed(NsdServiceInfo info, int code) { run(() -> fail("unregister-failed", "LAN unregister failed: " + code)); }
     };
 
-    private final NsdManager.ResolveListener resolution = new NsdManager.ResolveListener() {
-        public void onResolveFailed(NsdServiceInfo info, int code) { run(() -> fail("resolve-failed", "LAN resolution failed: " + code)); }
-        public void onServiceResolved(NsdServiceInfo info) { run(() -> {
-            resolving = false;
+    private void connectResolved(NsdServiceInfo info) {
             if (!chosenName.equals(info.getServiceName())) {
                 fail("invalid-peer", "Resolved service name no longer matches the selected peer"); return;
             }
@@ -228,8 +313,7 @@ final class LanTransport implements Transport {
                     read(created);
                 } catch (Exception e) { run(() -> fail("connect-failed", "LAN connection failed: " + e.getClass().getSimpleName())); }
             }, "nearby-lan-reader").start();
-        }); }
-    };
+    }
 
     private boolean sameSubnet(InetAddress remote) {
         if (remote.isAnyLocalAddress() || remote.isLoopbackAddress() || remote.isMulticastAddress()) return false;
@@ -323,13 +407,22 @@ final class LanTransport implements Transport {
     }
     private void fail(String code, String message) { if (!active) return; stop(); events.failed(code, message); }
     private void stopDiscovery() {
+        deadlines.remove(maintenance);
         if (discovering) { discovering = false; try { nsd.stopServiceDiscovery(discovery); } catch (Exception ignored) {} }
     }
     private void unregister() {
         if (registering) { try { nsd.unregisterService(registration); } catch (Exception ignored) {} }
         // Keep the flag for the late onServiceRegistered cleanup; unregister is idempotently guarded by Android.
     }
-    public void setForeground(boolean active) { deadlines.setActive(active); }
+    public void setForeground(boolean active) {
+        foreground = active;
+        deadlines.setActive(active);
+        if (active && discovering) {
+            for (DiscoveryIndex.Peer<NsdServiceInfo> peer : peers.revalidate(SystemClock.elapsedRealtime()))
+                events.peerLost(peer.id);
+            deadlines.post(maintenance, 1_000);
+        }
+    }
 
     public void stop() {
         synchronized (this) {
@@ -345,8 +438,8 @@ final class LanTransport implements Transport {
         deadlines.clear();
         main.removeCallbacksAndMessages(null);
         stopDiscovery(); unregister();
-        if (resolving && Build.VERSION.SDK_INT >= 34) { try { nsd.stopServiceResolution(resolution); } catch (Exception ignored) {} }
-        resolving = false;
+        if (pendingResolution != null && Build.VERSION.SDK_INT >= 34) { try { nsd.stopServiceResolution(pendingResolution); } catch (Exception ignored) {} }
+        pendingResolution = null; resolutionTimeout = null; selected = null;
         writer.shutdownNow(); frames.clear(); peers.clear();
     }
 }

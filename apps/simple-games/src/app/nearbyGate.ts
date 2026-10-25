@@ -5,7 +5,8 @@ import type { NearbyGameId } from '../nearby/gameTypes';
 
 export type { NearbyGameId } from '../nearby/gameTypes';
 type Root = ComponentType<{
-  gameId: NearbyGameId;
+  gameId: NearbyGameId | null;
+  onGameSelected?: (gameId: NearbyGameId | null) => void;
   visible?: boolean;
   onExit: () => void;
   onActiveChange?: (active: boolean) => void;
@@ -13,7 +14,10 @@ type Root = ComponentType<{
 }>;
 let root: LazyExoticComponent<Root> | null = null;
 export function nearbyAvailable(gameId: string): gameId is NearbyGameId {
-  return isNearbyGameId(gameId) && import.meta.env.MODE !== 'web' && Capacitor.isNativePlatform();
+  return isNearbyGameId(gameId) && nearbyDiscoveryAvailable();
+}
+export function nearbyDiscoveryAvailable(): boolean {
+  return import.meta.env.MODE !== 'web' && Capacitor.isNativePlatform();
 }
 export function getNearbyRoot(): LazyExoticComponent<Root> | null {
   if (import.meta.env.MODE === 'web' || !Capacitor.isNativePlatform()) return null;

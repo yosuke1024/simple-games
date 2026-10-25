@@ -69,7 +69,7 @@ vi.mock('./controller', async () => {
   class FakeController {
     state = 'idle';
     reason = 'ended';
-    peers = [{ id: 'peer-1', name: 'F-ABC123' }];
+    peers: Array<{ id: string; name: string; gameId: NearbyGameId }> = [];
     label = 'F-ABC123';
     code = '123456';
     storageFailed = false;
@@ -84,6 +84,7 @@ vi.mock('./controller', async () => {
       _plugin: unknown,
       adapter: GameAdapter,
     ) {
+      this.peers = [{ id: 'peer-1', name: 'F-ABC123', gameId: setup.gameId }];
       this.session = new Session({
         adapter,
         host: setup.host,

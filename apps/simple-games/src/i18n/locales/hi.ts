@@ -1,6 +1,9 @@
 import type { Messages } from './en';
 
 export const hi: Messages = {
+  findNearbyOpponents: 'आसपास के प्रतिद्वंद्वी खोजें',
+  findNearbyOpponentsNote: 'Bluetooth या एक ही Wi-Fi · सभी समर्थित गेम',
+
   playTogether: 'किसी के साथ खेलें',
   returnToTogether: 'मल्टीप्लेयर पर लौटें',
   playTogetherNote: 'पास मौजूद किसी व्यक्ति से जुड़कर मुकाबला करें।',

@@ -1,7 +1,7 @@
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { SUPPORT_EMAIL } from '@simple-games/brand';
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSettings } from '../state/SettingsContext';
 import { ConfirmDialog } from '../ui/components/ConfirmDialog';
 import { IconBack, IconClose } from '../ui/components/icons';
@@ -18,13 +18,15 @@ import { useNearbyText } from './i18n';
 import { isChatText, isPlayerName } from './session';
 import { GAME_NAME_KEYS, GAME_TITLES, loadNearbyGame, type NearbyGame } from './games';
 import type { NearbyGameId } from './gameTypes';
+import { NearbyBrowser } from './NearbyBrowser';
 import './nearby.css';
 
 type Screen = 'home' | 'setup' | 'active' | 'history' | 'detail';
 type Question = 'leave' | 'delete' | 'clear' | 'block' | null;
 
 export interface NearbyRootProps {
-  gameId: NearbyGameId;
+  gameId: NearbyGameId | null;
+  onGameSelected?: (gameId: NearbyGameId | null) => void;
   onExit: () => void;
   /** Kept mounted by the app while a connection is active on another screen. */
   visible?: boolean;
@@ -33,19 +35,74 @@ export interface NearbyRootProps {
 }
 
 export function NearbyRoot(props: NearbyRootProps) {
+  const fromBrowser = useRef(props.gameId === null).current;
+  const [joined, setJoined] = useState<{
+    controller: NearbyController;
+    gameId: NearbyGameId;
+    game: NearbyGame;
+  } | null>(null);
+  const [, render] = useState(0);
+  const handedOffController = useRef<NearbyController | null>(null);
+  const live = useRef(true);
+  useEffect(() => {
+    live.current = true;
+    return () => {
+      live.current = false;
+      void handedOffController.current?.stop();
+    };
+  }, []);
+  const changed = useCallback(() => {
+    if (live.current) render((value) => value + 1);
+  }, []);
+  const gameId = fromBrowser ? (joined?.gameId ?? null) : props.gameId;
   const Loaded = useMemo(
     () =>
       lazy(async () => {
-        const game = await loadNearbyGame(props.gameId);
-        return { default: (inner: NearbyRootProps) => <NearbyGameRoot {...inner} game={game} /> };
+        if (!gameId) throw new Error('Select a game before loading its board');
+        const game = await loadNearbyGame(gameId);
+        return { default: (inner: GameRootProps) => <NearbyGameRoot {...inner} game={game} /> };
       }),
-    [props.gameId],
+    [gameId],
   );
+  if (!gameId)
+    return (
+      <NearbyBrowser
+        visible={props.visible}
+        onExit={props.onExit}
+        onRegisterStop={props.onRegisterStop}
+        onChanged={changed}
+        onJoin={(controller, selectedId, game) => {
+          handedOffController.current = controller;
+          setJoined({ controller, gameId: selectedId, game });
+          props.onGameSelected?.(selectedId);
+        }}
+      />
+    );
+  const innerProps: GameRootProps = {
+    ...props,
+    gameId,
+    initialController: joined?.controller,
+    onReturnToBrowser: fromBrowser
+      ? () => {
+          setJoined(null);
+          props.onGameSelected?.(null);
+        }
+      : undefined,
+  };
+  // The browser already loaded the selected board before handing off. Avoid
+  // suspending/unmounting the connection while its encrypted handshake runs.
+  if (joined) return <NearbyGameRoot {...innerProps} game={joined.game} />;
   return (
     <Suspense fallback={<div className="screen" aria-busy="true" />}>
-      <Loaded {...props} />
+      <Loaded {...innerProps} />
     </Suspense>
   );
+}
+
+interface GameRootProps extends Omit<NearbyRootProps, 'gameId'> {
+  gameId: NearbyGameId;
+  initialController?: NearbyController;
+  onReturnToBrowser?: () => void;
 }
 
 function NearbyGameRoot({
@@ -55,23 +112,32 @@ function NearbyGameRoot({
   visible = true,
   onActiveChange,
   onRegisterStop,
-}: NearbyRootProps & { game: NearbyGame }) {
+  initialController,
+  onReturnToBrowser,
+}: GameRootProps & { game: NearbyGame }) {
   const n = useNearbyText();
   const { locale, t } = useSettings();
   const gameTitle = t(GAME_NAME_KEYS[gameId]);
   const [boardSize, setBoardSize] = useState<3 | 4 | 5>(3);
-  const [screen, setScreen] = useState<Screen>('home');
-  const [setup, setSetup] = useState<Setup>({
-    gameId,
-    host: true,
-    name: '',
-    public: false,
-    transport: 'ble',
-    chatEnabled: false,
-  });
+  const [screen, setScreen] = useState<Screen>(initialController ? 'active' : 'home');
+  const [setup, setSetup] = useState<Setup>(
+    initialController?.setup.gameId
+      ? {
+          ...initialController.setup,
+          gameId: initialController.setup.gameId,
+        }
+      : {
+          gameId,
+          host: true,
+          name: '',
+          public: false,
+          transport: 'ble',
+          chatEnabled: false,
+        },
+  );
   const [accepted, setAccepted] = useState(false);
-  const [controller, setController] = useState<NearbyController | null>(null);
-  const controllerRef = useRef<NearbyController | null>(null);
+  const [controller, setController] = useState<NearbyController | null>(initialController ?? null);
+  const controllerRef = useRef<NearbyController | null>(initialController ?? null);
   const [, render] = useState(0);
   const [panel, setPanel] = useState<'chat' | 'game'>('game');
   const [hidden, setHidden] = useState(false);
@@ -113,6 +179,10 @@ function NearbyGameRoot({
       return;
     }
     if (screen === 'active') {
+      if (onReturnToBrowser) {
+        onReturnToBrowser();
+        return;
+      }
       setScreen('home');
       return;
     }
@@ -392,7 +462,7 @@ function NearbyGameRoot({
               />
             </label>
             <p id="nearby-name-hint" className="nearby-note">
-              {n('nameHint')}
+              {n(setup.host ? 'hostNameHint' : 'nameHint')}
             </p>
             {setup.host && (
               <>
@@ -485,8 +555,11 @@ function NearbyGameRoot({
                 <h2>{n('ended')}</h2>
                 {controller.reason !== 'ended' && <p role="status">{n(controller.reason)}</p>}
                 {controller.gathering && <p className="nearby-note">{n('localNote')}</p>}
-                <button className="btn btn-primary" onClick={() => setScreen('home')}>
-                  {n('retry', { game: gameTitle })}
+                <button
+                  className="btn btn-primary"
+                  onClick={() => (onReturnToBrowser ? onReturnToBrowser() : setScreen('home'))}
+                >
+                  {onReturnToBrowser ? n('search') : n('retry', { game: gameTitle })}
                 </button>
               </>
             ) : session && (session.paired || controller.state === 'reconnecting') ? (
@@ -698,7 +771,8 @@ function NearbyGameRoot({
                           void controller.connect(peer.id);
                         }}
                       >
-                        <strong>{peer.name}</strong>
+                        <strong>{peer.hostName ?? peer.name}</strong>
+                        <span>{t(GAME_NAME_KEYS[peer.gameId])}</span>
                         <span>{n(peer.name.startsWith('F-') ? 'friends' : 'public')}</span>
                       </button>
                     ))}

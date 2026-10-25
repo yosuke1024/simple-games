@@ -25,6 +25,7 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
     private static let service = CBUUID(string: "9b5d2000-7a4c-4e13-a280-75d53c01a268")
     private static let inbound = CBUUID(string: "9b5d2001-7a4c-4e13-a280-75d53c01a268")
     private static let outbound = CBUUID(string: "9b5d2002-7a4c-4e13-a280-75d53c01a268")
+    private static let metadata = CBUUID(string: "9b5d2003-7a4c-4e13-a280-75d53c01a268")
     private static let bonjour = "_sgnearplay._tcp"
     private static let maxBytes = 4096
     private static let maxFrames = 16
@@ -42,6 +43,7 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
     private var transport = ""
     private var role = ""
     private var label = ""
+    private var listingData: Data?
     private var epoch = 0
     private var lifecycleObservers: [NSObjectProtocol] = []
     private let eventBuffer = NearbyPlayEventBuffer()
@@ -58,6 +60,14 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
     private var peripheralManager: CBPeripheralManager?
     private var bluetoothState: CBManagerState?
     private var blePeers: [String: CBPeripheral] = [:]
+    private let discoveryIndex = NearbyPlayDiscoveryIndex()
+    private var discoveryMaintenance: DispatchWorkItem?
+    private let probeDeadline = NearbyPlayForegroundDeadline()
+    private var probePeripheral: CBPeripheral?
+    private var probeLabel: String?
+    private var probeListing: String?
+    private var probeSucceeded = false
+    private var probeDisconnecting = false
     private var remotePeripheral: CBPeripheral?
     private var writeCharacteristic: CBCharacteristic?
     private var notifyCharacteristic: CBCharacteristic?
@@ -70,6 +80,7 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
     private var browser: NWBrowser?
     private var connection: NWConnection?
     private var lanPeers: [String: NWEndpoint] = [:]
+    private var lanListings: [String: String] = [:]
 
     public override func load() {
         // Loading the plugin and reading capabilities perform no discovery or permission request.
@@ -89,12 +100,15 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
         sessionDeadline.cancel()
         sendDeadline.cancel()
         receiveDeadline.cancel()
+        probeDeadline.cancel()
+        discoveryMaintenance?.cancel()
         browser?.cancel()
         listener?.cancel()
         connection?.cancel()
         centralManager?.delegate = nil
         centralManager?.stopScan()
         if let peripheral = remotePeripheral { centralManager?.cancelPeripheralConnection(peripheral) }
+        if let peripheral = probePeripheral { centralManager?.cancelPeripheralConnection(peripheral) }
         peripheralManager?.delegate = nil
         peripheralManager?.stopAdvertising()
         peripheralManager?.removeAllServices()
@@ -134,6 +148,15 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
                 call.reject("Open Nearby Play in the foreground before starting.", "BACKGROUND")
                 return
             }
+            let listing = call.getString("listing")?.data(using: .utf8)
+            if let listing {
+                guard role == "advertise", call.getBool("resume") != true,
+                      NearbyPlayListing.supportsProbe(label),
+                      NearbyPlayListing.string(listing, lan: transport == "lan") != nil else {
+                    call.reject("Expected bounded discovery JSON for a new metadata-capable host.", "LISTING")
+                    return
+                }
+            }
             // Automatic recovery must never turn a revoked permission into a
             // new system prompt. Only a fresh, explicit start may request it.
             if call.getBool("resume") == true, transport == "ble",
@@ -147,6 +170,7 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
             self.transport = transport
             self.role = role
             self.label = label
+            self.listingData = listing
             self.armSessionDeadline(seconds: 60, message: "Discovery expired; start again explicitly.")
             if transport == "ble" {
                 // These are the only manager constructors: start is the permission boundary.
@@ -173,15 +197,20 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
                 return
             }
             if self.transport == "ble" {
-                guard let peer = self.blePeers[id], let manager = self.centralManager else {
+                guard let peer = self.blePeers[id], self.discoveryIndex.entries[id]?.announced == true,
+                      let manager = self.centralManager else {
                     call.reject("Peer was not discovered in this session.", "PEER")
                     return
                 }
                 manager.stopScan()
+                self.discoveryMaintenance?.cancel(); self.discoveryMaintenance = nil
+                self.cancelProbe(failed: false)
                 self.remotePeripheral = peer
                 peer.delegate = self
                 self.armSessionDeadline(seconds: 15, message: "Bluetooth connection/subscription timed out.")
-                manager.connect(peer, options: nil)
+                // A refresh probe may still be disconnecting. Do not overlap
+                // that link (or mistake its callback for the selected session).
+                if self.probePeripheral == nil { manager.connect(peer, options: nil) }
             } else {
                 guard let endpoint = self.lanPeers[id] else {
                     call.reject("Peer was not discovered in this session.", "PEER")
@@ -275,11 +304,28 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
             sessionDeadline.resume()
             sendDeadline.resume()
             receiveDeadline.resume()
+            if running, role == "browse", transport == "ble", remotePeripheral == nil {
+                // Background scans coalesce duplicates. Revalidate every entry
+                // instead of displaying a room that became full while hidden.
+                for (id, entry) in discoveryIndex.entries where entry.announced {
+                    event(["type": "peerLost", "id": id])
+                }
+                discoveryIndex.removeAll(); blePeers.removeAll()
+                centralManager?.stopScan()
+                if centralManager?.state == .poweredOn { startBLEScan() }
+            } else if running, role == "browse", transport == "lan", connection == nil {
+                for id in lanPeers.keys { event(["type": "peerLost", "id": id]) }
+                lanPeers.removeAll(); lanListings.removeAll()
+                browser?.cancel(); browser = nil
+                startLAN()
+            }
         } else {
             guard eventBuffer.suspend() else { return }
             sessionDeadline.pause()
             sendDeadline.pause()
             receiveDeadline.pause()
+            discoveryMaintenance?.cancel(); discoveryMaintenance = nil
+            cancelProbe(failed: false)
             notifyListeners("nearbyEvent", data: ["type": "lifecycle", "active": false])
             // CoreBluetooth may wake these delegates with the declared central /
             // peripheral modes. No background task, keepalive, or JS loop is used.
@@ -316,6 +362,8 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
         sessionDeadline.cancel()
         sendDeadline.cancel()
         receiveDeadline.cancel()
+        discoveryMaintenance?.cancel(); discoveryMaintenance = nil
+        cancelProbe(failed: false, abandon: true)
         browser?.cancel(); browser = nil
         listener?.cancel(); listener = nil
         connection?.stateUpdateHandler = nil
@@ -331,7 +379,8 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
         writeCharacteristic = nil; notifyCharacteristic = nil
         subscriptionPending = false; beforeSubscriptionReady.removeAll()
         localNotifyCharacteristic = nil; subscribedCentral = nil
-        blePeers.removeAll(); lanPeers.removeAll()
+        blePeers.removeAll(); lanPeers.removeAll(); lanListings.removeAll()
+        discoveryIndex.removeAll(); listingData = nil
         received.removeAll(); outgoing.removeAll()
         offset = 0; writeInFlight = 0; networkSending = false
         // A stopped manager's old poweredOn value cannot establish current radio availability.
@@ -355,6 +404,9 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
     private func markConnected() {
         guard running, !connected else { return }
         connected = true
+        listingData = nil
+        discoveryMaintenance?.cancel(); discoveryMaintenance = nil
+        cancelProbe(failed: false)
         sessionDeadline.cancel()
         centralManager?.stopScan()
         peripheralManager?.stopAdvertising()
@@ -364,7 +416,8 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
         listener?.cancel(); listener = nil
         // A lost connection can be restarted by the foreground JS recovery
         // flow; native never silently chooses or authenticates a new peer.
-        blePeers.removeAll(); lanPeers.removeAll()
+        blePeers.removeAll(); lanPeers.removeAll(); lanListings.removeAll()
+        discoveryIndex.removeAll()
         event(["type": "connected"])
         // A peer may notify immediately on subscription, before our OS has
         // delivered its notification-state callback. Emit connected first.
@@ -473,6 +526,101 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
         value.utf8.count == 8 && value.range(of: "^[PF]-[0-9A-Fa-f]{6}$", options: .regularExpression) != nil
     }
 
+    private func startBLEScan() {
+        guard running, eventBuffer.active, remotePeripheral == nil else { return }
+        centralManager?.scanForPeripherals(withServices: [Self.service],
+            options: [CBCentralManagerScanOptionAllowDuplicatesKey: true])
+        scheduleDiscoveryMaintenance()
+    }
+
+    private func scheduleDiscoveryMaintenance() {
+        discoveryMaintenance?.cancel()
+        guard running, eventBuffer.active, transport == "ble", role == "browse", remotePeripheral == nil else { return }
+        let generation = epoch
+        let work = DispatchWorkItem { [weak self] in
+            guard let self, self.running, self.epoch == generation, self.eventBuffer.active,
+                  self.remotePeripheral == nil else { return }
+            for id in self.discoveryIndex.expire(now: ProcessInfo.processInfo.systemUptime) {
+                self.event(["type": "peerLost", "id": id])
+            }
+            self.blePeers = self.blePeers.filter { self.discoveryIndex.entries[$0.key] != nil }
+            self.startNextProbe()
+            self.scheduleDiscoveryMaintenance()
+        }
+        discoveryMaintenance = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: work)
+    }
+
+    private func startNextProbe() {
+        guard running, eventBuffer.active, remotePeripheral == nil, probePeripheral == nil,
+              let manager = centralManager, manager.state == .poweredOn,
+              let id = discoveryIndex.nextProbe(now: ProcessInfo.processInfo.systemUptime),
+              let peer = blePeers[id], let entry = discoveryIndex.entries[id] else { return }
+        discoveryIndex.checked(id, now: ProcessInfo.processInfo.systemUptime)
+        probePeripheral = peer
+        probeLabel = entry.label
+        probeListing = nil
+        probeSucceeded = false
+        probeDisconnecting = false
+        peer.delegate = self
+        probeDeadline.arm(seconds: 5) { [weak self] in self?.cancelProbe() }
+        manager.connect(peer, options: nil)
+    }
+
+    /// Cancellation stays in flight until CoreBluetooth confirms closure. The
+    /// outer 60-second discovery deadline bounds an unresponsive OS callback.
+    private func cancelProbe(failed: Bool = true, abandon: Bool = false) {
+        probeDeadline.cancel()
+        guard let peer = probePeripheral else { return }
+        if failed, discoveryIndex.withdraw(peer.identifier.uuidString) {
+            event(["type": "peerLost", "id": peer.identifier.uuidString])
+        }
+        probeSucceeded = false
+        probeDisconnecting = true
+        peer.delegate = nil
+        centralManager?.cancelPeripheralConnection(peer)
+        if abandon { resetProbe() }
+    }
+
+    private func resetProbe() {
+        probeDeadline.cancel()
+        probePeripheral = nil; probeLabel = nil; probeListing = nil
+        probeSucceeded = false; probeDisconnecting = false
+    }
+
+    private func completeProbe(listing: String?) {
+        guard let peer = probePeripheral, !probeDisconnecting else { return }
+        probeListing = listing
+        probeSucceeded = true
+        probeDisconnecting = true
+        peer.delegate = nil
+        centralManager?.cancelPeripheralConnection(peer)
+    }
+
+    private func didCloseProbe() {
+        guard let peer = probePeripheral else { return }
+        let id = peer.identifier.uuidString
+        let name = probeLabel
+        let listing = probeListing
+        let success = probeSucceeded
+        resetProbe()
+        if remotePeripheral == nil, eventBuffer.active, discoveryIndex.entries[id]?.label == name {
+            if success, listing.map({ !NearbyPlayListing.unavailable($0) }) ?? true {
+                if discoveryIndex.publish(id, listing: listing, now: ProcessInfo.processInfo.systemUptime), let name {
+                    var value: [String: Any] = ["type": "peer", "id": id, "name": name]
+                    if let listing { value["listing"] = listing }
+                    event(value)
+                }
+            } else if discoveryIndex.withdraw(id) {
+                event(["type": "peerLost", "id": id])
+            }
+        }
+        if let selected = remotePeripheral {
+            selected.delegate = self
+            centralManager?.connect(selected, options: nil)
+        } else { startNextProbe() }
+    }
+
     private static func lanLabel(_ name: String) -> String? {
         guard name.hasPrefix("NP-"), name.utf8.count <= 32 else { return nil }
         let value = String(name.dropFirst(3).prefix(8))
@@ -500,7 +648,8 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
             do {
                 let server = try NWListener(using: Self.lanParameters(), on: .any)
                 listener = server
-                server.service = NWListener.Service(name: "NP-" + label, type: Self.bonjour, domain: "local.")
+                server.service = NWListener.Service(name: "NP-" + label, type: Self.bonjour, domain: "local.",
+                    txtRecord: NearbyPlayListing.txtRecord(listingData))
                 server.stateUpdateHandler = { [weak self] state in
                     guard let self, self.running, self.epoch == generation else { return }
                     switch state {
@@ -516,29 +665,44 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
                 server.start(queue: .main)
             } catch { fail("LAN_LISTEN", error.localizedDescription) }
         } else {
-            let discovery = NWBrowser(for: .bonjour(type: Self.bonjour, domain: "local."), using: Self.lanParameters())
+            let discovery = NWBrowser(for: .bonjourWithTXTRecord(type: Self.bonjour, domain: "local."), using: Self.lanParameters())
             browser = discovery
-            discovery.stateUpdateHandler = { [weak self] state in
-                guard let self, self.running, self.epoch == generation else { return }
+            discovery.stateUpdateHandler = { [weak self, weak discovery] state in
+                guard let self, let discovery, self.browser === discovery, self.running, self.epoch == generation else { return }
                 switch state {
                 case .ready: self.status("Browsing the same Wi-Fi network for 60 seconds.")
                 case .failed(let error), .waiting(let error): self.fail("LAN_BROWSE", error.localizedDescription)
                 default: break
                 }
             }
-            discovery.browseResultsChangedHandler = { [weak self] results, _ in
-                guard let self, self.running, self.epoch == generation, self.connection == nil else { return }
+            discovery.browseResultsChangedHandler = { [weak self, weak discovery] results, _ in
+                guard let self, let discovery, self.browser === discovery,
+                      self.running, self.epoch == generation, self.connection == nil else { return }
                 var current: [String: NWEndpoint] = [:]
+                var listings: [String: String] = [:]
                 for result in results {
                     guard case let .service(name, type, domain, _) = result.endpoint,
                           let roomLabel = Self.lanLabel(name), type.trimmingCharacters(in: CharacterSet(charactersIn: ".")) == Self.bonjour,
                           domain == "local.",
                           current.count < Self.maxPeers else { continue }
                     let id = "lan:" + name + ":" + domain
+                    var listing: String?
+                    if case let .bonjour(record) = result.metadata, let raw = record["listing"] {
+                        guard let valid = NearbyPlayListing.string(Data(raw.utf8), lan: true),
+                              !NearbyPlayListing.unavailable(valid) else { continue }
+                        listing = valid
+                        listings[id] = valid
+                    }
                     current[id] = result.endpoint
-                    if self.lanPeers[id] == nil { self.event(["type": "peer", "id": id, "name": roomLabel]) }
+                    if self.lanPeers[id] == nil || self.lanListings[id] != listing {
+                        var value: [String: Any] = ["type": "peer", "id": id, "name": roomLabel]
+                        if let listing { value["listing"] = listing }
+                        self.event(value)
+                    }
                 }
+                for id in self.lanPeers.keys where current[id] == nil { self.event(["type": "peerLost", "id": id]) }
                 self.lanPeers = current
+                self.lanListings = listings
             }
             discovery.start(queue: .main)
         }
@@ -579,7 +743,7 @@ extension NearbyPlayPlugin: CBCentralManagerDelegate, CBPeripheralDelegate {
         bluetoothState = central.state
         switch central.state {
         case .poweredOn:
-            central.scanForPeripherals(withServices: [Self.service], options: [CBCentralManagerScanOptionAllowDuplicatesKey: false])
+            startBLEScan()
             status("Bluetooth browse started for 60 seconds.")
         case .unknown: break
         case .resetting: fail("BLUETOOTH_RESET", "Bluetooth is resetting; start again explicitly when it is ready.")
@@ -592,9 +756,8 @@ extension NearbyPlayPlugin: CBCentralManagerDelegate, CBPeripheralDelegate {
 
     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral,
                               advertisementData: [String: Any], rssi RSSI: NSNumber) {
-        guard running, central === centralManager, remotePeripheral == nil, blePeers.count < Self.maxPeers else { return }
+        guard running, eventBuffer.active, central === centralManager, remotePeripheral == nil else { return }
         let id = peripheral.identifier.uuidString
-        guard blePeers[id] == nil else { return }
         // iOS advertises a short local name; Android carries the same 8-byte
         // label as service data. Neither path exposes the phone's system name.
         let localName = advertisementData[CBAdvertisementDataLocalNameKey] as? String
@@ -605,26 +768,53 @@ extension NearbyPlayPlugin: CBCentralManagerDelegate, CBPeripheralDelegate {
             serviceName = value
         }
         guard let name = localName.flatMap({ Self.validLabel($0) ? $0 : nil }) ?? serviceName else { return }
+        if let previous = discoveryIndex.entries[id], previous.label != name {
+            if previous.announced { event(["type": "peerLost", "id": id]) }
+            if peripheral === probePeripheral { cancelProbe() }
+        }
+        let now = ProcessInfo.processInfo.systemUptime
+        guard discoveryIndex.observe(id, label: name, now: now) else { return }
         blePeers[id] = peripheral
-        event(["type": "peer", "id": id, "name": name])
+        if !NearbyPlayListing.supportsProbe(name) {
+            // Never connect to an old host merely to inspect it.
+            if discoveryIndex.publish(id, listing: nil, now: now) { event(["type": "peer", "id": id, "name": name]) }
+        } else { startNextProbe() }
     }
 
     public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        guard running, central === centralManager, peripheral === remotePeripheral else { return }
+        guard running, central === centralManager else { return }
+        if peripheral === probePeripheral {
+            if probeDisconnecting { central.cancelPeripheralConnection(peripheral) }
+            else { peripheral.discoverServices([Self.service]) }
+            return
+        }
+        guard peripheral === remotePeripheral else { return }
         peripheral.discoverServices([Self.service])
     }
 
     public func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
-        guard running, central === centralManager, peripheral === remotePeripheral else { return }
+        guard running, central === centralManager else { return }
+        if peripheral === probePeripheral { probeSucceeded = false; didCloseProbe(); return }
+        guard peripheral === remotePeripheral else { return }
         fail("BLE_CONNECT", error?.localizedDescription ?? "Bluetooth connection failed.")
     }
 
     public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        guard running, central === centralManager, peripheral === remotePeripheral else { return }
+        guard running, central === centralManager else { return }
+        if peripheral === probePeripheral { didCloseProbe(); return }
+        guard peripheral === remotePeripheral else { return }
         stopSession(reason: "peer-disconnected")
     }
 
     public func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+        if peripheral === probePeripheral, probeDisconnecting { return }
+        if running, peripheral === probePeripheral, !probeDisconnecting {
+            guard error == nil, let service = peripheral.services?.first(where: { $0.uuid == Self.service }) else {
+                cancelProbe(); return
+            }
+            peripheral.discoverCharacteristics([Self.metadata], for: service)
+            return
+        }
         guard running, peripheral === remotePeripheral else { return }
         guard error == nil, let service = peripheral.services?.first(where: { $0.uuid == Self.service }) else {
             fail("BLE_SERVICE", error?.localizedDescription ?? "Required service is missing."); return
@@ -633,6 +823,15 @@ extension NearbyPlayPlugin: CBCentralManagerDelegate, CBPeripheralDelegate {
     }
 
     public func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+        if peripheral === probePeripheral, probeDisconnecting { return }
+        if running, peripheral === probePeripheral, !probeDisconnecting, service.uuid == Self.service {
+            guard error == nil else { cancelProbe(); return }
+            guard let metadata = service.characteristics?.first(where: { $0.uuid == Self.metadata && $0.properties.contains(.read) }) else {
+                cancelProbe(); return
+            }
+            peripheral.readValue(for: metadata)
+            return
+        }
         guard running, peripheral === remotePeripheral, service.uuid == Self.service else { return }
         guard error == nil,
               let write = service.characteristics?.first(where: { $0.uuid == Self.inbound && $0.properties.contains(.write) }),
@@ -657,6 +856,14 @@ extension NearbyPlayPlugin: CBCentralManagerDelegate, CBPeripheralDelegate {
     }
 
     public func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        if peripheral === probePeripheral, probeDisconnecting { return }
+        if running, peripheral === probePeripheral, !probeDisconnecting, characteristic.uuid == Self.metadata {
+            guard error == nil, let data = characteristic.value else { cancelProbe(); return }
+            if data.isEmpty { completeProbe(listing: nil); return }
+            guard let listing = NearbyPlayListing.string(data) else { cancelProbe(); return }
+            completeProbe(listing: listing)
+            return
+        }
         guard running, peripheral === remotePeripheral, characteristic.uuid == Self.outbound else { return }
         guard error == nil, let data = characteristic.value, !data.isEmpty, data.count <= 20 else {
             fail("BLE_READ", error?.localizedDescription ?? "Expected a notification fragment of 1–20 bytes."); return
@@ -674,6 +881,9 @@ extension NearbyPlayPlugin: CBCentralManagerDelegate, CBPeripheralDelegate {
     }
 
     public func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
+        if running, peripheral === probePeripheral, invalidatedServices.contains(where: { $0.uuid == Self.service }) {
+            cancelProbe(); return
+        }
         guard running, peripheral === remotePeripheral, invalidatedServices.contains(where: { $0.uuid == Self.service }) else { return }
         fail("BLE_SERVICE", "Peer invalidated the nearby service.")
     }
@@ -687,9 +897,10 @@ extension NearbyPlayPlugin: CBPeripheralManagerDelegate {
         case .poweredOn:
             let inbound = CBMutableCharacteristic(type: Self.inbound, properties: [.write], value: nil, permissions: [.writeable])
             let outbound = CBMutableCharacteristic(type: Self.outbound, properties: [.notify], value: nil, permissions: [])
+            let metadata = CBMutableCharacteristic(type: Self.metadata, properties: [.read], value: nil, permissions: [.readable])
             localNotifyCharacteristic = outbound
             let service = CBMutableService(type: Self.service, primary: true)
-            service.characteristics = [inbound, outbound]
+            service.characteristics = [inbound, outbound, metadata]
             peripheral.add(service)
         case .unknown: break
         case .resetting: fail("BLUETOOTH_RESET", "Bluetooth is resetting; start again explicitly when it is ready.")
@@ -715,9 +926,10 @@ extension NearbyPlayPlugin: CBPeripheralManagerDelegate {
     public func peripheralManager(_ peripheral: CBPeripheralManager, central: CBCentral, didSubscribeTo characteristic: CBCharacteristic) {
         guard running, peripheral === peripheralManager, characteristic.uuid == Self.outbound else { return }
         if let existing = subscribedCentral, existing.identifier != central.identifier {
-            // CoreBluetooth exposes no peripheral-side disconnect API. Remove the service
-            // and end this session so two centrals can never share game data.
-            fail("PEER_LIMIT", "A second central subscribed; session closed. Start again with two devices only.")
+            // Two viewers can choose the same room concurrently. CoreBluetooth
+            // cannot disconnect a peripheral-side central; ignore the later
+            // subscription and reject its writes. Notifications target only
+            // the first central, whose accepted gathering remains intact.
             return
         }
         subscribedCentral = central
@@ -730,6 +942,20 @@ extension NearbyPlayPlugin: CBPeripheralManagerDelegate {
         stopSession(reason: "peer-disconnected")
     }
 
+    public func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveRead request: CBATTRequest) {
+        guard running, peripheral === peripheralManager else { return }
+        guard request.characteristic.uuid == Self.metadata else {
+            peripheral.respond(to: request, withResult: .readNotPermitted); return
+        }
+        // Reading public metadata never subscribes a central, claims the seat,
+        // stops advertising, or emits a game connection/disconnection event.
+        guard let value = NearbyPlayListing.read(connected ? nil : listingData, offset: request.offset) else {
+            peripheral.respond(to: request, withResult: .invalidOffset); return
+        }
+        request.value = value
+        peripheral.respond(to: request, withResult: .success)
+    }
+
     public func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveWrite requests: [CBATTRequest]) {
         guard running, peripheral === peripheralManager, let first = requests.first else { return }
         // CoreBluetooth requires one response to the first request of an atomic batch.
@@ -737,7 +963,9 @@ extension NearbyPlayPlugin: CBPeripheralManagerDelegate {
               requests.allSatisfy({ $0.characteristic.uuid == Self.inbound && $0.offset == 0 &&
                   $0.central.identifier == subscribedCentral?.identifier && $0.value != nil && $0.value!.count <= 20 }) else {
             peripheral.respond(to: first, withResult: .requestNotSupported)
-            fail("BLE_WRITE", "Invalid write, offset or unauthorised central.")
+            if requests.contains(where: { $0.central.identifier == subscribedCentral?.identifier }) {
+                fail("BLE_WRITE", "Invalid write or offset from the subscribed central.")
+            }
             return
         }
         for request in requests {

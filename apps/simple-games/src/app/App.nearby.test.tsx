@@ -88,12 +88,14 @@ function GameHome({ onExit, onPlayTogether, playTogetherActive }: GameRootProps)
 // the actual shell's mount identity, visibility, and explicit deletion ordering.
 function RetainedPeer({
   gameId,
+  onGameSelected,
   visible,
   onExit,
   onActiveChange,
   onRegisterStop,
 }: {
-  gameId: NearbyGameId;
+  gameId: NearbyGameId | null;
+  onGameSelected?: (gameId: NearbyGameId) => void;
   visible: boolean;
   onExit: () => void;
   onActiveChange: (active: boolean) => void;
@@ -123,7 +125,17 @@ function RetainedPeer({
   }, [stop, onRegisterStop]);
   return (
     <section data-testid="peer" data-visible={visible}>
-      <h1>{gameId} with someone</h1>
+      <h1>{gameId ?? 'browse'} with someone</h1>
+      {!gameId && (
+        <button
+          onClick={() => {
+            onGameSelected?.('chess');
+            setActive(true);
+          }}
+        >
+          Join Chess
+        </button>
+      )}
       <p>Turn {turn}</p>
       <button onClick={() => setActive(true)}>Connect</button>
       <button onClick={() => setTurn((v) => v + 1)}>Play a turn</button>
@@ -169,15 +181,39 @@ afterEach(() => {
   window.history.replaceState(null, '', '/');
 });
 
-describe('multiplayer is entered through the supported game', () => {
-  it('does not load the feature on the collection or a game home, and has no standalone entry', () => {
+describe('multiplayer entrances retain one session', () => {
+  it('shows the all-game discovery door without loading the feature on paint', () => {
     renderShell();
-    expect(screen.queryByRole('button', { name: /Nearby Play/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Find nearby opponents/ })).toBeVisible();
+    expect(state.loaded).not.toHaveBeenCalled();
     chooseYacht();
     expect(screen.getByRole('button', { name: 'Play with someone' })).toBeInTheDocument();
     expect(state.loaded).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Play with someone' }));
     expect(screen.getByRole('heading', { name: 'yacht with someone' })).toBeInTheDocument();
+  });
+  it('enters without a game and returns to the same selected match through the collection', () => {
+    renderShell();
+    fireEvent.click(screen.getByRole('button', { name: /Find nearby opponents/ }));
+    expect(screen.getByRole('heading', { name: 'browse with someone' })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Join Chess' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Play a turn' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back to game' }));
+    expect(screen.getByRole('button', { name: /Back to multiplayer/ })).toBeVisible();
+    expect(screen.queryByRole('heading', { name: 'Game home' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Back to multiplayer/ }));
+    expect(screen.getByRole('heading', { name: 'chess with someone' })).toBeVisible();
+    expect(screen.getByText('Turn 2')).toBeVisible();
+    expect(state.mounted).toHaveBeenCalledTimes(1);
+    expect(state.stopped).not.toHaveBeenCalled();
+  });
+  it('returns an unused global browser to the collection without a Yacht fallback', () => {
+    renderShell();
+    fireEvent.click(screen.getByRole('button', { name: /Find nearby opponents/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back to game' }));
+    expect(screen.getByRole('button', { name: /Find nearby opponents/ })).toBeVisible();
+    expect(state.unmounted).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('heading', { name: 'Game home' })).not.toBeInTheDocument();
   });
   it('does not offer multiplayer for an unsupported game or in the browser', () => {
     const first = renderShell();

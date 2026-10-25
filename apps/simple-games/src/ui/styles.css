@@ -3338,3 +3338,11 @@ button:disabled {
   --accent-ring: rgba(139, 189, 100, 0.38);
   --accent-ring-soft: rgba(139, 189, 100, 0.12);
 }
+.home-find-opponent {
+  width: 100%;
+  max-width: 420px;
+  align-self: center;
+  margin-top: 12px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

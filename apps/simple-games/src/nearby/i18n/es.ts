@@ -2,6 +2,14 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const es: NearbyMessages = {
+  browseHint:
+    'Encuentra personas que organizan partidas de cualquier juego compatible. Elige la misma conexión que el anfitrión.',
+  chooseConnection: 'Conectar mediante',
+  stopSearch: 'Dejar de buscar',
+  listingUnavailable: 'Esta sala ya no está disponible. Vuelve para buscar otra.',
+  hostNameHint:
+    'Hasta 24 caracteres. Al organizar una partida, tu nombre y el juego son visibles para las personas cercanas, incluso si juegas con amigos.',
+
   playerTurn: 'Turno de {name}',
   playTogether: 'Jugar con alguien',
   closeChat: 'Cerrar chat',

@@ -2,6 +2,14 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const tr: NearbyMessages = {
+  browseHint:
+    'Desteklenen oyunlardan birine ev sahipliği yapan kişileri bul. Ev sahibiyle aynı bağlantı seçeneğini kullan.',
+  chooseConnection: 'Bağlantı yöntemi',
+  stopSearch: 'Aramayı durdur',
+  listingUnavailable: 'Bu buluşma artık kullanılamıyor. Başka birini bulmak için geri dön.',
+  hostNameHint:
+    'En fazla 24 karakter. Ev sahipliği yaparken adın ve oyunun yakındaki kişilere görünür; arkadaşlarla oynarken de bu geçerlidir.',
+
   playerTurn: 'Sıra {name} oyuncusunda',
   playTogether: 'Biriyle oyna',
   closeChat: 'Sohbeti kapat',

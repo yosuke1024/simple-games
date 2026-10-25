@@ -1,8 +1,16 @@
 import type { PluginListenerHandle } from '@capacitor/core';
-import { isNearbyGameId, NEARBY_GAME_CODES } from '../app/nearbyGameIds';
+import { isNearbyGameId } from '../app/nearbyGameIds';
 import type { GameAdapter, NearbyGameId, Random } from './gameTypes';
 import { Channel } from './channel';
 import { Delivery } from './delivery';
+import {
+  gameForLabel,
+  isMetadataLabel,
+  metadataGameCode,
+  parseListing,
+  serializeListing,
+  type DiscoveredPeer,
+} from './discovery';
 import {
   blockIdentity,
   loadHistory,
@@ -17,7 +25,7 @@ import {
   type NearbyPlugin,
   type Transport,
 } from './native';
-import { Session } from './session';
+import { isPlayerName, Session } from './session';
 
 export interface Setup {
   host: boolean;
@@ -26,6 +34,14 @@ export interface Setup {
   name: string;
   transport: Transport;
   public: boolean;
+}
+export interface DiscoverySetup {
+  host: false;
+  chatEnabled: false;
+  gameId: null;
+  name: '';
+  transport: Transport;
+  public: false;
 }
 export type EndReason = 'ended' | 'timeout' | 'connectionError' | 'declined' | 'blocked';
 // Native plugins are singletons. An old permission/start completion must never
@@ -37,7 +53,7 @@ const random: Random = () => crypto.getRandomValues(new Uint32Array(1))[0]! / 0x
 export class NearbyController {
   state: 'idle' | 'starting' | 'discovering' | 'connecting' | 'room' | 'reconnecting' | 'ended' =
     'idle';
-  peers: Array<{ id: string; name: string }> = [];
+  peers: DiscoveredPeer[] = [];
   label = '';
   code = '';
   session: Session | null = null;
@@ -65,24 +81,38 @@ export class NearbyController {
   private restarting = false;
   private authenticated = false;
   private deliveryPending = 0;
-  private readonly gameId: NearbyGameId;
+  private selectedHostName: string | undefined;
+  private selectingPeer: DiscoveredPeer | null = null;
   private delivery = new Delivery(
     (plain) => this.session?.receive(plain),
     () => this.observe(),
   );
 
   constructor(
-    readonly setup: Setup,
+    private currentSetup: Setup | DiscoverySetup,
     private readonly changed: () => void,
     private readonly plugin: NearbyPlugin = nearbyPlugin,
-    private readonly adapter?: GameAdapter,
-  ) {
-    this.gameId = setup.gameId;
+    private adapter?: GameAdapter,
+  ) {}
+
+  get setup(): Setup | DiscoverySetup {
+    return this.currentSetup;
+  }
+
+  get gameId(): NearbyGameId | null {
+    return this.setup.gameId;
   }
 
   async start() {
     if (this.state !== 'idle') return;
-    if (!isNearbyGameId(this.gameId) || (this.adapter?.id ?? 'yacht') !== this.gameId) {
+    const discovery = this.gameId === null;
+    if (
+      discovery
+        ? this.setup.host || this.setup.name !== '' || this.setup.public || this.setup.chatEnabled
+        : !isNearbyGameId(this.gameId) ||
+          (this.adapter?.id ?? 'yacht') !== this.gameId ||
+          !isPlayerName(this.setup.name)
+    ) {
       this.state = 'ended';
       this.reason = 'connectionError';
       this.changed();
@@ -95,30 +125,15 @@ export class NearbyController {
     if (old && old !== this) await old.stop();
     if (!this.active) return;
     owners.set(this.plugin, this);
-    this.label = `${this.setup.public ? 'P' : 'F'}-${NEARBY_GAME_CODES[this.gameId]}${randomId().slice(0, 4).toUpperCase()}`;
+    // This unused browse label advertises nothing. Selection replaces it with
+    // the actual candidate label before connection or continuation is possible.
+    this.label =
+      this.gameId === null
+        ? 'F-000000'
+        : `${this.setup.public ? 'P' : 'F'}-${metadataGameCode(this.gameId)}${randomId().slice(0, 4).toUpperCase()}`;
     this.changed();
     try {
-      this.data = await loadHistory(this.plugin);
-    } catch {
-      this.storageFailed = true;
-      await this.stop('connectionError');
-      return;
-    }
-    if (!this.active) return;
-    try {
-      await this.prepareChannel(false);
-      if (!this.active) return;
-      this.session = new Session({
-        host: this.setup.host,
-        chatEnabled: this.setup.chatEnabled,
-        adapter: this.adapter,
-        name: this.setup.name,
-        nonce: randomId(),
-        identity: this.data.identity,
-        random,
-        send: (wire) => this.delivery.send(wire),
-        changed: () => this.observe(),
-      });
+      if (!discovery && !(await this.prepareSession())) return;
       const listener = await this.plugin.addListener('nearbyEvent', (event) => {
         if (!this.active) return;
         // Lifecycle cannot wait behind a stalled native send/WebCrypto job.
@@ -141,6 +156,19 @@ export class NearbyController {
         }
         this.incomingCount++;
         const generation = this.generation;
+        // Discovery changes must be visible even while a selected game's
+        // history or crypto is loading. In particular, loss invalidates that
+        // exact candidate before connect(), without reopening discovery.
+        if (event.type === 'peer' || event.type === 'peerLost') {
+          void this.event(event)
+            .catch(() => {
+              if (generation === this.generation) this.interrupted('connectionError');
+            })
+            .finally(() => {
+              if (generation === this.generation) this.incomingCount--;
+            });
+          return;
+        }
         // Keep decrypt + protocol application ordered across asynchronous crypto.
         this.incoming = this.incoming
           .then(() => {
@@ -160,10 +188,19 @@ export class NearbyController {
       this.listener = listener;
       this.state = 'discovering';
       this.changed();
+      const listing =
+        this.setup.host && this.gameId !== null
+          ? serializeListing(this.label, this.setup.name, this.gameId)
+          : undefined;
+      if (listing === null) {
+        await this.stop('connectionError');
+        return;
+      }
       await this.plugin.start({
         transport: this.setup.transport,
         role: this.setup.host ? 'advertise' : 'browse',
         label: this.label,
+        ...(listing === undefined ? {} : { listing }),
       });
       if (!this.active) {
         if (owners.get(this.plugin) === this) await this.plugin.stop();
@@ -176,10 +213,78 @@ export class NearbyController {
       await this.stop('connectionError');
     }
   }
+  private async prepareSession(): Promise<boolean> {
+    try {
+      this.data = await loadHistory(this.plugin);
+    } catch {
+      if (this.active) {
+        this.storageFailed = true;
+        await this.stop('connectionError');
+      }
+      return false;
+    }
+    if (!this.active) return false;
+    await this.prepareChannel(false);
+    if (!this.active) return false;
+    this.session = new Session({
+      host: this.setup.host,
+      chatEnabled: this.setup.chatEnabled,
+      adapter: this.adapter,
+      name: this.setup.name,
+      nonce: randomId(),
+      identity: this.data.identity,
+      random,
+      send: (wire) => this.delivery.send(wire),
+      changed: () => this.observe(),
+    });
+    return true;
+  }
+
+  /** Promote the current scan to the selected game without losing its native peer ID. */
+  async connectToGame(peerId: string, name: string, adapter: GameAdapter): Promise<boolean> {
+    if (!this.active || this.gameId !== null || this.state !== 'discovering') return false;
+    const peer = this.peers.find((p) => p.id === peerId);
+    if (!peer?.hostName || peer.gameId !== adapter.id || !isPlayerName(name)) {
+      await this.stop('connectionError');
+      return false;
+    }
+    this.selectingPeer = peer;
+    this.selectedHostName = peer.hostName;
+    this.adapter = adapter;
+    this.currentSetup = {
+      ...this.setup,
+      host: false,
+      name,
+      gameId: peer.gameId,
+      chatEnabled: false,
+      public: false,
+    };
+    this.label = peer.name;
+    this.state = 'connecting';
+    this.limit(15000);
+    this.changed();
+    try {
+      if (!(await this.prepareSession())) return false;
+      if (!this.active || !this.peers.includes(peer)) {
+        if (this.active) await this.stop('connectionError');
+        return false;
+      }
+      this.selectingPeer = null;
+      await this.plugin.connect({ peerId });
+      return this.active;
+    } catch {
+      if (this.active) await this.stop('connectionError');
+      return false;
+    } finally {
+      this.selectingPeer = null;
+    }
+  }
+
   async connect(peerId: string) {
-    if (!this.active || this.setup.host || this.state !== 'discovering') return;
+    if (!this.active || !this.session || this.setup.host || this.state !== 'discovering') return;
     const peer = this.peers.find((p) => p.id === peerId);
     if (!peer) return;
+    this.selectedHostName = peer.hostName;
     this.label = peer.name;
     this.state = 'connecting';
     this.limit(15000);
@@ -342,12 +447,27 @@ export class NearbyController {
       } else this.limit(this.state === 'discovering' ? 60000 : 15000);
       return;
     }
-    if (event.type === 'peer' && (this.state === 'discovering' || this.state === 'reconnecting')) {
-      if (typeof event.id !== 'string' || typeof event.name !== 'string' || event.id.length > 256)
+    if (event.type === 'peerLost') {
+      this.removePeer(event.id);
+      return;
+    }
+    if (
+      event.type === 'peer' &&
+      (this.state === 'discovering' || this.state === 'reconnecting' || this.selectingPeer)
+    ) {
+      if (
+        typeof event.id !== 'string' ||
+        !event.id ||
+        event.id.length > 256 ||
+        typeof event.name !== 'string'
+      )
         return;
       const name = event.name.toUpperCase();
-      if (!/^[PF]-[A-F0-9]{6}$/.test(name) || name.slice(2, 4) !== NEARBY_GAME_CODES[this.gameId])
+      const gameId = gameForLabel(name);
+      if (!gameId || (this.gameId !== null && gameId !== this.gameId)) {
+        this.removePeer(event.id);
         return;
+      }
       if (this.state === 'reconnecting') {
         // Discovery metadata selects a candidate; only its cryptographic proof
         // can resume this gathering, even when another device copies the label.
@@ -362,10 +482,42 @@ export class NearbyController {
         }
         return;
       }
-      if (!this.peers.some((peer) => peer.id === event.id) && this.peers.length < 50)
-        this.peers.push({ id: event.id, name });
+      const listing = parseListing(event.listing, name);
+      // An explicitly invalid/incompatible listing is never treated as legacy.
+      // Global browsing requires a name and game; game-specific browsing can
+      // still connect an older host by its already-filtered discovery label.
+      if (
+        !listing &&
+        (event.listing !== undefined || this.gameId === null || isMetadataLabel(name))
+      ) {
+        this.removePeer(event.id);
+        return;
+      }
+      const peer: DiscoveredPeer = {
+        id: event.id,
+        name,
+        gameId,
+        ...(listing ? { hostName: listing.name } : {}),
+      };
+      const index = this.peers.findIndex((p) => p.id === event.id);
+      if (index < 0) {
+        if (this.peers.length >= 50) return;
+        this.peers.push(peer);
+      } else {
+        const previous = this.peers[index]!;
+        if (previous.name === peer.name && previous.hostName === peer.hostName) return;
+        this.peers[index] = peer;
+        if (this.selectingPeer === previous) {
+          void this.stop('connectionError');
+          return;
+        }
+      }
       this.changed();
     } else if (event.type === 'connected') {
+      if (!this.session || !this.channel || this.selectingPeer) {
+        void this.stop('connectionError');
+        return;
+      }
       if (this.authenticated) return;
       this.connected = true;
       if (!this.session?.suspended) this.state = 'connecting';
@@ -378,6 +530,13 @@ export class NearbyController {
       if (this.restarting) return; // plugin.stop() during a deliberate physical retry
       this.interrupted(event.type === 'error' ? 'connectionError' : 'ended');
     }
+  }
+  private removePeer(id: string) {
+    const index = this.peers.findIndex((peer) => peer.id === id);
+    if (index < 0) return;
+    const [removed] = this.peers.splice(index, 1);
+    if (removed === this.selectingPeer) void this.stop('connectionError');
+    else this.changed();
   }
   private watch(key: string, pending: boolean) {
     if (pending && !this.timers.has(key))
@@ -395,6 +554,15 @@ export class NearbyController {
   private observe() {
     const session = this.session;
     if (!session) return;
+    if (
+      this.active &&
+      this.selectedHostName !== undefined &&
+      session.peerName &&
+      session.peerName !== this.selectedHostName
+    ) {
+      void this.stop('connectionError');
+      return;
+    }
     if (this.active && this.data?.blocked.includes(session.peerIdentity)) {
       void this.stop('blocked');
       return;

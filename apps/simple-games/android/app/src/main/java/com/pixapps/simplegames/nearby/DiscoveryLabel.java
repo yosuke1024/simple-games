@@ -10,6 +10,12 @@ final class DiscoveryLabel {
         return label != null && label.length() == 8 && label.matches("[PF]-[0-9A-Fa-f]{6}");
     }
 
+    static boolean metadataCapable(String label) {
+        if (!valid(label)) return false;
+        int code = Integer.parseInt(label.substring(2, 4), 16);
+        return code >= 0x81 && code <= 0x8d;
+    }
+
     static String fromBytes(byte[] bytes) {
         if (bytes == null || bytes.length != 8) return null;
         String label = new String(bytes, StandardCharsets.US_ASCII);

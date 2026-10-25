@@ -30,6 +30,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ParcelUuid;
+import android.os.SystemClock;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Arrays;
@@ -47,6 +48,7 @@ final class BleTransport implements Transport {
     static final UUID SERVICE = UUID.fromString("9b5d2000-7a4c-4e13-a280-75d53c01a268");
     static final UUID RX = UUID.fromString("9b5d2001-7a4c-4e13-a280-75d53c01a268");
     static final UUID TX = UUID.fromString("9b5d2002-7a4c-4e13-a280-75d53c01a268");
+    static final UUID META = UUID.fromString("9b5d2003-7a4c-4e13-a280-75d53c01a268");
     static final UUID CCC = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
     private final Context context;
     private final Events events;
@@ -57,7 +59,19 @@ final class BleTransport implements Transport {
     });
     private final FrameCodec decoder = new FrameCodec();
     private final SubscriptionBuffer earlyNotifications = new SubscriptionBuffer();
-    private final Map<String, BluetoothDevice> peers = new LinkedHashMap<>();
+    private final DiscoveryIndex<BluetoothDevice> peers = new DiscoveryIndex<>("ble-");
+    private final BleAdmission<BluetoothDevice> admission = new BleAdmission<>();
+    private final Map<BluetoothDevice, Runnable> candidateTimeouts = new LinkedHashMap<>();
+    private BluetoothGatt probe;
+    private DiscoveryIndex.Peer<BluetoothDevice> probePeer;
+    private boolean probeClosing;
+    private boolean probeSucceeded;
+    private String probeLabel;
+    private String probeListing;
+    private boolean foreground = true;
+    private byte[] listing;
+    private final Runnable probeTimeout = () -> finishProbe(null, false);
+    private final Runnable maintenance = this::maintainDiscovery;
     private final ArrayDeque<byte[]> frames = new ArrayDeque<>();
     private final AtomicInteger pendingCallbacks = new AtomicInteger();
     private final AtomicBoolean callbackOverflow = new AtomicBoolean();
@@ -93,12 +107,13 @@ final class BleTransport implements Transport {
 
     BleTransport(Context context, Events events) { this.context = context; this.events = events; }
 
-    public void start(boolean advertise, String label) {
+    public void start(boolean advertise, String label, byte[] listing) {
         BluetoothManager manager = context.getSystemService(BluetoothManager.class);
         BluetoothAdapter adapter = manager == null ? null : manager.getAdapter();
         if (adapter == null || !adapter.isEnabled()) throw new IllegalStateException("Enable Bluetooth before starting");
         this.advertise = advertise;
         this.label = label;
+        this.listing = listing;
         active = true;
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
         // Bluetooth broadcasts originate from a privileged separate process. This action is
@@ -123,6 +138,8 @@ final class BleTransport implements Transport {
                 BluetoothGattDescriptor.PERMISSION_READ | BluetoothGattDescriptor.PERMISSION_WRITE));
             service.addCharacteristic(writeCharacteristic);
             service.addCharacteristic(notifyCharacteristic);
+            service.addCharacteristic(new BluetoothGattCharacteristic(META,
+                BluetoothGattCharacteristic.PROPERTY_READ, BluetoothGattCharacteristic.PERMISSION_READ));
             if (!server.addService(service)) throw new IllegalStateException("Could not add BLE service");
         } else {
             scanner = adapter.getBluetoothLeScanner();
@@ -130,19 +147,21 @@ final class BleTransport implements Transport {
             scanner.startScan(Collections.singletonList(new ScanFilter.Builder().setServiceUuid(new ParcelUuid(SERVICE)).build()),
                 new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build(), scanCallback);
             events.status("BLE discovery started (60-second limit)");
+            deadlines.post(maintenance, 1_000);
         }
     }
 
     public void connect(String peerId) {
         if (!active || advertise || gatt != null || remote != null) throw new IllegalStateException("BLE is not available for another connection");
-        BluetoothDevice device = peers.get(peerId);
-        if (device == null) throw new IllegalArgumentException("Select a discovered BLE peer");
+        DiscoveryIndex.Peer<BluetoothDevice> peer = peers.byId(peerId);
+        if (peer == null || !peer.announced) throw new IllegalArgumentException("Select a current discovered BLE peer");
         stopScan();
         deadlines.remove(sessionTimeout);
-        remote = device;
+        remote = peer.value;
         deadlines.post(connectTimeout, 15_000);
-        gatt = device.connectGatt(context, false, clientCallback, BluetoothDevice.TRANSPORT_LE);
-        if (gatt == null) fail("connect-failed", "Could not create BLE connection");
+        // Finish a metadata-only link before opening the real connection, including
+        // when the chosen device is the one currently being probed.
+        if (probe != null) releaseProbe(); else connectSelected();
     }
 
     public void send(byte[] frame) {
@@ -237,17 +256,128 @@ final class BleTransport implements Transport {
         });
     }
 
+    private void connectSelected() {
+        if (!active || advertise || remote == null || gatt != null) return;
+        try {
+            gatt = remote.connectGatt(context, false, clientCallback, BluetoothDevice.TRANSPORT_LE);
+            if (gatt == null) fail("connect-failed", "Could not create BLE connection");
+        } catch (Exception error) { fail("connect-failed", "Could not create BLE connection"); }
+    }
+
+    private void maintainDiscovery() {
+        if (!active || scanner == null || !foreground) return;
+        for (DiscoveryIndex.Peer<BluetoothDevice> peer : peers.expire(SystemClock.elapsedRealtime())) {
+            if (peer.announced) events.peerLost(peer.id);
+            if (peer == probePeer) releaseProbe();
+        }
+        for (DiscoveryIndex.Peer<BluetoothDevice> peer : peers.expireListings(SystemClock.elapsedRealtime()))
+            events.peerLost(peer.id);
+        pumpProbe();
+        deadlines.post(maintenance, 1_000);
+    }
+    private void pumpProbe() {
+        if (!active || !foreground || scanner == null || probe != null || remote != null) return;
+        probePeer = peers.nextProbe(SystemClock.elapsedRealtime());
+        // Older hosts treat any physical connection as joining and would end on
+        // probe disconnect. The high game-code bit is the metadata capability flag.
+        while (probePeer != null && !DiscoveryLabel.metadataCapable(probePeer.label)) {
+            probePeer = peers.nextProbe(SystemClock.elapsedRealtime());
+        }
+        if (probePeer == null) return;
+        probeLabel = probePeer.label; probeListing = null; probeSucceeded = false;
+        try {
+            probe = probePeer.value.connectGatt(context, false, probeCallback, BluetoothDevice.TRANSPORT_LE);
+            if (probe == null) { probePeer = null; return; }
+            deadlines.post(probeTimeout, 5_000);
+        } catch (Exception ignored) { probe = null; probePeer = null; }
+    }
+    private void finishProbe(String value, boolean succeeded) {
+        if (probe == null || probeClosing) return;
+        probeListing = value; probeSucceeded = succeeded;
+        releaseProbe();
+    }
+    private void releaseProbe() {
+        if (probe == null || probeClosing) return;
+        deadlines.remove(probeTimeout);
+        probeClosing = true;
+        // Do not overlap links if the OS is slow to report closure. The enclosing
+        // 60-second scan / 15-second selection deadline bounds this wait.
+        try { probe.disconnect(); } catch (Exception ignored) { /* Wait for closure or the outer deadline. */ }
+    }
+    private void closedProbe() {
+        deadlines.remove(probeTimeout);
+        BluetoothGatt closing = probe;
+        DiscoveryIndex.Peer<BluetoothDevice> peer = probePeer;
+        boolean publish = probeSucceeded && peer != null && peer.label.equals(probeLabel);
+        String value = probeListing;
+        probe = null; probePeer = null; probeClosing = false;
+        probeLabel = null; probeListing = null; probeSucceeded = false;
+        if (closing != null) { try { closing.close(); } catch (Exception ignored) {} }
+        if (scanner != null && foreground && peers.contains(peer)) {
+            if (publish) {
+                if (peers.publish(peer, value, SystemClock.elapsedRealtime())) events.peer(peer.id, peer.label, value);
+            } else if (peers.withdraw(peer)) events.peerLost(peer.id);
+        }
+        if (remote != null) connectSelected(); else pumpProbe();
+    }
+    private final BluetoothGattCallback probeCallback = new BluetoothGattCallback() {
+        @Override public void onConnectionStateChange(BluetoothGatt client, int status, int state) { run(() -> {
+            if (client != probe) return;
+            if (state == BluetoothProfile.STATE_DISCONNECTED) {
+                if (!probeClosing) finishProbe(null, false);
+                closedProbe(); return;
+            }
+            if (probeClosing) return;
+            if (status != BluetoothGatt.GATT_SUCCESS) { finishProbe(null, false); return; }
+            if (state == BluetoothProfile.STATE_CONNECTED) {
+                try { if (!client.discoverServices()) finishProbe(null, false); }
+                catch (Exception ignored) { finishProbe(null, false); }
+            }
+        }); }
+        @Override public void onServicesDiscovered(BluetoothGatt client, int status) { run(() -> {
+            if (client != probe || probeClosing) return;
+            BluetoothGattService service = client.getService(SERVICE);
+            BluetoothGattCharacteristic metadata = service == null ? null : service.getCharacteristic(META);
+            if (status != BluetoothGatt.GATT_SUCCESS || metadata == null ||
+                (metadata.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) == 0) { finishProbe(null, false); return; }
+            try { if (!client.readCharacteristic(metadata)) finishProbe(null, false); }
+            catch (Exception ignored) { finishProbe(null, false); }
+        }); }
+        @Override public void onCharacteristicRead(BluetoothGatt client, BluetoothGattCharacteristic characteristic, int status) {
+            if (Build.VERSION.SDK_INT < 33) read(client, characteristic, characteristic.getValue(), status);
+        }
+        @Override public void onCharacteristicRead(BluetoothGatt client, BluetoothGattCharacteristic characteristic, byte[] value, int status) {
+            read(client, characteristic, value, status);
+        }
+        private void read(BluetoothGatt client, BluetoothGattCharacteristic characteristic, byte[] value, int status) {
+            byte[] copy = value != null && value.length <= ListingPayload.MAX_BYTES ? value.clone() : null;
+            run(() -> {
+                if (client == probe && !probeClosing && META.equals(characteristic.getUuid()))
+                    finishProbe(ListingPayload.decode(copy), status == BluetoothGatt.GATT_SUCCESS && copy != null &&
+                        (copy.length == 0 || ListingPayload.decode(copy) != null));
+            });
+        }
+    };
     private final ScanCallback scanCallback = new ScanCallback() {
         @Override public void onScanResult(int callbackType, ScanResult result) { run(() -> {
+            if (scanner == null || !foreground) return;
             BluetoothDevice device = result.getDevice();
-            if (peers.containsValue(device) || peers.size() >= 16) return;
-            String id = "ble-" + (peers.size() + 1);
             String name = result.getScanRecord() == null ? null : result.getScanRecord().getDeviceName();
             byte[] supplied = result.getScanRecord() == null ? null : result.getScanRecord().getServiceData(new ParcelUuid(SERVICE));
             if (supplied != null) name = DiscoveryLabel.fromBytes(supplied);
-            if (!DiscoveryLabel.valid(name)) return; // Wait for the bounded room metadata in a scan response.
-            peers.put(id, device);
-            events.peer(id, name);
+            if (!DiscoveryLabel.valid(name)) return;
+            String key = device.getAddress();
+            DiscoveryIndex.Peer<BluetoothDevice> previous = peers.byKey(key);
+            boolean changed = previous == null || !previous.label.equals(name);
+            if (changed && previous != null) {
+                if (previous.announced) events.peerLost(previous.id);
+                if (previous == probePeer) { probeSucceeded = false; releaseProbe(); }
+            }
+            DiscoveryIndex.Peer<BluetoothDevice> peer = peers.seen(key, device, name, SystemClock.elapsedRealtime());
+            if (peer == null) return;
+            if (!DiscoveryLabel.metadataCapable(peer.label) && peers.publish(peer, null, SystemClock.elapsedRealtime()))
+                events.peer(peer.id, peer.label, null);
+            pumpProbe();
         }); }
         @Override public void onScanFailed(int code) { run(() -> fail("scan-failed", "BLE scan failed: " + code)); }
     };
@@ -321,14 +451,33 @@ final class BleTransport implements Transport {
         }); }
         @Override public void onConnectionStateChange(BluetoothDevice device, int status, int state) { run(() -> {
             if (state == BluetoothProfile.STATE_CONNECTED) {
-                if (remote != null && !remote.equals(device)) { server.cancelConnection(device); return; }
-                if (status != BluetoothGatt.GATT_SUCCESS) { fail("connect-failed", "BLE peripheral connection failed"); return; }
-                remote = device;
-                deadlines.remove(sessionTimeout);
-                deadlines.post(connectTimeout, 15_000);
-                stopAdvertising();
-            } else if (state == BluetoothProfile.STATE_DISCONNECTED && device.equals(remote)) {
-                fail("connection-lost", "BLE peer disconnected");
+                if (status != BluetoothGatt.GATT_SUCCESS || !admission.connected(device)) {
+                    server.cancelConnection(device); return;
+                }
+                if (device.equals(remote) || candidateTimeouts.containsKey(device)) return;
+                Runnable timeout = () -> {
+                    candidateTimeouts.remove(device);
+                    admission.disconnected(device);
+                    try { server.cancelConnection(device); } catch (Exception ignored) {}
+                };
+                candidateTimeouts.put(device, timeout);
+                deadlines.post(timeout, 15_000);
+            } else if (state == BluetoothProfile.STATE_DISCONNECTED) {
+                Runnable timeout = candidateTimeouts.remove(device);
+                if (timeout != null) deadlines.remove(timeout);
+                if (admission.disconnected(device)) fail("connection-lost", "BLE peer disconnected");
+            }
+        }); }
+        @Override public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int start,
+            BluetoothGattCharacteristic characteristic) { run(() -> {
+            if (!META.equals(characteristic.getUuid()) || !admission.candidate(device)) {
+                server.sendResponse(device, requestId, BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED, start, null); return;
+            }
+            try {
+                byte[] value = ListingPayload.read(remote == null ? listing : null, start);
+                server.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, start, value);
+            } catch (IllegalArgumentException error) {
+                server.sendResponse(device, requestId, BluetoothGatt.GATT_INVALID_OFFSET, start, null);
             }
         }); }
         @Override public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId,
@@ -348,15 +497,28 @@ final class BleTransport implements Transport {
             run(() -> {
                 boolean subscription = Arrays.equals(copy, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) ||
                     Arrays.equals(copy, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
-                boolean valid = device.equals(remote) && CCC.equals(descriptor.getUuid()) && TX.equals(descriptor.getCharacteristic().getUuid()) &&
-                    !prepared && responseNeeded && start == 0 && subscription;
+                boolean valid = CCC.equals(descriptor.getUuid()) && TX.equals(descriptor.getCharacteristic().getUuid()) &&
+                    !prepared && responseNeeded && start == 0 && subscription && admission.subscribe(device);
+                if (valid && remote == null) {
+                    remote = device;
+                    Runnable timeout = candidateTimeouts.remove(device);
+                    if (timeout != null) deadlines.remove(timeout);
+                    // Metadata readers do not own a seat; release any still connected
+                    // when a participant explicitly subscribes to the game channel.
+                    for (BluetoothDevice other : admission.waiting()) {
+                        Runnable otherTimeout = candidateTimeouts.remove(other);
+                        if (otherTimeout != null) deadlines.remove(otherTimeout);
+                        admission.disconnected(other);
+                        try { server.cancelConnection(other); } catch (Exception ignored) {}
+                    }
+                }
                 if (responseNeeded) server.sendResponse(device, requestId, valid ? BluetoothGatt.GATT_SUCCESS : BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED, 0, null);
                 if (valid) { indicate = Arrays.equals(copy, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE); connected(); }
                 else if (device.equals(remote)) fail("subscribe-failed", "Unsupported BLE subscription or unsubscribe");
             });
         }
         @Override public void onDescriptorReadRequest(BluetoothDevice device, int requestId, int start, BluetoothGattDescriptor descriptor) { run(() -> {
-            boolean valid = device.equals(remote) && CCC.equals(descriptor.getUuid()) && start == 0;
+            boolean valid = (device.equals(remote) || admission.candidate(device)) && CCC.equals(descriptor.getUuid()) && start == 0;
             byte[] value = ready ? (indicate ? BluetoothGattDescriptor.ENABLE_INDICATION_VALUE : BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
                 : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
             server.sendResponse(device, requestId, valid ? BluetoothGatt.GATT_SUCCESS : BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED, 0, valid ? value : null);
@@ -370,12 +532,24 @@ final class BleTransport implements Transport {
 
     private void fail(String code, String message) { if (!active) return; stop(); events.failed(code, message); }
     private void stopScan() {
+        deadlines.remove(maintenance);
         if (scanner != null) { try { scanner.stopScan(scanCallback); } catch (Exception ignored) {} scanner = null; }
     }
     private void stopAdvertising() {
         if (advertiser != null) { try { advertiser.stopAdvertising(advertiseCallback); } catch (Exception ignored) {} }
     }
-    public void setForeground(boolean active) { deadlines.setActive(active); }
+    public void setForeground(boolean active) {
+        foreground = active;
+        deadlines.setActive(active);
+        if (scanner != null) {
+            if (!active) { probeSucceeded = false; releaseProbe(); }
+            else {
+                // Cached rows are not evidence that a host is still open after suspension.
+                for (DiscoveryIndex.Peer<BluetoothDevice> peer : peers.clear()) if (peer.announced) events.peerLost(peer.id);
+                deadlines.post(maintenance, 1_000);
+            }
+        }
+    }
 
     public void stop() {
         active = false; ready = false; writing = false;
@@ -386,6 +560,12 @@ final class BleTransport implements Transport {
         deadlines.clear();
         main.removeCallbacksAndMessages(null);
         stopScan(); stopAdvertising(); advertiser = null;
+        if (probe != null) { try { probe.disconnect(); probe.close(); } catch (Exception ignored) {} probe = null; }
+        probePeer = null; probeClosing = false;
+        if (server != null) for (BluetoothDevice device : admission.waiting()) {
+            try { server.cancelConnection(device); } catch (Exception ignored) {}
+        }
+        admission.clear(); candidateTimeouts.clear();
         if (gatt != null) { try { gatt.disconnect(); gatt.close(); } catch (Exception ignored) {} gatt = null; }
         if (server != null) { try { if (remote != null) server.cancelConnection(remote); server.close(); } catch (Exception ignored) {} server = null; }
         remote = null; frames.clear(); peers.clear(); decoder.clear(); earlyNotifications.clear(); offset = 0;

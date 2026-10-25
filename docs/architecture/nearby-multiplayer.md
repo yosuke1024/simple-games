@@ -16,18 +16,24 @@ Updated: 2026-10-25 / issue #268
 旧PoC記録の「製品へ導入しない」「保存しない」「前面限定」は当時の状態であり、現在の製品契約ではない。
 
 - native の対応ゲームtopに「誰かと遊ぶ」を置き、近くの相手とBluetooth／同一Wi-Fiで遊ぶことを
-  短く補足する。対応は Yacht / Reversi / Connect Four / Gomoku / Checkers / Gin Rummy / Mancala / Dominoes / Dots and Boxes / Chess / Nested Tic-Tac-Toe / Scopa / Nim の13本。コレクションの独立Nearby入口を削除し、Club Houseからも
+  短く補足する。対応は Yacht / Reversi / Connect Four / Gomoku / Checkers / Gin Rummy / Mancala / Dominoes / Dots and Boxes / Chess / Nested Tic-Tac-Toe / Scopa / Nim の13本。コレクションには参加専用の「近くの募集を探す」を置く。Club Houseからは
   開始しない。未対応ゲームには未実装のボタンを出さない。
   ゲームはシェルから渡されたcallbackを呼び、`src/app/nearbyGate.ts` からだけ動的に
   `src/nearby/` を読み込む。ゲームからNearbyをimportしない。
-  Webの対応13本のtopには無効な「誰かと遊ぶ」ボタンと「アプリ専用の機能です」を表示する
+  Webのコレクションには無効な「近くの募集を探す」、対応13本のtopには無効な「誰かと遊ぶ」ボタンと「アプリ専用の機能です」を表示する
   （英語は “Play with someone” / “Available in the app only.”）。開始callbackは渡さず、
   接続画面へ遷移しない。Web buildには `src/nearby/` の実行コード・通信chunkを含めず、
   探索・権限要求・接続・Nearby履歴読取を行わない。nativeでも未利用時の探索・権限要求・履歴読取は無い。
 - 初期範囲2人、Bluetooth優先／同一LANを明示選択。host=advertise/listen、参加者=browse。
   ゲーム選択済み → 募集／参加 → 表示名で申請 → host承認 → 双方Ready → 既存と共通のゲーム画面。
+  コレクションからは接続方法選択 → 明示探索 → 全13本の募集者名＋ゲーム名一覧 → 募集選択 →
+  自分の表示名 → 接続・host承認 → 双方Ready → 対象ゲームへ進む。募集作成は各ゲームtopのまま。
+  探索中は盤面/Viewや履歴を読み込まず、選択後にそのゲームのmoduleを読み込み、同じcontrollerと
+  native探索世代を保って接続する。全体探索を閉じると探索を停止し、参加後はホームへ戻っても保持する。
   初回に同じゲームを改めて提案する操作を求めない。内部protocolの提案・確認は維持でき、
   同時に同じroundを提案した場合は1件へ合流して既存のReadyを消さない。参加前自由コメント無し。
+  既存の共通Sessionが持つYacht互換adapter/engineへの静的参照は残る。選択前に全ゲームのadapter/Viewを読み込む構成にはしない。
+
 - シェルの `App` は接続を所有する `NearbyRoot` とcontrollerをマウントしたまま保持する。
   ゲームtopへ戻ると `visible=false` で非表示にし、同じ入口から同じ対戦へ戻す。
   通常ゲーム画面のアンマウントや会話を閉じる操作では切らず、新しい集まりを重複開始しない。
@@ -41,8 +47,19 @@ Updated: 2026-10-25 / issue #268
   ONのチャットは「会話」ボタンから任意に開く。ゲームと同格のタブにはしない。
   受信で会話を自動表示しない。終局後は結果と再戦を主にし、接続を保持して双方Readyで再戦する。
   集まりは開始時のゲームに固定し、別ゲームへ続ける切替機能は含めない。
-- 仲間／公開の発見labelは `F-` / `P-` + ゲーム識別2桁hex + ランダム4桁hex。同じゲームだけを発見一覧に出す。個人名を広告に含めない。
-  どちらもhost承認必須。labelは公開される番号で、招待秘密や本人証明ではない。
+- 仲間／公開の発見labelは `F-` / `P-` + ゲーム識別2桁hex + ランダム4桁hex。新規募集はゲーム識別に
+  `0x80`を加えた `81`〜`8D` を使い、公開募集metadataのreadが部屋を占有しない実装だと示す。
+  従来の`01`〜`0D`にBLE metadata probeを行うと旧ホストを終了させるため、決してprobeしない。
+  旧ラベルはゲーム別参加だけで扱い、全体一覧には名前とmetadataのある互換候補だけを表示する。
+  新版ホストは旧版の一覧に出ない。接続する端末を同じ新版へ更新する。
+  公開metadataはUTF-8 JSON `v:1 / label / name / gameId / protocol:6 / available:true`、
+  LANはBonjour TXTの`listing`（keyと`=`込み255byte以内）、BLEはread-only META UUID
+  `9b5d2003-7a4c-4e13-a280-75d53c01a268`。購読せず名前だけを読むprobeは参加・承認・対局を開始しない。
+  probeは同時1件、候補16件、個別5秒、全体探索60秒で上限を持つ。消失候補は一覧から外す。
+  metadataの型・文字数・gameCode対応・対応protocolを検査し、接続後のhelloでもgameと表示名を照合する。
+  接続中・継続待ちの部屋は新規募集metadataを公開しない。名前は未認証の自己申告である。
+  募集開始前に表示名とゲームが近くの人に見えることを説明し、端末名・install ID・履歴を含めない。
+  仲間／公開どちらもhost承認必須。labelは公開される番号で、招待秘密や本人証明ではない。
 - native plugin名 `NearbyPlay`。BLE UUIDは `9b5d2000/2001/2002-7a4c-4e13-a280-75d53c01a268`、
   Bonjourは `_sgnearplay._tcp`。PoCと混在させない。native最大4096 UTF-8 bytes + LF、20byte BLE。
 - アプリ間の鍵交換は WebCrypto P-256 ECDH、HKDF-SHA-256、方向別AES-256-GCM。

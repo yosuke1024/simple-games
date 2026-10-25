@@ -58,14 +58,16 @@ src/
 レイヤー規則:
 
 - Nearby Play は対応ゲームtopの「誰かと遊ぶ」から、シェル所有のcallback経由で開く。
-  最初は native の Yacht だけにcallbackを渡す。ゲームからNearbyをimportせず、シェルの
+  native の対応13本にcallbackを渡す。ゲームからNearbyをimportせず、シェルの
   `app/nearbyGate.ts` からのdynamic importだけで `nearby/` を読み込む。
-  コレクションの独立したNearby入口とClub Houseからの開始導線は持たない。例外として
+  コレクションの参加専用入口はゲーム未選択で同じgateを開く。Club Houseからは開始しない。例外として
   `nearby/yacht.ts` のみが `games/yacht/game/{engine,types}` の純粋な採点／型を参照できる。
   `nearby/NearbyRoot.tsx` は `games/yacht/ui/components/YachtPlaySurface` の純粋なUIも共有する。
   この2境界以外のゲーム内部参照、通常GameContext/storage/Clubへの到達、ゲームからNearbyへの参照は許容しない。
   製品nativeと隔離PoCは別所有・別service識別子とし、製品からPoCへimportしない。
-  選択済みゲームをシェルから渡し、初回の重複ゲーム提案操作を省く。host承認と双方Readyは省かない。
+  ゲーム別入口は選択済みゲームを渡し、全体探索は `NearbyBrowser` が候補のgameIdに一致するadapter/Viewだけを
+  遅延読み込みする。探索controller/native peerの所有権を保って既存のゲームUIへ引き継ぎ、
+  初回の重複ゲーム提案操作を省く。host承認と双方Readyは省かない。
 
 - シェルの `App` は接続を所有する `NearbyRoot` とcontrollerをマウントしたまま保持し、
   ゲームtopへ戻ると `visible=false` で非表示にする。通常ゲーム画面のアンマウントや会話を閉じる

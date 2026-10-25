@@ -1,5 +1,13 @@
 import type { NearbyMessages } from './en';
 export const ja: NearbyMessages = {
+  browseHint:
+    '遊ぶゲームを決めずに、募集している人を探せます。ホストと同じ接続方法を選んでください。',
+  chooseConnection: '接続方法',
+  stopSearch: '探索をやめる',
+  listingUnavailable: 'この募集には現在参加できません。戻って別の募集を探してください。',
+  hostNameHint:
+    '24文字まで。募集中は、表示名とゲーム名が近くの人の一覧に表示されます。「仲間と」の場合も同じです。',
+
   playerTurn: '{name}の番',
   playTogether: '誰かと遊ぶ',
   closeChat: 'チャットを閉じる',

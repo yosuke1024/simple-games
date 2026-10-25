@@ -1,6 +1,9 @@
 import type { Messages } from './en';
 
 export const ptBR: Messages = {
+  findNearbyOpponents: 'Encontrar adversários por perto',
+  findNearbyOpponentsNote: 'Bluetooth ou o mesmo Wi-Fi · entre jogos',
+
   playTogether: 'Jogar com alguém',
   returnToTogether: 'Voltar ao multijogador',
   playTogetherNote: 'Conecte-se com alguém por perto para uma partida.',
