@@ -2,14 +2,15 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const id: NearbyMessages = {
+  roomName: 'Nama pertemuan',
+  roomNameHint:
+    'Maksimal 24 karakter. Saat Anda membuka pertemuan, nama ini dan permainannya terlihat oleh orang di sekitar.',
+  participants: '{count}/{capacity} pemain',
   browseHint:
     'Cari orang yang menjadi tuan rumah game yang didukung. Pilih koneksi yang sama dengan tuan rumah.',
   chooseConnection: 'Hubungkan melalui',
   stopSearch: 'Berhenti mencari',
   listingUnavailable: 'Pertemuan ini tidak lagi tersedia. Kembali untuk mencari yang lain.',
-  hostNameHint:
-    'Maksimal 24 karakter. Saat menjadi tuan rumah, nama dan game Anda terlihat oleh orang di sekitar, termasuk saat bermain dengan teman.',
-
   playerTurn: 'Giliran {name}',
   playTogether: 'Bermain dengan seseorang',
   closeChat: 'Tutup chat',
@@ -20,11 +21,8 @@ export const id: NearbyMessages = {
   history: 'Riwayat',
   back: 'Kembali',
   name: 'Nama tampilan Anda',
-  nameHint: 'Maksimal 24 karakter. Ditampilkan kepada peserta lain setelah terhubung.',
-  friends: 'Bersama teman',
-  public: 'Sambut orang di sekitar',
-  audienceHint:
-    'Kedua pilihan memerlukan persetujuan Anda. Nama saja tidak memverifikasi identitas seseorang.',
+  nameHint:
+    'Maksimal 24 karakter. Disimpan di perangkat ini untuk digunakan lagi dan ditampilkan kepada peserta lain setelah terhubung.',
   bluetooth: 'Bluetooth',
   wifi: 'Wi-Fi yang sama',
   connectionHint:
@@ -102,7 +100,7 @@ export const id: NearbyMessages = {
     'Riwayat tidak dapat disimpan atau dibaca. Riwayat tersimpan belum ditimpa. Kosongkan ruang atau hapus riwayat yang tidak diperlukan, lalu coba lagi.',
   clear: 'Hapus semua data Nearby Play',
   clearBody:
-    'Ini hanya menghapus riwayat dan pemblokiran lokal di perangkat ini. Tindakan ini tidak dapat dibatalkan.',
+    'Ini menghapus riwayat, nama tampilan Anda yang tersimpan, dan blokir lokal hanya dari perangkat ini. Tindakan ini tidak dapat dibatalkan.',
   hideChat: 'Sembunyikan obrolan masuk',
   showChat: 'Tampilkan obrolan masuk',
   chatHidden: 'Obrolan masuk disembunyikan di perangkat ini.',

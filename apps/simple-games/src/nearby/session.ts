@@ -13,7 +13,7 @@ import { adapter as yachtAdapter } from './games/yacht';
 export const MAX_FRAME_BYTES = 4096;
 // Leave room for delivery seq/ACK before the channel's 2800-byte plaintext cap.
 export const MAX_MESSAGE_BYTES = 2600;
-export const PROTOCOL_VERSION = 6;
+export const PROTOCOL_VERSION = 7;
 export const MAX_CHAT_CHARACTERS = 160;
 export const MAX_CHAT_MESSAGES = 1000;
 const token = (v: unknown): v is string => typeof v === 'string' && /^[a-f0-9]{32}$/.test(v);
@@ -25,6 +25,7 @@ export const isPlayerName = (v: unknown): v is string =>
   v.length > 0 &&
   Array.from(v).length <= 24 &&
   !unsafeText.test(v);
+export const isRoomName = isPlayerName;
 export const isChatText = (v: unknown): v is string =>
   typeof v === 'string' &&
   v.trim().length > 0 &&
@@ -41,6 +42,7 @@ export interface Options {
   host: boolean;
   chatEnabled?: boolean;
   name: string;
+  roomName?: string;
   nonce: string;
   identity: string;
   adapter?: GameAdapter;
@@ -82,6 +84,8 @@ export class Session {
   private lastReceivedText = '';
   private approvalSent = false;
   private roomChatEnabled: boolean;
+  private roomTitle: string;
+  private readonly expectedRoomName: string | undefined;
   private fullState: unknown;
   private guestMatch: NearbyMatch | null = null;
   private readonly random: Random;
@@ -89,6 +93,11 @@ export class Session {
   constructor(private readonly options: Options) {
     if (!token(options.nonce) || !token(options.identity) || !isPlayerName(options.name))
       throw new Error('Invalid session identity');
+    if (
+      (options.host && !isRoomName(options.roomName)) ||
+      (options.roomName !== undefined && options.roomName !== '' && !isRoomName(options.roomName))
+    )
+      throw new Error('Invalid room name');
     this.host = options.host;
     this.name = options.name;
     this.adapter = options.adapter ?? yachtAdapter;
@@ -104,6 +113,8 @@ export class Session {
     // Only the host chooses the immutable room policy. A guest learns it from
     // the first host hello; its local setup can never enable room chat.
     this.roomChatEnabled = options.host && options.chatEnabled === true;
+    this.roomTitle = options.host ? options.roomName! : '';
+    this.expectedRoomName = options.host ? undefined : options.roomName || undefined;
   }
   get paired() {
     return !!this.peerNonce && this.admission === 'approved' && !this.closed;
@@ -122,6 +133,9 @@ export class Session {
   }
   get chatEnabled(): boolean {
     return this.roomChatEnabled;
+  }
+  get roomName(): string {
+    return this.roomTitle;
   }
   get approvalPending() {
     return this.approvalSent && this.admission === 'pending' && !this.closed;
@@ -166,7 +180,7 @@ export class Session {
       host: this.host,
       nonce: this.options.nonce,
       identity: this.options.identity,
-      ...(this.host ? { chatEnabled: this.chatEnabled } : {}),
+      ...(this.host ? { chatEnabled: this.chatEnabled, roomName: this.roomName } : {}),
     });
     if (this.earlyFrame !== null) {
       const frame = this.earlyFrame;
@@ -184,7 +198,11 @@ export class Session {
     )
       return;
     this.approvalSent = true;
-    this.send('admission', { approved: true, chatEnabled: this.chatEnabled });
+    this.send('admission', {
+      approved: true,
+      chatEnabled: this.chatEnabled,
+      roomName: this.roomName,
+    });
     this.changed();
   }
   reject() {
@@ -197,7 +215,11 @@ export class Session {
     )
       return;
     this.admission = 'rejected';
-    this.send('admission', { approved: false, chatEnabled: this.chatEnabled });
+    this.send('admission', {
+      approved: false,
+      chatEnabled: this.chatEnabled,
+      roomName: this.roomName,
+    });
     this.end('Admission rejected', false);
   }
   proposeGame() {
@@ -461,11 +483,21 @@ export class Session {
         this.end('Choose one game host and one guest, then reconnect');
         return;
       }
-      if ((v.host && typeof v.chatEnabled !== 'boolean') || (!v.host && 'chatEnabled' in v)) {
+      if (
+        (v.host && (typeof v.chatEnabled !== 'boolean' || !isRoomName(v.roomName))) ||
+        (!v.host && ('chatEnabled' in v || 'roomName' in v))
+      ) {
         this.end('Invalid room policy');
         return;
       }
-      if (!this.host) this.roomChatEnabled = v.chatEnabled as boolean;
+      if (!this.host) {
+        if (this.expectedRoomName !== undefined && v.roomName !== this.expectedRoomName) {
+          this.end('Room name mismatch');
+          return;
+        }
+        this.roomChatEnabled = v.chatEnabled as boolean;
+        this.roomTitle = v.roomName as string;
+      }
       this.peerNonce = v.nonce;
       this.peerName = v.name;
       this.peerIdentity = v.identity;
@@ -486,7 +518,7 @@ export class Session {
         this.end('Invalid admission');
         return;
       }
-      if (v.chatEnabled !== this.chatEnabled) {
+      if (v.chatEnabled !== this.chatEnabled || v.roomName !== this.roomName) {
         this.end('Room policy mismatch');
         return;
       }
@@ -496,13 +528,13 @@ export class Session {
         return;
       }
       // Queue receipt before the UI can send chat or accept a proposal.
-      this.send('admission-ack', { chatEnabled: this.chatEnabled });
+      this.send('admission-ack', { chatEnabled: this.chatEnabled, roomName: this.roomName });
     } else if (v.type === 'admission-ack' && this.host) {
       if (!this.approvalSent || this.admission !== 'pending') {
         this.end('Invalid admission acknowledgement');
         return;
       }
-      if (v.chatEnabled !== this.chatEnabled) {
+      if (v.chatEnabled !== this.chatEnabled || v.roomName !== this.roomName) {
         this.end('Room policy mismatch');
         return;
       }

@@ -2,15 +2,16 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const de: NearbyMessages = {
+  roomName: 'Name des Treffens',
+  roomNameHint:
+    'Bis zu 24 Zeichen. Während du ein Treffen anbietest, sind dieser Name und das Spiel für Personen in der Nähe sichtbar.',
+  participants: '{count}/{capacity} Spieler',
   browseHint:
     'Finde Personen, die ein unterstütztes Spiel anbieten. Wähle dieselbe Verbindungsart wie der Gastgeber.',
   chooseConnection: 'Verbindung über',
   stopSearch: 'Suche beenden',
   listingUnavailable:
     'Diese Runde ist nicht mehr verfügbar. Gehe zurück, um eine andere zu finden.',
-  hostNameHint:
-    'Bis zu 24 Zeichen. Während du eine Runde anbietest, sind dein Name und das Spiel für Personen in der Nähe sichtbar, auch beim Spielen mit Freunden.',
-
   playerTurn: '{name} ist am Zug',
   playTogether: 'Mit jemandem spielen',
   closeChat: 'Chat schließen',
@@ -21,11 +22,8 @@ export const de: NearbyMessages = {
   history: 'Verlauf',
   back: 'Zurück',
   name: 'Dein Anzeigename',
-  nameHint: 'Bis zu 24 Zeichen. Wird nach dem Verbinden der anderen Person angezeigt.',
-  friends: 'Mit Freunden',
-  public: 'Menschen in der Nähe willkommen heißen',
-  audienceHint:
-    'Beide Optionen erfordern deine Zustimmung. Ein Name allein bestätigt keine Identität.',
+  nameHint:
+    'Bis zu 24 Zeichen. Wird auf diesem Gerät für das nächste Mal gespeichert und der anderen Person nach dem Verbinden angezeigt.',
   bluetooth: 'Bluetooth',
   wifi: 'Gleiches WLAN',
   connectionHint:
@@ -104,7 +102,7 @@ export const de: NearbyMessages = {
     'Der Verlauf konnte nicht gespeichert oder gelesen werden. Gespeicherter Verlauf wurde nicht überschrieben. Schaffe Speicherplatz oder lösche unnötigen Verlauf und versuche es erneut.',
   clear: 'Alle Nearby-Play-Daten löschen',
   clearBody:
-    'Dies löscht Verlauf und lokale Blockierungen nur auf diesem Gerät. Es kann nicht rückgängig gemacht werden.',
+    'Dies löscht den Verlauf, deinen gespeicherten Anzeigenamen und lokale Sperren nur von diesem Gerät. Das kann nicht rückgängig gemacht werden.',
   hideChat: 'Eingehenden Chat ausblenden',
   showChat: 'Eingehenden Chat anzeigen',
   chatHidden: 'Eingehender Chat ist auf diesem Gerät ausgeblendet.',

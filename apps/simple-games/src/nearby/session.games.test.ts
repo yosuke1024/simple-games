@@ -60,6 +60,7 @@ function pair(hostAdapter: GameAdapter = adapter, guestAdapter: GameAdapter = ad
   };
   const host = new Session({
     host: true,
+    roomName: 'Game 1234',
     name: 'Host',
     nonce: 'a'.repeat(32),
     identity: 'c'.repeat(32),

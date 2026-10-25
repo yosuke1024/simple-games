@@ -120,7 +120,7 @@ function NearbyGameRoot({
   const gameTitle = t(GAME_NAME_KEYS[gameId]);
   const [boardSize, setBoardSize] = useState<3 | 4 | 5>(3);
   const [screen, setScreen] = useState<Screen>(initialController ? 'active' : 'home');
-  const [setup, setSetup] = useState<Setup>(
+  const [setup, setSetup] = useState<Setup>(() =>
     initialController?.setup.gameId
       ? {
           ...initialController.setup,
@@ -130,11 +130,12 @@ function NearbyGameRoot({
           gameId,
           host: true,
           name: '',
-          public: false,
+          roomName: `${[...gameTitle].slice(0, 19).join('')} ${String(crypto.getRandomValues(new Uint32Array(1))[0]! % 10000).padStart(4, '0')}`,
           transport: 'ble',
           chatEnabled: false,
         },
   );
+  const nameEdited = useRef(!!initialController);
   const [accepted, setAccepted] = useState(false);
   const [controller, setController] = useState<NearbyController | null>(initialController ?? null);
   const controllerRef = useRef<NearbyController | null>(initialController ?? null);
@@ -159,8 +160,24 @@ function NearbyGameRoot({
   const date = (at: number) =>
     new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(at);
 
+  useEffect(() => {
+    if (screen !== 'setup' || nameEdited.current) return;
+    let current = true;
+    void loadHistory()
+      .then((data) => {
+        if (current && !nameEdited.current && data.displayName)
+          setSetup((value) => ({ ...value, name: data.displayName! }));
+      })
+      .catch(() => {
+        if (current) setStorageError(true);
+      });
+    return () => {
+      current = false;
+    };
+  }, [screen]);
+
   const back = () => {
-    if (!visible) return;
+    if (!visible || busy) return;
     if (question) {
       setQuestion(null);
       return;
@@ -284,10 +301,18 @@ function NearbyGameRoot({
   };
 
   const begin = () => {
-    if (!visible || active || !isPlayerName(setup.name.trim()) || !accepted || busy) return;
+    if (
+      !visible ||
+      active ||
+      !isPlayerName(setup.name.trim()) ||
+      (setup.host && !isPlayerName(setup.roomName.trim())) ||
+      !accepted ||
+      busy
+    )
+      return;
     const adapter = game.makeAdapter ? game.makeAdapter(boardSize) : game.adapter;
     const next = new NearbyController(
-      { ...setup, name: setup.name.trim() },
+      { ...setup, name: setup.name.trim(), roomName: setup.host ? setup.roomName.trim() : '' },
       () => {
         if (live.current) render((v) => v + 1);
       },
@@ -329,7 +354,11 @@ function NearbyGameRoot({
     setStorageError(false);
     try {
       if (action === 'delete' && detail) await deleteGathering(detail.id);
-      if (action === 'clear') await clearHistory();
+      if (action === 'clear') {
+        await clearHistory();
+        nameEdited.current = false;
+        setSetup((value) => ({ ...value, name: '' }));
+      }
       setDetail(null);
       await readHistory();
       setScreen('history');
@@ -372,9 +401,9 @@ function NearbyGameRoot({
       inert={!visible}
       data-game={gameId}
     >
-      <div className="nearby-content" inert={question !== null}>
+      <div className="nearby-content" inert={question !== null || busy} aria-busy={busy}>
         <header className="screen-header">
-          <button className="icon-btn" aria-label={n('back')} onClick={back}>
+          <button className="icon-btn" aria-label={n('back')} disabled={busy} onClick={back}>
             <IconBack />
           </button>
           <h1 className="nearby-title">{gameTitle}</h1>
@@ -438,6 +467,28 @@ function NearbyGameRoot({
             }}
           >
             <h2>{n(setup.host ? 'create' : 'join')}</h2>
+            {storageError && (
+              <p className="nearby-warning" role="alert">
+                {n('storageError')}
+              </p>
+            )}
+            {setup.host && (
+              <>
+                <label className="nearby-field">
+                  {n('roomName')}
+                  <input
+                    value={setup.roomName}
+                    maxLength={48}
+                    autoComplete="off"
+                    aria-describedby="nearby-room-name-hint"
+                    onChange={(e) => setSetup({ ...setup, roomName: e.target.value })}
+                  />
+                </label>
+                <p id="nearby-room-name-hint" className="nearby-note">
+                  {n('roomNameHint')}
+                </p>
+              </>
+            )}
             {setup.host && game.makeAdapter && (
               <label className="nearby-field">
                 {t('dotsAndBoxesChooseBoard')}
@@ -458,36 +509,17 @@ function NearbyGameRoot({
                 maxLength={48}
                 autoComplete="off"
                 aria-describedby="nearby-name-hint"
-                onChange={(e) => setSetup({ ...setup, name: e.target.value })}
+                onChange={(e) => {
+                  nameEdited.current = true;
+                  setSetup({ ...setup, name: e.target.value });
+                }}
               />
             </label>
             <p id="nearby-name-hint" className="nearby-note">
-              {n(setup.host ? 'hostNameHint' : 'nameHint')}
+              {n('nameHint')}
             </p>
             {setup.host && (
               <>
-                <fieldset className="nearby-choices">
-                  <legend>{n('create')}</legend>
-                  <label>
-                    <input
-                      type="radio"
-                      name="audience"
-                      checked={!setup.public}
-                      onChange={() => setSetup({ ...setup, public: false })}
-                    />
-                    {n('friends')}
-                  </label>
-                  <label>
-                    <input
-                      type="radio"
-                      name="audience"
-                      checked={setup.public}
-                      onChange={() => setSetup({ ...setup, public: true })}
-                    />
-                    {n('public')}
-                  </label>
-                </fieldset>
-                <p className="nearby-note">{n('audienceHint')}</p>
                 <label className="nearby-check">
                   <input
                     type="checkbox"
@@ -534,7 +566,11 @@ function NearbyGameRoot({
             </label>
             <button
               className="btn btn-primary"
-              disabled={!isPlayerName(setup.name.trim()) || !accepted}
+              disabled={
+                !isPlayerName(setup.name.trim()) ||
+                (setup.host && !isPlayerName(setup.roomName.trim())) ||
+                !accepted
+              }
             >
               {n(setup.host ? 'start' : 'search')}
             </button>
@@ -566,8 +602,8 @@ function NearbyGameRoot({
               <>
                 {!showingBoard && (
                   <div className="nearby-room-heading">
-                    <h2>{session.names.join(' · ')}</h2>
-                    <span>{controller.label}</span>
+                    <h2>{session.roomName}</h2>
+                    <span>{session.names.join(' · ')}</span>
                   </div>
                 )}
                 {(controller.state === 'reconnecting' || session.suspended) && (
@@ -702,6 +738,8 @@ function NearbyGameRoot({
                 )}
                 <details className="nearby-safety">
                   <summary>{n('room')}</summary>
+                  <p>{session.roomName}</p>
+                  <p>{session.names.join(' · ')}</p>
                   <p>{n('confirmation', { code: controller.code })}</p>
                   {chatEnabled && (
                     <button className="btn btn-ghost" onClick={() => setHidden(!hidden)}>
@@ -731,10 +769,14 @@ function NearbyGameRoot({
                       )}
                 </h2>
                 {setup.host && (
-                  <p>
-                    {n('label')} <strong className="nearby-code">{controller.label}</strong>
-                  </p>
+                  <section className="nearby-card">
+                    <h3>{setup.roomName}</h3>
+                    <p>
+                      {gameTitle} · {n('participants', { count: 1, capacity: 2 })}
+                    </p>
+                  </section>
                 )}
+                {!setup.host && session?.roomName && <p>{session.roomName}</p>}
                 {session?.peerName && (
                   <section className="nearby-card">
                     <p>{session.peerName}</p>
@@ -771,9 +813,9 @@ function NearbyGameRoot({
                           void controller.connect(peer.id);
                         }}
                       >
-                        <strong>{peer.hostName ?? peer.name}</strong>
+                        <strong>{peer.roomName}</strong>
                         <span>{t(GAME_NAME_KEYS[peer.gameId])}</span>
-                        <span>{n(peer.name.startsWith('F-') ? 'friends' : 'public')}</span>
+                        <span>{n('participants', { count: 1, capacity: 2 })}</span>
                       </button>
                     ))}
                   </div>
@@ -802,7 +844,8 @@ function NearbyGameRoot({
                   setScreen('detail');
                 }}
               >
-                <strong>{g.names.join(' · ')}</strong>
+                <strong>{g.roomName ?? g.names.join(' · ')}</strong>
+                {g.roomName && <span>{g.names.join(' · ')}</span>}
                 <span>{date(g.at)}</span>
               </button>
             ))}
@@ -813,7 +856,8 @@ function NearbyGameRoot({
         )}
         {screen === 'detail' && detail && (
           <main className="nearby-stack">
-            <h2>{detail.names.join(' · ')}</h2>
+            <h2>{detail.roomName ?? detail.names.join(' · ')}</h2>
+            {detail.roomName && <p>{detail.names.join(' · ')}</p>}
             <p>{date(detail.at)}</p>
             <p className="nearby-note">{n('historyReadOnly')}</p>
             {storageError && <p role="alert">{n('storageError')}</p>}

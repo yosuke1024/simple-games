@@ -1,13 +1,13 @@
 import type { NearbyMessages } from './en';
 export const ja: NearbyMessages = {
+  roomName: '募集名',
+  roomNameHint: '24文字まで。募集中は、この名前とゲーム名が近くの人に表示されます。',
+  participants: '{count}/{capacity}人',
   browseHint:
     '遊ぶゲームを決めずに、募集している人を探せます。ホストと同じ接続方法を選んでください。',
   chooseConnection: '接続方法',
   stopSearch: '探索をやめる',
   listingUnavailable: 'この募集には現在参加できません。戻って別の募集を探してください。',
-  hostNameHint:
-    '24文字まで。募集中は、表示名とゲーム名が近くの人の一覧に表示されます。「仲間と」の場合も同じです。',
-
   playerTurn: '{name}の番',
   playTogether: '誰かと遊ぶ',
   closeChat: 'チャットを閉じる',
@@ -18,10 +18,7 @@ export const ja: NearbyMessages = {
   history: '履歴を見る',
   back: '戻る',
   name: 'あなたの表示名',
-  nameHint: '24文字まで。接続すると相手に表示されます。',
-  friends: '仲間と',
-  public: '近くの人を募集',
-  audienceHint: 'どちらもホストの承認が必要です。表示名だけでは本人か確認できません。',
+  nameHint: '24文字まで。この端末で次回も使えるよう保存します。接続後に相手に表示されます。',
   bluetooth: 'Bluetooth',
   wifi: '同じ Wi-Fi',
   connectionHint:
@@ -96,7 +93,7 @@ export const ja: NearbyMessages = {
   storageError:
     '履歴を保存・読み込みできませんでした。保存済みの履歴は上書きしていません。空き容量や不要な履歴を確認してから、もう一度お試しください。',
   clear: 'Nearby Play のデータをすべて削除',
-  clearBody: 'この端末の履歴とブロック情報を削除します。元に戻せません。',
+  clearBody: 'この端末の履歴・保存した表示名・ブロック情報を削除します。元に戻せません。',
   hideChat: '受信チャットを隠す',
   showChat: '受信チャットを表示',
   chatHidden: 'この端末では受信チャットを非表示にしています。',

@@ -2,15 +2,16 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const fr: NearbyMessages = {
+  roomName: 'Nom de la rencontre',
+  roomNameHint:
+    '24 caractères maximum. Lorsque vous organisez une rencontre, ce nom et le jeu sont visibles par les personnes à proximité.',
+  participants: '{count}/{capacity} joueurs',
   browseHint:
     'Trouvez des personnes proposant un jeu compatible. Choisissez le même type de connexion que l’hôte.',
   chooseConnection: 'Connexion par',
   stopSearch: 'Arrêter la recherche',
   listingUnavailable:
     'Ce groupe n’est plus disponible. Revenez en arrière pour en trouver un autre.',
-  hostNameHint:
-    '24 caractères maximum. Lorsque vous proposez une partie, votre nom et le jeu sont visibles à proximité, même pour une partie entre amis.',
-
   playerTurn: 'Au tour de {name}',
   playTogether: 'Jouer avec quelqu’un',
   closeChat: 'Fermer le chat',
@@ -21,10 +22,8 @@ export const fr: NearbyMessages = {
   history: 'Historique',
   back: 'Retour',
   name: 'Votre nom affiché',
-  nameHint: '24 caractères maximum. Il est montré à l’autre personne après la connexion.',
-  friends: 'Entre amis',
-  public: 'Accueillir des personnes à proximité',
-  audienceHint: 'Les deux options nécessitent votre accord. Un nom seul ne vérifie pas l’identité.',
+  nameHint:
+    '24 caractères maximum. Ce nom est enregistré sur cet appareil pour la prochaine fois et montré à l’autre personne après la connexion.',
   bluetooth: 'Bluetooth',
   wifi: 'Même réseau Wi-Fi',
   connectionHint:
@@ -102,7 +101,7 @@ export const fr: NearbyMessages = {
     'Impossible d’enregistrer ou de lire l’historique. L’historique enregistré n’a pas été écrasé. Libérez de l’espace ou supprimez l’historique inutile, puis réessayez.',
   clear: 'Supprimer toutes les données Nearby Play',
   clearBody:
-    'Cela supprime l’historique et les blocages locaux sur cet appareil uniquement. Cette action est irréversible.',
+    'Cela supprime l’historique, votre nom affiché enregistré et les blocages locaux uniquement sur cet appareil. Cette action est irréversible.',
   hideChat: 'Masquer les messages reçus',
   showChat: 'Afficher les messages reçus',
   chatHidden: 'Les messages reçus sont masqués sur cet appareil.',

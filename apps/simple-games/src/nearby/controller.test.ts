@@ -74,16 +74,30 @@ async function setup() {
   const a = native(),
     b = native();
   const host = create(
-    { host: true, name: 'A', public: true, chatEnabled: true, gameId: 'yacht', transport: 'ble' },
+    {
+      host: true,
+      name: 'A',
+      roomName: 'Room 1234',
+      chatEnabled: true,
+      gameId: 'yacht',
+      transport: 'ble',
+    },
     () => {},
     a.plugin,
   );
   const guest = create(
-    { host: false, name: 'B', public: false, chatEnabled: true, gameId: 'yacht', transport: 'ble' },
+    { host: false, name: 'B', roomName: '', chatEnabled: true, gameId: 'yacht', transport: 'ble' },
     () => {},
     b.plugin,
   );
   await Promise.all([host.start(), guest.start()]);
+  b.event({
+    type: 'peer',
+    id: 'host',
+    name: host.label,
+    listing: vi.mocked(a.plugin.start).mock.calls[0]![0].listing,
+  });
+  await guest.connect('host');
   a.event({ type: 'connected' });
   b.event({ type: 'connected' });
   async function pump() {
@@ -107,7 +121,7 @@ afterEach(async () => {
 
 function browser(p: ReturnType<typeof native>) {
   return create(
-    { host: false, name: '', public: false, chatEnabled: false, gameId: null, transport: 'ble' },
+    { host: false, name: '', roomName: '', chatEnabled: false, gameId: null, transport: 'ble' },
     () => {},
     p.plugin,
   );
@@ -124,6 +138,85 @@ function advertise(
 }
 
 describe('nearby all-game discovery handoff', () => {
+  it('advertises only the room title and persists a personal name only on host start or guest join', async () => {
+    const a = native(),
+      b = native();
+    const host = create(
+      {
+        host: true,
+        name: 'Private host',
+        roomName: 'Yacht 4321',
+        gameId: 'yacht',
+        chatEnabled: false,
+        transport: 'ble',
+      },
+      () => {},
+      a.plugin,
+    );
+    const guest = create(
+      {
+        host: false,
+        name: 'Private guest',
+        roomName: '',
+        gameId: 'yacht',
+        chatEnabled: false,
+        transport: 'ble',
+      },
+      () => {},
+      b.plugin,
+    );
+    await Promise.all([host.start(), guest.start()]);
+    const options = vi.mocked(a.plugin.start).mock.calls[0]![0];
+    expect(options.label).toMatch(/^P-81[A-F0-9]{4}$/);
+    expect(JSON.parse(options.listing!)).toEqual({
+      v: 2,
+      label: host.label,
+      roomName: 'Yacht 4321',
+      gameId: 'yacht',
+      protocol: 7,
+      available: true,
+    });
+    expect(options.listing).not.toContain('Private host');
+    expect(options).not.toHaveProperty('name');
+    expect((await loadHistory(a.plugin)).displayName).toBe('Private host');
+    expect(guest.session).toBeNull();
+    expect(b.plugin.readHistory).not.toHaveBeenCalled();
+    b.event({ type: 'peer', id: 'host', name: host.label, listing: options.listing });
+    expect(guest.peers).toEqual([
+      { id: 'host', name: host.label, roomName: 'Yacht 4321', gameId: 'yacht' },
+    ]);
+    await guest.connect('host');
+    expect(guest.setup.roomName).toBe('Yacht 4321');
+    expect((await loadHistory(b.plugin)).displayName).toBe('Private guest');
+    expect(guest.gathering).toBeNull();
+  });
+
+  it('stops before advertising when saving the personal name fails', async () => {
+    const p = native();
+    const write = p.plugin.writeHistory;
+    p.plugin.writeHistory = async (value) => {
+      if (JSON.parse(value.data).displayName) throw new Error('Storage failed');
+      await write(value);
+    };
+    const host = create(
+      {
+        host: true,
+        name: 'Private host',
+        roomName: 'Yacht 4321',
+        gameId: 'yacht',
+        chatEnabled: false,
+        transport: 'ble',
+      },
+      () => {},
+      p.plugin,
+    );
+    await host.start();
+    expect(host.state).toBe('ended');
+    expect(host.storageFailed).toBe(true);
+    expect(host.session).toBeNull();
+    expect(p.plugin.start).not.toHaveBeenCalled();
+  });
+
   it('lists compatible metadata across all games without opening storage, a channel, or a session', async () => {
     const p = native();
     const c = browser(p);
@@ -148,20 +241,20 @@ describe('nearby all-game discovery handoff', () => {
     });
     await settle();
     expect(c.peers.map((p) => p.gameId)).toEqual(Object.keys(NEARBY_GAME_CODES));
-    expect(c.peers.every((p) => p.hostName === 'Pixel')).toBe(true);
+    expect(c.peers.every((p) => p.roomName === 'Pixel')).toBe(true);
     expect(c.gameId).toBeNull();
     expect(c.session).toBeNull();
     expect(p.plugin.readHistory).not.toHaveBeenCalled();
     expect(p.frames).toEqual([]);
     expect(p.plugin.start).toHaveBeenCalledExactlyOnceWith({
       role: 'browse',
-      label: 'F-000000',
+      label: 'P-000000',
       transport: 'ble',
     });
     p.event({ type: 'peerLost', id: 'nim' });
     expect(c.peers).toHaveLength(12);
     advertise(p, 'yacht', 'yacht', 'New name');
-    expect(c.peers.find((p) => p.id === 'yacht')?.hostName).toBe('New name');
+    expect(c.peers.find((p) => p.id === 'yacht')?.roomName).toBe('New name');
     p.event({ type: 'peer', id: 'yacht', name: 'P-811234', listing: '{}' });
     expect(c.peers.some((p) => p.id === 'yacht')).toBe(false);
   });
@@ -173,7 +266,7 @@ describe('nearby all-game discovery handoff', () => {
       {
         host: true,
         name: 'Pixel',
-        public: true,
+        roomName: 'Room 1234',
         chatEnabled: false,
         gameId: 'nim',
         transport: 'ble',
@@ -211,6 +304,9 @@ describe('nearby all-game discovery handoff', () => {
     host.session!.approve();
     await pump();
     expect(guest.state).toBe('room');
+    expect(guest.gathering?.roomName).toBe('Room 1234');
+    expect(host.gathering?.roomName).toBe('Room 1234');
+    expect(guest.gathering?.names).toEqual(['Pixel', 'iPhone']);
     guest.session!.proposeGame();
     await pump();
     guest.session!.ready();
@@ -318,7 +414,7 @@ describe('nearby all-game discovery handoff', () => {
   });
 
   it.each([false, true])(
-    'closes a selected-name mismatch before admission/history (global=%s)',
+    'closes a selected-room-name mismatch before admission/history (global=%s)',
     async (global) => {
       const a = native(),
         b = native();
@@ -326,7 +422,7 @@ describe('nearby all-game discovery handoff', () => {
         {
           host: true,
           name: 'Real name',
-          public: true,
+          roomName: 'Room 1234',
           chatEnabled: false,
           gameId: 'yacht',
           transport: 'ble',
@@ -340,7 +436,7 @@ describe('nearby all-game discovery handoff', () => {
             {
               host: false,
               name: 'Guest',
-              public: false,
+              roomName: '',
               chatEnabled: false,
               gameId: 'yacht',
               transport: 'ble',
@@ -379,7 +475,7 @@ describe('nearby lifecycle and persistence', () => {
       {
         host: false,
         name: 'A',
-        public: false,
+        roomName: '',
         chatEnabled: false,
         gameId: 'yacht',
         transport: 'ble',
@@ -388,6 +484,8 @@ describe('nearby lifecycle and persistence', () => {
       p.plugin,
     );
     await controller.start();
+    expect(controller.session).toBeNull();
+    expect(p.plugin.readHistory).not.toHaveBeenCalled();
     p.event({ type: 'peer', id: 'other-game', name: 'P-0A1234' });
     p.event({ type: 'peer', id: 'old-label', name: 'Nearby Play' });
     p.event({ type: 'peer', id: 'same-game', name: 'F-01ABCD' });
@@ -396,18 +494,26 @@ describe('nearby lifecycle and persistence', () => {
     p.event({ type: 'peer', id: 'invalid-metadata', name: 'P-811234', listing: '{}' });
     await settle();
     expect(controller.peers).toEqual([
-      { id: 'same-game', name: 'F-01ABCD', gameId: 'yacht' },
-      { id: 'current-game', name: 'P-811234', gameId: 'yacht', hostName: 'Pixel' },
+      { id: 'current-game', name: 'P-811234', gameId: 'yacht', roomName: 'Pixel' },
     ]);
     await controller.connect('other-game');
     expect(p.plugin.connect).not.toHaveBeenCalled();
     await controller.connect('same-game');
-    expect(p.plugin.connect).toHaveBeenCalledExactlyOnceWith({ peerId: 'same-game' });
+    expect(p.plugin.connect).not.toHaveBeenCalled();
+    await controller.connect('current-game');
+    expect(p.plugin.connect).toHaveBeenCalledExactlyOnceWith({ peerId: 'current-game' });
   });
   it('rejects a mismatched selected game and adapter before opening the radio', async () => {
     const p = native();
     const controller = create(
-      { host: true, name: 'A', public: false, chatEnabled: false, gameId: 'nim', transport: 'ble' },
+      {
+        host: true,
+        name: 'A',
+        roomName: 'Room 1234',
+        chatEnabled: false,
+        gameId: 'nim',
+        transport: 'ble',
+      },
       () => {},
       p.plugin,
     );
@@ -423,7 +529,7 @@ describe('nearby lifecycle and persistence', () => {
       {
         host: true,
         name: 'A',
-        public: false,
+        roomName: 'Room 1234',
         chatEnabled: true,
         gameId: 'yacht',
         transport: 'ble',
@@ -458,6 +564,9 @@ describe('nearby lifecycle and persistence', () => {
     expect(a.plugin.stop).not.toHaveBeenCalled();
     const saved = (await loadHistory(a.plugin)).gatherings[0]!;
     expect(saved.messages[0]?.text).toBe('Hello');
+    expect(saved.roomName).toBe('Room 1234');
+    expect(saved.names).toEqual(['A', 'B']);
+    expect(host.session?.roomName).toBe('Room 1234');
     expect(saved.games[0]?.finished).toBe(false);
     expect(saved.endedAt).toBeUndefined();
     // Reading history cannot start or reconnect a transport.
@@ -518,7 +627,7 @@ describe('nearby lifecycle and persistence', () => {
       {
         host: true,
         name: 'A',
-        public: false,
+        roomName: 'Room 1234',
         chatEnabled: true,
         gameId: 'yacht',
         transport: 'ble',
@@ -549,7 +658,7 @@ describe('nearby lifecycle and persistence', () => {
     const options = {
       host: true,
       name: 'A',
-      public: false,
+      roomName: 'Room 1234',
       chatEnabled: true,
       gameId: 'yacht',
       transport: 'ble',
@@ -588,7 +697,7 @@ describe('nearby lifecycle and persistence', () => {
         {
           host: false,
           name: 'A',
-          public: false,
+          roomName: '',
           chatEnabled: true,
           gameId: 'yacht',
           transport: 'ble',

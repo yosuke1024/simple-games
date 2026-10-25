@@ -1,12 +1,13 @@
 export const en = {
+  roomName: 'Gathering name',
+  roomNameHint:
+    'Up to 24 characters. While hosting, this name and the game are visible to people nearby.',
+  participants: '{count}/{capacity} players',
   browseHint:
     'Find people hosting any supported game. Choose the same connection option as the host.',
   chooseConnection: 'Connect using',
   stopSearch: 'Stop searching',
   listingUnavailable: 'This gathering is no longer available. Go back to find another.',
-  hostNameHint:
-    'Up to 24 characters. While hosting, your name and game are visible to people nearby, including when playing with friends.',
-
   playerTurn: '{name}’s turn',
   playTogether: 'Play with someone',
   closeChat: 'Close chat',
@@ -17,10 +18,8 @@ export const en = {
   history: 'History',
   back: 'Back',
   name: 'Your display name',
-  nameHint: 'Up to 24 characters. Shared with the other participant after connecting.',
-  friends: 'With friends',
-  public: 'Welcome people nearby',
-  audienceHint: 'Both options require your approval. Names alone do not verify a person.',
+  nameHint:
+    'Up to 24 characters. Saved on this device for next time and shown to the other player after connecting.',
   bluetooth: 'Bluetooth',
   wifi: 'Same Wi-Fi',
   connectionHint:
@@ -96,7 +95,8 @@ export const en = {
   storageError:
     'History could not be saved or read. Saved history has not been overwritten. Free space or delete unneeded history, then try again.',
   clear: 'Delete all Nearby Play data',
-  clearBody: 'This deletes history and local blocks from this device only. It cannot be undone.',
+  clearBody:
+    'This deletes history, your saved display name, and local blocks from this device only. It cannot be undone.',
   hideChat: 'Hide incoming chat',
   showChat: 'Show incoming chat',
   chatHidden: 'Incoming chat is hidden on this device.',

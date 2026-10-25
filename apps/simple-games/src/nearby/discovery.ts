@@ -1,11 +1,11 @@
 import { isNearbyGameId, NEARBY_GAME_CODES } from '../app/nearbyGameIds';
 import type { NearbyGameId } from './gameTypes';
-import { isPlayerName, PROTOCOL_VERSION } from './session';
+import { isRoomName, PROTOCOL_VERSION } from './session';
 
 export interface DiscoveryListing {
-  v: 1;
+  v: 2;
   label: string;
-  name: string;
+  roomName: string;
   gameId: NearbyGameId;
   protocol: typeof PROTOCOL_VERSION;
   available: true;
@@ -16,11 +16,11 @@ export interface DiscoveredPeer {
   /** Public discovery label, not an authentication secret. */
   name: string;
   gameId: NearbyGameId;
-  hostName?: string;
+  roomName: string;
 }
 
 const encoder = new TextEncoder();
-const keys = ['available', 'gameId', 'label', 'name', 'protocol', 'v'];
+const keys = ['available', 'gameId', 'label', 'protocol', 'roomName', 'v'];
 
 export function gameForLabel(label: string): NearbyGameId | null {
   if (!/^[PF]-[A-F0-9]{6}$/.test(label)) return null;
@@ -40,7 +40,7 @@ export function metadataGameCode(gameId: NearbyGameId): string {
   return (parseInt(NEARBY_GAME_CODES[gameId], 16) | 0x80).toString(16).toUpperCase();
 }
 
-/** An advertised name is untrusted until it matches the encrypted session hello. */
+/** An advertised room title is untrusted until it matches the encrypted session hello. */
 export function parseListing(raw: unknown, label: string): DiscoveryListing | null {
   if (typeof raw !== 'string' || raw.length > 255 || encoder.encode(raw).length > 255) return null;
   try {
@@ -49,10 +49,10 @@ export function parseListing(raw: unknown, label: string): DiscoveryListing | nu
     const v = value as Record<string, unknown>;
     if (
       Object.keys(v).sort().join(',') !== keys.join(',') ||
-      v.v !== 1 ||
+      v.v !== 2 ||
       v.label !== label ||
       !isMetadataLabel(label) ||
-      !isPlayerName(v.name) ||
+      !isRoomName(v.roomName) ||
       !isNearbyGameId(v.gameId) ||
       gameForLabel(label) !== v.gameId ||
       v.protocol !== PROTOCOL_VERSION ||
@@ -65,11 +65,15 @@ export function parseListing(raw: unknown, label: string): DiscoveryListing | nu
   }
 }
 
-export function serializeListing(label: string, name: string, gameId: NearbyGameId): string | null {
+export function serializeListing(
+  label: string,
+  roomName: string,
+  gameId: NearbyGameId,
+): string | null {
   const raw = JSON.stringify({
-    v: 1,
+    v: 2,
     label,
-    name,
+    roomName,
     gameId,
     protocol: PROTOCOL_VERSION,
     available: true,
