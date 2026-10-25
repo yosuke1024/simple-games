@@ -3,17 +3,20 @@ import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NearbyBrowser } from './NearbyBrowser';
 import type { NearbyGameId } from './gameTypes';
+import { en } from './i18n/en';
 
 const fixtures = vi.hoisted(() => ({
   controllers: [] as Array<{
     state: string;
-    peers: Array<{ id: string; name: string; hostName: string; gameId: NearbyGameId }>;
+    peers: Array<{ id: string; name: string; roomName: string; gameId: NearbyGameId }>;
     changed: () => void;
     stop: ReturnType<typeof vi.fn>;
     connectToGame: ReturnType<typeof vi.fn>;
     setup: { transport: string };
+    storageFailed: boolean;
   }>,
   loadGame: vi.fn(),
+  loadHistory: vi.fn(),
   joined: vi.fn(),
   exited: vi.fn(),
   native: false,
@@ -32,6 +35,7 @@ vi.mock('../state/SettingsContext', async () => {
     }),
   };
 });
+vi.mock('./history', () => ({ loadHistory: fixtures.loadHistory }));
 vi.mock('./games', async (original) => ({
   ...(await original<typeof import('./games')>()),
   loadNearbyGame: fixtures.loadGame,
@@ -39,8 +43,9 @@ vi.mock('./games', async (original) => ({
 vi.mock('./controller', () => ({
   NearbyController: class {
     state = 'idle';
+    storageFailed = false;
     reason = 'ended';
-    peers: Array<{ id: string; name: string; hostName: string; gameId: NearbyGameId }> = [];
+    peers: Array<{ id: string; name: string; roomName: string; gameId: NearbyGameId }> = [];
     constructor(
       readonly setup: { transport: string },
       readonly changed: () => void,
@@ -74,7 +79,12 @@ function Harness({ visible = true }: { visible?: boolean }) {
     />
   );
 }
-const peer = { id: 'chess-host', name: 'P-8A1234', hostName: 'Aki', gameId: 'chess' as const };
+const peer = {
+  id: 'chess-host',
+  name: 'P-8A1234',
+  roomName: 'Friday games',
+  gameId: 'chess' as const,
+};
 async function search() {
   fireEvent.click(screen.getByRole('button', { name: 'Find gatherings' }));
   await act(async () => {
@@ -82,13 +92,16 @@ async function search() {
   });
   const controller = fixtures.controllers[0]!;
   act(() => {
-    controller.peers = [peer, { id: 'nim-host', name: 'F-8D1234', hostName: 'Bo', gameId: 'nim' }];
+    controller.peers = [
+      peer,
+      { id: 'nim-host', name: 'F-8D1234', roomName: 'Nim club', gameId: 'nim' },
+    ];
     controller.changed();
   });
   return controller;
 }
 function fillJoin() {
-  fireEvent.click(screen.getByRole('button', { name: /Aki Chess/ }));
+  fireEvent.click(screen.getByRole('button', { name: /Friday games Chess/ }));
   fireEvent.change(screen.getByRole('textbox', { name: 'Your display name' }), {
     target: { value: 'Guest' },
   });
@@ -103,19 +116,67 @@ beforeEach(() => {
     fixtures.nativeBack = callback;
     return { remove: fixtures.removeListener };
   });
+  fixtures.loadHistory.mockResolvedValue({ displayName: undefined });
   fixtures.loadGame.mockResolvedValue({ adapter: { id: 'chess' }, Board: () => null });
 });
 afterEach(cleanup);
 
 describe('collection-wide nearby browser', () => {
+  it('reports persistence failures when saving a participant name prevents joining', async () => {
+    render(<Harness />);
+    const controller = await search();
+    fillJoin();
+    controller.connectToGame.mockImplementation(async () => {
+      controller.storageFailed = true;
+      return false;
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Join a gathering' }));
+    });
+    expect(screen.getByText(en.storageError)).toBeVisible();
+    expect(fixtures.joined).not.toHaveBeenCalled();
+  });
+
+  it('prefills the saved personal name after selecting a gathering without starting a connection', async () => {
+    fixtures.loadHistory.mockResolvedValue({ displayName: 'Remembered player' });
+    render(<Harness />);
+    const controller = await search();
+    expect(fixtures.loadHistory).not.toHaveBeenCalled();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Friday games Chess/ }));
+    });
+    expect(screen.getByRole('heading', { name: 'Friday games' })).toBeVisible();
+    expect(screen.getByRole('textbox', { name: 'Your display name' })).toHaveValue(
+      'Remembered player',
+    );
+    expect(controller.connectToGame).not.toHaveBeenCalled();
+  });
+
+  it('keeps typed personal names when a delayed saved name arrives', async () => {
+    let finish!: (value: unknown) => void;
+    fixtures.loadHistory.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    render(<Harness />);
+    await search();
+    fillJoin();
+    await act(async () => {
+      finish({ displayName: 'Old player' });
+    });
+    expect(screen.getByRole('textbox', { name: 'Your display name' })).toHaveValue('Guest');
+  });
+
   it('only scans after an explicit choice and shows hosts across games without loading boards', async () => {
     render(<Harness />);
     expect(fixtures.controllers).toHaveLength(0);
     fireEvent.click(screen.getByRole('radio', { name: 'Same Wi-Fi' }));
     const controller = await search();
     expect(controller.setup.transport).toBe('lan');
-    expect(screen.getByRole('button', { name: /Aki Chess/ })).toBeVisible();
-    expect(screen.getByRole('button', { name: /Bo Nim/ })).toBeVisible();
+    expect(screen.getByRole('button', { name: /Friday games Chess/ })).toBeVisible();
+    expect(screen.getByRole('button', { name: /Nim club Nim/ })).toBeVisible();
     expect(fixtures.loadGame).not.toHaveBeenCalled();
     expect(controller.connectToGame).not.toHaveBeenCalled();
   });
@@ -172,7 +233,7 @@ describe('collection-wide nearby browser', () => {
   it.each([
     { id: 'another-device' },
     { name: 'P-8A5678' },
-    { hostName: 'Someone else' },
+    { roomName: 'Someone else' },
     { gameId: 'nim' as const },
   ])('rechecks the exact displayed listing after its board loads: %j', async (change) => {
     let finish!: (value: unknown) => void;

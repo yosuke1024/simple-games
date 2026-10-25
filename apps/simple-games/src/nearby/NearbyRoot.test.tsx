@@ -69,7 +69,7 @@ vi.mock('./controller', async () => {
   class FakeController {
     state = 'idle';
     reason = 'ended';
-    peers: Array<{ id: string; name: string; gameId: NearbyGameId }> = [];
+    peers: Array<{ id: string; name: string; roomName: string; gameId: NearbyGameId }> = [];
     label = 'F-ABC123';
     code = '123456';
     storageFailed = false;
@@ -84,12 +84,15 @@ vi.mock('./controller', async () => {
       _plugin: unknown,
       adapter: GameAdapter,
     ) {
-      this.peers = [{ id: 'peer-1', name: 'F-ABC123', gameId: setup.gameId }];
+      this.peers = [
+        { id: 'peer-1', name: 'P-811234', roomName: 'Friday games', gameId: setup.gameId },
+      ];
       this.session = new Session({
         adapter,
         host: setup.host,
         chatEnabled: setup.chatEnabled,
         name: setup.name,
+        roomName: setup.host ? setup.roomName : undefined,
         nonce: 'a'.repeat(32),
         identity: 'c'.repeat(32),
         die: () => 6,
@@ -101,6 +104,7 @@ vi.mock('./controller', async () => {
               id: this.session.sid,
               at: 1000,
               label: this.label,
+              roomName: this.session.roomName,
               transport: setup.transport,
               host: setup.host,
               names: this.session.names as [string, string],
@@ -116,6 +120,7 @@ vi.mock('./controller', async () => {
         host: !setup.host,
         chatEnabled: fixtures.peerChatEnabled,
         name: setup.host ? 'Guest' : 'Host',
+        roomName: setup.host ? undefined : 'Friday games',
         nonce: 'b'.repeat(32),
         identity: 'd'.repeat(32),
         die: () => 6,
@@ -224,6 +229,73 @@ function hostRoom(chatEnabled = false) {
 }
 
 describe('Nearby Play user flows', () => {
+  it('generates an editable gathering name and keeps it separate from player names', async () => {
+    await renderNearby(<NearbyRoot gameId="yacht" onExit={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: en.create }));
+    const roomName = screen.getByRole('textbox', { name: en.roomName });
+    expect((roomName as HTMLInputElement).value).toMatch(/^Yacht \d{4}$/);
+    expect(screen.getAllByRole('radio')).toHaveLength(2); // Transport only.
+    fireEvent.change(screen.getByRole('textbox', { name: en.name }), {
+      target: { value: 'Yosuke' },
+    });
+    fireEvent.click(screen.getByRole('checkbox', { name: en.accept }));
+    for (const invalid of ['', 'x'.repeat(25)]) {
+      fireEvent.change(roomName, { target: { value: invalid } });
+      expect(screen.getByRole('button', { name: en.start })).toBeDisabled();
+    }
+    fireEvent.change(roomName, { target: { value: '  Friday games  ' } });
+    fireEvent.click(screen.getByRole('button', { name: en.start }));
+    const controller = fixtures.controllers.at(-1)!;
+    expect(controller.setup).toMatchObject({ name: 'Yosuke', roomName: 'Friday games' });
+    expect(screen.getByRole('heading', { name: 'Friday games' })).toBeVisible();
+    act(() => controller.establish());
+    fireEvent.click(screen.getByRole('button', { name: en.approve }));
+    act(() => controller.flush());
+    expect(controller.session.names).toEqual(['Yosuke', 'Guest']);
+    expect(screen.getByRole('heading', { name: 'Friday games' })).toBeVisible();
+  });
+
+  it.each([true, false])('prefills a locally saved display name in host=%s setup', async (host) => {
+    fixtures.load.mockResolvedValue({ displayName: 'Remembered player', gatherings: [] });
+    await renderNearby(<NearbyRoot gameId="nim" onExit={() => {}} />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: host ? en.create : en.join }));
+    });
+    expect(screen.getByRole('textbox', { name: en.name })).toHaveValue('Remembered player');
+    expect(fixtures.controllers).toHaveLength(0);
+  });
+
+  it('does not overwrite an edited or cleared display name when storage finishes loading', async () => {
+    let finish!: (value: unknown) => void;
+    fixtures.load.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    await renderNearby(<NearbyRoot gameId="yacht" onExit={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: en.create }));
+    const name = screen.getByRole('textbox', { name: en.name });
+    fireEvent.change(name, { target: { value: 'New player' } });
+    fireEvent.change(name, { target: { value: '' } });
+    await act(async () => {
+      finish({ displayName: 'Old player' });
+    });
+    expect(name).toHaveValue('');
+  });
+
+  it('shows gathering names in new histories and keeps personal names in the transcript', async () => {
+    fixtures.saved = [{ ...savedGathering(), roomName: 'Friday games' }];
+    await renderNearby(<NearbyRoot gameId="yacht" onExit={() => {}} />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: en.history }));
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Friday games/ }));
+    expect(screen.getByRole('heading', { name: 'Friday games' })).toBeVisible();
+    expect(screen.getByText('Saved host · Saved guest')).toBeVisible();
+    expect(screen.getByText('Saved host', { selector: 'strong' })).toBeVisible();
+  });
+
   it.each(Object.keys(NEARBY_GAME_CODES) as NearbyGameId[])(
     'prepares and starts %s through its real game adapter and board',
     async (gameId) => {
@@ -276,7 +348,7 @@ describe('Nearby Play user flows', () => {
       fireEvent.click(screen.getByRole('button', { name: host ? en.create : en.join }));
       const start = screen.getByRole('button', { name: host ? en.start : en.search });
       expect(start).toBeDisabled();
-      expect(screen.getAllByRole('textbox')).toHaveLength(1);
+      expect(screen.getAllByRole('textbox')).toHaveLength(host ? 2 : 1);
       expect(screen.queryByRole('textbox', { name: en.message })).not.toBeInTheDocument();
       fireEvent.change(screen.getByRole('textbox', { name: en.name }), {
         target: { value: 'Player' },
@@ -364,7 +436,7 @@ describe('Nearby Play user flows', () => {
       expect(screen.queryByText(en.chatOn)).not.toBeInTheDocument();
       expect(screen.queryByText(en.chatOff)).not.toBeInTheDocument();
       const controller = fixtures.controllers.at(-1)!;
-      fireEvent.click(screen.getByRole('button', { name: /F-ABC123/ }));
+      fireEvent.click(screen.getByRole('button', { name: /Friday games/ }));
       expect(screen.getByText(chatEnabled ? en.chatOn : en.chatOff)).toBeInTheDocument();
       expect(screen.queryByRole('checkbox', { name: en.useChat })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: en.ready })).not.toBeInTheDocument();
@@ -419,7 +491,7 @@ describe('Nearby Play user flows', () => {
   it('lets a joining player choose a gathering and wait without an approval button or join comment', async () => {
     await renderNearby(<NearbyRoot gameId="yacht" onExit={() => {}} />);
     const controller = begin(false);
-    fireEvent.click(screen.getByRole('button', { name: /F-ABC123/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Friday games/ }));
     expect(controller.connect).toHaveBeenCalledWith('peer-1');
     expect(screen.getByRole('heading', { name: en.awaiting })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: en.approve })).not.toBeInTheDocument();
@@ -752,6 +824,42 @@ describe('Nearby Play user flows', () => {
     view.unmount();
     expect(second).toHaveBeenCalledExactlyOnceWith(false);
     expect(controller.stop).toHaveBeenCalledOnce();
+  });
+
+  it('blocks Back during a delayed clear and removes the saved name from the next setup', async () => {
+    let finish!: () => void;
+    fixtures.clear.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    fixtures.load.mockResolvedValue({ displayName: 'Old player', gatherings: [] });
+    await renderNearby(<NearbyRoot gameId="yacht" onExit={() => {}} />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: en.create }));
+    });
+    expect(screen.getByRole('textbox', { name: en.name })).toHaveValue('Old player');
+    fireEvent.click(screen.getByRole('button', { name: en.back }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: en.history }));
+    });
+    fireEvent.click(screen.getByRole('button', { name: en.clear }));
+    fireEvent.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: en.clear }),
+    );
+    expect(screen.getByRole('button', { name: en.back })).toBeDisabled();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.getByRole('heading', { name: en.history })).toBeInTheDocument();
+    fixtures.load.mockResolvedValue({ gatherings: [] });
+    await act(async () => {
+      finish();
+    });
+    fireEvent.click(screen.getByRole('button', { name: en.back }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: en.create }));
+    });
+    expect(screen.getByRole('textbox', { name: en.name })).toHaveValue('');
   });
 
   it('deletes only the selected local history after warning that the peer copy remains', async () => {

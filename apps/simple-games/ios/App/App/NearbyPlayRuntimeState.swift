@@ -2,7 +2,7 @@ import Foundation
 import CoreFoundation
 
 /// Public, unauthenticated discovery hints. JS validates the schema and checks
-/// the selected game/name again against the encrypted hello before admission.
+/// the selected game/room name again against the encrypted hello before admission.
 enum NearbyPlayListing {
     static let maxBytes = 255
     static let maxTXTBytes = 247 // DNS-SD's one-byte length also covers "listing=".

@@ -2,13 +2,13 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const ko: NearbyMessages = {
+  roomName: '모임 이름',
+  roomNameHint: '최대 24자. 모집 중에는 이 이름과 게임 이름이 근처 사람들에게 표시됩니다.',
+  participants: '{count}/{capacity}명',
   browseHint: '지원하는 게임을 모집 중인 사람을 찾아보세요. 호스트와 같은 연결 방법을 선택하세요.',
   chooseConnection: '연결 방법',
   stopSearch: '검색 중지',
   listingUnavailable: '더 이상 참여할 수 없는 모임입니다. 돌아가서 다른 모임을 찾아보세요.',
-  hostNameHint:
-    '최대 24자. 모집 중에는 이름과 게임이 주변 사람의 목록에 표시됩니다. 친구와 플레이할 때도 같습니다.',
-
   playerTurn: '{name}의 차례',
   playTogether: '다른 사람과 플레이',
   closeChat: '채팅 닫기',
@@ -19,10 +19,8 @@ export const ko: NearbyMessages = {
   history: '기록',
   back: '뒤로',
   name: '내 표시 이름',
-  nameHint: '최대 24자. 연결 후 상대방에게 표시됩니다.',
-  friends: '친구와 함께',
-  public: '주변 사람 모집',
-  audienceHint: '두 방식 모두 승인이 필요합니다. 이름만으로는 신원을 확인할 수 없습니다.',
+  nameHint:
+    '최대 24자. 다음에 다시 사용할 수 있도록 이 기기에 저장되며, 연결 후 상대방에게 표시됩니다.',
   bluetooth: 'Bluetooth',
   wifi: '같은 Wi-Fi',
   connectionHint:
@@ -97,7 +95,8 @@ export const ko: NearbyMessages = {
   storageError:
     '기록을 저장하거나 읽을 수 없습니다. 저장된 기록은 덮어쓰지 않았습니다. 저장 공간을 확보하거나 필요 없는 기록을 삭제한 후 다시 시도하세요.',
   clear: 'Nearby Play 데이터 모두 삭제',
-  clearBody: '이 기기의 기록과 로컬 차단 정보만 삭제합니다. 되돌릴 수 없습니다.',
+  clearBody:
+    '이 기기의 기록, 저장된 내 표시 이름, 로컬 차단 정보만 삭제합니다. 되돌릴 수 없습니다.',
   hideChat: '받은 채팅 숨기기',
   showChat: '받은 채팅 표시',
   chatHidden: '이 기기에서 받은 채팅을 숨기고 있습니다.',

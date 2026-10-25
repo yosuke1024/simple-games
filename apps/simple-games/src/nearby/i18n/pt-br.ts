@@ -2,14 +2,15 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const ptBR: NearbyMessages = {
+  roomName: 'Nome do encontro',
+  roomNameHint:
+    'Até 24 caracteres. Enquanto você organiza o encontro, este nome e o jogo ficam visíveis para pessoas próximas.',
+  participants: '{count}/{capacity} jogadores',
   browseHint:
     'Encontre pessoas organizando qualquer jogo compatível. Escolha a mesma conexão do anfitrião.',
   chooseConnection: 'Conectar por',
   stopSearch: 'Parar de buscar',
   listingUnavailable: 'Este encontro não está mais disponível. Volte para encontrar outro.',
-  hostNameHint:
-    'Até 24 caracteres. Ao organizar uma partida, seu nome e o jogo ficam visíveis para pessoas por perto, mesmo ao jogar com amigos.',
-
   playerTurn: 'Vez de {name}',
   playTogether: 'Jogar com alguém',
   closeChat: 'Fechar chat',
@@ -20,10 +21,8 @@ export const ptBR: NearbyMessages = {
   history: 'Histórico',
   back: 'Voltar',
   name: 'Seu nome de exibição',
-  nameHint: 'Até 24 caracteres. Mostrado à outra pessoa após a conexão.',
-  friends: 'Com amigos',
-  public: 'Receber pessoas por perto',
-  audienceHint: 'As duas opções exigem sua aprovação. Um nome sozinho não verifica a identidade.',
+  nameHint:
+    'Até 24 caracteres. Fica salvo neste dispositivo para a próxima vez e é mostrado à outra pessoa após a conexão.',
   bluetooth: 'Bluetooth',
   wifi: 'Mesma rede Wi-Fi',
   connectionHint:
@@ -101,7 +100,7 @@ export const ptBR: NearbyMessages = {
     'Não foi possível salvar ou ler o histórico. O histórico salvo não foi sobrescrito. Libere espaço ou exclua históricos desnecessários e tente novamente.',
   clear: 'Excluir todos os dados do Nearby Play',
   clearBody:
-    'Isso exclui o histórico e os bloqueios locais apenas deste dispositivo. Não é possível desfazer.',
+    'Isso exclui o histórico, seu nome de exibição salvo e os bloqueios locais somente deste dispositivo. Não é possível desfazer.',
   hideChat: 'Ocultar mensagens recebidas',
   showChat: 'Mostrar mensagens recebidas',
   chatHidden: 'As mensagens recebidas estão ocultas neste dispositivo.',

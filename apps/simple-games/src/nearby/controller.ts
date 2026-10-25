@@ -5,7 +5,6 @@ import { Channel } from './channel';
 import { Delivery } from './delivery';
 import {
   gameForLabel,
-  isMetadataLabel,
   metadataGameCode,
   parseListing,
   serializeListing,
@@ -15,6 +14,7 @@ import {
   blockIdentity,
   loadHistory,
   saveGathering,
+  saveDisplayName,
   type Gathering,
   type HistoryData,
 } from './history';
@@ -25,7 +25,7 @@ import {
   type NearbyPlugin,
   type Transport,
 } from './native';
-import { isPlayerName, Session } from './session';
+import { isPlayerName, isRoomName, Session } from './session';
 
 export interface Setup {
   host: boolean;
@@ -33,7 +33,7 @@ export interface Setup {
   gameId: NearbyGameId;
   name: string;
   transport: Transport;
-  public: boolean;
+  roomName: string;
 }
 export interface DiscoverySetup {
   host: false;
@@ -41,7 +41,7 @@ export interface DiscoverySetup {
   gameId: null;
   name: '';
   transport: Transport;
-  public: false;
+  roomName: '';
 }
 export type EndReason = 'ended' | 'timeout' | 'connectionError' | 'declined' | 'blocked';
 // Native plugins are singletons. An old permission/start completion must never
@@ -81,7 +81,7 @@ export class NearbyController {
   private restarting = false;
   private authenticated = false;
   private deliveryPending = 0;
-  private selectedHostName: string | undefined;
+  private selectedRoomName: string | undefined;
   private selectingPeer: DiscoveredPeer | null = null;
   private delivery = new Delivery(
     (plain) => this.session?.receive(plain),
@@ -108,10 +108,14 @@ export class NearbyController {
     const discovery = this.gameId === null;
     if (
       discovery
-        ? this.setup.host || this.setup.name !== '' || this.setup.public || this.setup.chatEnabled
+        ? this.setup.host ||
+          this.setup.name !== '' ||
+          this.setup.roomName !== '' ||
+          this.setup.chatEnabled
         : !isNearbyGameId(this.gameId) ||
           (this.adapter?.id ?? 'yacht') !== this.gameId ||
-          !isPlayerName(this.setup.name)
+          !isPlayerName(this.setup.name) ||
+          (this.setup.host && !isRoomName(this.setup.roomName))
     ) {
       this.state = 'ended';
       this.reason = 'connectionError';
@@ -129,11 +133,11 @@ export class NearbyController {
     // the actual candidate label before connection or continuation is possible.
     this.label =
       this.gameId === null
-        ? 'F-000000'
-        : `${this.setup.public ? 'P' : 'F'}-${metadataGameCode(this.gameId)}${randomId().slice(0, 4).toUpperCase()}`;
+        ? 'P-000000'
+        : `P-${metadataGameCode(this.gameId)}${randomId().slice(0, 4).toUpperCase()}`;
     this.changed();
     try {
-      if (!discovery && !(await this.prepareSession())) return;
+      if (this.setup.host && !(await this.prepareSession())) return;
       const listener = await this.plugin.addListener('nearbyEvent', (event) => {
         if (!this.active) return;
         // Lifecycle cannot wait behind a stalled native send/WebCrypto job.
@@ -190,7 +194,7 @@ export class NearbyController {
       this.changed();
       const listing =
         this.setup.host && this.gameId !== null
-          ? serializeListing(this.label, this.setup.name, this.gameId)
+          ? serializeListing(this.label, this.session!.roomName, this.gameId)
           : undefined;
       if (listing === null) {
         await this.stop('connectionError');
@@ -216,6 +220,8 @@ export class NearbyController {
   private async prepareSession(): Promise<boolean> {
     try {
       this.data = await loadHistory(this.plugin);
+      if (!this.active) return false;
+      await saveDisplayName(this.setup.name, this.plugin);
     } catch {
       if (this.active) {
         this.storageFailed = true;
@@ -231,6 +237,7 @@ export class NearbyController {
       chatEnabled: this.setup.chatEnabled,
       adapter: this.adapter,
       name: this.setup.name,
+      roomName: this.setup.roomName,
       nonce: randomId(),
       identity: this.data.identity,
       random,
@@ -244,12 +251,10 @@ export class NearbyController {
   async connectToGame(peerId: string, name: string, adapter: GameAdapter): Promise<boolean> {
     if (!this.active || this.gameId !== null || this.state !== 'discovering') return false;
     const peer = this.peers.find((p) => p.id === peerId);
-    if (!peer?.hostName || peer.gameId !== adapter.id || !isPlayerName(name)) {
+    if (!peer || peer.gameId !== adapter.id || !isPlayerName(name)) {
       await this.stop('connectionError');
       return false;
     }
-    this.selectingPeer = peer;
-    this.selectedHostName = peer.hostName;
     this.adapter = adapter;
     this.currentSetup = {
       ...this.setup,
@@ -257,7 +262,21 @@ export class NearbyController {
       name,
       gameId: peer.gameId,
       chatEnabled: false,
-      public: false,
+      roomName: peer.roomName,
+    };
+    return this.joinPeer(peer);
+  }
+
+  private async joinPeer(peer: DiscoveredPeer): Promise<boolean> {
+    this.selectingPeer = peer;
+    this.selectedRoomName = peer.roomName;
+    this.currentSetup = {
+      host: false,
+      name: this.setup.name,
+      roomName: peer.roomName,
+      gameId: peer.gameId,
+      transport: this.setup.transport,
+      chatEnabled: this.setup.chatEnabled,
     };
     this.label = peer.name;
     this.state = 'connecting';
@@ -270,7 +289,7 @@ export class NearbyController {
         return false;
       }
       this.selectingPeer = null;
-      await this.plugin.connect({ peerId });
+      await this.plugin.connect({ peerId: peer.id });
       return this.active;
     } catch {
       if (this.active) await this.stop('connectionError');
@@ -281,19 +300,11 @@ export class NearbyController {
   }
 
   async connect(peerId: string) {
-    if (!this.active || !this.session || this.setup.host || this.state !== 'discovering') return;
+    if (!this.active || this.gameId === null || this.setup.host || this.state !== 'discovering')
+      return;
     const peer = this.peers.find((p) => p.id === peerId);
     if (!peer) return;
-    this.selectedHostName = peer.hostName;
-    this.label = peer.name;
-    this.state = 'connecting';
-    this.limit(15000);
-    this.changed();
-    try {
-      await this.plugin.connect({ peerId });
-    } catch {
-      this.interrupted('connectionError');
-    }
+    await this.joinPeer(peer);
   }
   private limit(ms: number) {
     clearTimeout(this.deadline);
@@ -483,13 +494,9 @@ export class NearbyController {
         return;
       }
       const listing = parseListing(event.listing, name);
-      // An explicitly invalid/incompatible listing is never treated as legacy.
-      // Global browsing requires a name and game; game-specific browsing can
-      // still connect an older host by its already-filtered discovery label.
-      if (
-        !listing &&
-        (event.listing !== undefined || this.gameId === null || isMetadataLabel(name))
-      ) {
+      // Every entry needs the compatible public room title. Older metadata and
+      // metadata-free peers cannot join this wire version, even within one game.
+      if (!listing) {
         this.removePeer(event.id);
         return;
       }
@@ -497,7 +504,7 @@ export class NearbyController {
         id: event.id,
         name,
         gameId,
-        ...(listing ? { hostName: listing.name } : {}),
+        roomName: listing.roomName,
       };
       const index = this.peers.findIndex((p) => p.id === event.id);
       if (index < 0) {
@@ -505,7 +512,7 @@ export class NearbyController {
         this.peers.push(peer);
       } else {
         const previous = this.peers[index]!;
-        if (previous.name === peer.name && previous.hostName === peer.hostName) return;
+        if (previous.name === peer.name && previous.roomName === peer.roomName) return;
         this.peers[index] = peer;
         if (this.selectingPeer === previous) {
           void this.stop('connectionError');
@@ -556,9 +563,10 @@ export class NearbyController {
     if (!session) return;
     if (
       this.active &&
-      this.selectedHostName !== undefined &&
-      session.peerName &&
-      session.peerName !== this.selectedHostName
+      (session.closed === 'Room name mismatch' ||
+        (this.selectedRoomName !== undefined &&
+          session.roomName &&
+          session.roomName !== this.selectedRoomName))
     ) {
       void this.stop('connectionError');
       return;
@@ -612,6 +620,7 @@ export class NearbyController {
       id: randomId(),
       at: now,
       label: this.label,
+      roomName: session.roomName,
       transport: this.setup.transport,
       host: this.setup.host,
       names: session.names as [string, string],

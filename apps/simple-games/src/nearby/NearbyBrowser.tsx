@@ -9,11 +9,12 @@ import type { NearbyGameId } from './gameTypes';
 import { useNearbyText } from './i18n';
 import type { Transport } from './native';
 import { isPlayerName } from './session';
+import { loadHistory } from './history';
 
 interface Selection {
   id: string;
   name: string;
-  hostName: string;
+  roomName: string;
   gameId: NearbyGameId;
 }
 
@@ -38,6 +39,8 @@ export function NearbyBrowser({
   const controllerRef = useRef<NearbyController | null>(null);
   const [selection, setSelection] = useState<Selection | null>(null);
   const [name, setName] = useState('');
+  const nameEdited = useRef(false);
+  const [storageError, setStorageError] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -56,7 +59,7 @@ export function NearbyBrowser({
         p.id === selection?.id &&
         p.name === selection.name &&
         p.gameId === selection.gameId &&
-        p.hostName === selection.hostName,
+        p.roomName === selection.roomName,
     );
 
   const back = () => {
@@ -113,6 +116,20 @@ export function NearbyBrowser({
   useEffect(() => {
     if (visible) titleRef.current?.focus({ preventScroll: true });
   }, [selection, visible]);
+  useEffect(() => {
+    if (!selection || nameEdited.current) return;
+    let current = true;
+    void loadHistory()
+      .then((data) => {
+        if (current && !nameEdited.current && data.displayName) setName(data.displayName);
+      })
+      .catch(() => {
+        if (current) setStorageError(true);
+      });
+    return () => {
+      current = false;
+    };
+  }, [selection]);
 
   const search = async () => {
     if (busy || active || !visible) return;
@@ -123,7 +140,7 @@ export function NearbyBrowser({
     setFailed(false);
     setSelection(null);
     const next = new NearbyController(
-      { host: false, gameId: null, name: '', public: false, chatEnabled: false, transport },
+      { host: false, gameId: null, name: '', roomName: '', chatEnabled: false, transport },
       onChanged,
     );
     controllerRef.current = next;
@@ -147,7 +164,7 @@ export function NearbyBrowser({
             p.id === selection.id &&
             p.name === selection.name &&
             p.gameId === selection.gameId &&
-            p.hostName === selection.hostName,
+            p.roomName === selection.roomName,
         )
       )
         return;
@@ -187,7 +204,7 @@ export function NearbyBrowser({
             }}
           >
             <section className="nearby-card">
-              <h2>{selection.hostName}</h2>
+              <h2>{selection.roomName}</h2>
               <p>{GAME_TITLES[selection.gameId]}</p>
               <p className="nearby-note">{n(transport === 'ble' ? 'bluetooth' : 'wifi')}</p>
             </section>
@@ -199,7 +216,10 @@ export function NearbyBrowser({
                 maxLength={48}
                 autoComplete="off"
                 aria-describedby="nearby-join-name-hint"
-                onChange={(event) => setName(event.target.value)}
+                onChange={(event) => {
+                  nameEdited.current = true;
+                  setName(event.target.value);
+                }}
               />
             </label>
             <p id="nearby-join-name-hint" className="nearby-note">
@@ -245,17 +265,17 @@ export function NearbyBrowser({
                   {controller?.peers.length === 0 && <p className="nearby-note">{n('noPeers')}</p>}
                   {controller?.peers.map(
                     (peer) =>
-                      peer.hostName && (
+                      peer.roomName && (
                         <button
                           key={peer.id}
                           type="button"
                           className="nearby-peer"
-                          aria-label={`${peer.hostName} ${GAME_TITLES[peer.gameId]} ${n(peer.name.startsWith('F-') ? 'friends' : 'public')}`}
-                          onClick={() => setSelection({ ...peer, hostName: peer.hostName! })}
+                          aria-label={`${peer.roomName} ${GAME_TITLES[peer.gameId]} ${n('participants', { count: 1, capacity: 2 })}`}
+                          onClick={() => setSelection(peer)}
                         >
-                          <strong>{peer.hostName}</strong>
+                          <strong>{peer.roomName}</strong>
                           <span>{GAME_TITLES[peer.gameId]}</span>
-                          <span>{n(peer.name.startsWith('F-') ? 'friends' : 'public')}</span>
+                          <span>{n('participants', { count: 1, capacity: 2 })}</span>
                         </button>
                       ),
                   )}
@@ -291,6 +311,11 @@ export function NearbyBrowser({
         {failed && (
           <p className="nearby-warning" role="alert">
             {n('connectionError')}
+          </p>
+        )}
+        {(storageError || controller?.storageFailed) && (
+          <p className="nearby-warning" role="alert">
+            {n('storageError')}
           </p>
         )}
       </main>

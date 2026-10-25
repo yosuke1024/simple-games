@@ -41,7 +41,7 @@ describe('Nearby feature translations', () => {
         ).toBe(false);
         expect(text, `${locale}.${key}`).not.toMatch(/[<>]/);
       }
-      for (const key of ['nameHint', 'chatHint', 'twoPeople', 'turn'] as const)
+      for (const key of ['nameHint', 'roomNameHint', 'chatHint', 'twoPeople', 'turn'] as const)
         expect(catalogs[locale][key].match(/\d+/g), `${locale}.${key}`).toEqual(
           en[key].match(/\d+/g),
         );
@@ -63,6 +63,14 @@ describe('Nearby feature translations', () => {
       }
     });
   }
+  it('keeps gathering names separate from personal names and removes the obsolete audience choices', () => {
+    for (const locale of Object.keys(catalogs) as Locale[]) {
+      expect(catalogs[locale].roomName).not.toBe(catalogs[locale].name);
+      expect(nearbyText(locale, 'participants', { count: 1, capacity: 2 })).toContain('1/2');
+      for (const key of ['friends', 'public', 'audienceHint', 'hostNameHint'])
+        expect(catalogs[locale]).not.toHaveProperty(key);
+    }
+  });
   it('substitutes values literally and leaves missing placeholders intact', () => {
     expect(nearbyText('en', 'request', { name: '$& <Player>' })).toBe('$& <Player> wants to join');
     expect(nearbyText('en', 'turn', { name: 'Player', rolls: 0 })).toBe(

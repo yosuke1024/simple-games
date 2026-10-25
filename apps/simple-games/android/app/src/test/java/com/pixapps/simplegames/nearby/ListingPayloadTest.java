@@ -3,10 +3,11 @@ package com.pixapps.simplegames.nearby;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import java.util.Arrays;
+import java.io.ByteArrayOutputStream;
 
 public final class ListingPayloadTest {
     @Test public void validatesWireBytesWithoutTrustingMetadataIdentity() {
-        String text = "{\"name\":\"日本語🙂\"}";
+        String text = "{\"v\":2,\"label\":\"P-810001\",\"roomName\":\"週末のゲーム🙂\",\"gameId\":\"yacht\",\"protocol\":7,\"available\":true}";
         byte[] raw = ListingPayload.encode(text, 255);
         assertEquals(text, ListingPayload.decode(raw));
         assertEquals(255, ListingPayload.encode("x".repeat(255), 255).length);
@@ -27,6 +28,19 @@ public final class ListingPayloadTest {
         assertThrows(IllegalArgumentException.class, () -> ListingPayload.read(raw, raw.length + 1));
         assertThrows(IllegalArgumentException.class, () -> ListingPayload.read(raw, -1));
         assertArrayEquals(new byte[0], ListingPayload.read(null, 0));
+    }
+    @Test public void carriesMaximumRoomNameThroughTxtAndDefaultMtuLongReads() {
+        String roomName = "🦊".repeat(24);
+        String text = "{\"v\":2,\"label\":\"P-8B0001\",\"roomName\":\"" + roomName + "\",\"gameId\":\"nested-tic-tac-toe\",\"protocol\":7,\"available\":true}";
+        byte[] raw = ListingPayload.encode(text, ListingPayload.MAX_TXT_BYTES);
+        assertTrue(raw.length + "listing=".length() <= 255);
+        assertEquals(text, ListingPayload.decode(raw));
+        ByteArrayOutputStream reconstructed = new ByteArrayOutputStream();
+        while (reconstructed.size() < raw.length) {
+            byte[] suffix = ListingPayload.read(raw, reconstructed.size());
+            reconstructed.write(suffix, 0, Math.min(22, suffix.length));
+        }
+        assertEquals(text, ListingPayload.decode(reconstructed.toByteArray()));
     }
     @Test public void onlyNewGameLabelsAllowPassiveMetadataConnections() {
         for (int code = 0; code < 256; code++) {

@@ -61,7 +61,7 @@ function controller(
     {
       host,
       name: host ? 'Host' : 'Guest',
-      public: true,
+      roomName: 'Room 1234',
       chatEnabled,
       gameId: adapter?.id ?? 'yacht',
       transport: 'ble',
@@ -94,7 +94,7 @@ async function pair(chatEnabled = true, adapter?: GameAdapter, globalDiscovery =
         {
           host: false,
           name: '',
-          public: false,
+          roomName: '',
           chatEnabled: false,
           gameId: null,
           transport: 'ble',
@@ -390,6 +390,13 @@ describe('nearby controller with the real encrypted channel', () => {
       randomId.mockRestore();
     }
     await nextGuest.start();
+    b.emit({
+      type: 'peer',
+      id: 'next-host',
+      name: nextHost.label,
+      listing: vi.mocked(a.plugin.start).mock.calls.at(-1)![0].listing,
+    });
+    await nextGuest.connect('next-host');
     a.emit({ type: 'connected' });
     b.emit({ type: 'connected' });
     await pump(() => !!nextHost.session?.peerName && !!nextGuest.session?.peerName);
@@ -481,6 +488,8 @@ describe('approved gathering survives a physical interruption', () => {
       // Recovery reuses the admitted session policy, never re-reads setup.
       host.setup.chatEnabled = !chatEnabled;
       guest.setup.chatEnabled = !chatEnabled;
+      host.setup.roomName = 'Changed setup title';
+      guest.setup.roomName = 'Changed guest title';
       await vi.advanceTimersByTimeAsync(3001);
       await until(
         () =>
@@ -504,6 +513,11 @@ describe('approved gathering survives a physical interruption', () => {
       expect(host.gathering!.id).toBe(gatheringId);
       expect(host.session!.chatEnabled).toBe(chatEnabled);
       expect(guest.session!.chatEnabled).toBe(chatEnabled);
+      expect(host.session!.roomName).toBe('Room 1234');
+      expect(guest.session!.roomName).toBe('Room 1234');
+      expect(host.gathering!.roomName).toBe('Room 1234');
+      expect(guest.gathering!.roomName).toBe('Room 1234');
+      expect(vi.mocked(a.plugin.start).mock.calls[1]![0]).not.toHaveProperty('listing');
       expect(host.session!.messages).toHaveLength(chatEnabled ? 1 : 0);
       expect(guest.session!.messages).toHaveLength(chatEnabled ? 1 : 0);
       expect(guest.session!.sendChat('after interruption')).toBe(chatEnabled);

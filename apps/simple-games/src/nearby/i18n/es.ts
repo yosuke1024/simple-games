@@ -2,14 +2,15 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const es: NearbyMessages = {
+  roomName: 'Nombre del encuentro',
+  roomNameHint:
+    'Hasta 24 caracteres. Mientras organizas el encuentro, las personas cercanas pueden ver este nombre y el juego.',
+  participants: '{count}/{capacity} jugadores',
   browseHint:
     'Encuentra personas que organizan partidas de cualquier juego compatible. Elige la misma conexión que el anfitrión.',
   chooseConnection: 'Conectar mediante',
   stopSearch: 'Dejar de buscar',
   listingUnavailable: 'Esta sala ya no está disponible. Vuelve para buscar otra.',
-  hostNameHint:
-    'Hasta 24 caracteres. Al organizar una partida, tu nombre y el juego son visibles para las personas cercanas, incluso si juegas con amigos.',
-
   playerTurn: 'Turno de {name}',
   playTogether: 'Jugar con alguien',
   closeChat: 'Cerrar chat',
@@ -20,11 +21,8 @@ export const es: NearbyMessages = {
   history: 'Historial',
   back: 'Volver',
   name: 'Tu nombre visible',
-  nameHint: 'Hasta 24 caracteres. Se muestra a la otra persona después de conectar.',
-  friends: 'Con amigos',
-  public: 'Invitar a personas cercanas',
-  audienceHint:
-    'Ambas opciones requieren tu aprobación. Un nombre por sí solo no verifica la identidad.',
+  nameHint:
+    'Hasta 24 caracteres. Se guarda en este dispositivo para la próxima vez y se muestra a la otra persona después de conectar.',
   bluetooth: 'Bluetooth',
   wifi: 'Misma red Wi-Fi',
   connectionHint:
@@ -102,7 +100,7 @@ export const es: NearbyMessages = {
     'No se pudo guardar o leer el historial. El historial guardado no se ha sobrescrito. Libera espacio o elimina historial innecesario y vuelve a intentarlo.',
   clear: 'Eliminar todos los datos de Nearby Play',
   clearBody:
-    'Se eliminarán el historial y los bloqueos locales solo de este dispositivo. Esta acción no se puede deshacer.',
+    'Se eliminarán el historial, tu nombre visible guardado y los bloqueos locales solo de este dispositivo. No se puede deshacer.',
   hideChat: 'Ocultar el chat entrante',
   showChat: 'Mostrar el chat entrante',
   chatHidden: 'El chat entrante está oculto en este dispositivo.',

@@ -30,6 +30,7 @@ export interface Gathering {
   at: number;
   endedAt?: number;
   label: string;
+  roomName?: string;
   transport: Transport;
   host: boolean;
   names: [string, string];
@@ -39,6 +40,7 @@ export interface Gathering {
 export interface HistoryData {
   version: 1;
   identity: string;
+  displayName?: string;
   blocked: string[];
   gatherings: Gathering[];
 }
@@ -51,6 +53,16 @@ const integer = (v: unknown): v is number =>
 const text = (v: unknown, max: number): v is string => typeof v === 'string' && v.length <= max;
 // eslint-disable-next-line no-control-regex -- reject control characters in stored display names.
 const name = (v: unknown) => text(v, 48) && !/[\u0000-\u001f\u007f]/.test(v);
+// New optional names follow the wire's isPlayerName rules. Keep legacy names
+// above readable, and keep history validation independent of game/session code.
+// eslint-disable-next-line no-control-regex -- Reject controls, bidi overrides and lone surrogates.
+const unsafeName = /[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069\ud800-\udfff]/u;
+const strictName = (v: unknown): v is string =>
+  typeof v === 'string' &&
+  v.trim() === v &&
+  v.length > 0 &&
+  Array.from(v).length <= 24 &&
+  !unsafeName.test(v);
 const MAX_BYTES = 1024 * 1024;
 
 /** Never trusts files, even though they are never accepted from another device. */
@@ -59,6 +71,7 @@ export function validateHistory(v: unknown): HistoryData | null {
     !object(v) ||
     v.version !== 1 ||
     !id(v.identity) ||
+    (v.displayName !== undefined && !strictName(v.displayName)) ||
     !Array.isArray(v.blocked) ||
     v.blocked.length > 1000 ||
     !v.blocked.every(id) ||
@@ -73,6 +86,7 @@ export function validateHistory(v: unknown): HistoryData | null {
       !integer(g.at) ||
       (g.endedAt !== undefined && !integer(g.endedAt)) ||
       !text(g.label, 32) ||
+      (g.roomName !== undefined && !strictName(g.roomName)) ||
       (g.transport !== 'ble' && g.transport !== 'lan') ||
       typeof g.host !== 'boolean' ||
       !Array.isArray(g.names) ||
@@ -158,6 +172,14 @@ export function loadHistory(io: HistoryIO = nearbyPlugin): Promise<HistoryData> 
     // Persist installation identity before any radio session starts.
     await write(data, io);
     return data;
+  });
+}
+export function saveDisplayName(displayName: string, io: HistoryIO = nearbyPlugin): Promise<void> {
+  return queue(async () => {
+    if (!strictName(displayName)) throw new Error('Invalid display name');
+    const data = await read(io);
+    data.displayName = displayName;
+    await write(data, io);
   });
 }
 export function saveGathering(gathering: Gathering, io: HistoryIO = nearbyPlugin): Promise<void> {

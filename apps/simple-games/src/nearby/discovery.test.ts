@@ -12,25 +12,25 @@ import { PROTOCOL_VERSION } from './session';
 
 const label = 'P-81ABCD';
 const valid = {
-  v: 1,
+  v: 2,
   label,
-  name: 'Pixel',
+  roomName: 'Pixel',
   gameId: 'yacht',
   protocol: PROTOCOL_VERSION,
   available: true,
 };
 
 describe('nearby discovery metadata', () => {
-  it('round trips every supported game and the maximum Unicode name within a DNS-SD TXT item', () => {
+  it('round trips every supported game and the maximum Unicode room title within a DNS-SD TXT item', () => {
     for (const gameId of Object.keys(NEARBY_GAME_CODES) as NearbyGameId[]) {
       const candidateLabel = `F-${metadataGameCode(gameId)}1234`;
-      for (const name of ['Pixel', '🎲'.repeat(24), '"\\'.repeat(12), '日本語の表示名']) {
-        const raw = serializeListing(candidateLabel, name, gameId)!;
+      for (const roomName of ['Pixel', '🎲'.repeat(24), '"\\'.repeat(12), '日本語の募集名']) {
+        const raw = serializeListing(candidateLabel, roomName, gameId)!;
         expect(new TextEncoder().encode(`listing=${raw}`).length).toBeLessThanOrEqual(255);
         expect(parseListing(raw, candidateLabel)).toEqual({
           ...valid,
           label: candidateLabel,
-          name,
+          roomName,
           gameId,
         });
         expect(gameForLabel(candidateLabel)).toBe(gameId);
@@ -42,20 +42,21 @@ describe('nearby discovery metadata', () => {
   });
 
   it.each([
-    { v: 2 },
+    { v: 1 },
     { available: false },
     { available: 1 },
     { protocol: PROTOCOL_VERSION - 1 },
     { gameId: 'unknown' },
     { gameId: 'chess' },
     { label: 'P-811234' },
-    { name: '' },
-    { name: ' Pixel' },
-    { name: 'x'.repeat(25) },
-    { name: 'a\nb' },
-    { name: '\ud800' },
-    { name: 'x\u202ey' },
+    { roomName: '' },
+    { roomName: ' Pixel' },
+    { roomName: 'x'.repeat(25) },
+    { roomName: 'a\nb' },
+    { roomName: '\ud800' },
+    { roomName: 'x\u202ey' },
     { extra: 'ignored' },
+    { name: 'Personal name must not be advertised' },
   ])('rejects an incompatible or unsafe listing: %j', (change) => {
     expect(parseListing(JSON.stringify({ ...valid, ...change }), label)).toBeNull();
   });
@@ -65,12 +66,12 @@ describe('nearby discovery metadata', () => {
     const sized = raw.padEnd(255, ' ');
     expect(parseListing(sized, label)).toEqual(valid);
     expect(parseListing(`${sized} `, label)).toBeNull();
-    const unicodePadded = JSON.stringify({ ...valid, name: '🎲'.repeat(24) }).padEnd(255, ' ');
+    const unicodePadded = JSON.stringify({ ...valid, roomName: '🎲'.repeat(24) }).padEnd(255, ' ');
     expect(unicodePadded.length).toBe(255);
     expect(new TextEncoder().encode(unicodePadded).length).toBeGreaterThan(255);
     expect(parseListing(unicodePadded, label)).toBeNull();
     expect(parseListing(`${raw}${' '.repeat(256)}`, label)).toBeNull();
-    expect(parseListing(JSON.stringify({ ...valid, name: '🎲'.repeat(64) }), label)).toBeNull();
+    expect(parseListing(JSON.stringify({ ...valid, roomName: '🎲'.repeat(64) }), label)).toBeNull();
     for (const bad of [null, undefined, {}, [], 'null', '[1]', '{', '{}'])
       expect(parseListing(bad, label)).toBeNull();
     for (const key of Object.keys(valid)) {

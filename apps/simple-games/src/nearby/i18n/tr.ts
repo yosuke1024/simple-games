@@ -2,14 +2,15 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const tr: NearbyMessages = {
+  roomName: 'Buluşma adı',
+  roomNameHint:
+    'En fazla 24 karakter. Buluşmaya ev sahipliği yaparken bu ad ve oyun yakındaki kişilere görünür.',
+  participants: '{count}/{capacity} oyuncu',
   browseHint:
     'Desteklenen oyunlardan birine ev sahipliği yapan kişileri bul. Ev sahibiyle aynı bağlantı seçeneğini kullan.',
   chooseConnection: 'Bağlantı yöntemi',
   stopSearch: 'Aramayı durdur',
   listingUnavailable: 'Bu buluşma artık kullanılamıyor. Başka birini bulmak için geri dön.',
-  hostNameHint:
-    'En fazla 24 karakter. Ev sahipliği yaparken adın ve oyunun yakındaki kişilere görünür; arkadaşlarla oynarken de bu geçerlidir.',
-
   playerTurn: 'Sıra {name} oyuncusunda',
   playTogether: 'Biriyle oyna',
   closeChat: 'Sohbeti kapat',
@@ -20,10 +21,8 @@ export const tr: NearbyMessages = {
   history: 'Geçmiş',
   back: 'Geri',
   name: 'Görünen adın',
-  nameHint: 'En fazla 24 karakter. Bağlandıktan sonra diğer katılımcıya gösterilir.',
-  friends: 'Arkadaşlarla',
-  public: 'Yakındaki kişilere açık',
-  audienceHint: 'Her iki seçenek de onayını gerektirir. Yalnızca ad, kişinin kimliğini doğrulamaz.',
+  nameHint:
+    'En fazla 24 karakter. Bir dahaki sefere kullanmak üzere bu cihazda kaydedilir ve bağlandıktan sonra diğer katılımcıya gösterilir.',
   bluetooth: 'Bluetooth',
   wifi: 'Aynı Wi-Fi',
   connectionHint:
@@ -98,7 +97,8 @@ export const tr: NearbyMessages = {
   storageError:
     'Geçmiş kaydedilemedi veya okunamadı. Kayıtlı geçmişin üzerine yazılmadı. Yer aç veya gereksiz geçmişi silip yeniden dene.',
   clear: 'Tüm Nearby Play verilerini sil',
-  clearBody: 'Bu, yalnızca bu cihazdaki geçmişi ve yerel engellemeleri siler. Geri alınamaz.',
+  clearBody:
+    'Bu işlem geçmişi, kaydedilmiş görünen adını ve yerel engellemeleri yalnızca bu cihazdan siler. Geri alınamaz.',
   hideChat: 'Gelen sohbeti gizle',
   showChat: 'Gelen sohbeti göster',
   chatHidden: 'Gelen sohbet bu cihazda gizleniyor.',

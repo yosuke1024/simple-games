@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   isChatText,
   isPlayerName,
+  isRoomName,
   MAX_CHAT_MESSAGES,
   MAX_FRAME_BYTES,
   PROTOCOL_VERSION,
@@ -23,7 +24,9 @@ function yachtView(session: Session) {
 }
 
 function pair(
-  options: { hostChatEnabled?: boolean; guestChatEnabled?: boolean } = { hostChatEnabled: true },
+  options: { hostChatEnabled?: boolean; guestChatEnabled?: boolean; guestRoomName?: string } = {
+    hostChatEnabled: true,
+  },
 ) {
   const queue: Array<{ target: 'host' | 'guest'; wire: Wire }> = [];
   const sent: Array<{ target: 'host' | 'guest'; wire: Wire }> = [];
@@ -35,6 +38,7 @@ function pair(
   const host = new Session({
     name: 'ホスト',
     host: true,
+    roomName: 'Yacht 1234',
     chatEnabled: options.hostChatEnabled,
     nonce: 'a'.repeat(32),
     identity: 'c'.repeat(32),
@@ -48,6 +52,7 @@ function pair(
   const guest = new Session({
     name: 'Guest',
     host: false,
+    roomName: options.guestRoomName,
     chatEnabled: options.guestChatEnabled,
     nonce: 'b'.repeat(32),
     identity: 'd'.repeat(32),
@@ -88,6 +93,122 @@ function pair(
   };
   return { host, guest, die, guestDie, queue, sent, deliver, flush, connect, admit, begin };
 }
+
+describe('immutable public room name and private player names', () => {
+  it.each([
+    undefined,
+    null,
+    '',
+    ' title',
+    'x'.repeat(25),
+    '🎲'.repeat(25),
+    'a\nb',
+    '\ud800',
+    'a\u202eb',
+  ])('requires a safe host room title (%#)', (roomName) => {
+    expect(
+      () =>
+        new Session({
+          host: true,
+          name: 'Private host',
+          roomName: roomName as string,
+          nonce: 'a'.repeat(32),
+          identity: 'b'.repeat(32),
+          send: () => {},
+          changed: () => {},
+        }),
+    ).toThrow('Invalid room name');
+    expect(isRoomName(roomName)).toBe(false);
+  });
+
+  it('copies the host title before hello and exposes it separately from player names', () => {
+    const send = vi.fn();
+    const options = {
+      host: true,
+      name: 'Private host',
+      roomName: '🎲'.repeat(24),
+      nonce: 'a'.repeat(32),
+      identity: 'b'.repeat(32),
+      send,
+      changed: () => {},
+    };
+    const host = new Session(options);
+    options.roomName = 'Changed later';
+    host.start();
+    expect(host.roomName).toBe('🎲'.repeat(24));
+    expect(send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        v: 7,
+        type: 'hello',
+        name: 'Private host',
+        roomName: '🎲'.repeat(24),
+      }),
+    );
+    const p = pair();
+    expect(p.guest.roomName).toBe('');
+    p.begin();
+    expect(p.host.roomName).toBe('Yacht 1234');
+    expect(p.guest.roomName).toBe('Yacht 1234');
+    expect(p.guest.names).toEqual(['ホスト', 'Guest']);
+    expect(
+      p.sent.find(({ target, wire }) => target === 'host' && wire.type === 'hello')!.wire,
+    ).not.toHaveProperty('roomName');
+    p.host.suspend();
+    p.guest.suspend();
+    p.host.resume();
+    p.guest.resume();
+    expect(p.host.roomName).toBe('Yacht 1234');
+    expect(p.guest.roomName).toBe('Yacht 1234');
+  });
+
+  it('rejects a host title that differs from the selected listing before retaining its identity', () => {
+    const p = pair({ guestRoomName: 'Different room' });
+    p.connect();
+    expect(p.guest.closed).toBe('Room name mismatch');
+    expect(p.guest.peerName).toBe('');
+    expect(p.guest.peerIdentity).toBe('');
+    expect(p.guest.roomName).toBe('');
+    expect(p.guest.paired).toBe(false);
+  });
+
+  it.each([undefined, null, '', 'x'.repeat(25), 'a\nb'])(
+    'rejects an invalid host hello title (%#)',
+    (roomName) => {
+      const p = pair();
+      p.host.start();
+      p.guest.start();
+      const hello = p.queue.shift()!.wire;
+      p.guest.receive(JSON.stringify({ ...hello, roomName }));
+      expect(p.guest.closed).toBe('Invalid room policy');
+      expect(p.guest.peerName).toBe('');
+      expect(p.guest.roomName).toBe('');
+    },
+  );
+
+  it('rejects a guest claiming the public room title', () => {
+    const p = pair();
+    p.guest.start();
+    p.host.start();
+    p.host.receive(JSON.stringify({ ...p.queue.shift()!.wire, roomName: 'Yacht 1234' }));
+    expect(p.host.closed).toBe('Invalid room policy');
+    expect(p.host.roomName).toBe('Yacht 1234');
+  });
+
+  it.each(['admission', 'admission-ack'] as const)('binds the room title in %s', (type) => {
+    for (const roomName of [undefined, 'Other title']) {
+      const p = pair();
+      p.connect();
+      p.host.approve();
+      if (type === 'admission-ack') p.deliver();
+      const { target, wire } = p.queue.shift()!;
+      const receiver = p[target];
+      receiver.receive(JSON.stringify({ ...wire, roomName }));
+      expect(receiver.closed).toBe('Room policy mismatch');
+      expect(receiver.paired).toBe(false);
+      expect(receiver.roomName).toBe('Yacht 1234');
+    }
+  });
+});
 
 describe('approved two-peer room and host-authoritative Yacht', () => {
   it.each([
@@ -174,9 +295,12 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
         const hello = p.sent.find(
           (frame) => frame.target === target && frame.wire.type === 'hello',
         )!;
-        receiver.receive(JSON.stringify({ ...hello.wire, chatEnabled: true }));
+        receiver.receive(
+          JSON.stringify({ ...hello.wire, chatEnabled: true, roomName: 'Changed title' }),
+        );
         expect(receiver.closed).not.toBe('');
         expect(receiver.chatEnabled).toBe(false);
+        expect(receiver.roomName).toBe('Yacht 1234');
         expect(receiver.messages).toEqual([]);
       }
     },
@@ -422,7 +546,7 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
     expect(p.host.closed).toBe('Round limit');
     expect(p.host.match.round).toBe(10000);
   });
-  it.each([1, 2, 3, 4, 5])(
+  it.each([1, 2, 3, 4, 5, 6])(
     'rejects protocol version %s rather than mixing older peers into admission',
     (v) => {
       const p = pair();

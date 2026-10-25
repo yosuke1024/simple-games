@@ -2,14 +2,15 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const vi: NearbyMessages = {
+  roomName: 'Tên buổi gặp',
+  roomNameHint:
+    'Tối đa 24 ký tự. Khi bạn mở buổi gặp, người ở gần có thể thấy tên này và tên trò chơi.',
+  participants: '{count}/{capacity} người chơi',
   browseHint:
     'Tìm người đang mở phòng cho các trò chơi được hỗ trợ. Chọn cùng cách kết nối với chủ phòng.',
   chooseConnection: 'Kết nối bằng',
   stopSearch: 'Dừng tìm kiếm',
   listingUnavailable: 'Phòng này không còn khả dụng. Quay lại để tìm phòng khác.',
-  hostNameHint:
-    'Tối đa 24 ký tự. Khi mở phòng, tên và trò chơi của bạn sẽ hiển thị cho người ở gần, kể cả khi chơi với bạn bè.',
-
   playerTurn: 'Lượt của {name}',
   playTogether: 'Chơi cùng người khác',
   closeChat: 'Đóng trò chuyện',
@@ -20,11 +21,8 @@ export const vi: NearbyMessages = {
   history: 'Lịch sử',
   back: 'Quay lại',
   name: 'Tên hiển thị của bạn',
-  nameHint: 'Tối đa 24 ký tự. Hiển thị cho người kia sau khi kết nối.',
-  friends: 'Cùng bạn bè',
-  public: 'Chào đón người ở gần',
-  audienceHint:
-    'Cả hai lựa chọn đều cần bạn chấp thuận. Chỉ tên gọi không xác minh được danh tính.',
+  nameHint:
+    'Tối đa 24 ký tự. Được lưu trên thiết bị này để dùng lần sau và hiển thị cho người kia sau khi kết nối.',
   bluetooth: 'Bluetooth',
   wifi: 'Cùng mạng Wi-Fi',
   connectionHint:
@@ -101,7 +99,7 @@ export const vi: NearbyMessages = {
     'Không thể lưu hoặc đọc lịch sử. Lịch sử đã lưu chưa bị ghi đè. Hãy giải phóng dung lượng hoặc xóa lịch sử không cần thiết rồi thử lại.',
   clear: 'Xóa mọi dữ liệu Nearby Play',
   clearBody:
-    'Thao tác này chỉ xóa lịch sử và các mục chặn cục bộ trên thiết bị này. Không thể hoàn tác.',
+    'Thao tác này chỉ xóa lịch sử, tên hiển thị đã lưu của bạn và thông tin chặn cục bộ trên thiết bị này. Không thể hoàn tác.',
   hideChat: 'Ẩn tin nhắn nhận được',
   showChat: 'Hiện tin nhắn nhận được',
   chatHidden: 'Tin nhắn nhận được đang bị ẩn trên thiết bị này.',

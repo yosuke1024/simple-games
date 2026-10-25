@@ -12,8 +12,19 @@ struct NearbyPlayDiscoveryTests {
         func json(bytes: Int) -> Data {
             Data(("{\"x\":\"" + String(repeating: "x", count: bytes - 8) + "\"}").utf8)
         }
-        let listing = "{\"v\":1,\"label\":\"P-810001\",\"name\":\"友達🦊\",\"gameId\":\"yacht\",\"protocol\":6,\"available\":true}"
+        let listing = "{\"v\":2,\"label\":\"P-810001\",\"roomName\":\"週末のゲーム🦊\",\"gameId\":\"yacht\",\"protocol\":7,\"available\":true}"
         check(NearbyPlayListing.string(Data(listing.utf8)) == listing, "Preserves raw JSON and Unicode")
+        let longestRoom = String(repeating: "🦊", count: 24)
+        let longestListing = "{\"v\":2,\"label\":\"P-8B0001\",\"roomName\":\"\(longestRoom)\",\"gameId\":\"nested-tic-tac-toe\",\"protocol\":7,\"available\":true}"
+        let longestData = Data(longestListing.utf8)
+        check(longestData.count <= NearbyPlayListing.maxTXTBytes, "Maximum Unicode room name and game ID fit one TXT item")
+        check(NearbyPlayListing.string(longestData, lan: true) == longestListing, "LAN preserves the new room listing at its maximum name size")
+        check(NearbyPlayListing.txtRecord(longestData)?.dropFirst(9) == longestData, "TXT preserves the v2 listing without truncating the room name")
+        var roomFragments = Data()
+        while roomFragments.count < longestData.count {
+            roomFragments.append(NearbyPlayListing.read(longestData, offset: roomFragments.count)!.prefix(22))
+        }
+        check(NearbyPlayListing.string(roomFragments) == longestListing, "Default MTU long reads preserve a Unicode v2 room name across fragment boundaries")
         check(NearbyPlayListing.string(json(bytes: 255)) != nil, "BLE accepts exact byte bound")
         check(NearbyPlayListing.string(json(bytes: 256)) == nil, "BLE rejects overflow")
         check(NearbyPlayListing.string(json(bytes: 247), lan: true) != nil, "TXT reserves key bytes")

@@ -3,6 +3,7 @@ import {
   clearHistory,
   deleteGathering,
   loadHistory,
+  saveDisplayName,
   saveGathering,
   validateHistory,
   blockIdentity,
@@ -61,6 +62,84 @@ async function slowStore() {
 }
 
 describe('device-only nearby history', () => {
+  it('adds remembered names to existing v1 files without changing identity, blocks or transcripts', async () => {
+    const io = store();
+    const original = await loadHistory(io);
+    await saveGathering(gathering(), io);
+    await blockIdentity('b'.repeat(32), io);
+    expect((await loadHistory(io)).displayName).toBeUndefined();
+    await saveDisplayName('Alice 🦊', io);
+    const room = { ...gathering(), roomName: '週末のゲーム' };
+    await saveGathering(room, io);
+    await saveDisplayName('別の表示名', io);
+    const restored = await loadHistory(io);
+    expect(restored).toEqual({
+      version: 1,
+      identity: original.identity,
+      displayName: '別の表示名',
+      blocked: ['b'.repeat(32)],
+      gatherings: [room],
+    });
+    await deleteGathering(room.id, io);
+    expect((await loadHistory(io)).displayName).toBe('別の表示名');
+  });
+
+  it('stores names containing 24 Unicode codepoints without cutting surrogate pairs', async () => {
+    const io = store();
+    const value = '🦊'.repeat(24);
+    await saveDisplayName(value, io);
+    await saveGathering({ ...gathering(), roomName: value }, io);
+    const saved = await loadHistory(io);
+    expect(saved.displayName).toBe(value);
+    expect(saved.gatherings[0]?.roomName).toBe(value);
+  });
+
+  it.each([
+    '',
+    ' Alice',
+    'Alice ',
+    'x'.repeat(25),
+    '🦊'.repeat(25),
+    'A\nB',
+    'A\u0085B',
+    'A\u202eB',
+    'A\u2066B',
+    '\ud800',
+    '\udfff',
+    null,
+    12,
+  ])('rejects an invalid optional name without overwriting saved data (%#)', async (invalid) => {
+    const io = store();
+    await saveDisplayName('Alice', io);
+    await saveGathering(gathering(), io);
+    const before = (await io.readHistory()).data!;
+    const saved = JSON.parse(before);
+    expect(validateHistory({ ...saved, displayName: invalid })).toBeNull();
+    expect(
+      validateHistory({ ...saved, gatherings: [{ ...gathering(), roomName: invalid }] }),
+    ).toBeNull();
+    await expect(saveDisplayName(invalid as string, io)).rejects.toThrow('Invalid display name');
+    await expect(
+      saveGathering({ ...gathering(), roomName: invalid } as Gathering, io),
+    ).rejects.toThrow('History full');
+    expect((await io.readHistory()).data).toBe(before);
+  });
+
+  it('reports display name write failures and preserves the previously remembered name', async () => {
+    const io = store();
+    await saveDisplayName('Alice', io);
+    const before = (await io.readHistory()).data;
+    await expect(
+      saveDisplayName('Bob', {
+        ...io,
+        writeHistory: async () => {
+          throw new Error('disk full');
+        },
+      }),
+    ).rejects.toThrow('disk full');
+    expect((await io.readHistory()).data).toBe(before);
+  });
+
   it('keeps legacy v1 Yacht intact while storing explicit game results in new records', async () => {
     const io = store();
     await loadHistory(io);
@@ -129,6 +208,7 @@ describe('device-only nearby history', () => {
     await io.writeHistory({ data: '{"version":999}' });
     await expect(loadHistory(io)).rejects.toThrow();
     await expect(saveGathering(gathering(), io)).rejects.toThrow();
+    await expect(saveDisplayName('Alice', io)).rejects.toThrow();
     expect((await io.readHistory()).data).toBe('{"version":999}');
     await io.clearHistory();
     await expect(
@@ -202,7 +282,24 @@ describe('device-only nearby history', () => {
     expect((await io.readHistory()).data).toBeNull();
   });
 
-  it.each(['load', 'delete', 'clear', 'block'] as const)(
+  it('clears remembered names behind pending writes and never revives old transcripts on a later name save', async () => {
+    const { io, started, release } = await slowStore();
+    const active = saveGathering(gathering(), io);
+    await started;
+    const name = saveDisplayName('Alice', io);
+    const reset = clearHistory(io);
+    release();
+    await Promise.all([active, name, reset]);
+    expect((await io.readHistory()).data).toBeNull();
+
+    await saveDisplayName('New name after reset', io);
+    const saved = await loadHistory(io);
+    expect(saved.displayName).toBe('New name after reset');
+    expect(saved.gatherings).toEqual([]);
+    expect(saved.blocked).toEqual([]);
+  });
+
+  it.each(['load', 'delete', 'clear', 'block', 'name'] as const)(
     'does not coalesce saves across a %s barrier',
     async (kind) => {
       const { io, started, release } = await slowStore();
@@ -218,7 +315,9 @@ describe('device-only nearby history', () => {
             ? deleteGathering(current.id, io)
             : kind === 'clear'
               ? clearHistory(io)
-              : blockIdentity('b'.repeat(32), io);
+              : kind === 'block'
+                ? blockIdentity('b'.repeat(32), io)
+                : saveDisplayName('Alice', io);
       current.messages[0]!.text = 'Explicit save after barrier';
       const after = saveGathering(current, io);
       release();
@@ -233,6 +332,7 @@ describe('device-only nearby history', () => {
       expect(saved?.gatherings).toHaveLength(1);
       expect(saved?.gatherings[0]?.messages[0]?.text).toBe('Explicit save after barrier');
       expect(saved?.blocked).toEqual(kind === 'block' ? ['b'.repeat(32)] : []);
+      expect(saved?.displayName).toBe(kind === 'name' ? 'Alice' : undefined);
     },
   );
 });

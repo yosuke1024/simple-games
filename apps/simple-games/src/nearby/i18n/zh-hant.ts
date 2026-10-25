@@ -2,13 +2,13 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const zhHant: NearbyMessages = {
+  roomName: '聚會名稱',
+  roomNameHint: '最多24個字元。招募期間，附近的人可以看到此名稱和遊戲名稱。',
+  participants: '{count}/{capacity}人',
   browseHint: '不必先選遊戲，就能尋找正在招募玩家的人。請選擇與房主相同的連線方式。',
   chooseConnection: '連線方式',
   stopSearch: '停止尋找',
   listingUnavailable: '目前無法加入此房間，請返回尋找其他房間。',
-  hostNameHint:
-    '最多24個字元。招募期間，你的名字和遊戲會顯示在附近使用者的列表中，選擇與朋友玩時也一樣。',
-
   playerTurn: '輪到 {name}',
   playTogether: '與他人同玩',
   closeChat: '關閉聊天',
@@ -19,10 +19,7 @@ export const zhHant: NearbyMessages = {
   history: '歷史紀錄',
   back: '返回',
   name: '你的顯示名稱',
-  nameHint: '最多24個字元。連線後會顯示給另一位參與者。',
-  friends: '與朋友一起',
-  public: '歡迎附近的人',
-  audienceHint: '兩種方式都需要你的核准。僅憑名稱無法驗證身分。',
+  nameHint: '最多24個字元。儲存在此裝置上供下次使用，連線後會顯示給另一位參與者。',
   bluetooth: 'Bluetooth',
   wifi: '同一 Wi-Fi',
   connectionHint:
@@ -96,7 +93,7 @@ export const zhHant: NearbyMessages = {
   storageError:
     '無法儲存或讀取歷史紀錄。已儲存的紀錄未被覆寫。請騰出空間或刪除不需要的紀錄，然後重試。',
   clear: '刪除Nearby Play的所有資料',
-  clearBody: '僅刪除此裝置上的歷史紀錄和本機封鎖資訊。此操作無法復原。',
+  clearBody: '僅刪除此裝置上的歷史紀錄、你儲存的顯示名稱和本機封鎖資訊。此操作無法復原。',
   hideChat: '隱藏收到的聊天',
   showChat: '顯示收到的聊天',
   chatHidden: '此裝置已隱藏收到的聊天訊息。',
