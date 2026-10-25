@@ -207,6 +207,21 @@ describe('multiplayer entrances retain one session', () => {
     expect(state.mounted).toHaveBeenCalledTimes(1);
     expect(state.stopped).not.toHaveBeenCalled();
   });
+  it('starts a fresh global search when a retained match ends while on the collection', async () => {
+    renderShell();
+    fireEvent.click(screen.getByRole('button', { name: /Find nearby opponents/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Join Chess' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Play a turn' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back to game' }));
+    // Model the other player ending the retained, currently hidden connection.
+    fireEvent.click(screen.getByText('End connection'));
+    await flush();
+    fireEvent.click(screen.getByRole('button', { name: /Find nearby opponents/ }));
+    expect(screen.getByRole('heading', { name: 'browse with someone' })).toBeVisible();
+    expect(screen.getByText('Turn 1')).toBeVisible();
+    expect(state.mounted).toHaveBeenCalledTimes(2);
+    expect(state.unmounted).toHaveBeenCalledTimes(1);
+  });
   it('returns an unused global browser to the collection without a Yacht fallback', () => {
     renderShell();
     fireEvent.click(screen.getByRole('button', { name: /Find nearby opponents/ }));

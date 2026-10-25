@@ -260,6 +260,9 @@ export function App() {
       nearbyOrigin.current = { kind: 'collection' };
       setNearbyGame(null);
       setNearbyBrowsing(true);
+      // A previously joined match may have ended while this view was hidden.
+      // A new search must not reuse its ended game root or selected adapter.
+      setNearbyNonce((n) => n + 1);
     }
     show({ kind: 'nearby' });
   }, [show]);
@@ -651,6 +654,7 @@ export function App() {
             onExit={returnFromNearby}
             onRetry={() => {
               noteNearbyActive(false);
+              if (nearbyBrowsing) setNearbyGame(null);
               resetNearbyRoot();
               setNearbyNonce((n) => n + 1);
             }}
