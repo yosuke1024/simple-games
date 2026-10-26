@@ -76,6 +76,21 @@ final class BleTransport implements Transport {
     private final AtomicInteger pendingCallbacks = new AtomicInteger();
     private final AtomicBoolean callbackOverflow = new AtomicBoolean();
     private BluetoothLeScanner scanner;
+    private ScanCallback scanCallback;
+    private final ForegroundScan scan = new ForegroundScan(new ForegroundScan.Driver() {
+        public void start(long generation) {
+            scanCallback = createScanCallback(generation);
+            scanner.startScan(Collections.singletonList(new ScanFilter.Builder().setServiceUuid(new ParcelUuid(SERVICE)).build()),
+                new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build(), scanCallback);
+        }
+        public void stop() {
+            ScanCallback previous = scanCallback;
+            scanCallback = null;
+            if (scanner != null && previous != null) {
+                try { scanner.stopScan(previous); } catch (Exception ignored) { /* Radio/permission may already be unavailable. */ }
+            }
+        }
+    });
     private BluetoothLeAdvertiser advertiser;
     private BluetoothGatt gatt;
     private BluetoothGattServer server;
@@ -144,8 +159,7 @@ final class BleTransport implements Transport {
         } else {
             scanner = adapter.getBluetoothLeScanner();
             if (scanner == null) throw new IllegalStateException("BLE scanning unavailable");
-            scanner.startScan(Collections.singletonList(new ScanFilter.Builder().setServiceUuid(new ParcelUuid(SERVICE)).build()),
-                new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build(), scanCallback);
+            scan.start();
             events.status("BLE discovery started (60-second limit)");
             deadlines.post(maintenance, 1_000);
         }
@@ -358,9 +372,11 @@ final class BleTransport implements Transport {
             });
         }
     };
-    private final ScanCallback scanCallback = new ScanCallback() {
-        @Override public void onScanResult(int callbackType, ScanResult result) { run(() -> {
-            if (scanner == null || !foreground) return;
+    private ScanCallback createScanCallback(long generation) { return new ScanCallback() {
+        @Override public void onScanResult(int callbackType, ScanResult result) {
+            if (!scan.accepts(generation)) return;
+            run(() -> {
+            if (!scan.accepts(generation) || scanner == null || !foreground) return;
             BluetoothDevice device = result.getDevice();
             String name = result.getScanRecord() == null ? null : result.getScanRecord().getDeviceName();
             byte[] supplied = result.getScanRecord() == null ? null : result.getScanRecord().getServiceData(new ParcelUuid(SERVICE));
@@ -379,8 +395,11 @@ final class BleTransport implements Transport {
                 events.peer(peer.id, peer.label, null);
             pumpProbe();
         }); }
-        @Override public void onScanFailed(int code) { run(() -> fail("scan-failed", "BLE scan failed: " + code)); }
-    };
+        @Override public void onScanFailed(int code) {
+            if (!scan.accepts(generation)) return;
+            run(() -> { if (scan.accepts(generation)) fail("scan-failed", "BLE scan failed: " + code); });
+        }
+    }; }
 
     private final AdvertiseCallback advertiseCallback = new AdvertiseCallback() {
         @Override public void onStartSuccess(AdvertiseSettings settings) { run(() -> events.status("BLE advertising started (60-second limit)")); }
@@ -533,19 +552,29 @@ final class BleTransport implements Transport {
     private void fail(String code, String message) { if (!active) return; stop(); events.failed(code, message); }
     private void stopScan() {
         deadlines.remove(maintenance);
-        if (scanner != null) { try { scanner.stopScan(scanCallback); } catch (Exception ignored) {} scanner = null; }
+        scan.stop();
+        scanner = null;
     }
     private void stopAdvertising() {
         if (advertiser != null) { try { advertiser.stopAdvertising(advertiseCallback); } catch (Exception ignored) {} }
     }
     public void setForeground(boolean active) {
+        if (foreground == active) return;
         foreground = active;
         deadlines.setActive(active);
         if (scanner != null) {
-            if (!active) { probeSucceeded = false; releaseProbe(); }
+            if (!active) {
+                // Keep the connection/session, but never discover devices in the background.
+                // Android 10/11 would otherwise require background location for BLE scanning.
+                scan.setForeground(false);
+                probeSucceeded = false;
+                releaseProbe();
+            }
             else {
                 // Cached rows are not evidence that a host is still open after suspension.
                 for (DiscoveryIndex.Peer<BluetoothDevice> peer : peers.clear()) if (peer.announced) events.peerLost(peer.id);
+                try { scan.setForeground(true); }
+                catch (RuntimeException error) { fail("scan-failed", "BLE discovery could not resume"); return; }
                 deadlines.post(maintenance, 1_000);
             }
         }

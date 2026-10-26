@@ -2,6 +2,25 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const es: NearbyMessages = {
+  reportReason: 'Motivo',
+  reportHarassment: 'Acoso o amenazas',
+  reportSexual: 'Contenido sexual',
+  reportOther: 'Otro contenido dañino',
+  reportContent: 'Contenido que se incluirá',
+  reportConsent: 'He revisado este contenido y quiero incluirlo en el reporte.',
+  reportEmail: 'Abrir borrador de correo',
+  reportCopy: 'Copiar reporte',
+  reportCopied: 'Copiado. Pégalo en un correo al soporte para enviarlo.',
+  reportCopyFailed: 'No se pudo copiar. Puedes seleccionar y copiar el texto de arriba.',
+  hideListing: 'Ocultar esta sala',
+  hideListingHint: 'Se oculta solo en esta búsqueda. Esto no bloquea al jugador.',
+  blockPlayer: 'Bloquear al jugador',
+  blockHistoryBody:
+    'Bloquea esta instalación de la aplicación en este dispositivo. Reinstalar o modificar la otra aplicación puede eludir el bloqueo.',
+  contentBlocked: 'No se permite esta expresión. Usa otras palabras.',
+  contentHidden: 'Contenido oculto',
+
+  supportedGames: 'Juegos multijugador compatibles',
   roomName: 'Nombre del encuentro',
   roomNameHint:
     'Hasta 24 caracteres. Mientras organizas el encuentro, las personas cercanas pueden ver este nombre y el juego.',
@@ -107,10 +126,11 @@ export const es: NearbyMessages = {
   block: 'Bloquear y salir',
   blockBody:
     'Se bloqueará esta instalación de la app en tu dispositivo y terminará el encuentro. Reinstalar o modificar la app puede eludir este bloqueo.',
-  report: 'Contactar al soporte',
-  reportHint: 'Abre tu app de correo. El historial no se adjunta automáticamente.',
+  report: 'Reportar contenido',
+  reportHint:
+    'Elige el contenido y un motivo. Revisa exactamente lo que se incluirá. No se envía nada automáticamente.',
   conduct:
-    'Trata a los demás con respeto. No envíes acoso, amenazas, contenido sexual ni información personal. Puedes bloquear o salir en cualquier momento. Si el chat está activado, puedes ocultar los mensajes recibidos.',
+    'Los nombres de sala, nombres visibles y mensajes no deben contener acoso, amenazas, odio, contenido sexual ni información personal. Puedes reportar, bloquear o salir. Si el chat está activado, puedes ocultar los mensajes recibidos.',
   accept: 'Acepto y quiero continuar',
   historyReadOnly:
     'El historial es de solo lectura. Abrirlo no vuelve a conectar ni envía mensajes.',

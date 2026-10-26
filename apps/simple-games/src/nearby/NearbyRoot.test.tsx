@@ -22,6 +22,7 @@ interface FixtureController {
   start: Mock<() => Promise<void>>;
   connect: Mock<(id: string) => Promise<void>>;
   stop: Mock<() => Promise<void>>;
+  block: Mock<() => Promise<void>>;
   establish: () => void;
   flush: () => void;
 }
@@ -32,6 +33,7 @@ const fixtures = vi.hoisted(() => ({
   load: vi.fn(),
   remove: vi.fn(),
   clear: vi.fn(),
+  block: vi.fn(),
   native: false,
   peerChatEnabled: false,
   addListener: vi.fn(),
@@ -59,6 +61,7 @@ vi.mock('./history', async () => ({
   loadHistory: fixtures.load,
   deleteGathering: fixtures.remove,
   clearHistory: fixtures.clear,
+  blockIdentity: fixtures.block,
 }));
 
 // Native lifecycle and persistence have their own tests. This seam exposes
@@ -179,6 +182,7 @@ beforeEach(() => {
   fixtures.controllers.length = 0;
   fixtures.native = false;
   fixtures.peerChatEnabled = false;
+  fixtures.block.mockResolvedValue(undefined);
   fixtures.saved = [];
   vi.clearAllMocks();
   fixtures.addListener.mockResolvedValue({ remove: vi.fn(async () => {}) });
@@ -229,6 +233,128 @@ function hostRoom(chatEnabled = false) {
 }
 
 describe('Nearby Play user flows', () => {
+  it('hides filtered legacy text without rewriting it, but previews the specifically reported original', async () => {
+    const offensive = 'send nudes';
+    fixtures.saved = [
+      {
+        ...savedGathering(),
+        roomName: offensive,
+        messages: [
+          { id: 'old-peer', sender: 'peer', text: offensive, at: 1500, status: 'delivered' },
+        ],
+      },
+    ];
+    await renderNearby(<NearbyRoot gameId="yacht" onExit={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: en.history }));
+    fireEvent.click(await screen.findByRole('button', { name: new RegExp(en.contentHidden) }));
+    expect(screen.queryByText(offensive)).not.toBeInTheDocument();
+    expect(screen.getAllByText(en.contentHidden)).toHaveLength(2);
+    fireEvent.click(within(screen.getByRole('article')).getByRole('button', { name: en.report }));
+    expect(
+      (screen.getByRole('textbox', { name: en.reportContent }) as HTMLTextAreaElement).value,
+    ).toContain(offensive);
+    expect(fixtures.saved[0]!.roomName).toBe(offensive);
+    expect(fixtures.saved[0]!.messages[0]!.text).toBe(offensive);
+    expect(fixtures.remove).not.toHaveBeenCalled();
+  });
+
+  it('can report and block an unapproved peer without admitting them', async () => {
+    await renderNearby(<NearbyRoot gameId="yacht" onExit={() => {}} />);
+    const controller = begin();
+    act(() => controller.establish());
+    expect(controller.session.paired).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: en.report }));
+    expect(
+      (screen.getByRole('textbox', { name: en.reportContent }) as HTMLTextAreaElement).value,
+    ).toContain('Guest');
+    fireEvent.keyDown(window, { key: 'Escape' });
+    fireEvent.click(screen.getByRole('button', { name: en.block }));
+    await act(async () => {
+      fireEvent.click(
+        within(screen.getByRole('alertdialog')).getByRole('button', { name: en.block }),
+      );
+    });
+    expect(controller.block).toHaveBeenCalledOnce();
+    expect(controller.session.paired).toBe(false);
+    expect(controller.state).toBe('ended');
+  });
+
+  it('blocks a saved peer after leaving, reports only the selected message, and keeps legacy history readable', async () => {
+    fixtures.saved = [
+      {
+        ...savedGathering(),
+        peerIdentity: 'd'.repeat(32),
+        messages: [
+          {
+            id: 'peer-message',
+            sender: 'peer',
+            text: 'Selected peer message',
+            at: 1700,
+            status: 'delivered',
+          },
+          {
+            id: 'private-message',
+            sender: 'self',
+            text: 'Unselected private text',
+            at: 1800,
+            status: 'delivered',
+          },
+        ],
+      },
+    ];
+    await renderNearby(<NearbyRoot gameId="yacht" onExit={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: en.history }));
+    fireEvent.click(await screen.findByRole('button', { name: /Saved host/ }));
+    fireEvent.click(
+      within(screen.getByText('Selected peer message').closest('article')!).getByRole('button', {
+        name: en.report,
+      }),
+    );
+    const evidence = (
+      screen.getByRole('textbox', { name: en.reportContent }) as HTMLTextAreaElement
+    ).value;
+    expect(evidence).toContain('Selected peer message');
+    expect(evidence).not.toContain('Unselected private text');
+    expect(evidence).not.toContain('d'.repeat(32));
+    fireEvent.keyDown(window, { key: 'Escape' });
+    fireEvent.click(screen.getByRole('button', { name: en.blockPlayer }));
+    await act(async () => {
+      fireEvent.click(
+        within(screen.getByRole('alertdialog')).getByRole('button', { name: en.blockPlayer }),
+      );
+    });
+    expect(fixtures.block).toHaveBeenCalledExactlyOnceWith('d'.repeat(32));
+    expect(screen.getByRole('status')).toHaveTextContent(en.blocked);
+    expect(fixtures.controllers).toHaveLength(0);
+    expect(fixtures.radio.start).not.toHaveBeenCalled();
+    expect(fixtures.remove).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: en.back }));
+    fixtures.saved = [savedGathering()];
+    fireEvent.click(screen.getByRole('button', { name: en.back }));
+    fireEvent.click(screen.getByRole('button', { name: en.history }));
+    fireEvent.click(await screen.findByRole('button', { name: /Saved host/ }));
+    expect(screen.queryByRole('button', { name: en.blockPlayer })).not.toBeInTheDocument();
+    expect(screen.getByText('Saved locally')).toBeVisible();
+  });
+
+  it('keeps the history and block action available if saving a local block fails', async () => {
+    fixtures.saved = [{ ...savedGathering(), peerIdentity: 'd'.repeat(32) }];
+    fixtures.block.mockRejectedValueOnce(new Error('disk full'));
+    await renderNearby(<NearbyRoot gameId="yacht" onExit={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: en.history }));
+    fireEvent.click(await screen.findByRole('button', { name: /Saved host/ }));
+    fireEvent.click(screen.getByRole('button', { name: en.blockPlayer }));
+    await act(async () => {
+      fireEvent.click(
+        within(screen.getByRole('alertdialog')).getByRole('button', { name: en.blockPlayer }),
+      );
+    });
+    expect(screen.getByRole('alert')).toHaveTextContent(en.storageError);
+    expect(screen.queryByText(en.blocked)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: en.blockPlayer })).toBeEnabled();
+    expect(screen.getByText('Saved locally')).toBeVisible();
+  });
+
   it('generates an editable gathering name and keeps it separate from player names', async () => {
     await renderNearby(<NearbyRoot gameId="yacht" onExit={() => {}} />);
     fireEvent.click(screen.getByRole('button', { name: en.create }));

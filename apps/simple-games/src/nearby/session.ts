@@ -9,6 +9,7 @@ import {
   type Seat,
 } from './gameTypes';
 import { adapter as yachtAdapter } from './games/yacht';
+import { isAllowedNearbyText } from './contentFilter';
 
 export const MAX_FRAME_BYTES = 4096;
 // Leave room for delivery seq/ACK before the channel's 2800-byte plaintext cap.
@@ -24,13 +25,15 @@ export const isPlayerName = (v: unknown): v is string =>
   v.trim() === v &&
   v.length > 0 &&
   Array.from(v).length <= 24 &&
-  !unsafeText.test(v);
+  !unsafeText.test(v) &&
+  isAllowedNearbyText(v);
 export const isRoomName = isPlayerName;
 export const isChatText = (v: unknown): v is string =>
   typeof v === 'string' &&
   v.trim().length > 0 &&
   Array.from(v).length <= MAX_CHAT_CHARACTERS &&
-  !unsafeText.test(v);
+  !unsafeText.test(v) &&
+  isAllowedNearbyText(v);
 export interface ChatMessage {
   id: string;
   sender: 'self' | 'peer';

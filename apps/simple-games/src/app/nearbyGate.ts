@@ -7,6 +7,7 @@ export type { NearbyGameId } from '../nearby/gameTypes';
 type Root = ComponentType<{
   gameId: NearbyGameId | null;
   onGameSelected?: (gameId: NearbyGameId | null) => void;
+  onOpenGame?: (gameId: NearbyGameId) => void;
   visible?: boolean;
   onExit: () => void;
   onActiveChange?: (active: boolean) => void;

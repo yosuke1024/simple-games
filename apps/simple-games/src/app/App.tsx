@@ -381,6 +381,18 @@ export function App() {
     [enterGame],
   );
 
+  const openGameFromNearby = useCallback(
+    (gameId: NearbyGameId) => {
+      if (viewRef.current.kind !== 'nearby' || nearbyReset.current || nearbyActiveRef.current) return;
+      // The browser stops discovery before handing navigation back to the shell.
+      releaseSound();
+      setNearbyGame(null);
+      setNearbyBrowsing(false);
+      openGame(gameId);
+    },
+    [openGame],
+  );
+
   // Only a game can be left, and only once: a second call from a subtree that
   // has not unmounted yet would otherwise close the same session twice and
   // take a second step back through the browser's history.
@@ -666,6 +678,7 @@ export function App() {
                 key={nearbyBrowsing ? 'browser' : nearbyGame}
                 gameId={nearbyGame}
                 onGameSelected={setNearbyGame}
+                onOpenGame={openGameFromNearby}
                 visible={nearbyVisible}
                 onExit={returnFromNearby}
                 onActiveChange={noteNearbyActive}

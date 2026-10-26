@@ -13,13 +13,18 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
+import java.io.IOException;
 import java.io.InputStream;
-import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -52,11 +57,14 @@ final class LanTransport implements Transport {
         new ArrayBlockingQueue<>(1), task -> new Thread(task, "nearby-lan-writer"));
     private volatile boolean active;
     private volatile Socket socket;
-    private volatile ServerSocket listener;
+    private final List<ServerSocket> listeners = new ArrayList<>();
     private Network wifi;
     private ConnectivityManager connectivity;
     private boolean observingWifi;
     private LinkProperties links;
+    private List<LanAddressPolicy.Link> localLinks;
+    private List<InetAddress> localAddresses;
+    private int interfaceIndex;
     private NsdManager nsd;
     private boolean advertising;
     private boolean discovering;
@@ -73,6 +81,14 @@ final class LanTransport implements Transport {
         @Override public void onLost(Network network) {
             run(() -> { if (network.equals(wifi)) fail("wifi-lost", "The selected Wi-Fi connection was lost"); });
         }
+        @Override public void onLinkPropertiesChanged(Network network, LinkProperties properties) {
+            run(() -> {
+                if (network.equals(wifi) && (!Objects.equals(links.getInterfaceName(), properties.getInterfaceName()) ||
+                    !LanAddressPolicy.sameLinks(localLinks, addresses(properties)))) {
+                    fail("wifi-changed", "The selected Wi-Fi addressing changed; reconnect to continue");
+                }
+            });
+        }
     };
 
     LanTransport(Context context, Events events) { this.context = context; this.events = events; }
@@ -86,10 +102,19 @@ final class LanTransport implements Transport {
             if (capabilities != null && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) &&
                 !capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
                 LinkProperties properties = connectivity.getLinkProperties(network);
-                if (properties != null && ipv4(properties) != null) { wifi = network; links = properties; break; }
+                if (properties == null) continue;
+                NetworkInterface networkInterface = properties.getInterfaceName() == null ? null :
+                    NetworkInterface.getByName(properties.getInterfaceName());
+                int index = networkInterface == null ? 0 : networkInterface.getIndex();
+                List<LanAddressPolicy.Link> candidateLinks = addresses(properties);
+                List<InetAddress> candidates = LanAddressPolicy.localAddresses(candidateLinks, index);
+                if (!candidates.isEmpty()) {
+                    wifi = network; links = properties; localLinks = candidateLinks;
+                    localAddresses = candidates; interfaceIndex = index; break;
+                }
             }
         }
-        if (wifi == null) throw new IllegalStateException("Join the same Wi-Fi LAN first (IPv4 required)");
+        if (wifi == null) throw new IllegalStateException("Join the same Wi-Fi LAN first");
         this.advertising = advertise;
         this.label = "NP-" + label;
         this.listing = listing;
@@ -108,40 +133,75 @@ final class LanTransport implements Transport {
         }
     }
 
-    private static InetAddress ipv4(LinkProperties properties) {
+    private static List<LanAddressPolicy.Link> addresses(LinkProperties properties) {
+        List<LanAddressPolicy.Link> result = new ArrayList<>();
         for (LinkAddress address : properties.getLinkAddresses()) {
-            if (address.getAddress() instanceof Inet4Address && !address.getAddress().isLoopbackAddress()) return address.getAddress();
+            result.add(new LanAddressPolicy.Link(address.getAddress(), address.getPrefixLength()));
         }
-        return null;
+        return result;
     }
 
     private void startListener() {
         new Thread(() -> {
             try {
-                ServerSocket created = new ServerSocket();
-                synchronized (this) {
-                    if (!active) { created.close(); return; }
-                    listener = created;
+                List<ServerSocket> bound = new ArrayList<>();
+                int port = 0;
+                for (InetAddress address : localAddresses) {
+                    ServerSocket created = new ServerSocket();
+                    synchronized (this) {
+                        if (!active) { created.close(); return; }
+                        listeners.add(created);
+                    }
+                    // DNS-SD may advertise every address on this Wi-Fi link. Bind each
+                    // concrete address to one shared port; never bind a wildcard/cellular address.
+                    created.bind(new InetSocketAddress(address, port), 1);
+                    if (port == 0) port = created.getLocalPort();
+                    created.setSoTimeout(0); // stop/deadline closes every blocking accept.
+                    bound.add(created);
                 }
-                // Bind exactly the current Wi-Fi interface, never 0.0.0.0/cellular.
-                created.bind(new InetSocketAddress(ipv4(links), 0), 1);
-                // The pausable discovery deadline closes this blocking accept on expiry.
-                created.setSoTimeout(0);
+                final int advertisedPort = port;
                 run(() -> {
                     NsdServiceInfo info = new NsdServiceInfo();
-                    info.setServiceName(label); info.setServiceType(TYPE); info.setPort(created.getLocalPort());
+                    info.setServiceName(label); info.setServiceType(TYPE); info.setPort(advertisedPort);
                     if (listing != null) info.setAttribute("listing", ListingPayload.decode(listing));
                     if (Build.VERSION.SDK_INT >= 33) info.setNetwork(wifi);
                     registering = true;
                     nsd.registerService(info, NsdManager.PROTOCOL_DNS_SD, registration);
                 });
-                Socket accepted = created.accept();
-                created.close();
-                if (!sameSubnet(accepted.getInetAddress())) { accepted.close(); throw new IllegalStateException("Peer is not on the selected Wi-Fi subnet"); }
-                if (!adopt(accepted)) return;
-                read(accepted);
+                for (ServerSocket created : bound) {
+                    new Thread(() -> accept(created), "nearby-lan-accept").start();
+                }
             } catch (Exception e) { run(() -> fail("listen-failed", "LAN listener stopped: " + e.getClass().getSimpleName())); }
         }, "nearby-lan-listener").start();
+    }
+
+    private void accept(ServerSocket source) {
+        Socket accepted = null;
+        try {
+            accepted = source.accept();
+            if (!sameSubnet(accepted.getInetAddress())) {
+                accepted.close();
+                throw new IllegalStateException("Peer is not on the selected Wi-Fi subnet");
+            }
+            synchronized (this) {
+                if (!active || socket != null) { accepted.close(); return; }
+                socket = accepted; // Exactly one listener wins, even when both IP families connect together.
+                closeListeners();
+            }
+            if (!adopt(accepted)) return;
+            read(accepted);
+        } catch (Exception error) {
+            Socket failed = accepted;
+            run(() -> {
+                // Closing the other listeners after one connection is expected, not a disconnection.
+                if (socket == null || socket == failed) fail("listen-failed", "LAN listener stopped: " + error.getClass().getSimpleName());
+            });
+        }
+    }
+
+    private synchronized void closeListeners() {
+        for (ServerSocket listener : listeners) { try { listener.close(); } catch (Exception ignored) {} }
+        listeners.clear();
     }
 
     public void connect(String peerId) {
@@ -284,59 +344,63 @@ final class LanTransport implements Transport {
             if (Build.VERSION.SDK_INT >= 33 && info.getNetwork() != null && !wifi.equals(info.getNetwork())) {
                 fail("invalid-peer", "Resolved peer belongs to a different network"); return;
             }
-            InetAddress host = info.getHost();
-            if (Build.VERSION.SDK_INT >= 34) {
-                for (InetAddress candidate : info.getHostAddresses()) {
-                    if (candidate instanceof Inet4Address && sameSubnet(candidate)) { host = candidate; break; }
-                }
-            }
-            if (host == null) {
+            List<InetAddress> resolved = Build.VERSION.SDK_INT >= 34 ? info.getHostAddresses() :
+                (info.getHost() == null ? Collections.emptyList() : Collections.singletonList(info.getHost()));
+            if (resolved.isEmpty()) {
                 fail("invalid-peer", "Resolved peer has no host address"); return;
             }
-            if (!(host instanceof Inet4Address)) {
-                fail("invalid-peer", "Resolved peer has no usable IPv4 address"); return;
-            }
-            if (!sameSubnet(host)) {
+            List<InetAddress> candidates = LanAddressPolicy.remoteAddresses(resolved, localLinks, interfaceIndex);
+            if (candidates.isEmpty()) {
                 fail("invalid-peer", "Resolved peer is outside the selected Wi-Fi subnet"); return;
             }
-            InetAddress resolvedHost = host;
             new Thread(() -> {
                 try {
-                    Socket created = new Socket();
-                    synchronized (LanTransport.this) {
-                        if (!active) { created.close(); return; }
-                        socket = created; // stop can close a pending connect.
-                    }
-                    wifi.bindSocket(created);
-                    created.connect(new InetSocketAddress(resolvedHost, info.getPort()), 8_000);
+                    Socket created = connectCandidates(candidates, info.getPort());
+                    if (created == null) return;
                     if (!adopt(created)) return;
                     read(created);
                 } catch (Exception e) { run(() -> fail("connect-failed", "LAN connection failed: " + e.getClass().getSimpleName())); }
             }, "nearby-lan-reader").start();
     }
 
-    private boolean sameSubnet(InetAddress remote) {
-        if (remote.isAnyLocalAddress() || remote.isLoopbackAddress() || remote.isMulticastAddress()) return false;
-        byte[] candidate = remote.getAddress();
-        for (LinkAddress link : links.getLinkAddresses()) {
-            byte[] local = link.getAddress().getAddress();
-            if (local.length != candidate.length) continue;
-            boolean same = true;
-            int prefix = link.getPrefixLength();
-            for (int i = 0; i < local.length && prefix > 0; i++, prefix -= 8) {
-                int mask = 0xff << (8 - Math.min(prefix, 8));
-                if ((local[i] & mask) != (candidate[i] & mask)) { same = false; break; }
+    private Socket connectCandidates(List<InetAddress> candidates, int port) throws IOException {
+        long end = SystemClock.elapsedRealtime() + 8_000;
+        IOException last = new IOException("No reachable address on the selected Wi-Fi link");
+        for (int index = 0; index < candidates.size(); index++) {
+            InetAddress candidate = candidates.get(index);
+            long remaining = end - SystemClock.elapsedRealtime();
+            if (remaining <= 0) break;
+            Socket created = new Socket();
+            synchronized (this) {
+                if (!active) { created.close(); return null; }
+                socket = created; // stop can close a pending connect, including a fallback attempt.
             }
-            if (same) return true;
+            try {
+                wifi.bindSocket(created);
+                // Share the original eight-second budget across all validated addresses.
+                // A single-host legacy resolver retains the full original connect timeout.
+                int timeout = (int) Math.max(1, remaining / (candidates.size() - index));
+                created.connect(new InetSocketAddress(candidate, port), timeout);
+                return created;
+            } catch (IOException error) {
+                last = error;
+                try { created.close(); } catch (IOException ignored) {}
+                synchronized (this) { if (socket == created) socket = null; }
+                if (!active) return null;
+            }
         }
-        return false;
+        throw last;
+    }
+
+    private boolean sameSubnet(InetAddress remote) {
+        return LanAddressPolicy.allowedRemote(remote, localLinks, interfaceIndex) != null;
     }
 
     private boolean adopt(Socket connected) throws Exception {
         connected.setTcpNoDelay(true);
         connected.setSoTimeout(0); // A player can think indefinitely. stop() closes and unblocks this socket.
         synchronized (this) {
-            if (!active) { connected.close(); return false; }
+            if (!active || (socket != null && socket != connected)) { connected.close(); return false; }
             socket = connected;
         }
         run(() -> {
@@ -427,7 +491,7 @@ final class LanTransport implements Transport {
     public void stop() {
         synchronized (this) {
             active = false;
-            if (listener != null) { try { listener.close(); } catch (Exception ignored) {} listener = null; }
+            closeListeners();
             if (socket != null) { try { socket.close(); } catch (Exception ignored) {} socket = null; }
         }
         ready = false; writing = false;

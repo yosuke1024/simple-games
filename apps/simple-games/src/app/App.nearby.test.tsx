@@ -89,6 +89,7 @@ function GameHome({ onExit, onPlayTogether, playTogetherActive }: GameRootProps)
 function RetainedPeer({
   gameId,
   onGameSelected,
+  onOpenGame,
   visible,
   onExit,
   onActiveChange,
@@ -96,6 +97,7 @@ function RetainedPeer({
 }: {
   gameId: NearbyGameId | null;
   onGameSelected?: (gameId: NearbyGameId) => void;
+  onOpenGame?: (gameId: NearbyGameId) => void;
   visible: boolean;
   onExit: () => void;
   onActiveChange: (active: boolean) => void;
@@ -126,6 +128,7 @@ function RetainedPeer({
   return (
     <section data-testid="peer" data-visible={visible}>
       <h1>{gameId ?? 'browse'} with someone</h1>
+      {!gameId && <button onClick={() => onOpenGame?.('chess')}>Open Chess home</button>}
       {!gameId && (
         <button
           onClick={() => {
@@ -229,6 +232,19 @@ describe('multiplayer entrances retain one session', () => {
     expect(screen.getByRole('button', { name: /Find nearby opponents/ })).toBeVisible();
     expect(state.unmounted).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('heading', { name: 'Game home' })).not.toBeInTheDocument();
+  });
+  it('opens a supported game home from discovery and recruits for that selected game', () => {
+    renderShell();
+    fireEvent.click(screen.getByRole('button', { name: /Find nearby opponents/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Open Chess home' }));
+    expect(screen.getByRole('heading', { name: 'Game home' })).toBeVisible();
+    expect(screen.queryByTestId('peer')).not.toBeInTheDocument();
+    expect(state.unmounted).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Play with someone' }));
+    expect(screen.getByRole('heading', { name: 'chess with someone' })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Back to game' }));
+    fireEvent.click(screen.getByRole('button', { name: 'All games' }));
+    expect(screen.getByRole('button', { name: /Find nearby opponents/ })).toBeVisible();
   });
   it('does not offer multiplayer for an unsupported game or in the browser', () => {
     const first = renderShell();

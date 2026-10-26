@@ -2,6 +2,24 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const tr: NearbyMessages = {
+  reportReason: 'Neden',
+  reportHarassment: 'Taciz veya tehditler',
+  reportSexual: 'Cinsel içerik',
+  reportOther: 'Diğer zararlı içerik',
+  reportContent: 'Bildirime eklenecek içerik',
+  reportConsent: 'Bu içeriği inceledim ve bildirime eklemek istiyorum.',
+  reportEmail: 'E-posta taslağını aç',
+  reportCopy: 'Bildirimi kopyala',
+  reportCopied: 'Kopyalandı. Göndermek için destek ekibine yazacağın e-postaya yapıştır.',
+  reportCopyFailed: 'Kopyalanamadı. Yukarıdaki metni seçip kopyalayabilirsin.',
+  hideListing: 'Bu buluşmayı gizle',
+  hideListingHint: 'Yalnızca bu arama için gizlenir. Bu, oyuncuyu engellemez.',
+  blockPlayer: 'Oyuncuyu engelle',
+  blockHistoryBody:
+    'Bu cihazda karşı tarafın uygulamasının bu kurulumunu engelle. Karşı tarafın uygulamayı yeniden yüklemesi veya değiştirmesi bu engeli aşabilir.',
+  contentBlocked: 'Bu ifade kullanılamaz. Lütfen farklı şekilde yaz.',
+  contentHidden: 'İçerik gizlendi',
+  supportedGames: 'Desteklenen çok oyunculu oyunlar',
   roomName: 'Buluşma adı',
   roomNameHint:
     'En fazla 24 karakter. Buluşmaya ev sahipliği yaparken bu ad ve oyun yakındaki kişilere görünür.',
@@ -105,10 +123,11 @@ export const tr: NearbyMessages = {
   block: 'Engelle ve ayrıl',
   blockBody:
     'Bu uygulama kurulumu cihazında engellenir ve buluşma biter. Uygulamayı yeniden yüklemek veya değiştirmek bu engeli aşabilir.',
-  report: 'Destekle iletişime geç',
-  reportHint: 'E-posta uygulamanı açar. Geçmiş otomatik olarak eklenmez.',
+  report: 'İçeriği bildir',
+  reportHint:
+    'İçeriği ve bir neden seç. Nelerin ekleneceğini tam olarak gözden geçir. Hiçbir şey otomatik olarak gönderilmez.',
   conduct:
-    'Başkalarına saygılı ol. Taciz, tehdit, cinsel içerik veya kişisel bilgi gönderme. İstediğin zaman engelleyebilir veya ayrılabilirsin. Sohbet açıksa gelen mesajları gizleyebilirsin.',
+    'Buluşma adları, görünen adlar ve mesajlar taciz, tehdit, nefret söylemi, cinsel içerik veya kişisel bilgi içermemelidir. Bildirebilir, engelleyebilir veya ayrılabilirsin. Sohbet açıkken gelen mesajları gizleyebilirsin.',
   accept: 'Kabul ediyorum ve devam etmek istiyorum',
   historyReadOnly: 'Geçmiş salt okunurdur. Açmak yeniden bağlanmaz veya mesaj göndermez.',
   openGame: 'Oyunu göster',

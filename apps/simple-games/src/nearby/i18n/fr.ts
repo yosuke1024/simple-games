@@ -2,6 +2,25 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const fr: NearbyMessages = {
+  reportReason: 'Motif',
+  reportHarassment: 'Harcèlement ou menaces',
+  reportSexual: 'Contenu sexuel',
+  reportOther: 'Autre contenu nuisible',
+  reportContent: 'Contenu à inclure',
+  reportConsent: 'J’ai vérifié ce contenu et souhaite l’inclure dans le signalement.',
+  reportEmail: 'Ouvrir un brouillon de courriel',
+  reportCopy: 'Copier le signalement',
+  reportCopied: 'Copié. Collez-le dans un courriel au support pour l’envoyer.',
+  reportCopyFailed: 'Échec de la copie. Vous pouvez sélectionner et copier le texte ci-dessus.',
+  hideListing: 'Masquer ce salon',
+  hideListingHint: 'Masqué uniquement pour cette recherche. Cela ne bloque pas le joueur.',
+  blockPlayer: 'Bloquer le joueur',
+  blockHistoryBody:
+    'Bloquer cette installation de l’application sur cet appareil. La réinstallation ou la modification de l’autre application peut contourner ce blocage.',
+  contentBlocked: 'Cette formulation n’est pas autorisée. Veuillez utiliser d’autres mots.',
+  contentHidden: 'Contenu masqué',
+
+  supportedGames: 'Jeux multijoueurs compatibles',
   roomName: 'Nom de la rencontre',
   roomNameHint:
     '24 caractères maximum. Lorsque vous organisez une rencontre, ce nom et le jeu sont visibles par les personnes à proximité.',
@@ -108,11 +127,11 @@ export const fr: NearbyMessages = {
   block: 'Bloquer et quitter',
   blockBody:
     'Cette installation de l’app sera bloquée sur votre appareil et la rencontre prendra fin. Réinstaller ou modifier l’app peut contourner ce blocage.',
-  report: 'Contacter l’assistance',
+  report: 'Signaler un contenu',
   reportHint:
-    'Ouvre votre application de messagerie électronique. L’historique n’est pas joint automatiquement.',
+    'Choisissez le contenu et un motif. Vérifiez exactement ce qui sera inclus. Rien n’est envoyé automatiquement.',
   conduct:
-    'Respectez les autres. N’envoyez ni harcèlement, ni menaces, ni contenu sexuel, ni informations personnelles. Vous pouvez bloquer ou partir à tout moment. Si le chat est activé, vous pouvez masquer les messages reçus.',
+    'Les noms de salon, noms affichés et messages ne doivent contenir ni harcèlement, menaces, propos haineux, contenu sexuel ni informations personnelles. Vous pouvez signaler, bloquer ou quitter. Si la discussion est activée, vous pouvez masquer les messages reçus.',
   accept: 'J’accepte et souhaite continuer',
   historyReadOnly:
     'L’historique est en lecture seule. L’ouvrir ne rétablit pas la connexion et n’envoie aucun message.',

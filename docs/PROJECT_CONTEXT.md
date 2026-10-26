@@ -1,6 +1,6 @@
 # Simple Games — Project Context / Source of Truth
 
-Updated: 2026-10-25
+Updated: 2026-10-26
 
 この文書は、Simple Games を変更・レビュー・説明するときの **共通の入口** である。
 ここに全仕様を複製しない。実装上の事実はコード、恒久的な原則は各 canonical document を正とし、
@@ -145,6 +145,7 @@ Design philosophy:
 native の対応ゲームのトップに **「誰かと遊ぶ」** を置き、近くの相手と Bluetooth／同一 Wi-Fi で
 遊ぶことを短く補足する。対応は1対1ターン制の13本（Yacht / Reversi / Connect Four / Gomoku / Checkers / Gin Rummy / Mancala / Dominoes / Dots and Boxes / Chess / Nested Tic-Tac-Toe / Scopa / Nim）。コレクションには参加専用の「近くの対戦相手を探す」を置き、ゲーム未選択のまま全13本の募集を横断して探せる。
 入口はClub House直下に、Club Houseと同程度の控えめなテキスト行として配置する。
+探索画面の下部には「対戦サポートゲーム」と全13本のリンクを置き、探索を停止して対応する通常のゲームトップへ移動する。
 募集作成は各ゲームのトップから行い、Club House からは開始しない。他ゲームに未実装のボタンを置かない。
 ゲーム選択済み → 募集／参加 → host承認 → 双方Ready → 各ゲームの既存CPU戦と共通の盤面・操作で対局。
 全体探索は Bluetooth／同一Wi-Fi 選択 → 明示探索 → 募集名＋ゲーム名・人数の一覧 → 募集選択 →
@@ -175,6 +176,9 @@ Web に Nearby の実行コード・探索・権限要求・接続・履歴読�
 接続・承認・双方向チャットのユーザー報告があるが、今回採用したゲームトップの入口、画面から
 独立した接続保持、共通ゲーム画面と再接続の実機検証とは分ける。3台以上・同OS・旧端末・
 WAN切断LAN・電池なども未検証で、Epic の全完了や今回のストア公開承認を意味しない。
+2026-10-26、オーナーが対応ゲーム一覧の追加と、Bluetooth関連の申告確認を含む本番公開を依頼した。
+次の公開版を1.6.0／10600として準備する。公開済み・審査済みとは扱わず、進捗と残る検証は
+`RELEASE_CHECKLIST.md` の1.6.0項目へ記録する。
 正本: `PRODUCT_PRINCIPLES.md`「Nearby Play」、`architecture/nearby-multiplayer.md`。
 
 ## 4. Non-negotiable product constraints

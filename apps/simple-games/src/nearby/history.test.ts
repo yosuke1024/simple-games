@@ -62,6 +62,28 @@ async function slowStore() {
 }
 
 describe('device-only nearby history', () => {
+  it('adds a local peer block target to v1 while keeping legacy transcripts readable', async () => {
+    const io = store();
+    await loadHistory(io);
+    const legacy = gathering();
+    await saveGathering(legacy, io);
+    const current = { ...gathering(), id: 'd'.repeat(32), peerIdentity: 'b'.repeat(32) };
+    await saveGathering(current, io);
+    const restored = await loadHistory(io);
+    expect(restored.version).toBe(1);
+    expect(restored.gatherings).toEqual([current, legacy]);
+    await blockIdentity(restored.gatherings[0]!.peerIdentity!, io);
+    await deleteGathering(current.id, io);
+    expect((await loadHistory(io)).blocked).toEqual(['b'.repeat(32)]);
+    const before = (await io.readHistory()).data;
+    await expect(saveGathering({ ...current, peerIdentity: 'invalid' }, io)).rejects.toThrow();
+    expect((await io.readHistory()).data).toBe(before);
+    await clearHistory(io);
+    const cleared = await loadHistory(io);
+    expect(cleared.blocked).toEqual([]);
+    expect(cleared.gatherings).toEqual([]);
+  });
+
   it('adds remembered names to existing v1 files without changing identity, blocks or transcripts', async () => {
     const io = store();
     const original = await loadHistory(io);

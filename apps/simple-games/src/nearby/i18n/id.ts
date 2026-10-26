@@ -2,6 +2,25 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const id: NearbyMessages = {
+  reportReason: 'Alasan',
+  reportHarassment: 'Pelecehan atau ancaman',
+  reportSexual: 'Konten seksual',
+  reportOther: 'Konten berbahaya lainnya',
+  reportContent: 'Konten yang disertakan',
+  reportConsent: 'Saya telah meninjau konten ini dan ingin menyertakannya dalam laporan.',
+  reportEmail: 'Buka draf email',
+  reportCopy: 'Salin laporan',
+  reportCopied:
+    'Tersalin. Tempelkan ke email yang ditujukan kepada tim dukungan untuk mengirimkannya.',
+  reportCopyFailed: 'Tidak dapat menyalin. Anda dapat memilih dan menyalin teks di atas.',
+  hideListing: 'Sembunyikan pertemuan ini',
+  hideListingHint: 'Hanya disembunyikan untuk pencarian ini. Ini tidak memblokir pemain.',
+  blockPlayer: 'Blokir pemain',
+  blockHistoryBody:
+    'Blokir instalasi aplikasi pemain tersebut di perangkat ini. Memasang ulang atau memodifikasi aplikasi pemain tersebut dapat melewati pemblokiran ini.',
+  contentBlocked: 'Kata-kata ini tidak dapat digunakan. Silakan gunakan ungkapan lain.',
+  contentHidden: 'Konten disembunyikan',
+  supportedGames: 'Game multipemain yang didukung',
   roomName: 'Nama pertemuan',
   roomNameHint:
     'Maksimal 24 karakter. Saat Anda membuka pertemuan, nama ini dan permainannya terlihat oleh orang di sekitar.',
@@ -107,10 +126,11 @@ export const id: NearbyMessages = {
   block: 'Blokir dan keluar',
   blockBody:
     'Ini memblokir instalasi aplikasi tersebut di perangkat Anda dan mengakhiri pertemuan. Memasang ulang atau memodifikasi aplikasi dapat melewati pemblokiran ini.',
-  report: 'Hubungi dukungan',
-  reportHint: 'Membuka aplikasi email Anda. Riwayat tidak dilampirkan secara otomatis.',
+  report: 'Laporkan konten',
+  reportHint:
+    'Pilih konten dan alasan. Tinjau dengan tepat apa yang akan disertakan. Tidak ada yang dikirim secara otomatis.',
   conduct:
-    'Hormati orang lain. Jangan kirim pelecehan, ancaman, konten seksual, atau informasi pribadi. Anda dapat memblokir atau keluar kapan saja. Jika obrolan aktif, Anda dapat menyembunyikan pesan masuk.',
+    'Nama pertemuan, nama tampilan, dan pesan tidak boleh memuat pelecehan, ancaman, konten kebencian atau seksual, atau informasi pribadi. Anda dapat melaporkan, memblokir, atau keluar. Saat chat diaktifkan, Anda dapat menyembunyikan pesan masuk.',
   accept: 'Saya setuju dan ingin melanjutkan',
   historyReadOnly:
     'Riwayat hanya dapat dilihat. Membukanya tidak menghubungkan ulang atau mengirim pesan.',

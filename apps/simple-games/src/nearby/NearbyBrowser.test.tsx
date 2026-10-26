@@ -1,9 +1,11 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NearbyBrowser } from './NearbyBrowser';
 import type { NearbyGameId } from './gameTypes';
 import { en } from './i18n/en';
+import { NEARBY_GAME_CODES } from '../app/nearbyGameIds';
+import { GAME_TITLES } from './games';
 
 const fixtures = vi.hoisted(() => ({
   controllers: [] as Array<{
@@ -19,6 +21,7 @@ const fixtures = vi.hoisted(() => ({
   loadHistory: vi.fn(),
   joined: vi.fn(),
   exited: vi.fn(),
+  openedGame: vi.fn(),
   native: false,
   nativeBack: null as (() => void) | null,
   addListener: vi.fn(),
@@ -74,6 +77,7 @@ function Harness({ visible = true }: { visible?: boolean }) {
     <NearbyBrowser
       visible={visible}
       onExit={fixtures.exited}
+      onOpenGame={fixtures.openedGame}
       onJoin={fixtures.joined}
       onChanged={() => render((v) => v + 1)}
     />
@@ -90,7 +94,7 @@ async function search() {
   await act(async () => {
     await Promise.resolve();
   });
-  const controller = fixtures.controllers[0]!;
+  const controller = fixtures.controllers.at(-1)!;
   act(() => {
     controller.peers = [
       peer,
@@ -122,10 +126,102 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('collection-wide nearby browser', () => {
+  it('reports only a selected listing, and hiding it neither connects nor blocks a player', async () => {
+    const view = render(<Harness />);
+    const controller = await search();
+    const listing = screen.getByRole('button', { name: /Friday games Chess/ }).closest('article')!;
+    fireEvent.click(within(listing).getByRole('button', { name: en.report }));
+    expect(screen.getByRole('dialog')).toBeVisible();
+    expect(screen.getByRole('textbox', { name: en.reportContent })).toHaveValue(
+      'Simple Games — Chess\n\n\n\nFriday games',
+    );
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(fixtures.exited).not.toHaveBeenCalled();
+    fireEvent.click(within(listing).getByRole('button', { name: en.hideListing }));
+    expect(screen.queryByRole('button', { name: /Friday games Chess/ })).not.toBeInTheDocument();
+    expect(screen.getByText(en.hideListingHint)).toBeVisible();
+    act(() => controller.changed());
+    expect(screen.queryByRole('button', { name: /Friday games Chess/ })).not.toBeInTheDocument();
+    expect(controller.connectToGame).not.toHaveBeenCalled();
+    expect(fixtures.loadHistory).not.toHaveBeenCalled();
+    expect(fixtures.loadGame).not.toHaveBeenCalled();
+    view.unmount();
+    render(<Harness />);
+    await search();
+    expect(screen.getByRole('button', { name: /Friday games Chess/ })).toBeVisible();
+  });
+
+  it('links every supported game to its home without starting discovery or loading boards', async () => {
+    render(<Harness />);
+    const region = screen.getByRole('region', { name: en.supportedGames });
+    const links = within(region).getAllByRole('link');
+    expect(links).toHaveLength(13);
+    expect(links.map((link) => link.getAttribute('href'))).toEqual(
+      Object.keys(NEARBY_GAME_CODES).map((id) => `?game=${id}`),
+    );
+    for (const id of Object.keys(NEARBY_GAME_CODES) as NearbyGameId[]) {
+      expect(within(region).getByRole('link', { name: GAME_TITLES[id] })).toBeVisible();
+    }
+    await act(async () => {
+      fireEvent.click(within(region).getByRole('link', { name: 'Chess' }));
+    });
+    expect(fixtures.openedGame).toHaveBeenCalledExactlyOnceWith('chess');
+    expect(fixtures.controllers).toHaveLength(0);
+    expect(fixtures.loadGame).not.toHaveBeenCalled();
+    expect(fixtures.loadHistory).not.toHaveBeenCalled();
+    expect(fixtures.joined).not.toHaveBeenCalled();
+  });
+
+  it('waits for active discovery to stop before opening a game home', async () => {
+    render(<Harness />);
+    const controller = await search();
+    let finish!: () => void;
+    controller.stop.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    fireEvent.click(screen.getByRole('link', { name: 'Nim' }));
+    expect(controller.stop).toHaveBeenCalledOnce();
+    expect(fixtures.openedGame).not.toHaveBeenCalled();
+    expect(screen.getByRole('link', { name: 'Chess' })).toHaveAttribute('aria-disabled', 'true');
+    fireEvent.click(screen.getByRole('link', { name: 'Chess' }));
+    await act(async () => {
+      finish();
+    });
+    expect(fixtures.openedGame).toHaveBeenCalledExactlyOnceWith('nim');
+    expect(controller.connectToGame).not.toHaveBeenCalled();
+    expect(fixtures.loadGame).not.toHaveBeenCalled();
+  });
+
+  it.each(['back', 'hidden', 'unmounted'] as const)(
+    'does not navigate after a delayed stop when the browser was %s',
+    async (exit) => {
+      const view = render(<Harness />);
+      const controller = await search();
+      let finish!: () => void;
+      const stopped = new Promise<void>((resolve) => {
+        finish = resolve;
+      });
+      controller.stop.mockImplementation(() => stopped);
+      fireEvent.click(screen.getByRole('link', { name: 'Yacht' }));
+      if (exit === 'back') fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+      if (exit === 'hidden') view.rerender(<Harness visible={false} />);
+      if (exit === 'unmounted') view.unmount();
+      await act(async () => {
+        finish();
+      });
+      expect(fixtures.openedGame).not.toHaveBeenCalled();
+      expect(fixtures.loadGame).not.toHaveBeenCalled();
+    },
+  );
+
   it('reports persistence failures when saving a participant name prevents joining', async () => {
     render(<Harness />);
     const controller = await search();
     fillJoin();
+    expect(screen.queryByRole('region', { name: en.supportedGames })).not.toBeInTheDocument();
     controller.connectToGame.mockImplementation(async () => {
       controller.storageFailed = true;
       return false;
