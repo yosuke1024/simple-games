@@ -1,5 +1,23 @@
 import type { NearbyMessages } from './en';
 export const ja: NearbyMessages = {
+  reportReason: '通報理由',
+  reportHarassment: '嫌がらせ・脅迫',
+  reportSexual: '性的な内容',
+  reportOther: 'その他の有害な内容',
+  reportContent: '通報に含める内容',
+  reportConsent: 'この内容を確認し、通報に含めることに同意します。',
+  reportEmail: 'メールの下書きを開く',
+  reportCopy: '通報内容をコピー',
+  reportCopied: 'コピーしました。送信するにはサポート宛メールに貼り付けてください。',
+  reportCopyFailed: 'コピーできませんでした。上の文章を選択してコピーできます。',
+  hideListing: 'この募集を非表示',
+  hideListingHint: '今回の探索中だけ非表示にします。相手をブロックする操作ではありません。',
+  blockPlayer: '相手をブロック',
+  blockHistoryBody:
+    'この端末で、相手のアプリのインストールをブロックします。相手が再インストールや改変をすると回避される場合があります。',
+  contentBlocked: 'この表現は使えません。別の言い方にしてください。',
+  contentHidden: '内容を非表示にしました',
+  supportedGames: '対戦サポートゲーム',
   roomName: '募集名',
   roomNameHint: '24文字まで。募集中は、この名前とゲーム名が近くの人に表示されます。',
   participants: '{count}/{capacity}人',
@@ -100,10 +118,10 @@ export const ja: NearbyMessages = {
   block: 'ブロックして退出',
   blockBody:
     'この相手のアプリの識別子を端末内でブロックし、集まりを終了します。再インストールや改造をされた場合は防げません。',
-  report: 'サポートに連絡',
-  reportHint: 'メールアプリを開きます。履歴を自動添付することはありません。',
+  report: '内容を通報',
+  reportHint: '対象と理由を選び、含める内容を確認してください。自動で送信されることはありません。',
   conduct:
-    '相手への配慮をお願いします。嫌がらせ・脅迫・性的な内容・個人情報は送らないでください。ブロック・退出はいつでもできます。チャットが有効な場合は受信メッセージを隠せます。',
+    '募集名・表示名・メッセージに、嫌がらせ、脅迫、差別、性的な内容、個人情報を含めないでください。通報・ブロック・退出ができます。会話が有効な場合、受信内容を非表示にできます。',
   accept: '同意して利用する',
   historyReadOnly: '履歴は閲覧専用です。開いても再接続や送信は行いません。',
   openGame: '盤面を開く',

@@ -71,6 +71,8 @@
 > **2026-10-25:** オーナーの正式収録判断に従いChess / Nested Tic-Tac-Toe / Scopa / Nimを追加し45本に更新。
 > これは次の収録版向けの掲載ドラフトであり、Console反映・ストア公開はまだ行っていない。
 
+> **2026-10-26 / 1.6.0:** オーナーが本番公開を依頼。Nearby Play の13本・host承認・任意チャット・端末内履歴を追加し、通常プレイのオフライン説明と区別した。App Store Connect の新1.6.0下書きは14言語で保存・GET一致を確認。Google Play反映・審査提出は別に記録する。
+
 ## タイトル候補(優先順)
 
 1. `Simple Games: Offline Games`(appName として決定済み。27 字。
@@ -147,10 +149,13 @@ Simple Games is a simple collection of classic games in one app. Where most game
 Nothing rushes you.
 No login bonuses, no day-streak counters, no limited-time events. No clock runs on screen while you play. Skip a day and you lose nothing.
 
-The games never go online.
-All of them run offline, from the very first launch. Your progress stays on your device and nowhere else. No account and no cloud sync, and no game ever waits on a server — so there is nothing that can go down in the middle of a game. To keep the app usable far from a charger, I left out anything power-hungry.
+Play offline, from the very first launch.
+Solo games and games against the computer need no internet connection, account or game server. Your progress stays on your device, with no cloud sync. Nearby Play and Club House are optional ways to play or share with others, described below.
 
-Club House is the one optional exception, and only if you join one.
+Nearby Play — play with someone nearby.
+In the app, 13 turn-based games support one-to-one play over Bluetooth or the same Wi-Fi. Host a gathering from a supported game, or find nearby hosts from the collection. The host approves each participant. Chat is optional and off by default; game and chat history stay on each participant’s device. No internet connection, account or Club House membership is needed.
+
+Club House is optional, and only connects if you join one.
 Join a Club with a nickname — there is no account. From then on, each game you finish sends its result (time, moves or score) to the Clubs you joined, automatically — in the games that support Clubs, and nothing you played before joining. In each game and mode your personal bests sit next to theirs; everyone plays different boards, luck included. In most games the daily puzzle is one board for everyone, so you can see how others did on the very same one. You can disconnect, delete your own records one by one, or change your name at any time. PixApps runs the Public Club House, and you can also start your own Club and invite family or friends with a link — PixApps runs that one too. A device that never joins never connects to it.
 
 INCLUDED GAMES

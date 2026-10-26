@@ -31,9 +31,10 @@
 	     this is NOT the Android one. -->
 	<key>GADApplicationIdentifier</key>
 	<string>$(ADMOB_IOS_APP_ID)</string>
-	<!-- Export compliance: the app uses only the HTTPS that iOS itself and
-	     the ad/billing SDKs provide, which is exempt. Declaring it here keeps
-	     every upload from asking the same question again. -->
+	<!-- Export compliance: system-provided encryption includes HTTPS and
+	     Nearby's WKWebView WebCrypto (ECDH, HKDF, AES-GCM and HMAC).
+	     Nearby bundles no separate cryptographic implementation. This key
+	     records the documentation exemption, not an absence of encryption. -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>

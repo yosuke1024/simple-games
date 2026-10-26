@@ -1,12 +1,12 @@
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
-import { SUPPORT_EMAIL } from '@simple-games/brand';
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSettings } from '../state/SettingsContext';
 import { ConfirmDialog } from '../ui/components/ConfirmDialog';
 import { IconBack, IconClose } from '../ui/components/icons';
 import { NearbyController, type Setup } from './controller';
 import {
+  blockIdentity,
   clearHistory,
   deleteGathering,
   loadHistory,
@@ -19,14 +19,18 @@ import { isChatText, isPlayerName } from './session';
 import { GAME_NAME_KEYS, GAME_TITLES, loadNearbyGame, type NearbyGame } from './games';
 import type { NearbyGameId } from './gameTypes';
 import { NearbyBrowser } from './NearbyBrowser';
+import { filteredNearbyText, isAllowedNearbyText } from './contentFilter';
+import { ReportDialog } from './ReportDialog';
+import { listingKey, type ReportTarget } from './report';
 import './nearby.css';
 
 type Screen = 'home' | 'setup' | 'active' | 'history' | 'detail';
-type Question = 'leave' | 'delete' | 'clear' | 'block' | null;
+type Question = 'leave' | 'delete' | 'clear' | 'block' | 'blockHistory' | null;
 
 export interface NearbyRootProps {
   gameId: NearbyGameId | null;
   onGameSelected?: (gameId: NearbyGameId | null) => void;
+  onOpenGame?: (gameId: NearbyGameId) => void;
   onExit: () => void;
   /** Kept mounted by the app while a connection is active on another screen. */
   visible?: boolean;
@@ -69,6 +73,7 @@ export function NearbyRoot(props: NearbyRootProps) {
       <NearbyBrowser
         visible={props.visible}
         onExit={props.onExit}
+        onOpenGame={props.onOpenGame}
         onRegisterStop={props.onRegisterStop}
         onChanged={changed}
         onJoin={(controller, selectedId, game) => {
@@ -151,6 +156,10 @@ function NearbyGameRoot({
   const [detail, setDetail] = useState<Gathering | null>(null);
   const [storageError, setStorageError] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [report, setReport] = useState<ReportTarget | null>(null);
+  const [blocked, setBlocked] = useState<string[]>([]);
+  const [hiddenListings, setHiddenListings] = useState<Set<string>>(new Set());
+  const safeText = (text: string) => filteredNearbyText(text, n('contentHidden'));
   const live = useRef(true);
   const chatEnd = useRef<HTMLDivElement>(null);
   const backRef = useRef<() => void>(() => {});
@@ -179,6 +188,10 @@ function NearbyGameRoot({
 
   const back = () => {
     if (!visible || busy) return;
+    if (report) {
+      setReport(null);
+      return;
+    }
     if (question) {
       setQuestion(null);
       return;
@@ -289,10 +302,29 @@ function NearbyGameRoot({
     session?.messages.filter((message) => message.sender === 'peer').length ?? 0;
   const unread = chatEnabled && !hidden && receivedMessages > readMessages;
   useEffect(() => {
-    if (!visible || !foreground || !chatOpen || !inRoom || hidden || question !== null) return;
+    if (
+      !visible ||
+      !foreground ||
+      !chatOpen ||
+      !inRoom ||
+      hidden ||
+      question !== null ||
+      report !== null
+    )
+      return;
     setReadMessages(receivedMessages);
     chatEnd.current?.scrollIntoView?.({ block: 'nearest' });
-  }, [visible, foreground, chatOpen, inRoom, hidden, question, receivedMessages, messageCount]);
+  }, [
+    visible,
+    foreground,
+    chatOpen,
+    inRoom,
+    hidden,
+    question,
+    report,
+    receivedMessages,
+    messageCount,
+  ]);
   useEffect(() => {
     if (visible && inRoom && chatOpen) chatHeadingRef.current?.focus({ preventScroll: true });
   }, [visible, inRoom, chatOpen]);
@@ -324,6 +356,7 @@ function NearbyGameRoot({
     setController(next);
     setHidden(false);
     setDraft('');
+    setHiddenListings(new Set());
     setReadMessages(0);
     setPanel('game');
     setScreen('active');
@@ -333,7 +366,9 @@ function NearbyGameRoot({
     setBusy(true);
     setStorageError(false);
     try {
-      setHistory((await loadHistory()).gatherings);
+      const data = await loadHistory();
+      setHistory(data.gatherings);
+      setBlocked(data.blocked);
     } catch {
       setStorageError(true);
     } finally {
@@ -348,12 +383,22 @@ function NearbyGameRoot({
       return;
     }
     if (action === 'block') {
-      await controller?.block();
+      setBusy(true);
+      try {
+        await controller?.block();
+      } finally {
+        setBusy(false);
+      }
       return;
     }
     setBusy(true);
     setStorageError(false);
     try {
+      if (action === 'blockHistory' && detail?.peerIdentity) {
+        await blockIdentity(detail.peerIdentity);
+        setBlocked((old) => [...old, detail.peerIdentity!]);
+        return;
+      }
       if (action === 'delete' && detail) await deleteGathering(detail.id);
       if (action === 'clear') {
         await clearHistory();
@@ -374,25 +419,31 @@ function NearbyGameRoot({
       ? n('deleteTitle')
       : question === 'clear'
         ? n('clear')
-        : question === 'block'
-          ? n('block')
-          : n('leaveTitle');
+        : question === 'blockHistory'
+          ? n('blockPlayer')
+          : question === 'block'
+            ? n('block')
+            : n('leaveTitle');
   const questionBody =
     question === 'delete'
       ? n('deleteBody')
       : question === 'clear'
         ? n('clearBody')
-        : question === 'block'
-          ? n('blockBody')
-          : n('leaveBody');
+        : question === 'blockHistory'
+          ? n('blockHistoryBody')
+          : question === 'block'
+            ? n('blockBody')
+            : n('leaveBody');
   const questionAction =
     question === 'delete'
       ? n('delete')
       : question === 'clear'
         ? n('clear')
-        : question === 'block'
-          ? n('block')
-          : n('leave');
+        : question === 'blockHistory'
+          ? n('blockPlayer')
+          : question === 'block'
+            ? n('block')
+            : n('leave');
 
   return (
     <div
@@ -402,7 +453,11 @@ function NearbyGameRoot({
       inert={!visible}
       data-game={gameId}
     >
-      <div className="nearby-content" inert={question !== null || busy} aria-busy={busy}>
+      <div
+        className="nearby-content"
+        inert={question !== null || report !== null || busy}
+        aria-busy={busy}
+      >
         <header className="screen-header">
           <button className="icon-btn" aria-label={n('back')} disabled={busy} onClick={back}>
             <IconBack />
@@ -488,6 +543,7 @@ function NearbyGameRoot({
                 <p id="nearby-room-name-hint" className="nearby-note">
                   {n('roomNameHint')}
                 </p>
+                {!isAllowedNearbyText(setup.roomName) && <p role="alert">{n('contentBlocked')}</p>}
               </>
             )}
             {setup.host && game.makeAdapter && (
@@ -519,6 +575,7 @@ function NearbyGameRoot({
             <p id="nearby-name-hint" className="nearby-note">
               {n('nameHint')}
             </p>
+            {!isAllowedNearbyText(setup.name) && <p role="alert">{n('contentBlocked')}</p>}
             {setup.host && (
               <>
                 <label className="nearby-check">
@@ -656,7 +713,13 @@ function NearbyGameRoot({
                       seat={session.host ? 0 : 1}
                       names={session.names}
                       statusLabel={gameStatus}
-                      canAct={visible && foreground && question === null && session.canAct}
+                      canAct={
+                        visible &&
+                        foreground &&
+                        question === null &&
+                        report === null &&
+                        session.canAct
+                      }
                       act={(action) => session.act(action)}
                     />
                     {session.result &&
@@ -698,8 +761,21 @@ function NearbyGameRoot({
                             className={`nearby-message nearby-message-${m.sender}`}
                           >
                             <strong>{m.sender === 'self' ? session.name : session.peerName}</strong>
-                            <p>{m.text}</p>
+                            <p>{safeText(m.text)}</p>
                             {m.sender === 'self' && <small>{n(m.status)}</small>}
+                            {m.sender === 'peer' && (
+                              <button
+                                className="btn btn-ghost nearby-message-report"
+                                onClick={() =>
+                                  setReport({
+                                    title: `${gameTitle} · ${session.peerName}`,
+                                    content: m.text,
+                                  })
+                                }
+                              >
+                                {n('report')}
+                              </button>
+                            )}
                           </article>
                         ))}
                       <div ref={chatEnd} />
@@ -734,6 +810,7 @@ function NearbyGameRoot({
                         {n('send')}
                       </button>
                     </form>
+                    {!isAllowedNearbyText(draft) && <p role="alert">{n('contentBlocked')}</p>}
                     <p className="nearby-note">{n('chatHint')}</p>
                   </section>
                 )}
@@ -750,7 +827,17 @@ function NearbyGameRoot({
                   <button className="btn btn-ghost" onClick={() => setQuestion('block')}>
                     {n('block')}
                   </button>
-                  <a href={`mailto:${SUPPORT_EMAIL}?subject=Nearby%20Play`}>{n('report')}</a>
+                  <button
+                    className="btn btn-ghost"
+                    onClick={() =>
+                      setReport({
+                        title: gameTitle,
+                        content: `${session.roomName}\n${session.peerName}`,
+                      })
+                    }
+                  >
+                    {n('report')}
+                  </button>
                   <p className="nearby-note">{n('reportHint')}</p>
                 </details>
               </>
@@ -783,6 +870,26 @@ function NearbyGameRoot({
                     <p>{session.peerName}</p>
                     <p className="nearby-code">{n('confirmation', { code: controller.code })}</p>
                     <p className="nearby-note">{n('compare')}</p>
+                    <div className="nearby-actions">
+                      <button
+                        className="btn btn-ghost"
+                        disabled={!session.peerIdentity}
+                        onClick={() => setQuestion('block')}
+                      >
+                        {n('block')}
+                      </button>
+                      <button
+                        className="btn btn-ghost"
+                        onClick={() =>
+                          setReport({
+                            title: gameTitle,
+                            content: `${session.roomName}\n${session.peerName}`,
+                          })
+                        }
+                      >
+                        {n('report')}
+                      </button>
+                    </div>
                     {setup.host && (
                       <div className="nearby-actions">
                         <button
@@ -805,20 +912,50 @@ function NearbyGameRoot({
                 )}
                 {!setup.host && controller.state === 'discovering' && (
                   <div className="nearby-stack">
-                    {controller.peers.length === 0 && <p className="nearby-note">{n('noPeers')}</p>}
-                    {controller.peers.map((peer) => (
-                      <button
-                        key={peer.id}
-                        className="nearby-peer"
-                        onClick={() => {
-                          void controller.connect(peer.id);
-                        }}
-                      >
-                        <strong>{peer.roomName}</strong>
-                        <span>{t(GAME_NAME_KEYS[peer.gameId])}</span>
-                        <span>{n('participants', { count: 1, capacity: 2 })}</span>
-                      </button>
-                    ))}
+                    {controller.peers.filter((peer) => !hiddenListings.has(listingKey(peer)))
+                      .length === 0 && <p className="nearby-note">{n('noPeers')}</p>}
+                    {controller.peers
+                      .filter((peer) => !hiddenListings.has(listingKey(peer)))
+                      .map((peer) => (
+                        <article className="nearby-listing" key={peer.id}>
+                          <button
+                            className="nearby-peer"
+                            onClick={() => {
+                              void controller.connect(peer.id);
+                            }}
+                          >
+                            <strong>{peer.roomName}</strong>
+                            <span>{t(GAME_NAME_KEYS[peer.gameId])}</span>
+                            <span>{n('participants', { count: 1, capacity: 2 })}</span>
+                          </button>
+                          <div className="nearby-actions nearby-listing-actions">
+                            <button
+                              className="btn btn-ghost"
+                              onClick={() =>
+                                setHiddenListings((old) => new Set([...old, listingKey(peer)]))
+                              }
+                            >
+                              {n('hideListing')}
+                            </button>
+                            <button
+                              className="btn btn-ghost"
+                              onClick={() =>
+                                setReport({
+                                  title: GAME_TITLES[peer.gameId],
+                                  content: peer.roomName ?? '',
+                                })
+                              }
+                            >
+                              {n('report')}
+                            </button>
+                          </div>
+                        </article>
+                      ))}
+                    {hiddenListings.size > 0 && (
+                      <p className="nearby-note" role="status">
+                        {n('hideListingHint')}
+                      </p>
+                    )}
                   </div>
                 )}
               </>
@@ -845,8 +982,8 @@ function NearbyGameRoot({
                   setScreen('detail');
                 }}
               >
-                <strong>{g.roomName ?? g.names.join(' · ')}</strong>
-                {g.roomName && <span>{g.names.join(' · ')}</span>}
+                <strong>{safeText(g.roomName ?? g.names.join(' · '))}</strong>
+                {g.roomName && <span>{safeText(g.names.join(' · '))}</span>}
                 <span>{date(g.at)}</span>
               </button>
             ))}
@@ -857,8 +994,8 @@ function NearbyGameRoot({
         )}
         {screen === 'detail' && detail && (
           <main className="nearby-stack">
-            <h2>{detail.roomName ?? detail.names.join(' · ')}</h2>
-            {detail.roomName && <p>{detail.names.join(' · ')}</p>}
+            <h2>{safeText(detail.roomName ?? detail.names.join(' · '))}</h2>
+            {detail.roomName && <p>{safeText(detail.names.join(' · '))}</p>}
             <p>{date(detail.at)}</p>
             <p className="nearby-note">{n('historyReadOnly')}</p>
             {storageError && <p role="alert">{n('storageError')}</p>}
@@ -872,33 +1009,71 @@ function NearbyGameRoot({
                     ? n('interrupted')
                     : savedGameResult(game).winner === 'draw'
                       ? n('draw')
-                      : n('won', { name: detail.names[savedGameResult(game).winner as 0 | 1] })}
+                      : n('won', {
+                          name: safeText(detail.names[savedGameResult(game).winner as 0 | 1]!),
+                        })}
                 </p>
                 {!['chess', 'nim'].includes(savedGameId(game)) && (
                   <p>
-                    {detail.names[0]} {game.scores[0]} · {detail.names[1]} {game.scores[1]}
+                    {safeText(detail.names[0])} {game.scores[0]} · {safeText(detail.names[1])}{' '}
+                    {game.scores[1]}
                   </p>
                 )}
               </section>
             ))}
             {detail.messages.map((m) => (
               <article className={`nearby-message nearby-message-${m.sender}`} key={m.id}>
-                <strong>{detail.names[(m.sender === 'self') === detail.host ? 0 : 1]}</strong>
-                <p>{m.text}</p>
+                <strong>
+                  {safeText(detail.names[(m.sender === 'self') === detail.host ? 0 : 1])}
+                </strong>
+                <p>{safeText(m.text)}</p>
                 <small>
                   {date(m.at)}
                   {m.sender === 'self'
                     ? ` · ${n(m.status === 'sending' ? 'failed' : m.status)}`
                     : ''}
                 </small>
+                {m.sender === 'peer' && (
+                  <button
+                    className="btn btn-ghost nearby-message-report"
+                    onClick={() =>
+                      setReport({
+                        title: `${n('history')} · ${detail.names[detail.host ? 1 : 0]}`,
+                        content: m.text,
+                      })
+                    }
+                  >
+                    {n('report')}
+                  </button>
+                )}
               </article>
             ))}
+            <button
+              className="btn btn-ghost"
+              onClick={() =>
+                setReport({
+                  title: n('history'),
+                  content: `${detail.roomName ?? ''}\n${detail.names[detail.host ? 1 : 0]}`,
+                })
+              }
+            >
+              {n('report')}
+            </button>
+            {detail.peerIdentity &&
+              (blocked.includes(detail.peerIdentity) ? (
+                <p role="status">{n('blocked')}</p>
+              ) : (
+                <button className="btn btn-ghost" onClick={() => setQuestion('blockHistory')}>
+                  {n('blockPlayer')}
+                </button>
+              ))}
             <button className="btn btn-ghost" onClick={() => setQuestion('delete')}>
               {n('delete')}
             </button>
           </main>
         )}
       </div>
+      {visible && report && <ReportDialog target={report} onClose={() => setReport(null)} />}
       <ConfirmDialog
         open={visible && question !== null}
         title={questionTitle}

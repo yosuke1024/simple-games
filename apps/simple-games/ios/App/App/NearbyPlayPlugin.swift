@@ -634,11 +634,10 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
         let parameters = NWParameters.tcp
         parameters.requiredInterfaceType = .wifi
         parameters.includePeerToPeer = false
-        // This two-player baseline uses IPv4 sockets on both platforms. Older
-        // Android NSD exposes only one resolved host; dual-stack discovery still
-        // needs physical verification even with the listener constrained here.
+        // Let Bonjour/Network choose IPv4 or IPv6 on the required Wi-Fi path.
+        // Connections still use only endpoints discovered in this session.
         let ip = parameters.defaultProtocolStack.internetProtocol as? NWProtocolIP.Options
-        ip?.version = .v4
+        ip?.version = .any
         return parameters
     }
 

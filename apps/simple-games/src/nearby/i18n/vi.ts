@@ -2,6 +2,24 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const vi: NearbyMessages = {
+  reportReason: 'Lý do',
+  reportHarassment: 'Quấy rối hoặc đe dọa',
+  reportSexual: 'Nội dung tình dục',
+  reportOther: 'Nội dung có hại khác',
+  reportContent: 'Nội dung đưa vào báo cáo',
+  reportConsent: 'Tôi đã xem lại nội dung này và muốn đưa vào báo cáo.',
+  reportEmail: 'Mở bản nháp email',
+  reportCopy: 'Sao chép báo cáo',
+  reportCopied: 'Đã sao chép. Dán vào email gửi bộ phận hỗ trợ để gửi báo cáo.',
+  reportCopyFailed: 'Không thể sao chép. Bạn có thể chọn và sao chép văn bản phía trên.',
+  hideListing: 'Ẩn buổi gặp này',
+  hideListingHint: 'Chỉ ẩn trong lần tìm kiếm này. Thao tác này không chặn người chơi.',
+  blockPlayer: 'Chặn người chơi',
+  blockHistoryBody:
+    'Chặn bản cài đặt ứng dụng này của người chơi kia trên thiết bị này. Người kia có thể vượt qua lệnh chặn bằng cách cài đặt lại hoặc sửa đổi ứng dụng.',
+  contentBlocked: 'Không thể dùng cách diễn đạt này. Vui lòng diễn đạt theo cách khác.',
+  contentHidden: 'Đã ẩn nội dung',
+  supportedGames: 'Trò chơi hỗ trợ nhiều người',
   roomName: 'Tên buổi gặp',
   roomNameHint:
     'Tối đa 24 ký tự. Khi bạn mở buổi gặp, người ở gần có thể thấy tên này và tên trò chơi.',
@@ -96,7 +114,7 @@ export const vi: NearbyMessages = {
   deleteTitle: 'Xóa khỏi thiết bị này?',
   deleteBody: 'Không thể hoàn tác. Bản sao của người kia sẽ không bị xóa.',
   storageError:
-    'Không thể lưu hoặc đọc lịch sử. Lịch sử đã lưu chưa bị ghi đè. Hãy giải phóng dung lượng hoặc xóa lịch sử không cần thiết rồi thử lại.',
+    'Không thể lưu hoặc đọc lịch sử. Lịch sử đã lưu không bị ghi đè. Hãy giải phóng dung lượng hoặc xóa lịch sử không cần thiết rồi thử lại.',
   clear: 'Xóa mọi dữ liệu Nearby Play',
   clearBody:
     'Thao tác này chỉ xóa lịch sử, tên hiển thị đã lưu của bạn và thông tin chặn cục bộ trên thiết bị này. Không thể hoàn tác.',
@@ -106,10 +124,11 @@ export const vi: NearbyMessages = {
   block: 'Chặn và rời đi',
   blockBody:
     'Thao tác này chặn bản cài đặt ứng dụng đó trên thiết bị của bạn và kết thúc buổi gặp. Cài đặt lại hoặc sửa đổi ứng dụng có thể vượt qua việc chặn này.',
-  report: 'Liên hệ hỗ trợ',
-  reportHint: 'Mở ứng dụng email của bạn. Lịch sử không được tự động đính kèm.',
+  report: 'Báo cáo nội dung',
+  reportHint:
+    'Chọn nội dung và lý do. Kiểm tra chính xác những gì sẽ được đưa vào báo cáo. Không có gì được gửi tự động.',
   conduct:
-    'Hãy tôn trọng người khác. Không gửi nội dung quấy rối, đe dọa, tình dục hoặc thông tin cá nhân. Bạn có thể chặn hoặc rời đi bất cứ lúc nào. Khi trò chuyện được bật, bạn có thể ẩn tin nhắn đến.',
+    'Tên buổi gặp, tên hiển thị và tin nhắn không được chứa nội dung quấy rối, đe dọa, thù ghét, tình dục hoặc thông tin cá nhân. Bạn có thể báo cáo, chặn hoặc rời đi. Khi bật trò chuyện, bạn có thể ẩn tin nhắn đến.',
   accept: 'Tôi đồng ý và muốn tiếp tục',
   historyReadOnly: 'Lịch sử chỉ để xem. Mở lịch sử không kết nối lại hay gửi tin nhắn.',
   openGame: 'Xem ván chơi',

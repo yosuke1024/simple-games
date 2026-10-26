@@ -4,6 +4,31 @@ Google Play への公開前に、この順で確認する。
 **チェックが通らない項目を「たぶん大丈夫」で飛ばさない。**
 実施していない検証を成功扱いにしないこと([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))。
 
+## 2026-10-26: 1.6.0／10600 本番公開の準備
+
+オーナーは対応ゲームリンクの追加、Bluetooth関連の申告確認、本番公開を明示依頼した。
+1.5.4の内部テスト／TestFlight公開と、本番1.6.0の公開は分けて記録する。
+
+- [x] 探索画面の対応13ゲームのリンクと、探索を止めて通常トップへ移動する処理。
+      Browser/i18n 51件、App routing 10件、日英独320/390px表示を確認。
+- [x] iOS PrivacyInfoの実使用理由3件とResources登録。署名なしiOS buildと同梱確認。
+- [x] Android背景scan停止／復帰と両OSのIPv6対応コード。Android native 36件、
+      iOS native compileと探索／runtime checksが成功。IPv6-only実機は未検証。
+- [ ] 通報の対象確認・任意外部送信、承認前／退出後block、限定的内容filterの最終統合確認。
+- [ ] Nearbyの高リスク文言・OS用途文の全出荷言語の独立逆翻訳と作者確認。
+- [ ] 最終差分のreview、CI、WebのNearby runtime非同梱確認。
+- [ ] 実機の接続／ゲーム／背景復帰とGoogle Play FGS用動画。
+- [ ] 公開privacy/termsおよび45本の掲載情報をpixapps-landing #214で同期。
+- [ ] Play connectedDevice FGS申告、Data safety、IARC内容交換、App access手順。
+- [ ] ASCチャット／UGC年齢項目、App Privacy、2台審査手順、1.6.0 metadata。
+- [ ] 最終sourceと一致するAAB／IPAの10600と署名・広告・含有データ確認。
+- [ ] 本番審査へ提出。審査承認やストアでの一般公開は、提出成功と区別する。
+
+現在のストア設定の確認（2026-10-26）: iOS公開版1.5.0、年齢質問のMessaging and Chat／
+UGCがfalseのまま。Playは13–15／16–17／18歳以上を対象とし、12歳以下は未選択。
+FGSは未申告。Data safetyの「すべて転送時暗号化」はYesなので、平文の公開募集情報を
+含めた再評価が必要。各変更は実際に保存・提出されたことを確認してから完了扱いにする。
+
 ## 2026-10-25: 13本の近隣対戦を含む次のテスト配布
 
 オーナーの「13本すべてをアプリに収録する」に従い、Chess / Nested Tic-Tac-Toe / Scopa / Nimも正式収録へ変更。

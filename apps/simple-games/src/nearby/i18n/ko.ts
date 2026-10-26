@@ -2,6 +2,24 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const ko: NearbyMessages = {
+  reportReason: '사유',
+  reportHarassment: '괴롭힘 또는 위협',
+  reportSexual: '성적인 내용',
+  reportOther: '그 밖의 유해한 내용',
+  reportContent: '포함할 내용',
+  reportConsent: '이 내용을 확인했고 신고에 포함하고 싶습니다.',
+  reportEmail: '이메일 초안 열기',
+  reportCopy: '신고 내용 복사',
+  reportCopied: '복사했습니다. 보내려면 지원팀에 보낼 이메일에 붙여넣으세요.',
+  reportCopyFailed: '복사하지 못했습니다. 위의 텍스트를 선택하여 복사할 수 있습니다.',
+  hideListing: '이 모임 숨기기',
+  hideListingHint: '이번 검색에서만 숨깁니다. 플레이어를 차단하는 것은 아닙니다.',
+  blockPlayer: '플레이어 차단',
+  blockHistoryBody:
+    '이 기기에서 상대방 앱의 현재 설치본을 차단합니다. 상대방이 앱을 다시 설치하거나 수정하면 차단을 우회할 수 있습니다.',
+  contentBlocked: '이 표현은 사용할 수 없습니다. 다른 표현으로 작성해 주세요.',
+  contentHidden: '내용을 숨겼습니다',
+  supportedGames: '대전 지원 게임',
   roomName: '모임 이름',
   roomNameHint: '최대 24자. 모집 중에는 이 이름과 게임 이름이 근처 사람들에게 표시됩니다.',
   participants: '{count}/{capacity}명',
@@ -103,10 +121,11 @@ export const ko: NearbyMessages = {
   block: '차단하고 나가기',
   blockBody:
     '이 기기에서 상대의 앱 설치본을 차단하고 모임을 종료합니다. 앱을 재설치하거나 수정하면 이 차단을 우회할 수 있습니다.',
-  report: '지원팀에 문의',
-  reportHint: '이메일 앱을 엽니다. 기록은 자동으로 첨부되지 않습니다.',
+  report: '내용 신고',
+  reportHint:
+    '내용과 사유를 선택하세요. 무엇이 포함될지 정확히 확인하세요. 아무것도 자동으로 전송되지 않습니다.',
   conduct:
-    '서로를 배려하세요. 괴롭힘, 위협, 성적인 내용이나 개인정보를 보내지 마세요. 언제든 차단하거나 나갈 수 있습니다. 채팅이 켜져 있으면 받은 메시지를 숨길 수 있습니다.',
+    '모임 이름, 표시 이름과 메시지에 괴롭힘, 위협, 혐오 표현, 성적인 내용 또는 개인정보를 포함하지 마세요. 신고하거나 차단하거나 모임을 나갈 수 있습니다. 채팅이 활성화되어 있으면 받은 메시지를 숨길 수 있습니다.',
   accept: '동의하고 계속하기',
   historyReadOnly: '기록은 조회 전용입니다. 열어도 재연결하거나 메시지를 보내지 않습니다.',
   openGame: '게임 보기',

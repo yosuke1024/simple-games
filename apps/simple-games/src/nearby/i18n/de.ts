@@ -2,6 +2,25 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const de: NearbyMessages = {
+  reportReason: 'Grund',
+  reportHarassment: 'Belästigung oder Drohungen',
+  reportSexual: 'Sexuelle Inhalte',
+  reportOther: 'Andere schädliche Inhalte',
+  reportContent: 'Aufzunehmender Inhalt',
+  reportConsent: 'Ich habe diesen Inhalt geprüft und möchte ihn in die Meldung aufnehmen.',
+  reportEmail: 'E-Mail-Entwurf öffnen',
+  reportCopy: 'Meldung kopieren',
+  reportCopied: 'Kopiert. Zum Senden in eine E-Mail an den Support einfügen.',
+  reportCopyFailed: 'Kopieren fehlgeschlagen. Du kannst den Text oben auswählen und kopieren.',
+  hideListing: 'Diese Runde ausblenden',
+  hideListingHint: 'Nur für diese Suche ausgeblendet. Der Spieler wird dadurch nicht blockiert.',
+  blockPlayer: 'Spieler blockieren',
+  blockHistoryBody:
+    'Diese App-Installation auf diesem Gerät blockieren. Durch Neuinstallation oder Änderung der anderen App kann die Sperre umgangen werden.',
+  contentBlocked: 'Diese Formulierung ist nicht erlaubt. Bitte formuliere es anders.',
+  contentHidden: 'Inhalt ausgeblendet',
+
+  supportedGames: 'Unterstützte Mehrspieler-Spiele',
   roomName: 'Name des Treffens',
   roomNameHint:
     'Bis zu 24 Zeichen. Während du ein Treffen anbietest, sind dieser Name und das Spiel für Personen in der Nähe sichtbar.',
@@ -109,10 +128,11 @@ export const de: NearbyMessages = {
   block: 'Blockieren und verlassen',
   blockBody:
     'Diese App-Installation wird auf deinem Gerät blockiert und das Treffen beendet. Eine Neuinstallation oder Änderung der App kann die Blockierung umgehen.',
-  report: 'Support kontaktieren',
-  reportHint: 'Öffnet deine E-Mail-App. Verlauf wird nicht automatisch angehängt.',
+  report: 'Inhalt melden',
+  reportHint:
+    'Wähle den Inhalt und einen Grund. Prüfe genau, was enthalten sein wird. Nichts wird automatisch gesendet.',
   conduct:
-    'Sei rücksichtsvoll. Sende keine Belästigungen, Drohungen, sexuellen Inhalte oder persönlichen Informationen. Du kannst jederzeit blockieren oder gehen. Wenn der Chat aktiviert ist, kannst du eingehende Nachrichten ausblenden.',
+    'Rundennamen, Anzeigenamen und Nachrichten dürfen keine Belästigungen, Drohungen, hasserfüllten oder sexuellen Inhalte oder persönlichen Informationen enthalten. Du kannst melden, blockieren oder die Runde verlassen. Bei aktiviertem Chat kannst du eingehende Nachrichten ausblenden.',
   accept: 'Ich stimme zu und möchte fortfahren',
   historyReadOnly:
     'Verlauf kann nur angesehen werden. Beim Öffnen wird keine Verbindung hergestellt und keine Nachricht gesendet.',

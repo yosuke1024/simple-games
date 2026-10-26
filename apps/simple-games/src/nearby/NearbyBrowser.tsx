@@ -1,6 +1,7 @@
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { useEffect, useRef, useState } from 'react';
+import { NEARBY_GAME_CODES } from '../app/nearbyGameIds';
 import { useSettings } from '../state/SettingsContext';
 import { IconBack } from '../ui/components/icons';
 import { NearbyController } from './controller';
@@ -10,6 +11,9 @@ import { useNearbyText } from './i18n';
 import type { Transport } from './native';
 import { isPlayerName } from './session';
 import { loadHistory } from './history';
+import { isAllowedNearbyText } from './contentFilter';
+import { ReportDialog } from './ReportDialog';
+import { listingKey, type ReportTarget } from './report';
 
 interface Selection {
   id: string;
@@ -17,12 +21,14 @@ interface Selection {
   roomName: string;
   gameId: NearbyGameId;
 }
+const supportedGames = Object.keys(NEARBY_GAME_CODES) as NearbyGameId[];
 
 /** Browse all games without loading a board or starting a game handshake. */
 export function NearbyBrowser({
   onExit,
   onChanged,
   onJoin,
+  onOpenGame,
   onRegisterStop,
   visible = true,
 }: {
@@ -30,6 +36,7 @@ export function NearbyBrowser({
   onExit: () => void;
   onChanged: () => void;
   onJoin: (controller: NearbyController, gameId: NearbyGameId, game: NearbyGame) => void;
+  onOpenGame?: (gameId: NearbyGameId) => void;
   onRegisterStop?: (stop: (() => Promise<void>) | null) => void;
 }) {
   const { t } = useSettings();
@@ -44,6 +51,8 @@ export function NearbyBrowser({
   const [accepted, setAccepted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [report, setReport] = useState<ReportTarget | null>(null);
+  const [hiddenListings, setHiddenListings] = useState<Set<string>>(new Set());
   const live = useRef(true);
   const handedOff = useRef(false);
   const shown = useRef(visible);
@@ -64,10 +73,15 @@ export function NearbyBrowser({
 
   const back = () => {
     if (!visible) return;
+    if (report) {
+      setReport(null);
+      return;
+    }
     if (selection && !busy) {
       setSelection(null);
       return;
     }
+    attempt.current += 1;
     void controllerRef.current?.stop();
     onExit();
   };
@@ -139,6 +153,7 @@ export function NearbyBrowser({
     if (!live.current || !shown.current || request !== attempt.current) return;
     setFailed(false);
     setSelection(null);
+    setHiddenListings(new Set());
     const next = new NearbyController(
       { host: false, gameId: null, name: '', roomName: '', chatEnabled: false, transport },
       onChanged,
@@ -182,143 +197,218 @@ export function NearbyBrowser({
       if (current()) setBusy(false);
     }
   };
+  const openGame = async (gameId: NearbyGameId) => {
+    if (!onOpenGame || busy || !visible) return;
+    const request = ++attempt.current;
+    const current = () => live.current && shown.current && request === attempt.current;
+    setBusy(true);
+    setFailed(false);
+    try {
+      // Leave discovery before mounting a solo game's home. Never reuse this
+      // discovery connection or load an adapter for this navigation shortcut.
+      await controllerRef.current?.stop();
+      if (current()) onOpenGame(gameId);
+    } catch {
+      if (current()) setFailed(true);
+    } finally {
+      if (current()) setBusy(false);
+    }
+  };
 
   return (
     <div className="screen nearby-screen">
-      <header className="screen-header">
-        <button className="icon-btn" type="button" aria-label={n('back')} onClick={back}>
-          <IconBack />
-        </button>
-        <h1 className="nearby-title" tabIndex={-1} ref={titleRef}>
-          {t('findNearbyOpponents')}
-        </h1>
-        <span className="icon-btn-placeholder" />
-      </header>
-      <main className="nearby-stack">
-        {selection ? (
-          <form
-            className="nearby-join-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void join();
-            }}
-          >
-            <section className="nearby-card">
-              <h2>{selection.roomName}</h2>
-              <p>{GAME_TITLES[selection.gameId]}</p>
-              <p className="nearby-note">{n(transport === 'ble' ? 'bluetooth' : 'wifi')}</p>
-            </section>
-            {!available && <p role="status">{n('listingUnavailable')}</p>}
-            <label className="nearby-field">
-              {n('name')}
-              <input
-                value={name}
-                maxLength={48}
-                autoComplete="off"
-                aria-describedby="nearby-join-name-hint"
-                onChange={(event) => {
-                  nameEdited.current = true;
-                  setName(event.target.value);
-                }}
-              />
-            </label>
-            <p id="nearby-join-name-hint" className="nearby-note">
-              {n('nameHint')}
-            </p>
-            <p className="nearby-note">{n('conduct')}</p>
-            <label className="nearby-check">
-              <input
-                type="checkbox"
-                checked={accepted}
-                onChange={(event) => setAccepted(event.target.checked)}
-              />
-              {n('accept')}
-            </label>
-            <button
-              className="btn btn-primary"
-              disabled={busy || !available || !accepted || !isPlayerName(name.trim())}
+      <div inert={report !== null}>
+        <header className="screen-header">
+          <button className="icon-btn" type="button" aria-label={n('back')} onClick={back}>
+            <IconBack />
+          </button>
+          <h1 className="nearby-title" tabIndex={-1} ref={titleRef}>
+            {t('findNearbyOpponents')}
+          </h1>
+          <span className="icon-btn-placeholder" />
+        </header>
+        <main className="nearby-stack">
+          {selection ? (
+            <form
+              className="nearby-join-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void join();
+              }}
             >
-              {n(busy ? 'connecting' : 'join')}
-            </button>
-          </form>
-        ) : (
-          <>
-            <p className="nearby-note">{n('browseHint')}</p>
-            <fieldset className="nearby-choices" disabled={active || busy}>
-              <legend>{n('chooseConnection')}</legend>
-              {(['ble', 'lan'] as const).map((option) => (
-                <label key={option}>
-                  <input
-                    type="radio"
-                    name="discovery-transport"
-                    checked={transport === option}
-                    onChange={() => setTransport(option)}
-                  />
-                  {n(option === 'ble' ? 'bluetooth' : 'wifi')}
-                </label>
-              ))}
-            </fieldset>
-            {active ? (
-              <>
-                <p role="status">{n('searching')}</p>
-                <div className="nearby-stack nearby-listings">
-                  {controller?.peers.length === 0 && <p className="nearby-note">{n('noPeers')}</p>}
-                  {controller?.peers.map(
-                    (peer) =>
-                      peer.roomName && (
-                        <button
-                          key={peer.id}
-                          type="button"
-                          className="nearby-peer"
-                          aria-label={`${peer.roomName} ${GAME_TITLES[peer.gameId]} ${n('participants', { count: 1, capacity: 2 })}`}
-                          onClick={() => setSelection(peer)}
-                        >
-                          <strong>{peer.roomName}</strong>
-                          <span>{GAME_TITLES[peer.gameId]}</span>
-                          <span>{n('participants', { count: 1, capacity: 2 })}</span>
-                        </button>
-                      ),
-                  )}
-                </div>
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={() => {
-                    void controller?.stop();
+              <section className="nearby-card">
+                <h2>{selection.roomName}</h2>
+                <p>{GAME_TITLES[selection.gameId]}</p>
+                <p className="nearby-note">{n(transport === 'ble' ? 'bluetooth' : 'wifi')}</p>
+              </section>
+              {!available && <p role="status">{n('listingUnavailable')}</p>}
+              <label className="nearby-field">
+                {n('name')}
+                <input
+                  value={name}
+                  maxLength={48}
+                  autoComplete="off"
+                  aria-describedby="nearby-join-name-hint"
+                  onChange={(event) => {
+                    nameEdited.current = true;
+                    setName(event.target.value);
                   }}
-                >
-                  {n('stopSearch')}
-                </button>
-              </>
-            ) : (
+                />
+              </label>
+              <p id="nearby-join-name-hint" className="nearby-note">
+                {n('nameHint')}
+              </p>
+              {!isAllowedNearbyText(name) && <p role="alert">{n('contentBlocked')}</p>}
+              <p className="nearby-note">{n('conduct')}</p>
+              <label className="nearby-check">
+                <input
+                  type="checkbox"
+                  checked={accepted}
+                  onChange={(event) => setAccepted(event.target.checked)}
+                />
+                {n('accept')}
+              </label>
               <button
                 className="btn btn-primary"
-                disabled={busy}
-                onClick={() => {
-                  void search();
-                }}
+                disabled={busy || !available || !accepted || !isPlayerName(name.trim())}
               >
-                {n('search')}
+                {n(busy ? 'connecting' : 'join')}
               </button>
-            )}
-          </>
-        )}
-        {controller?.state === 'ended' && controller.reason !== 'ended' && (
-          <p className="nearby-warning" role="status">
-            {n(controller.reason)}
-          </p>
-        )}
-        {failed && (
-          <p className="nearby-warning" role="alert">
-            {n('connectionError')}
-          </p>
-        )}
-        {(storageError || controller?.storageFailed) && (
-          <p className="nearby-warning" role="alert">
-            {n('storageError')}
-          </p>
-        )}
-      </main>
+            </form>
+          ) : (
+            <>
+              <p className="nearby-note">{n('browseHint')}</p>
+              <fieldset className="nearby-choices" disabled={active || busy}>
+                <legend>{n('chooseConnection')}</legend>
+                {(['ble', 'lan'] as const).map((option) => (
+                  <label key={option}>
+                    <input
+                      type="radio"
+                      name="discovery-transport"
+                      checked={transport === option}
+                      onChange={() => setTransport(option)}
+                    />
+                    {n(option === 'ble' ? 'bluetooth' : 'wifi')}
+                  </label>
+                ))}
+              </fieldset>
+              {active ? (
+                <>
+                  <p role="status">{n('searching')}</p>
+                  <div className="nearby-stack nearby-listings">
+                    {controller?.peers.filter((peer) => !hiddenListings.has(listingKey(peer)))
+                      .length === 0 && <p className="nearby-note">{n('noPeers')}</p>}
+                    {controller?.peers
+                      .filter((peer) => !hiddenListings.has(listingKey(peer)))
+                      .map(
+                        (peer) =>
+                          peer.roomName && (
+                            <article className="nearby-listing" key={peer.id}>
+                              <button
+                                type="button"
+                                className="nearby-peer"
+                                aria-label={`${peer.roomName} ${GAME_TITLES[peer.gameId]} ${n('participants', { count: 1, capacity: 2 })}`}
+                                onClick={() => setSelection(peer)}
+                              >
+                                <strong>{peer.roomName}</strong>
+                                <span>{GAME_TITLES[peer.gameId]}</span>
+                                <span>{n('participants', { count: 1, capacity: 2 })}</span>
+                              </button>
+                              <div className="nearby-actions nearby-listing-actions">
+                                <button
+                                  className="btn btn-ghost"
+                                  disabled={busy}
+                                  onClick={() =>
+                                    setHiddenListings((old) => new Set([...old, listingKey(peer)]))
+                                  }
+                                >
+                                  {n('hideListing')}
+                                </button>
+                                <button
+                                  className="btn btn-ghost"
+                                  disabled={busy}
+                                  onClick={() =>
+                                    setReport({
+                                      title: GAME_TITLES[peer.gameId],
+                                      content: peer.roomName!,
+                                    })
+                                  }
+                                >
+                                  {n('report')}
+                                </button>
+                              </div>
+                            </article>
+                          ),
+                      )}
+                    {hiddenListings.size > 0 && (
+                      <p className="nearby-note" role="status">
+                        {n('hideListingHint')}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={() => {
+                      void controller?.stop();
+                    }}
+                  >
+                    {n('stopSearch')}
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="btn btn-primary"
+                  disabled={busy}
+                  onClick={() => {
+                    void search();
+                  }}
+                >
+                  {n('search')}
+                </button>
+              )}
+            </>
+          )}
+          {controller?.state === 'ended' && controller.reason !== 'ended' && (
+            <p className="nearby-warning" role="status">
+              {n(controller.reason)}
+            </p>
+          )}
+          {failed && (
+            <p className="nearby-warning" role="alert">
+              {n('connectionError')}
+            </p>
+          )}
+          {(storageError || controller?.storageFailed) && (
+            <p className="nearby-warning" role="alert">
+              {n('storageError')}
+            </p>
+          )}
+          {!selection && onOpenGame && (
+            <section className="nearby-supported-games" aria-labelledby="nearby-supported-title">
+              <h2 id="nearby-supported-title">{n('supportedGames')}</h2>
+              <ul>
+                {supportedGames.map((gameId) => (
+                  <li key={gameId}>
+                    <a
+                      href={`?game=${gameId}`}
+                      aria-disabled={busy || !visible}
+                      tabIndex={busy || !visible ? -1 : undefined}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        void openGame(gameId);
+                      }}
+                    >
+                      {GAME_TITLES[gameId]}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </main>
+      </div>
+      {visible && report && <ReportDialog target={report} onClose={() => setReport(null)} />}
     </div>
   );
 }

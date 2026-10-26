@@ -469,6 +469,63 @@ describe('nearby all-game discovery handoff', () => {
   );
 });
 describe('nearby lifecycle and persistence', () => {
+  it('closes an unapproved connection immediately while the block write is still pending', async () => {
+    vi.useFakeTimers();
+    const { a, host } = await setup();
+    const write = a.plugin.writeHistory;
+    let release!: () => void;
+    a.plugin.writeHistory = async (value) => {
+      await new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      await write(value);
+    };
+    const blocking = host.block();
+    await settle();
+    try {
+      expect(host.state).toBe('ended');
+      expect(host.session!.closed).toBe('ended');
+      expect(host.session!.paired).toBe(false);
+    } finally {
+      release();
+      await vi.advanceTimersByTimeAsync(1751);
+      await blocking;
+    }
+    expect(await blocking).toBe(true);
+  });
+
+  it('persists a peer block before admission without creating an approved transcript', async () => {
+    vi.useFakeTimers();
+    const { a, host, guest } = await setup();
+    const identity = host.session!.peerIdentity;
+    expect(host.session!.paired).toBe(false);
+    const blocking = host.block();
+    await settle();
+    await vi.advanceTimersByTimeAsync(1751);
+    expect(await blocking).toBe(true);
+    expect(host.reason).toBe('blocked');
+    const saved = await loadHistory(a.plugin);
+    expect(saved.blocked).toEqual([identity]);
+    expect(saved.gatherings).toEqual([]);
+    expect(guest.session!.paired).toBe(false);
+  });
+
+  it('ends safely without claiming the peer was blocked when persistence fails', async () => {
+    vi.useFakeTimers();
+    const { a, host } = await setup();
+    a.plugin.writeHistory = async () => {
+      throw new Error('disk full');
+    };
+    const blocking = host.block();
+    await settle();
+    await vi.advanceTimersByTimeAsync(1751);
+    expect(await blocking).toBe(false);
+    expect(host.state).toBe('ended');
+    expect(host.reason).toBe('ended');
+    expect(host.storageFailed).toBe(true);
+    expect(JSON.parse((await a.plugin.readHistory()).data!).blocked).toEqual([]);
+  });
+
   it('filters discovery by the selected game and never connects an unlisted peer', async () => {
     const p = native();
     const controller = create(
@@ -565,6 +622,7 @@ describe('nearby lifecycle and persistence', () => {
     const saved = (await loadHistory(a.plugin)).gatherings[0]!;
     expect(saved.messages[0]?.text).toBe('Hello');
     expect(saved.roomName).toBe('Room 1234');
+    expect(saved.peerIdentity).toBe(host.session!.peerIdentity);
     expect(saved.names).toEqual(['A', 'B']);
     expect(host.session?.roomName).toBe('Room 1234');
     expect(saved.games[0]?.finished).toBe(false);

@@ -621,6 +621,7 @@ export class NearbyController {
       at: now,
       label: this.label,
       roomName: session.roomName,
+      peerIdentity: session.peerIdentity,
       transport: this.setup.transport,
       host: this.setup.host,
       names: session.names as [string, string],
@@ -664,14 +665,23 @@ export class NearbyController {
   }
   async block() {
     const identity = this.session?.peerIdentity;
-    if (!identity) return;
+    if (!identity) return false;
+    // Close admission/chat immediately, including while the queued local write
+    // is slow. A failed write must never leave the unwanted connection open.
+    const blocking = blockIdentity(identity, this.plugin);
+    const closing = this.stop();
+    let saved = false;
     try {
-      await blockIdentity(identity, this.plugin);
+      await blocking;
+      saved = true;
+      this.reason = 'blocked';
+      this.changed();
     } catch {
       this.storageFailed = true;
       this.changed();
     }
-    await this.stop('blocked');
+    await closing;
+    return saved;
   }
   stop(reason: EndReason = 'ended', flushRejection = false): Promise<void> {
     if (this.stopping) return this.stopping;

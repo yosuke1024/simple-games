@@ -29,6 +29,8 @@ export interface Gathering {
   id: string;
   at: number;
   endedAt?: number;
+  /** Local block target, never advertised or included in a report automatically. */
+  peerIdentity?: string;
   label: string;
   roomName?: string;
   transport: Transport;
@@ -84,6 +86,7 @@ export function validateHistory(v: unknown): HistoryData | null {
       !object(g) ||
       !id(g.id) ||
       !integer(g.at) ||
+      (g.peerIdentity !== undefined && !id(g.peerIdentity)) ||
       (g.endedAt !== undefined && !integer(g.endedAt)) ||
       !text(g.label, 32) ||
       (g.roomName !== undefined && !strictName(g.roomName)) ||

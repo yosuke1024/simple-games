@@ -1,4 +1,22 @@
 export const en = {
+  reportReason: 'Reason',
+  reportHarassment: 'Harassment or threats',
+  reportSexual: 'Sexual content',
+  reportOther: 'Other harmful content',
+  reportContent: 'Content to include',
+  reportConsent: 'I have reviewed this content and want to include it in the report.',
+  reportEmail: 'Open email draft',
+  reportCopy: 'Copy report',
+  reportCopied: 'Copied. Paste into an email to support to send it.',
+  reportCopyFailed: 'Could not copy. You can select and copy the text above.',
+  hideListing: 'Hide this gathering',
+  hideListingHint: 'Hidden for this search only. This does not block the player.',
+  blockPlayer: 'Block player',
+  blockHistoryBody:
+    'Block this app installation on this device. Reinstalling or modifying the other app can bypass this block.',
+  contentBlocked: 'This wording cannot be used. Please phrase it differently.',
+  contentHidden: 'Content hidden',
+  supportedGames: 'Supported multiplayer games',
   roomName: 'Gathering name',
   roomNameHint:
     'Up to 24 characters. While hosting, this name and the game are visible to people nearby.',
@@ -103,10 +121,11 @@ export const en = {
   block: 'Block and leave',
   blockBody:
     'This blocks this app installation on your device and ends the gathering. Reinstalling or modifying the app can bypass this block.',
-  report: 'Contact support',
-  reportHint: 'Opens your email app. History is not attached automatically.',
+  report: 'Report content',
+  reportHint:
+    'Choose the content and a reason. Review exactly what will be included. Nothing is sent automatically.',
   conduct:
-    'Be considerate. Do not send harassment, threats, sexual content, or personal information. You can block or leave at any time. When chat is enabled, you can hide incoming messages.',
+    'Gathering names, display names and messages must not contain harassment, threats, hateful or sexual content, or personal information. You can report, block or leave. When chat is enabled, you can hide incoming messages.',
   accept: 'I agree and want to continue',
   historyReadOnly: 'History is read-only. Opening it does not reconnect or send messages.',
   openGame: 'Show game',

@@ -2,6 +2,24 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const zhHans: NearbyMessages = {
+  reportReason: '举报原因',
+  reportHarassment: '骚扰或威胁',
+  reportSexual: '性相关内容',
+  reportOther: '其他有害内容',
+  reportContent: '举报中包含的内容',
+  reportConsent: '我已查看此内容，并希望将其包含在举报中。',
+  reportEmail: '打开邮件草稿',
+  reportCopy: '复制举报内容',
+  reportCopied: '已复制。请粘贴到发给支持团队的邮件中，再发送。',
+  reportCopyFailed: '无法复制。你可以选中上方的文字并复制。',
+  hideListing: '隐藏此聚会',
+  hideListingHint: '仅在本次查找中隐藏。这不会屏蔽该玩家。',
+  blockPlayer: '屏蔽玩家',
+  blockHistoryBody:
+    '仅在此设备上屏蔽对方当前安装的应用。对方重新安装或修改应用后，可能绕过此屏蔽。',
+  contentBlocked: '不能使用此表述。请换一种说法。',
+  contentHidden: '内容已隐藏',
+  supportedGames: '支持对战的游戏',
   roomName: '聚会名称',
   roomNameHint: '最多24个字符。招募期间，附近的人可以看到此名称和游戏名称。',
   participants: '{count}/{capacity}人',
@@ -100,10 +118,10 @@ export const zhHans: NearbyMessages = {
   block: '屏蔽并离开',
   blockBody:
     '这会在你的设备上屏蔽对方的此应用安装实例，并结束聚会。重新安装或修改应用可绕过此屏蔽。',
-  report: '联系支持',
-  reportHint: '打开你的邮件应用。不会自动附加历史记录。',
+  report: '举报内容',
+  reportHint: '选择要举报的内容和原因，并确认将包含哪些内容。不会自动发送任何内容。',
   conduct:
-    '请体谅他人。不要发送骚扰、威胁、色情内容或个人信息。你可以随时屏蔽或离开。启用聊天时，你可以隐藏收到的消息。',
+    '聚会名称、显示名称和消息不得包含骚扰、威胁、仇恨或性相关内容，也不得包含个人信息。你可以举报、屏蔽或退出。启用聊天时，你可以隐藏收到的消息。',
   accept: '我同意并继续',
   historyReadOnly: '历史记录仅供查看。打开记录不会重新连接或发送消息。',
   openGame: '查看游戏',
