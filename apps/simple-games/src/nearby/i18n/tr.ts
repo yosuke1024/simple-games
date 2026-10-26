@@ -127,7 +127,7 @@ export const tr: NearbyMessages = {
   reportHint:
     'İçeriği ve bir neden seç. Nelerin ekleneceğini tam olarak gözden geçir. Hiçbir şey otomatik olarak gönderilmez.',
   conduct:
-    'Buluşma adları, görünen adlar ve mesajlar taciz, tehdit, nefret söylemi, cinsel içerik veya kişisel bilgi içermemelidir. Bildirebilir, engelleyebilir veya ayrılabilirsin. Sohbet açıkken gelen mesajları gizleyebilirsin.',
+    'Buluşma adları, görünen adlar ve mesajlar taciz, tehdit, nefret söylemi, cinsel içerik veya kişisel bilgi içermemelidir. Bildirebilir, engelleyebilir veya ayrılabilirsin. Sohbet ayarı etkinse gelen mesajları gizleyebilirsin.',
   accept: 'Kabul ediyorum ve devam etmek istiyorum',
   historyReadOnly: 'Geçmiş salt okunurdur. Açmak yeniden bağlanmaz veya mesaj göndermez.',
   openGame: 'Oyunu göster',

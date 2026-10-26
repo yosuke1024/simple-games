@@ -114,7 +114,7 @@ export const vi: NearbyMessages = {
   deleteTitle: 'Xóa khỏi thiết bị này?',
   deleteBody: 'Không thể hoàn tác. Bản sao của người kia sẽ không bị xóa.',
   storageError:
-    'Không thể lưu hoặc đọc lịch sử. Lịch sử đã lưu chưa bị ghi đè. Hãy giải phóng dung lượng hoặc xóa lịch sử không cần thiết rồi thử lại.',
+    'Không thể lưu hoặc đọc lịch sử. Lịch sử đã lưu không bị ghi đè. Hãy giải phóng dung lượng hoặc xóa lịch sử không cần thiết rồi thử lại.',
   clear: 'Xóa mọi dữ liệu Nearby Play',
   clearBody:
     'Thao tác này chỉ xóa lịch sử, tên hiển thị đã lưu của bạn và thông tin chặn cục bộ trên thiết bị này. Không thể hoàn tác.',
