@@ -93,7 +93,7 @@ export class GroupSession {
       round: this.round,
       you: peer === 'host' ? 0 : (this.members.get(peer) ?? -1),
       seats: this.seats.map((s) => ({ ...s })),
-      state: structuredClone(this.state),
+      state: JSON.parse(JSON.stringify(this.state)) as unknown,
     };
   }
   private publish() {

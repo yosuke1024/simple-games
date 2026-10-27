@@ -268,7 +268,7 @@ export function deleteGathering(gatheringId: string, io: HistoryIO = nearbyPlugi
   });
 }
 export function saveGroup(group: SavedGroup, io: HistoryIO = nearbyPlugin): Promise<void> {
-  const snapshot = structuredClone(group);
+  const snapshot = JSON.parse(JSON.stringify(group)) as SavedGroup;
   return queue(async () => {
     const data = await read(io);
     data.groups ??= [];
