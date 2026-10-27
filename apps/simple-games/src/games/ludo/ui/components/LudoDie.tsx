@@ -91,9 +91,6 @@ export const LudoDie = memo(function LudoDie({
       onClick={onRoll}
     >
       {body}
-      <span className="ld-die-hint" aria-hidden="true">
-        {t('ludoRollAction')}
-      </span>
     </button>
   );
 });

@@ -469,11 +469,6 @@
   transform: translateY(2px);
   box-shadow: 0 1px 0 var(--accent);
 }
-.ld-die-hint {
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--accent);
-}
 .ld-die-face {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

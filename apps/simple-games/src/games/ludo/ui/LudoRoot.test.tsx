@@ -429,6 +429,7 @@ describe('a CPU lap', () => {
     expect(beats).toContain('move');
     expect(session.state.turn).toBe(YOU);
     expect(dieButton()).toBeInTheDocument();
+    expect(line()).toHaveTextContent('Your turn — throw the die.');
 
     // And then it stops: nothing moves on its own once the throw is yours.
     await advance(CPU_ROLL_DELAY_MS * 8);

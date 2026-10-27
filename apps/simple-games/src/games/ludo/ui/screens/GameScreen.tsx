@@ -108,17 +108,16 @@ export function LudoGameScreen() {
   // otherwise the extra throw looks like the turn never moved on.
   const throwingAgain = yourTurn && state.die === null && state.sixStreak > 0;
 
-  const line =
-    notice ??
-    (matchOver
-      ? ''
-      : yourTurn
-        ? state.die === null
-          ? throwingAgain
-            ? t('ludoRollAgain')
-            : t('ludoTurnRoll')
-          : t('ludoTurnMove', { die: state.die })
-        : t('ludoTurnCpu', { n: state.turn }));
+  const turnLine = matchOver
+    ? ''
+    : yourTurn
+      ? state.die === null
+        ? throwingAgain
+          ? t('ludoRollAgain')
+          : t('ludoTurnRoll')
+        : t('ludoTurnMove', { die: state.die })
+      : t('ludoTurnCpu', { n: state.turn });
+  const line = notice ? (canRoll ? `${notice} ${turnLine}` : notice) : turnLine;
 
   return (
     <div className="screen game-screen">
