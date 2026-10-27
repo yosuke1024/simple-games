@@ -46,7 +46,7 @@ import {
   YOU,
   type BySeat,
   type Seat,
-} from '../../game';
+} from '../../game/types';
 import { pawnLabel, placeLabel } from './seatText';
 
 /** The board is fifteen squares on a side (§1). */
@@ -159,6 +159,9 @@ interface Placed {
 
 export interface LudoBoardProps {
   pawns: BySeat<readonly [number, number, number, number]>;
+  /** Local seat stays at the bottom; omitted for the unchanged solo board. */
+  ownSeat?: Seat;
+  names?: readonly string[];
   /** Which of the player's pawns the rules allow right now (§7). */
   movable: readonly (0 | 1 | 2 | 3)[];
   /** False while a dialog is up or the match is over: nothing is pressable. */
@@ -171,9 +174,13 @@ export const LudoBoard = memo(function LudoBoard({
   movable,
   playing,
   onPawn,
+  ownSeat = YOU,
+  names,
 }: LudoBoardProps) {
   const { t } = useSettings();
   const reducedMotion = useReducedMotion();
+  const relativeSeat = (seat: Seat): Seat => ((seat - ownSeat + 4) % 4) as Seat;
+  const viewed = (cell: Cell): Cell => turnedBy(cell, (4 - ownSeat) % 4);
 
   /** Where each pawn stood at the previous commit, so a walk has a start. */
   const before = useRef<Map<string, Cell>>(new Map());
@@ -188,7 +195,7 @@ export const LudoBoard = memo(function LudoBoard({
         seat,
         pawn,
         progress,
-        cell: cellOf(seat, pawn, progress),
+        cell: viewed(cellOf(seat, pawn, progress)),
       });
     }
   }
@@ -205,11 +212,14 @@ export const LudoBoard = memo(function LudoBoard({
     const next = new Map<string, Cell>();
     for (const seat of SEATS) {
       for (let index = 0; index < PAWNS_PER_SEAT; index++) {
-        next.set(`${seat}-${index}`, cellOf(seat, index, pawns[seat][index]!));
+        next.set(
+          `${seat}-${index}`,
+          turnedBy(cellOf(seat, index, pawns[seat][index]!), (4 - ownSeat) % 4),
+        );
       }
     }
     before.current = next;
-  }, [pawns]);
+  }, [pawns, ownSeat]);
 
   return (
     <div className="ld-board" role="group" aria-label={t('ludoBoardLabel')}>
@@ -217,7 +227,7 @@ export const LudoBoard = memo(function LudoBoard({
         <div
           key={`yard-${seat}`}
           className={`ld-yard ld-seat-${seat}`}
-          style={at(YARD_BLOCKS[seat], 6)}
+          style={at(YARD_BLOCKS[relativeSeat(seat)], 6)}
           aria-hidden="true"
         />
       ))}
@@ -238,10 +248,10 @@ export const LudoBoard = memo(function LudoBoard({
             ]
               .filter(Boolean)
               .join(' ')}
-            style={at(cell)}
+            style={at(viewed(cell))}
             // A safe square standing empty still says so: it is the one thing
             // about a bare square that changes what happens on it (§2.3).
-            {...(safe && !occupied.has(keyOf(cell))
+            {...(safe && !occupied.has(keyOf(viewed(cell)))
               ? { role: 'img', 'aria-label': t('ludoSafeSquare') }
               : { 'aria-hidden': true })}
           >
@@ -255,7 +265,7 @@ export const LudoBoard = memo(function LudoBoard({
           <div
             key={`home-${seat}-${step}`}
             className={`ld-cell ld-column ld-seat-${seat}`}
-            style={at(homeColumnCell(seat, step))}
+            style={at(homeColumnCell(relativeSeat(seat), step))}
             aria-hidden="true"
           />
         )),
@@ -266,7 +276,7 @@ export const LudoBoard = memo(function LudoBoard({
           <div
             key={`slot-${seat}-${slot}`}
             className={`ld-cell ld-slot ld-seat-${seat}`}
-            style={at(yardCell(seat, slot))}
+            style={at(yardCell(relativeSeat(seat), slot))}
             aria-hidden="true"
           />
         )),
@@ -318,7 +328,7 @@ export const LudoBoard = memo(function LudoBoard({
         const nodeKey = `${one.id}@${key}`;
         const mark = <span className="ld-mark" aria-hidden="true" />;
 
-        if (one.seat === YOU && movableSet.has(one.pawn)) {
+        if (one.seat === ownSeat && movableSet.has(one.pawn)) {
           return (
             <button
               key={nodeKey}
@@ -338,7 +348,7 @@ export const LudoBoard = memo(function LudoBoard({
             className={className}
             style={style}
             role="img"
-            aria-label={pawnLabel(t, one.seat, one.progress)}
+            aria-label={pawnLabel(t, one.seat, one.progress, names?.[one.seat])}
           >
             {mark}
           </span>

@@ -146,6 +146,8 @@ export default defineConfig(({ mode }) => ({
               name: (id: string) => {
                 const match = id.match(/[\\/]src[\\/]nearby[\\/](.*)$/);
                 if (!match) return null;
+                if (/^(?:GroupRoot|groupController|groupSession)\.[jt]sx?$/.test(match[1]!))
+                  return 'nearby-group';
                 const game = /^games\/([^/]+?)(?:View)?\.tsx?$/.exec(match[1]!)?.[1];
                 return game && nearbyGames.has(game) ? `nearby-game-${game}` : 'nearby-core';
               },

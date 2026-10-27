@@ -78,7 +78,7 @@ export const en = {
     'Two of your pawns on one square block nobody and guard nothing. An enemy landing there sends the whole stack home, so a pile is a target, not a fort.',
   ludoStep5Title: 'Come home on an exact count',
   ludoStep5Body:
-    'A throw that would overshoot home cannot move that pawn at all. Get all four home to win. Every face comes from the match seed, each of the six is equally likely, and no seat is thrown for differently.',
+    'A throw that would overshoot home cannot move that pawn at all. Get all four home to win. Each of the six faces is equally likely, and no seat is thrown for differently.',
 } as const;
 
 /** Every locale of this game must provide exactly these keys. */

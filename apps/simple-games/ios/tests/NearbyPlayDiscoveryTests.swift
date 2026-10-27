@@ -38,13 +38,13 @@ struct NearbyPlayDiscoveryTests {
         check(!NearbyPlayListing.unavailable("{\"available\":0}"), "JSON numbers are not booleans")
         check(!NearbyPlayListing.unavailable("{\"available\":\"false\"}"), "Strings are not booleans")
         check(!NearbyPlayListing.unavailable(listing), "Recruiting room remains available")
-        for code in 0x81...0x8d {
-            check(NearbyPlayListing.supportsProbe(String(format: "P-%02x1234", code)), "All 13 new games support metadata")
+        for code in 0x81...0x8e {
+            check(NearbyPlayListing.supportsProbe(String(format: "P-%02x1234", code)), "All 14 new games support metadata")
         }
         for code in 1...13 {
             check(!NearbyPlayListing.supportsProbe(String(format: "F-%02x1234", code)), "Legacy game must never be probed")
         }
-        for label in ["P-801234", "P-8e1234", "F-000000", "X-811234", "P-81123é", "P-8112345"] {
+        for label in ["P-801234", "P-8f1234", "F-000000", "X-811234", "P-81123é", "P-8112345"] {
             check(!NearbyPlayListing.supportsProbe(label), "Invalid/reserved game code has no probe capability")
         }
         let record = NearbyPlayListing.txtRecord(json(bytes: 247))!

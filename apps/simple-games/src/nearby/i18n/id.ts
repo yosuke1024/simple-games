@@ -2,6 +2,28 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const id: NearbyMessages = {
+  groupSeats: 'Kursi pemain',
+  groupSeat: 'Kursi {seat}',
+  groupCpu: 'CPU',
+  groupHuman: 'Manusia',
+  groupOpen: 'Menunggu pemain',
+  groupDisconnected: 'Terputus',
+  groupCpuName: 'CPU {seat}',
+  groupHostStops: 'Jika host keluar, permainan berakhir untuk semua pemain.',
+  groupConnection:
+    'Maksimal 4 pemain. Manusia dan CPU dapat bermain bersama. Pilih jenis koneksi yang sama dengan host.',
+  groupSwitch: 'Kendali kursi {seat}',
+  groupWaiting: 'Menunggu pemain siap atau terhubung kembali. Host dapat mengalihkan kursi ke CPU.',
+  groupStart: 'Mulai permainan',
+  groupJoinSeat: 'Setujui untuk kursi {seat}',
+  groupHostLeft: 'Host terputus atau mengakhiri perkumpulan.',
+  groupBackToSetup: 'Kembali ke pengaturan',
+  groupFourSeats: '4 kursi pemain',
+  groupFinished: 'Permainan selesai',
+  groupWinner: '{name} menang',
+  groupNoChat: 'Saat ini, perkumpulan Ludo hanya menyediakan tindakan permainan.',
+  groupRestore: 'Kembalikan kendali ke pemain',
+  groupTakeover: 'Alihkan ke CPU',
   reportReason: 'Alasan',
   reportHarassment: 'Pelecehan atau ancaman',
   reportSexual: 'Konten seksual',

@@ -26,6 +26,7 @@ import {
   type Transport,
 } from './native';
 import { isPlayerName, isRoomName, Session } from './session';
+import { radioOwners as owners } from './ownership';
 
 export interface Setup {
   host: boolean;
@@ -46,7 +47,6 @@ export interface DiscoverySetup {
 export type EndReason = 'ended' | 'timeout' | 'connectionError' | 'declined' | 'blocked';
 // Native plugins are singletons. An old permission/start completion must never
 // close a newer gathering. The map also permits independent test devices.
-const owners = new WeakMap<NearbyPlugin, NearbyController>();
 const random: Random = () => crypto.getRandomValues(new Uint32Array(1))[0]! / 0x100000000;
 
 /** Owns exactly one user-started connection; opening history never instantiates it. */

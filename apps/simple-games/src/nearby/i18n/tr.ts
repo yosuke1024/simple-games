@@ -2,6 +2,29 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const tr: NearbyMessages = {
+  groupSeats: 'Oyuncu yerleri',
+  groupSeat: 'Yer {seat}',
+  groupCpu: 'CPU',
+  groupHuman: 'İnsan',
+  groupOpen: 'Oyuncu bekleniyor',
+  groupDisconnected: 'Bağlantı kesildi',
+  groupCpuName: 'CPU {seat}',
+  groupHostStops: 'Ev sahibi ayrılırsa oyun herkes için sona erer.',
+  groupConnection:
+    'En fazla 4 oyuncu. İnsanlar ve CPU’lar birlikte oynayabilir. Ev sahibiyle aynı bağlantı seçeneğini seçin.',
+  groupSwitch: '{seat}. yerin kontrolü',
+  groupWaiting:
+    'Oyuncuların hazır olması veya yeniden bağlanması bekleniyor. Ev sahibi bir yeri CPU’ya devredebilir.',
+  groupStart: 'Oyunu başlat',
+  groupJoinSeat: '{seat}. yer için onayla',
+  groupHostLeft: 'Ev sahibinin bağlantısı kesildi veya buluşmayı sonlandırdı.',
+  groupBackToSetup: 'Kuruluma dön',
+  groupFourSeats: '4 oyuncu yeri',
+  groupFinished: 'Oyun bitti',
+  groupWinner: '{name} kazandı',
+  groupNoChat: 'Ludo buluşmalarında şu anda yalnızca oyun kontrolleri kullanılabilir.',
+  groupRestore: 'Kontrolü oyuncuya geri ver',
+  groupTakeover: 'CPU’ya devret',
   reportReason: 'Neden',
   reportHarassment: 'Taciz veya tehditler',
   reportSexual: 'Cinsel içerik',

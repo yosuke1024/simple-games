@@ -2,6 +2,29 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const de: NearbyMessages = {
+  groupSeats: 'Spielerplätze',
+  groupSeat: 'Platz {seat}',
+  groupCpu: 'CPU',
+  groupHuman: 'Mensch',
+  groupOpen: 'Warten auf einen Spieler',
+  groupDisconnected: 'Verbindung getrennt',
+  groupCpuName: 'CPU {seat}',
+  groupHostStops: 'Wenn der Host die Runde verlässt, endet das Spiel für alle.',
+  groupConnection:
+    'Bis zu 4 Spieler. Menschen und CPUs können gemeinsam spielen. Wähle dieselbe Verbindungsart wie der Host.',
+  groupSwitch: 'Steuerung für Platz {seat}',
+  groupWaiting:
+    'Warten, bis die Spieler bereit oder wieder verbunden sind. Der Host kann einen Platz auf CPU umstellen.',
+  groupStart: 'Spiel starten',
+  groupJoinSeat: 'Für Platz {seat} zulassen',
+  groupHostLeft: 'Der Host hat die Verbindung getrennt oder die Runde beendet.',
+  groupBackToSetup: 'Zurück zur Einrichtung',
+  groupFourSeats: '4 Spielerplätze',
+  groupFinished: 'Spiel beendet',
+  groupWinner: '{name} gewinnt',
+  groupNoChat: 'In Ludo-Runden sind derzeit nur Spielaktionen verfügbar.',
+  groupRestore: 'Steuerung an Spieler zurückgeben',
+  groupTakeover: 'Auf CPU umstellen',
   reportReason: 'Grund',
   reportHarassment: 'Belästigung oder Drohungen',
   reportSexual: 'Sexuelle Inhalte',

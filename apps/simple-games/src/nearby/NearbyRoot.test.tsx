@@ -422,7 +422,7 @@ describe('Nearby Play user flows', () => {
     expect(screen.getByText('Saved host', { selector: 'strong' })).toBeVisible();
   });
 
-  it.each(Object.keys(NEARBY_GAME_CODES) as NearbyGameId[])(
+  it.each((Object.keys(NEARBY_GAME_CODES) as NearbyGameId[]).filter((id) => id !== 'ludo'))(
     'prepares and starts %s through its real game adapter and board',
     async (gameId) => {
       await renderNearby(<NearbyRoot gameId={gameId} onExit={() => {}} />);

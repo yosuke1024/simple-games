@@ -2,6 +2,29 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const ko: NearbyMessages = {
+  groupSeats: '플레이어 자리',
+  groupSeat: '자리 {seat}',
+  groupCpu: 'CPU',
+  groupHuman: '사람',
+  groupOpen: '플레이어를 기다리는 중',
+  groupDisconnected: '연결 끊김',
+  groupCpuName: 'CPU {seat}',
+  groupHostStops: '호스트가 나가면 모든 플레이어의 게임이 종료됩니다.',
+  groupConnection:
+    '최대 4명. 사람과 CPU가 함께 플레이할 수 있습니다. 호스트와 같은 연결 방식을 선택하세요.',
+  groupSwitch: '자리 {seat}의 조작 담당',
+  groupWaiting:
+    '플레이어의 준비 또는 재연결을 기다리는 중입니다. 호스트는 자리의 조작을 CPU로 전환할 수 있습니다.',
+  groupStart: '게임 시작',
+  groupJoinSeat: '자리 {seat} 참여 승인',
+  groupHostLeft: '호스트와 연결이 끊어졌거나 호스트가 모임을 종료했습니다.',
+  groupBackToSetup: '설정으로 돌아가기',
+  groupFourSeats: '플레이어 자리 4개',
+  groupFinished: '게임 종료',
+  groupWinner: '{name} 승리',
+  groupNoChat: '현재 Ludo 모임에서는 게임 조작만 이용할 수 있습니다.',
+  groupRestore: '플레이어에게 조작 돌려주기',
+  groupTakeover: 'CPU로 전환',
   reportReason: '사유',
   reportHarassment: '괴롭힘 또는 위협',
   reportSexual: '성적인 내용',

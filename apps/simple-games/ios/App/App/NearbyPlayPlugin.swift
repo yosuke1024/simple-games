@@ -4,6 +4,38 @@ import CoreBluetooth
 import Network
 import Capacitor
 
+private final class NearbyPlayLink {
+    let id: String
+    let frames = NearbyPlayPeerFrames()
+    let connectDeadline = NearbyPlayForegroundDeadline()
+    let sendDeadline = NearbyPlayForegroundDeadline()
+    let receiveDeadline = NearbyPlayForegroundDeadline()
+    var connection: NWConnection?
+    var central: CBCentral?
+    var ready = false
+    var sending = false
+    var disconnectAfterSending = false
+    var onClose: (() -> Void)?
+
+    init(id: String) { self.id = id }
+    func setActive(_ active: Bool) {
+        for timer in [connectDeadline, sendDeadline, receiveDeadline] {
+            if active { timer.resume() } else { timer.pause() }
+        }
+    }
+    func close() {
+        connectDeadline.cancel(); sendDeadline.cancel(); receiveDeadline.cancel()
+        connection?.stateUpdateHandler = nil
+        connection?.cancel()
+        connection = nil
+        central = nil
+        let completion = onClose
+        onClose = nil
+        completion?()
+    }
+    deinit { close() }
+}
+
 /// User-started nearby transport. BLE may continue while the web runtime is
 /// suspended; logical-session recovery after a lost radio link belongs to JS.
 /// All state, delegates, Network callbacks and timeouts run on the main queue.
@@ -16,6 +48,7 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "start", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "connect", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "send", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "disconnect", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "stop", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "readHistory", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "writeHistory", returnType: CAPPluginReturnPromise),
@@ -44,6 +77,10 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
     private var role = ""
     private var label = ""
     private var listingData: Data?
+    private var peerLimit = 1
+    private var selectedPeerId: String?
+    private var links: [String: NearbyPlayLink] = [:]
+    private var multiHost: Bool { peerLimit > 1 && role == "advertise" }
     private var epoch = 0
     private var lifecycleObservers: [NSObjectProtocol] = []
     private let eventBuffer = NearbyPlayEventBuffer()
@@ -105,6 +142,7 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
         browser?.cancel()
         listener?.cancel()
         connection?.cancel()
+        for link in links.values { link.close() }
         centralManager?.delegate = nil
         centralManager?.stopScan()
         if let peripheral = remotePeripheral { centralManager?.cancelPeripheralConnection(peripheral) }
@@ -149,6 +187,11 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
                 return
             }
             let listing = call.getString("listing")?.data(using: .utf8)
+            let peerLimit = call.getInt("maxPeers") ?? 1
+            guard peerLimit == 1 || peerLimit == 3 else {
+                call.reject("Expected maxPeers 1 or 3.", "ARGUMENT")
+                return
+            }
             if let listing {
                 guard role == "advertise", call.getBool("resume") != true,
                       NearbyPlayListing.supportsProbe(label),
@@ -171,7 +214,12 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
             self.role = role
             self.label = label
             self.listingData = listing
-            self.armSessionDeadline(seconds: 60, message: "Discovery expired; start again explicitly.")
+            self.peerLimit = peerLimit
+            // A multi-seat host can play with only CPU seats or continue after
+            // its final guest leaves. Its explicit room lifetime owns advertising.
+            if peerLimit == 1 || role == "browse" {
+                self.armSessionDeadline(seconds: 60, message: "Discovery expired; start again explicitly.")
+            }
             if transport == "ble" {
                 // These are the only manager constructors: start is the permission boundary.
                 if role == "browse" {
@@ -202,6 +250,7 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
                     call.reject("Peer was not discovered in this session.", "PEER")
                     return
                 }
+                self.selectedPeerId = id
                 manager.stopScan()
                 self.discoveryMaintenance?.cancel(); self.discoveryMaintenance = nil
                 self.cancelProbe(failed: false)
@@ -216,6 +265,7 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
                     call.reject("Peer was not discovered in this session.", "PEER")
                     return
                 }
+                self.selectedPeerId = id
                 self.browser?.cancel()
                 self.browser = nil
                 self.openConnection(NWConnection(to: endpoint, using: Self.lanParameters()))
@@ -226,7 +276,11 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func send(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
+            if self.multiHost { self.sendToLink(call); return }
             guard self.connected else { call.reject("No usable peer connection.", "STATE"); return }
+            if self.peerLimit > 1, call.getString("peerId") != self.selectedPeerId {
+                call.reject("Expected the connected host peerId.", "PEER"); return
+            }
             guard let value = call.getString("data"), let data = value.data(using: .utf8),
                   Self.validFrame(data) else {
                 call.reject("Expected JSON without raw LF, at most 4096 UTF-8 bytes.", "FRAME")
@@ -244,6 +298,25 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
             // Acceptance is not delivery: the JS protocol acknowledges game messages.
             call.resolve()
             self.pump()
+        }
+    }
+
+    @objc func disconnect(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            guard let id = call.getString("peerId") else { call.reject("Expected peerId.", "ARGUMENT"); return }
+            if self.multiHost, let link = self.links[id] {
+                guard !link.disconnectAfterSending else { call.resolve(); return }
+                // send resolves on enqueue. Allow the queued leave/rejection to
+                // reach the transport before retiring this one guest's link.
+                link.disconnectAfterSending = true
+                link.onClose = { call.resolve() }
+                if link.frames.outgoing.isEmpty { self.closeLink(id, reason: "disconnected") }
+                else { self.pumpLink(link) }
+                return
+            } else if self.selectedPeerId == id {
+                self.stopSession(reason: "disconnected")
+            }
+            call.resolve()
         }
     }
 
@@ -304,6 +377,7 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
             sessionDeadline.resume()
             sendDeadline.resume()
             receiveDeadline.resume()
+            for link in links.values { link.setActive(true) }
             if running, role == "browse", transport == "ble", remotePeripheral == nil {
                 // Background scans coalesce duplicates. Revalidate every entry
                 // instead of displaying a room that became full while hidden.
@@ -324,6 +398,8 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
             sessionDeadline.pause()
             sendDeadline.pause()
             receiveDeadline.pause()
+            for link in links.values { link.setActive(false) }
+            centralManager?.stopScan()
             discoveryMaintenance?.cancel(); discoveryMaintenance = nil
             cancelProbe(failed: false)
             notifyListeners("nearbyEvent", data: ["type": "lifecycle", "active": false])
@@ -356,6 +432,7 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
 
     private func stopSession(reason: String, notifyDisconnect: Bool = true) {
         let wasRunning = running
+        let previousPeerId = peerLimit > 1 && role == "browse" ? selectedPeerId : nil
         running = false
         connected = false
         epoch += 1
@@ -368,6 +445,8 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
         listener?.cancel(); listener = nil
         connection?.stateUpdateHandler = nil
         connection?.cancel(); connection = nil
+        for link in links.values { link.close() }
+        links.removeAll()
         centralManager?.delegate = nil
         centralManager?.stopScan()
         remotePeripheral?.delegate = nil
@@ -385,7 +464,13 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
         offset = 0; writeInFlight = 0; networkSending = false
         // A stopped manager's old poweredOn value cannot establish current radio availability.
         bluetoothState = nil
-        if wasRunning && notifyDisconnect { event(["type": "disconnected", "reason": reason]) }
+        selectedPeerId = nil
+        peerLimit = 1
+        if wasRunning && notifyDisconnect {
+            var value: [String: Any] = ["type": "disconnected", "reason": reason]
+            if let previousPeerId { value["peerId"] = previousPeerId }
+            event(value)
+        }
     }
 
     private func armSessionDeadline(seconds: Double, message: String) {
@@ -418,7 +503,9 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
         // flow; native never silently chooses or authenticates a new peer.
         blePeers.removeAll(); lanPeers.removeAll(); lanListings.removeAll()
         discoveryIndex.removeAll()
-        event(["type": "connected"])
+        var value: [String: Any] = ["type": "connected"]
+        if peerLimit > 1, let selectedPeerId { value["peerId"] = selectedPeerId }
+        event(value)
         // A peer may notify immediately on subscription, before our OS has
         // delivered its notification-state callback. Emit connected first.
         if !beforeSubscriptionReady.isEmpty {
@@ -473,7 +560,9 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
         // Validate the complete bounded batch before scheduling any bridge events.
         for text in frames {
             guard running else { break }
-            event(["type": "data", "data": text])
+            var value: [String: Any] = ["type": "data", "data": text]
+            if peerLimit > 1, let selectedPeerId { value["peerId"] = selectedPeerId }
+            event(value)
         }
     }
 
@@ -519,6 +608,143 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
                     for: characteristic, onSubscribedCentrals: [central]) else { return }
                 advance(size)
             }
+        }
+    }
+
+    private func sendToLink(_ call: CAPPluginCall) {
+        guard let id = call.getString("peerId"), let link = links[id], link.ready, !link.disconnectAfterSending else {
+            call.reject("Expected a connected peerId.", "PEER"); return
+        }
+        guard let value = call.getString("data"), let data = value.data(using: .utf8) else {
+            call.reject("Expected a JSON frame.", "FRAME"); return
+        }
+        let wasEmpty = link.frames.outgoing.isEmpty
+        do { try link.frames.enqueue(data) }
+        catch {
+            call.reject("Invalid frame or full peer send queue.", "FRAME")
+            closeLink(id, reason: "FRAME")
+            return
+        }
+        if wasEmpty { armLinkSendDeadline(link) }
+        call.resolve()
+        pumpLink(link)
+    }
+
+    private func markLinkConnected(_ link: NearbyPlayLink) {
+        guard running, links[link.id] === link, !link.ready else { return }
+        link.ready = true
+        connected = true
+        link.connectDeadline.cancel()
+        sessionDeadline.cancel()
+        refreshHostListing()
+        event(["type": "connected", "peerId": link.id])
+    }
+
+    /// CoreBluetooth cannot cancel a single peripheral-side central. Retiring
+    /// its slot rejects subsequent writes and stops targeted notifications;
+    /// the guest closes its own link after the JS leave/rejection message.
+    private func closeLink(_ id: String, reason: String) {
+        guard let link = links.removeValue(forKey: id) else { return }
+        link.close()
+        connected = links.values.contains { $0.ready }
+        refreshHostListing()
+        event(["type": "disconnected", "peerId": id, "reason": reason])
+    }
+
+    private func refreshHostListing() {
+        guard running, multiHost, let listener else { return }
+        let publicListing = links.count < peerLimit ? listingData : nil
+        listener.service = NWListener.Service(name: "NP-" + label, type: Self.bonjour, domain: "local.",
+            txtRecord: NearbyPlayListing.txtRecord(publicListing))
+    }
+
+    private func receiveLink(_ data: Data, from link: NearbyPlayLink) {
+        guard running, links[link.id] === link, link.ready else { return }
+        let frames: [String]
+        do { frames = try link.frames.receive(data) }
+        catch { closeLink(link.id, reason: "FRAME"); return }
+        link.receiveDeadline.cancel()
+        if !link.frames.received.isEmpty {
+            link.receiveDeadline.arm(seconds: 15) { [weak self, weak link] in
+                guard let self, let link, self.links[link.id] === link else { return }
+                self.closeLink(link.id, reason: "FRAME_TIMEOUT")
+            }
+        }
+        for text in frames {
+            guard running, links[link.id] === link else { break }
+            event(["type": "data", "peerId": link.id, "data": text])
+        }
+    }
+
+    private func armLinkSendDeadline(_ link: NearbyPlayLink) {
+        guard !link.frames.outgoing.isEmpty else { link.sendDeadline.cancel(); return }
+        link.sendDeadline.arm(seconds: 10) { [weak self, weak link] in
+            guard let self, let link, self.links[link.id] === link else { return }
+            self.closeLink(link.id, reason: "SEND_TIMEOUT")
+        }
+    }
+
+    private func pumpLink(_ link: NearbyPlayLink) {
+        guard running, links[link.id] === link, link.ready, !link.frames.outgoing.isEmpty else { return }
+        if let peer = link.connection {
+            guard !link.sending else { return }
+            link.sending = true
+            let frame = link.frames.outgoing[0]
+            peer.send(content: frame, completion: .contentProcessed { [weak self, weak link] error in
+                guard let self, let link, self.links[link.id] === link, self.running else { return }
+                link.sending = false
+                if error != nil { self.closeLink(link.id, reason: "SEND"); return }
+                link.frames.advance(frame.count)
+                self.armLinkSendDeadline(link)
+                if link.disconnectAfterSending && link.frames.outgoing.isEmpty { self.closeLink(link.id, reason: "disconnected") }
+                else { self.pumpLink(link) }
+            })
+        } else if let central = link.central, let manager = peripheralManager, let characteristic = localNotifyCharacteristic {
+            while links[link.id] === link, let frame = link.frames.outgoing.first {
+                let offset = link.frames.offset
+                let size = min(20, frame.count - offset, central.maximumUpdateValueLength)
+                guard size > 0 else { closeLink(link.id, reason: "MTU"); return }
+                guard manager.updateValue(frame.subdata(in: offset..<(offset + size)),
+                    for: characteristic, onSubscribedCentrals: [central]) else { return }
+                link.frames.advance(size)
+                armLinkSendDeadline(link)
+            }
+            if link.disconnectAfterSending && link.frames.outgoing.isEmpty { closeLink(link.id, reason: "disconnected") }
+        }
+    }
+
+    private func openHostConnection(_ peer: NWConnection) {
+        guard links.count < peerLimit else { peer.cancel(); return }
+        let link = NearbyPlayLink(id: "lan:" + UUID().uuidString)
+        link.connection = peer
+        link.setActive(eventBuffer.active)
+        links[link.id] = link
+        refreshHostListing()
+        link.connectDeadline.arm(seconds: 15) { [weak self, weak link] in
+            guard let self, let link, self.links[link.id] === link else { return }
+            self.closeLink(link.id, reason: "CONNECT_TIMEOUT")
+        }
+        peer.stateUpdateHandler = { [weak self, weak link] state in
+            guard let self, let link, self.links[link.id] === link, self.running else { return }
+            switch state {
+            case .ready:
+                self.markLinkConnected(link)
+                self.readHostConnection(link)
+            case .failed, .waiting, .cancelled: self.closeLink(link.id, reason: "peer-disconnected")
+            default: break
+            }
+        }
+        peer.start(queue: .main)
+    }
+
+    private func readHostConnection(_ link: NearbyPlayLink) {
+        guard let peer = link.connection else { return }
+        peer.receive(minimumIncompleteLength: 1, maximumLength: Self.maxBytes + 1) { [weak self, weak link] data, _, complete, error in
+            guard let self, let link, self.links[link.id] === link, self.running else { return }
+            if let data, !data.isEmpty { self.receiveLink(data, from: link) }
+            guard self.running, self.links[link.id] === link else { return }
+            if error != nil || complete { self.closeLink(link.id, reason: "peer-disconnected"); return }
+            self.readHostConnection(link)
         }
     }
 
@@ -659,7 +885,8 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
                 }
                 server.newConnectionHandler = { [weak self] peer in
                     guard let self, self.running, self.epoch == generation, self.connection == nil else { peer.cancel(); return }
-                    self.openConnection(peer)
+                    if self.multiHost { self.openHostConnection(peer) }
+                    else { self.openConnection(peer) }
                 }
                 server.start(queue: .main)
             } catch { fail("LAN_LISTEN", error.localizedDescription) }
@@ -919,11 +1146,21 @@ extension NearbyPlayPlugin: CBPeripheralManagerDelegate {
     public func peripheralManagerDidStartAdvertising(_ peripheral: CBPeripheralManager, error: Error?) {
         guard running, peripheral === peripheralManager else { return }
         if let error { fail("BLE_ADVERTISE", error.localizedDescription); return }
-        status("Bluetooth advertising started for 60 seconds.")
+        status(multiHost ? "Bluetooth room advertising started." : "Bluetooth advertising started for 60 seconds.")
     }
 
     public func peripheralManager(_ peripheral: CBPeripheralManager, central: CBCentral, didSubscribeTo characteristic: CBCharacteristic) {
         guard running, peripheral === peripheralManager, characteristic.uuid == Self.outbound else { return }
+        if multiHost {
+            guard !links.values.contains(where: { $0.central?.identifier == central.identifier }),
+                  links.count < peerLimit else { return }
+            let link = NearbyPlayLink(id: "ble:" + UUID().uuidString)
+            link.central = central
+            link.setActive(eventBuffer.active)
+            links[link.id] = link
+            markLinkConnected(link)
+            return
+        }
         if let existing = subscribedCentral, existing.identifier != central.identifier {
             // Two viewers can choose the same room concurrently. CoreBluetooth
             // cannot disconnect a peripheral-side central; ignore the later
@@ -936,8 +1173,14 @@ extension NearbyPlayPlugin: CBPeripheralManagerDelegate {
     }
 
     public func peripheralManager(_ peripheral: CBPeripheralManager, central: CBCentral, didUnsubscribeFrom characteristic: CBCharacteristic) {
-        guard running, peripheral === peripheralManager, characteristic.uuid == Self.outbound,
-              central.identifier == subscribedCentral?.identifier else { return }
+        guard running, peripheral === peripheralManager, characteristic.uuid == Self.outbound else { return }
+        if multiHost {
+            if let link = links.values.first(where: { $0.central?.identifier == central.identifier }) {
+                closeLink(link.id, reason: "peer-disconnected")
+            }
+            return
+        }
+        guard central.identifier == subscribedCentral?.identifier else { return }
         stopSession(reason: "peer-disconnected")
     }
 
@@ -948,7 +1191,8 @@ extension NearbyPlayPlugin: CBPeripheralManagerDelegate {
         }
         // Reading public metadata never subscribes a central, claims the seat,
         // stops advertising, or emits a game connection/disconnection event.
-        guard let value = NearbyPlayListing.read(connected ? nil : listingData, offset: request.offset) else {
+        let listing = multiHost ? (links.count < peerLimit ? listingData : nil) : (connected ? nil : listingData)
+        guard let value = NearbyPlayListing.read(listing, offset: request.offset) else {
             peripheral.respond(to: request, withResult: .invalidOffset); return
         }
         request.value = value
@@ -957,6 +1201,25 @@ extension NearbyPlayPlugin: CBPeripheralManagerDelegate {
 
     public func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveWrite requests: [CBATTRequest]) {
         guard running, peripheral === peripheralManager, let first = requests.first else { return }
+        if multiHost {
+            guard let link = links.values.first(where: { $0.central?.identifier == first.central.identifier }), link.ready else {
+                peripheral.respond(to: first, withResult: .requestNotSupported); return
+            }
+            guard requests.count <= Self.maxFrames,
+                  requests.allSatisfy({ $0.characteristic.uuid == Self.inbound && $0.offset == 0 &&
+                      $0.central.identifier == first.central.identifier && $0.value != nil &&
+                      !$0.value!.isEmpty && $0.value!.count <= 20 }) else {
+                peripheral.respond(to: first, withResult: .requestNotSupported)
+                closeLink(link.id, reason: "BLE_WRITE")
+                return
+            }
+            for request in requests {
+                receiveLink(request.value!, from: link)
+                if links[link.id] !== link { break }
+            }
+            peripheral.respond(to: first, withResult: links[link.id] === link ? .success : .unlikelyError)
+            return
+        }
         // CoreBluetooth requires one response to the first request of an atomic batch.
         guard connected, requests.count <= Self.maxFrames,
               requests.allSatisfy({ $0.characteristic.uuid == Self.inbound && $0.offset == 0 &&
@@ -976,6 +1239,7 @@ extension NearbyPlayPlugin: CBPeripheralManagerDelegate {
 
     public func peripheralManagerIsReady(toUpdateSubscribers peripheral: CBPeripheralManager) {
         guard running, peripheral === peripheralManager else { return }
-        pump()
+        if multiHost { for link in Array(links.values) { pumpLink(link) } }
+        else { pump() }
     }
 }

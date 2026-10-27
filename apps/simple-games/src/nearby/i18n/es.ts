@@ -2,6 +2,29 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const es: NearbyMessages = {
+  groupSeats: 'Puestos de jugadores',
+  groupSeat: 'Puesto {seat}',
+  groupCpu: 'CPU',
+  groupHuman: 'Persona',
+  groupOpen: 'Esperando a un jugador',
+  groupDisconnected: 'Sin conexión',
+  groupCpuName: 'CPU {seat}',
+  groupHostStops: 'Si el anfitrión sale, la partida termina para todos.',
+  groupConnection:
+    'Hasta 4 jugadores. Pueden jugar personas y CPUs juntos. Elige la misma conexión que el anfitrión.',
+  groupSwitch: 'Control del puesto {seat}',
+  groupWaiting:
+    'Esperando a que los jugadores estén listos o se reconecten. El anfitrión puede asignar un puesto a la CPU.',
+  groupStart: 'Iniciar partida',
+  groupJoinSeat: 'Aprobar para el puesto {seat}',
+  groupHostLeft: 'El anfitrión se desconectó o terminó la reunión.',
+  groupBackToSetup: 'Volver a la configuración',
+  groupFourSeats: '4 puestos de jugadores',
+  groupFinished: 'Partida terminada',
+  groupWinner: 'Gana {name}',
+  groupNoChat: 'Por ahora, las reuniones de Ludo solo permiten acciones del juego.',
+  groupRestore: 'Devolver el control al jugador',
+  groupTakeover: 'Cambiar a CPU',
   reportReason: 'Motivo',
   reportHarassment: 'Acoso o amenazas',
   reportSexual: 'Contenido sexual',

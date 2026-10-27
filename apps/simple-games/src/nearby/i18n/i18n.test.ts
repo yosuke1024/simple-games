@@ -41,7 +41,15 @@ describe('Nearby feature translations', () => {
         ).toBe(false);
         expect(text, `${locale}.${key}`).not.toMatch(/[<>]/);
       }
-      for (const key of ['nameHint', 'roomNameHint', 'chatHint', 'twoPeople', 'turn'] as const)
+      for (const key of [
+        'nameHint',
+        'roomNameHint',
+        'chatHint',
+        'twoPeople',
+        'turn',
+        'groupConnection',
+        'groupFourSeats',
+      ] as const)
         expect(catalogs[locale][key].match(/\d+/g), `${locale}.${key}`).toEqual(
           en[key].match(/\d+/g),
         );
@@ -77,6 +85,17 @@ describe('Nearby feature translations', () => {
       'Player’s turn · 0/3 rolls',
     );
     expect(nearbyText('en', 'confirmation')).toBe('Connection code: {code}');
+  });
+  it('labels four seats and substitutes controller, approval and winner names in every locale', () => {
+    for (const locale of Object.keys(catalogs) as Locale[]) {
+      for (const key of ['groupSeat', 'groupSwitch', 'groupJoinSeat', 'groupCpuName'] as const) {
+        expect(nearbyText(locale, key, { seat: 3 })).toContain('3');
+        expect(nearbyText(locale, key, { seat: 3 })).not.toContain('{seat}');
+      }
+      expect(nearbyText(locale, 'groupWinner', { name: '$& Player' })).toContain('$& Player');
+      expect(catalogs[locale].groupHuman).not.toBe(catalogs[locale].groupCpu);
+    }
+    expect(catalogs.ja.groupHostStops).toBe('ホストが退出すると、全員のゲームが終了します。');
   });
   it('follows the current settings locale without caching the initial language', () => {
     settings.locale = 'en';

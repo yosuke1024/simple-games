@@ -852,6 +852,22 @@ describe('closing the game', () => {
 // ---------- home ----------
 
 describe('home', () => {
+  it('hands Nearby play to the shell without replacing a suspended solo match', async () => {
+    const initial = saved(createSession('normal', SEED_OPENS_WITH_A_SIX));
+    const kv = createMemoryKV(initial);
+    const onPlayTogether = vi.fn();
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <LudoRoot onExit={vi.fn()} kv={kv} onPlayTogether={onPlayTogether} />
+      </SettingsProvider>,
+    );
+    await settle();
+    fireEvent.click(screen.getByRole('button', { name: /Play with someone/ }));
+    expect(onPlayTogether).toHaveBeenCalledTimes(1);
+    expect(await kv.get(LD_STORAGE_KEYS.game)).toBe(initial[LD_STORAGE_KEYS.game]);
+    expect(screen.getByRole('button', { name: /Normal.*Resume/ })).toBeInTheDocument();
+  });
+
   it('reports a record per opponent, with no draws column and no streak', async () => {
     renderGame(tutorialDone);
     await settle();

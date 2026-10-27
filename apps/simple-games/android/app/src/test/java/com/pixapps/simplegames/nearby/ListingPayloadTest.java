@@ -45,7 +45,7 @@ public final class ListingPayloadTest {
     @Test public void onlyNewGameLabelsAllowPassiveMetadataConnections() {
         for (int code = 0; code < 256; code++) {
             String label = "P-" + String.format("%02x", code) + "1234";
-            assertEquals(code >= 0x81 && code <= 0x8d, DiscoveryLabel.metadataCapable(label));
+            assertEquals(code >= 0x81 && code <= 0x8e, DiscoveryLabel.metadataCapable(label));
         }
         assertFalse(DiscoveryLabel.metadataCapable(null));
         assertFalse(DiscoveryLabel.metadataCapable("P-81"));

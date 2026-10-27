@@ -2,6 +2,29 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const hi: NearbyMessages = {
+  groupSeats: 'खिलाड़ियों की सीटें',
+  groupSeat: 'सीट {seat}',
+  groupCpu: 'CPU',
+  groupHuman: 'इंसान',
+  groupOpen: 'खिलाड़ी का इंतज़ार है',
+  groupDisconnected: 'कनेक्शन टूट गया',
+  groupCpuName: 'CPU {seat}',
+  groupHostStops: 'होस्ट के जाने पर सभी की बाज़ी समाप्त हो जाती है।',
+  groupConnection:
+    'अधिकतम 4 खिलाड़ी। इंसान और CPU साथ खेल सकते हैं। होस्ट वाला कनेक्शन विकल्प चुनें।',
+  groupSwitch: 'सीट {seat} का नियंत्रण',
+  groupWaiting:
+    'खिलाड़ियों के तैयार होने या दोबारा जुड़ने का इंतज़ार है। होस्ट किसी सीट को CPU को सौंप सकता है।',
+  groupStart: 'बाज़ी शुरू करें',
+  groupJoinSeat: 'सीट {seat} के लिए मंज़ूरी दें',
+  groupHostLeft: 'होस्ट का कनेक्शन टूट गया या होस्ट ने समूह समाप्त कर दिया।',
+  groupBackToSetup: 'सेटअप पर लौटें',
+  groupFourSeats: 'खिलाड़ियों की 4 सीटें',
+  groupFinished: 'बाज़ी समाप्त',
+  groupWinner: '{name} जीत गए',
+  groupNoChat: 'अभी Ludo समूहों में केवल खेल की चालें चल सकते हैं।',
+  groupRestore: 'नियंत्रण खिलाड़ी को लौटाएँ',
+  groupTakeover: 'CPU को सौंपें',
   reportReason: 'कारण',
   reportHarassment: 'उत्पीड़न या धमकियाँ',
   reportSexual: 'यौन सामग्री',

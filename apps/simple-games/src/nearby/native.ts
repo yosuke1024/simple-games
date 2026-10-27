@@ -4,10 +4,10 @@ export type Transport = 'ble' | 'lan';
 export type NativeEvent =
   | { type: 'peer'; id: string; name: string; listing?: string }
   | { type: 'peerLost'; id: string }
-  | { type: 'connected' }
+  | { type: 'connected'; peerId?: string }
   | { type: 'lifecycle'; active: boolean }
-  | { type: 'data'; data: string }
-  | { type: 'disconnected'; reason: string }
+  | { type: 'data'; data: string; peerId?: string }
+  | { type: 'disconnected'; reason: string; peerId?: string }
   | { type: 'error'; code: string; message: string }
   | { type: 'status'; message: string };
 
@@ -18,9 +18,11 @@ export interface NearbyPlugin {
     label: string;
     resume?: boolean;
     listing?: string;
+    maxPeers?: 3;
   }): Promise<void>;
   connect(options: { peerId: string }): Promise<void>;
-  send(options: { data: string }): Promise<void>;
+  send(options: { data: string; peerId?: string }): Promise<void>;
+  disconnect?(options: { peerId: string }): Promise<void>;
   stop(): Promise<void>;
   addListener(
     event: 'nearbyEvent',

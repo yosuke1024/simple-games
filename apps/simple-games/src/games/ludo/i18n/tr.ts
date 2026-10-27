@@ -64,5 +64,5 @@ export const tr: LudoMessages = {
     'Aynı karedeki iki taşın kimseyi engellemez, kimseyi korumaz. Bir rakip oraya gelirse yığının tamamı birden başlangıca döner — yığın bir kale değil, hedeftir.',
   ludoStep5Title: 'Eve tam sayıyla girilir',
   ludoStep5Body:
-    'Evi aşacak bir atış o taşı hiç oynatmaz. Kazanmak için dört taşını da eve götür. Her sayı maçın seed’inden gelir, altı yüz de eşit olasılıklıdır ve hiçbir oyuncu için zar farklı atılmaz.',
+    'Evi aşacak bir atış o taşı hiç oynatmaz. Kazanmak için dört taşını da eve götür. Altı yüz de eşit olasılıklıdır ve hiçbir oyuncu için zar farklı atılmaz.',
 };

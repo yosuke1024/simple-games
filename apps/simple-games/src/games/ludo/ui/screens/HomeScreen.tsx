@@ -18,10 +18,11 @@ import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
 import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart } from '@/ui/components/icons';
+import { PlayTogetherButton, type PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 import { DIFFICULTIES, type Difficulty } from '../../game';
 import { useLudo } from '../../state/GameContext';
 
-export function LudoHomeScreen() {
+export function LudoHomeScreen(together: PlayTogetherProps = {}) {
   const {
     navigate,
     session,
@@ -87,6 +88,8 @@ export function LudoHomeScreen() {
             </button>
           );
         })}
+
+        <PlayTogetherButton {...together} />
 
         <nav className="home-chips">
           <button type="button" className="home-chip" onClick={() => navigate('stats')}>

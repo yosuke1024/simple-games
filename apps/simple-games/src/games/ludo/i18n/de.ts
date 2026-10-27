@@ -64,5 +64,5 @@ export const de: LudoMessages = {
     'Zwei deiner Figuren auf demselben Feld blockieren niemanden und schützen nichts. Landet ein Gegner dort, gehen alle Figuren des Stapels auf einmal zurück ins Haus — ein Haufen ist ein Ziel, keine Festung.',
   ludoStep5Title: 'Nur mit genauer Zahl ins Ziel',
   ludoStep5Body:
-    'Ein Wurf, der über das Ziel hinausschießen würde, bewegt diese Figur gar nicht. Bring alle vier ins Ziel, um zu gewinnen. Jede Zahl kommt aus dem Seed der Partie, alle sechs sind gleich wahrscheinlich, und kein Platz wird anders gewürfelt.',
+    'Ein Wurf, der über das Ziel hinausschießen würde, bewegt diese Figur gar nicht. Bring alle vier ins Ziel, um zu gewinnen. Alle sechs Zahlen sind gleich wahrscheinlich, und kein Platz wird anders gewürfelt.',
 };

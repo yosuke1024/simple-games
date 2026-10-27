@@ -2,6 +2,29 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const vi: NearbyMessages = {
+  groupSeats: 'Vị trí người chơi',
+  groupSeat: 'Vị trí {seat}',
+  groupCpu: 'CPU',
+  groupHuman: 'Người',
+  groupOpen: 'Đang chờ người chơi',
+  groupDisconnected: 'Mất kết nối',
+  groupCpuName: 'CPU {seat}',
+  groupHostStops: 'Khi chủ phòng rời đi, ván chơi của tất cả mọi người sẽ kết thúc.',
+  groupConnection:
+    'Tối đa 4 người chơi. Người và CPU có thể chơi cùng nhau. Chọn cùng kiểu kết nối với chủ phòng.',
+  groupSwitch: 'Điều khiển vị trí {seat}',
+  groupWaiting:
+    'Đang chờ người chơi sẵn sàng hoặc kết nối lại. Chủ phòng có thể chuyển một vị trí sang CPU.',
+  groupStart: 'Bắt đầu ván',
+  groupJoinSeat: 'Duyệt vào vị trí {seat}',
+  groupHostLeft: 'Chủ phòng đã mất kết nối hoặc kết thúc nhóm.',
+  groupBackToSetup: 'Quay lại thiết lập',
+  groupFourSeats: '4 vị trí người chơi',
+  groupFinished: 'Ván chơi kết thúc',
+  groupWinner: '{name} thắng',
+  groupNoChat: 'Hiện tại, nhóm Ludo chỉ hỗ trợ các thao tác chơi.',
+  groupRestore: 'Trả quyền điều khiển cho người chơi',
+  groupTakeover: 'Chuyển sang CPU',
   reportReason: 'Lý do',
   reportHarassment: 'Quấy rối hoặc đe dọa',
   reportSexual: 'Nội dung tình dục',

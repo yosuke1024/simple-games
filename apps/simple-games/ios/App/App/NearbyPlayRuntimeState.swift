@@ -28,7 +28,7 @@ enum NearbyPlayListing {
               let code = UInt8(label.dropFirst(2).prefix(2), radix: 16) else { return false }
         // Old Android hosts treat a GATT connection itself as admission. Never
         // probe them; only the new fixed game-code range advertises this ability.
-        return (0x81...0x8d).contains(code)
+        return (0x81...0x8e).contains(code)
     }
 
     static func txtRecord(_ data: Data?) -> Data? {
@@ -45,6 +45,54 @@ enum NearbyPlayListing {
         let value = data ?? Data()
         guard offset >= 0, offset <= value.count else { return nil }
         return Data(value.dropFirst(offset))
+    }
+}
+
+/// Each physical peer owns its framing and queue. A partial frame or stalled
+/// writer must never consume, reorder, or time out another guest's traffic.
+final class NearbyPlayPeerFrames {
+    static let maxBytes = 4096
+    static let maxFrames = 16
+    enum Failure: Error { case frame, overflow }
+    private(set) var received = Data()
+    private(set) var outgoing: [Data] = []
+    private(set) var offset = 0
+
+    static func valid(_ data: Data) -> Bool {
+        !data.isEmpty && data.count <= maxBytes && !data.contains(10) &&
+            String(data: data, encoding: .utf8) != nil &&
+            (try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed])) != nil
+    }
+
+    func enqueue(_ data: Data) throws {
+        guard Self.valid(data) else { throw Failure.frame }
+        guard outgoing.count < Self.maxFrames else { throw Failure.overflow }
+        var frame = data
+        frame.append(10)
+        outgoing.append(frame)
+    }
+
+    func receive(_ data: Data) throws -> [String] {
+        guard !data.isEmpty else { throw Failure.frame }
+        var frames: [String] = []
+        for byte in data {
+            if byte == 10 {
+                guard Self.valid(received), let text = String(data: received, encoding: .utf8) else { throw Failure.frame }
+                guard frames.count < Self.maxFrames else { throw Failure.overflow }
+                frames.append(text)
+                received.removeAll(keepingCapacity: true)
+            } else {
+                guard received.count < Self.maxBytes else { throw Failure.frame }
+                received.append(byte)
+            }
+        }
+        return frames
+    }
+
+    func advance(_ count: Int) {
+        guard let first = outgoing.first, count > 0, count <= first.count - offset else { return }
+        offset += count
+        if offset == first.count { outgoing.removeFirst(); offset = 0 }
     }
 }
 

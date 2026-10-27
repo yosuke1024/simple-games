@@ -2,14 +2,17 @@ import { describe, expect, it } from 'vitest';
 import {
   clearHistory,
   deleteGathering,
+  deleteGroup,
   loadHistory,
   saveDisplayName,
   saveGathering,
+  saveGroup,
   validateHistory,
   blockIdentity,
   savedGameId,
   savedGameResult,
   type Gathering,
+  type SavedGroup,
 } from './history';
 function store() {
   let data: string | null = null;
@@ -33,6 +36,159 @@ const gathering = (): Gathering => ({
   messages: [{ id: 'one', sender: 'self', text: 'Hello', status: 'delivered', at: 101 }],
   games: [{ round: 1, at: 100, finished: true, scores: [40, 32] }],
   endedAt: 110,
+});
+
+const group = (): SavedGroup => ({
+  id: 'c'.repeat(32),
+  at: 200,
+  endedAt: 220,
+  roomName: 'Ludo 1234',
+  transport: 'lan',
+  rounds: [
+    {
+      round: 1,
+      names: ['Alice', 'Bob', 'Chika', 'CPU 4'],
+      scores: [2, 1, 4, 0],
+      winner: 2,
+      finished: true,
+    },
+  ],
+});
+
+describe('additive four-seat nearby history', () => {
+  it('reads v1 without groups and adds four-seat rounds without changing legacy gatherings', async () => {
+    const io = store();
+    const original = await loadHistory(io);
+    await saveGathering(gathering(), io);
+    await saveDisplayName('Alice', io);
+    await blockIdentity('b'.repeat(32), io);
+    const legacy = await loadHistory(io);
+    expect(legacy.groups).toBeUndefined();
+    await saveGroup(group(), io);
+    const saved = await loadHistory(io);
+    expect(saved).toEqual({ ...legacy, groups: [group()] });
+    expect(saved.identity).toBe(original.identity);
+    expect(savedGameResult(saved.gatherings[0]!.games[0]!)).toEqual({
+      scores: [40, 32],
+      winner: 0,
+    });
+
+    const newGathering = { ...gathering(), id: 'd'.repeat(32) };
+    await saveGathering(newGathering, io);
+    const afterLegacySave = await loadHistory(io);
+    expect(afterLegacySave.groups).toEqual([group()]);
+    expect(afterLegacySave.gatherings).toEqual([newGathering, gathering()]);
+    await deleteGathering(newGathering.id, io);
+    expect((await loadHistory(io)).groups).toEqual([group()]);
+  });
+
+  it('updates one group in place and keeps an unfinished round or no-contest distinct from a winner', async () => {
+    const io = store();
+    const current = group();
+    const unfinished = {
+      ...current.rounds[0]!,
+      round: 2,
+      scores: [0, 0, 0, 0],
+      winner: null,
+      finished: false,
+    };
+    await saveGroup(current, io);
+    current.rounds.push(unfinished);
+    await saveGroup(current, io);
+    let saved = await loadHistory(io);
+    expect(saved.groups).toHaveLength(1);
+    expect(saved.groups![0]!.rounds).toEqual([group().rounds[0], unfinished]);
+    const noContest = { ...unfinished, finished: true };
+    current.rounds[1] = noContest;
+    await saveGroup(current, io);
+    saved = await loadHistory(io);
+    expect(saved.groups![0]!.rounds[1]).toEqual(noContest);
+  });
+
+  it.each([
+    { names: ['Alice', 'Bob'] },
+    { names: ['Alice', 'Bob', 'Chika', 'CPU 4', 'Extra'] },
+    { scores: [1, 2] },
+    { scores: [1, 2, 3, 4, 5] },
+    { scores: [1, 2, NaN, 0] },
+    { scores: [1, 2, -1, 0] },
+    { winner: -1 },
+    { winner: 4 },
+    { winner: 0.5 },
+    { winner: 'draw' },
+    { winner: undefined },
+    { finished: false, winner: 2 },
+  ])('rejects malformed four-seat rounds and preserves the previous file (%#)', async (fields) => {
+    const io = store();
+    await saveGathering(gathering(), io);
+    await saveGroup(group(), io);
+    const before = (await io.readHistory()).data!;
+    const invalid = { ...group(), rounds: [{ ...group().rounds[0], ...fields }] };
+    expect(validateHistory({ ...JSON.parse(before), groups: [invalid] })).toBeNull();
+    await expect(saveGroup(invalid as SavedGroup, io)).rejects.toThrow('History full');
+    expect((await io.readHistory()).data).toBe(before);
+  });
+
+  it('deletes only the selected group and retains identity, display name, blocks and two-seat records', async () => {
+    const io = store();
+    await saveDisplayName('Alice', io);
+    await blockIdentity('b'.repeat(32), io);
+    await saveGathering(gathering(), io);
+    await saveGroup(group(), io);
+    const other = { ...group(), id: 'd'.repeat(32), roomName: 'Other Ludo' };
+    await saveGroup(other, io);
+    const before = await loadHistory(io);
+    await deleteGroup(group().id, io);
+    expect(await loadHistory(io)).toEqual({ ...before, groups: [other] });
+  });
+
+  it('snapshots a group before queued writes and does not resurrect it after a later deletion', async () => {
+    const { io, started, release } = await slowStore();
+    const current = group();
+    const active = saveGroup(current, io);
+    await started;
+    current.rounds[0]!.names[1] = 'Before deletion';
+    const update = saveGroup(current, io);
+    const deletion = deleteGroup(current.id, io);
+    current.rounds[0]!.names[1] = 'Mutation after queuing';
+    release();
+    await Promise.all([active, update, deletion]);
+    expect((await loadHistory(io)).groups).toEqual([]);
+    await saveDisplayName('Name after delete', io);
+    expect((await loadHistory(io)).groups).toEqual([]);
+  });
+
+  it('isolates queued group snapshots from later mutations by the game controller', async () => {
+    const { io, started, release, writes } = await slowStore();
+    const current = group();
+    const active = saveGroup(current, io);
+    await started;
+    current.rounds[0]!.names[1] = 'Approved player';
+    const update = saveGroup(current, io);
+    current.rounds[0]!.names[1] = 'Mutated after queuing';
+    release();
+    await Promise.all([active, update]);
+    expect(validateHistory(JSON.parse(writes[0]!))!.groups![0]!.rounds[0]!.names[1]).toBe('Bob');
+    expect((await loadHistory(io)).groups![0]!.rounds[0]!.names[1]).toBe('Approved player');
+  });
+
+  it('orders reset after pending group and legacy saves, with no resurrection from a later name save', async () => {
+    const { io, started, release } = await slowStore();
+    const active = saveGroup(group(), io);
+    await started;
+    const legacy = saveGathering(gathering(), io);
+    const update = saveGroup({ ...group(), endedAt: 300 }, io);
+    const reset = clearHistory(io);
+    release();
+    await Promise.all([active, legacy, update, reset]);
+    expect((await io.readHistory()).data).toBeNull();
+    await saveDisplayName('New name', io);
+    const afterReset = await loadHistory(io);
+    expect(afterReset.groups).toBeUndefined();
+    expect(afterReset.gatherings).toEqual([]);
+    expect(afterReset.blocked).toEqual([]);
+    expect(afterReset.displayName).toBe('New name');
+  });
 });
 
 async function slowStore() {

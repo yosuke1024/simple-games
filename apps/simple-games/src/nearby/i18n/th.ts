@@ -2,6 +2,28 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const th: NearbyMessages = {
+  groupSeats: 'ที่นั่งของผู้เล่น',
+  groupSeat: 'ที่นั่ง {seat}',
+  groupCpu: 'CPU',
+  groupHuman: 'คน',
+  groupOpen: 'กำลังรอผู้เล่น',
+  groupDisconnected: 'ขาดการเชื่อมต่อ',
+  groupCpuName: 'CPU {seat}',
+  groupHostStops: 'เมื่อโฮสต์ออก เกมของทุกคนจะจบลง',
+  groupConnection: 'ผู้เล่นสูงสุด 4 คน คนและ CPU เล่นร่วมกันได้ เลือกวิธีเชื่อมต่อแบบเดียวกับโฮสต์',
+  groupSwitch: 'ผู้ควบคุมที่นั่ง {seat}',
+  groupWaiting:
+    'กำลังรอให้ผู้เล่นพร้อมหรือเชื่อมต่อใหม่ โฮสต์สามารถเปลี่ยนที่นั่งให้ CPU เล่นแทนได้',
+  groupStart: 'เริ่มเกม',
+  groupJoinSeat: 'อนุมัติให้เข้าที่นั่ง {seat}',
+  groupHostLeft: 'โฮสต์ขาดการเชื่อมต่อหรือจบกลุ่มแล้ว',
+  groupBackToSetup: 'กลับไปตั้งค่า',
+  groupFourSeats: 'ที่นั่งผู้เล่น 4 ที่',
+  groupFinished: 'เกมจบแล้ว',
+  groupWinner: '{name} ชนะ',
+  groupNoChat: 'ขณะนี้กลุ่ม Ludo ใช้ได้เฉพาะการควบคุมเกมเท่านั้น',
+  groupRestore: 'คืนการควบคุมให้ผู้เล่น',
+  groupTakeover: 'เปลี่ยนเป็น CPU',
   reportReason: 'เหตุผล',
   reportHarassment: 'การคุกคามหรือข่มขู่',
   reportSexual: 'เนื้อหาทางเพศ',

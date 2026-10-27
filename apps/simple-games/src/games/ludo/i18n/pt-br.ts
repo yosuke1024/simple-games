@@ -64,5 +64,5 @@ export const ptBR: LudoMessages = {
     'Duas peças suas na mesma casa não bloqueiam ninguém nem se protegem. Se um adversário cair ali, a pilha inteira volta de uma vez para a base — um monte de peças é um alvo, não uma fortaleza.',
   ludoStep5Title: 'Só chega à meta com o número exato',
   ludoStep5Body:
-    'Uma jogada que passaria da meta não move essa peça. Leve suas quatro peças até a meta para vencer. Cada número vem da semente da partida, os seis valores têm a mesma chance, e nenhuma posição joga diferente.',
+    'Uma jogada que passaria da meta não move essa peça. Leve suas quatro peças até a meta para vencer. Os seis valores têm a mesma chance, e nenhuma posição joga diferente.',
 };

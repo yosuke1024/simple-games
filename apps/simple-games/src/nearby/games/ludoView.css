@@ -1,0 +1,29 @@
+/* Player names vary in length; retain the board's width while giving each
+   name a wrapping column and keeping its home count visible. */
+.nearby-ludo-seats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
+}
+
+.nearby-ludo-seats .ld-seat-item {
+  display: grid;
+  grid-template-columns: 11px minmax(0, 1fr) max-content;
+  min-width: 0;
+  gap: 4px;
+}
+
+.nearby-ludo-seats .ld-seat-name {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.nearby-ludo-seats .ld-seat-home {
+  white-space: nowrap;
+}
+
+.nearby-ludo-view .ld-line {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}

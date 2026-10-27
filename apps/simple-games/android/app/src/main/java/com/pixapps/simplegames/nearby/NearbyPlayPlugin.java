@@ -34,6 +34,7 @@ import org.json.JSONObject;
 public class NearbyPlayPlugin extends Plugin {
     private final Handler main = new Handler(Looper.getMainLooper());
     private Transport transport;
+    private boolean multiPeer;
     private PluginCall pendingStart;
     private long generation;
     private long serviceLease;
@@ -84,6 +85,9 @@ public class NearbyPlayPlugin extends Plugin {
             call.reject("transport, role and a P-/F- label with six hex digits are required"); return;
         }
         try {
+            Object maxPeers = call.getData().opt("maxPeers");
+            if (maxPeers != null && (!(maxPeers instanceof Number) || ((Number) maxPeers).doubleValue() != 3))
+                throw new IllegalArgumentException("maxPeers must be 3 when supplied");
             String listing = call.getString("listing");
             if (call.getData().has("listing") && listing == null) throw new IllegalArgumentException("Listing must be text");
             if (listing != null && (!"advertise".equals(role) || Boolean.TRUE.equals(call.getBoolean("resume", false))))
@@ -145,17 +149,23 @@ public class NearbyPlayPlugin extends Plugin {
             }); }
             public void peerLost(String id) { active(() -> event("peerLost", "id", id)); }
             public void connected() { active(() -> event("connected")); }
+            public void connected(String peerId) { active(() -> event("connected", "peerId", peerId)); }
             public void status(String message) { active(() -> event("status", "message", message)); }
             public void data(String data) { active(() -> {
                 event("data", "data", data);
             }); }
+            public void data(String peerId, String data) { active(() -> event("data", "peerId", peerId, "data", data)); }
+            public void disconnected(String peerId, String reason) { active(() -> event("disconnected", "peerId", peerId, "reason", reason)); }
             public void failed(String code, String message) { active(() -> fail(code, message)); }
             public void disconnected(String reason) { active(() -> end(reason)); }
         };
         try {
-            transport = "ble".equals(call.getString("transport"))
-                ? new BleTransport(getContext().getApplicationContext(), events)
-                : new LanTransport(getContext().getApplicationContext(), events);
+            multiPeer = call.getData().has("maxPeers");
+            transport = multiPeer
+                ? new MultiPeerTransport(getContext().getApplicationContext(), events, call.getString("transport"))
+                : "ble".equals(call.getString("transport"))
+                    ? new BleTransport(getContext().getApplicationContext(), events)
+                    : new LanTransport(getContext().getApplicationContext(), events);
             transport.start("advertise".equals(call.getString("role")), call.getString("label"),
                 ListingPayload.encode(call.getString("listing"), "lan".equals(call.getString("transport"))
                     ? ListingPayload.MAX_TXT_BYTES : ListingPayload.MAX_BYTES));
@@ -184,12 +194,20 @@ public class NearbyPlayPlugin extends Plugin {
             if (transport == null) throw new IllegalStateException("No session");
             String data = call.getString("data");
             byte[] frame = FrameCodec.encode(data);
-            transport.send(frame);
+            transport.send(frame, call.getString("peerId"));
             call.resolve();
         } catch (Exception e) {
             call.reject(message(e));
-            fail("send-failed", message(e));
+            if (!multiPeer) fail("send-failed", message(e));
         }
+    }); }
+
+    @PluginMethod public void disconnect(PluginCall call) { main.post(() -> {
+        try {
+            if (transport == null) throw new IllegalStateException("No session");
+            transport.disconnect(call.getString("peerId"));
+            call.resolve();
+        } catch (Exception error) { call.reject(message(error)); }
     }); }
 
     @PluginMethod public void stop(PluginCall call) { main.post(() -> {
@@ -244,6 +262,7 @@ public class NearbyPlayPlugin extends Plugin {
         if (pendingStart != null) { pendingStart.reject("Start cancelled"); pendingStart = null; }
         Transport previous = transport;
         transport = null;
+        multiPeer = false;
         NearbyConnectionService.release(getContext().getApplicationContext(), serviceLease);
         serviceLease = 0;
         if (previous != null) { previous.stop(); event("disconnected", "reason", reason); }

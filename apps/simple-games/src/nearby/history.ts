@@ -45,6 +45,21 @@ export interface HistoryData {
   displayName?: string;
   blocked: string[];
   gatherings: Gathering[];
+  groups?: SavedGroup[];
+}
+export interface SavedGroup {
+  id: string;
+  at: number;
+  endedAt?: number;
+  roomName: string;
+  transport: Transport;
+  rounds: {
+    round: number;
+    names: string[];
+    scores: number[];
+    winner: number | null;
+    finished: boolean;
+  }[];
 }
 type HistoryIO = Pick<NearbyPlugin, 'readHistory' | 'writeHistory' | 'clearHistory'>;
 const object = (v: unknown): v is Record<string, unknown> =>
@@ -79,6 +94,37 @@ export function validateHistory(v: unknown): HistoryData | null {
     !v.blocked.every(id) ||
     !Array.isArray(v.gatherings) ||
     v.gatherings.length > 100
+  )
+    return null;
+  if (
+    v.groups !== undefined &&
+    (!Array.isArray(v.groups) ||
+      v.groups.length > 100 ||
+      !v.groups.every(
+        (g: unknown) =>
+          object(g) &&
+          id(g.id) &&
+          integer(g.at) &&
+          (g.endedAt === undefined || integer(g.endedAt)) &&
+          strictName(g.roomName) &&
+          (g.transport === 'ble' || g.transport === 'lan') &&
+          Array.isArray(g.rounds) &&
+          g.rounds.length <= 10000 &&
+          g.rounds.every(
+            (r: unknown) =>
+              object(r) &&
+              integer(r.round) &&
+              r.round > 0 &&
+              typeof r.finished === 'boolean' &&
+              Array.isArray(r.names) &&
+              r.names.length === 4 &&
+              r.names.every(name) &&
+              Array.isArray(r.scores) &&
+              r.scores.length === 4 &&
+              r.scores.every((s: unknown) => integer(s) && s <= 1000000) &&
+              (r.winner === null || (r.finished && integer(r.winner) && r.winner < 4)),
+          ),
+      ))
   )
     return null;
   for (const g of v.gatherings) {
@@ -218,6 +264,24 @@ export function deleteGathering(gatheringId: string, io: HistoryIO = nearbyPlugi
   return queue(async () => {
     const data = await read(io);
     data.gatherings = data.gatherings.filter((g) => g.id !== gatheringId);
+    await write(data, io);
+  });
+}
+export function saveGroup(group: SavedGroup, io: HistoryIO = nearbyPlugin): Promise<void> {
+  const snapshot = structuredClone(group);
+  return queue(async () => {
+    const data = await read(io);
+    data.groups ??= [];
+    const index = data.groups.findIndex((g) => g.id === snapshot.id);
+    if (index < 0) data.groups.unshift(snapshot);
+    else data.groups[index] = snapshot;
+    await write(data, io);
+  });
+}
+export function deleteGroup(groupId: string, io: HistoryIO = nearbyPlugin): Promise<void> {
+  return queue(async () => {
+    const data = await read(io);
+    data.groups = data.groups?.filter((g) => g.id !== groupId);
     await write(data, io);
   });
 }

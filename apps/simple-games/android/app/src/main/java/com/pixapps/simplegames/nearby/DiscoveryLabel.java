@@ -13,7 +13,7 @@ final class DiscoveryLabel {
     static boolean metadataCapable(String label) {
         if (!valid(label)) return false;
         int code = Integer.parseInt(label.substring(2, 4), 16);
-        return code >= 0x81 && code <= 0x8d;
+        return code >= 0x81 && code <= 0x8e;
     }
 
     static String fromBytes(byte[] bytes) {
