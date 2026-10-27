@@ -23,6 +23,8 @@ export interface NearbyPlugin {
   connect(options: { peerId: string }): Promise<void>;
   send(options: { data: string; peerId?: string }): Promise<void>;
   disconnect?(options: { peerId: string }): Promise<void>;
+  /** Multi-seat host only: stop or resume recruiting. The label stays findable for resumes. */
+  setListingVisible?(options: { visible: boolean }): Promise<void>;
   stop(): Promise<void>;
   addListener(
     event: 'nearbyEvent',

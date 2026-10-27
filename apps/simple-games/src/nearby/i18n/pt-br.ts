@@ -7,7 +7,9 @@ export const ptBR: NearbyMessages = {
   groupCpu: 'CPU',
   groupHuman: 'Pessoa',
   groupOpen: 'Aguardando jogador',
-  groupDisconnected: 'Desconectado',
+  groupAway: 'Ausente',
+  groupReconnecting: 'Reconectando…',
+  groupLeaveSeat: 'Seu lugar passa para a CPU, e você não poderá voltar a esta partida.',
   groupCpuName: 'CPU {seat}',
   groupHostStops: 'Se o anfitrião sair, a partida termina para todos.',
   groupConnection:

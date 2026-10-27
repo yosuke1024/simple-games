@@ -7,7 +7,9 @@ export const ko: NearbyMessages = {
   groupCpu: 'CPU',
   groupHuman: '사람',
   groupOpen: '플레이어를 기다리는 중',
-  groupDisconnected: '연결 끊김',
+  groupAway: '자리 비움',
+  groupReconnecting: '다시 연결하는 중…',
+  groupLeaveSeat: '내 자리는 CPU로 바뀌며, 이 게임에는 다시 돌아올 수 없습니다.',
   groupCpuName: 'CPU {seat}',
   groupHostStops: '호스트가 나가면 모든 플레이어의 게임이 종료됩니다.',
   groupConnection:

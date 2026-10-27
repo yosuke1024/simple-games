@@ -62,6 +62,8 @@ final class MultiBleHost implements Transport {
     private boolean observing;
     private String label;
     private byte[] listing;
+    // Main thread only. Hidden means the metadata read is empty; the label is still advertised.
+    private boolean listingVisible = true;
     private final AtomicInteger callbacks = new AtomicInteger();
     private final AtomicBoolean overflow = new AtomicBoolean();
     private final BroadcastReceiver adapterState = new BroadcastReceiver() {
@@ -99,7 +101,7 @@ final class MultiBleHost implements Transport {
         advertiser = adapter.getBluetoothLeAdvertiser();
         if (advertiser == null || !adapter.isMultipleAdvertisementSupported())
             throw new IllegalStateException("This phone cannot advertise BLE; join from this phone instead");
-        this.label = label; this.listing = listing; active = true;
+        this.label = label; this.listing = listing; listingVisible = true; active = true;
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
         if (Build.VERSION.SDK_INT >= 33) context.registerReceiver(adapterState, filter, Context.RECEIVER_EXPORTED);
         else context.registerReceiver(adapterState, filter);
@@ -119,6 +121,10 @@ final class MultiBleHost implements Transport {
         if (!server.addService(service)) throw new IllegalStateException("Could not add BLE service");
     }
 
+    public void setListingVisible(boolean visible) {
+        if (!active) throw new IllegalStateException("BLE host is not running");
+        listingVisible = visible;
+    }
     public void connect(String peerId) { throw new IllegalStateException("A host accepts connections"); }
     public void send(byte[] frame) { throw new IllegalArgumentException("peerId is required"); }
     public void send(byte[] frame, String peerId) {
@@ -256,7 +262,7 @@ final class MultiBleHost implements Transport {
                 server.sendResponse(device, requestId, BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED, offset, null); return;
             }
             try {
-                byte[] value = ListingPayload.read(channels.size() < PeerLinks.CAPACITY ? listing : null, offset);
+                byte[] value = ListingPayload.read(ListingPayload.served(listing, listingVisible, channels.size()), offset);
                 server.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value);
             } catch (IllegalArgumentException error) {
                 server.sendResponse(device, requestId, BluetoothGatt.GATT_INVALID_OFFSET, offset, null);

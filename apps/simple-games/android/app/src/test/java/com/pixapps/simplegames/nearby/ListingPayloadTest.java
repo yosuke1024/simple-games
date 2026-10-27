@@ -29,6 +29,36 @@ public final class ListingPayloadTest {
         assertThrows(IllegalArgumentException.class, () -> ListingPayload.read(raw, -1));
         assertArrayEquals(new byte[0], ListingPayload.read(null, 0));
     }
+    @Test public void aHiddenOrFullRoomServesTheSuccessfulEmptyRead() {
+        byte[] raw = ListingPayload.encode("{\"v\":2,\"available\":true}", 255);
+        for (int links = 0; links < PeerLinks.CAPACITY; links++) {
+            assertSame(raw, ListingPayload.served(raw, true, links));
+            assertNull(ListingPayload.served(raw, false, links));
+        }
+        for (int links = PeerLinks.CAPACITY; links <= PeerLinks.CAPACITY + 2; links++) {
+            assertNull(ListingPayload.served(raw, true, links));
+            assertNull(ListingPayload.served(raw, false, links));
+        }
+        assertNull(ListingPayload.served(null, true, 0));
+        assertNull(ListingPayload.served(null, false, 0));
+        // Hidden is the same wire answer as a full room: success with zero bytes, never an offset error.
+        assertArrayEquals(new byte[0], ListingPayload.read(ListingPayload.served(raw, false, 0), 0));
+        assertArrayEquals(ListingPayload.read(ListingPayload.served(raw, true, PeerLinks.CAPACITY), 0),
+            ListingPayload.read(ListingPayload.served(raw, false, 0), 0));
+        assertThrows(IllegalArgumentException.class, () -> ListingPayload.read(ListingPayload.served(raw, false, 0), 1));
+    }
+    @Test public void aHiddenLanRecordLeavesTheTxtItemOutInsteadOfSettingItEmpty() {
+        String text = "{\"v\":2,\"available\":true}";
+        byte[] raw = ListingPayload.encode(text, ListingPayload.MAX_TXT_BYTES);
+        assertEquals(text, ListingPayload.txtListing(raw, true));
+        // null means "do not call setAttribute": an empty string would make Android browsers withdraw the peer.
+        assertNull(ListingPayload.txtListing(raw, false));
+        assertNull(ListingPayload.txtListing(null, true));
+        assertNull(ListingPayload.txtListing(null, false));
+        assertNull(ListingPayload.txtListing(new byte[0], true));
+        assertNull(ListingPayload.txtListing(new byte[0], false));
+        assertNull(ListingPayload.txtListing(new byte[] {(byte) 0xff}, true));
+    }
     @Test public void carriesMaximumRoomNameThroughTxtAndDefaultMtuLongReads() {
         String roomName = "🦊".repeat(24);
         String text = "{\"v\":2,\"label\":\"P-8B0001\",\"roomName\":\"" + roomName + "\",\"gameId\":\"nested-tic-tac-toe\",\"protocol\":7,\"available\":true}";

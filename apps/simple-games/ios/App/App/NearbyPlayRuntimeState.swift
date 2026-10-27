@@ -31,6 +31,16 @@ enum NearbyPlayListing {
         return (0x81...0x8e).contains(code)
     }
 
+    /// The one recruitment decision shared by Bonjour and BLE. A hidden or full
+    /// room still advertises its label (a dropped guest finds it there and proves
+    /// itself in JS); it only stops publishing a listing. `nil` feeds `txtRecord`
+    /// (TXT item absent) and `read` (successful empty read). Native can therefore
+    /// never publish more than the link count alone would: the JS flag only ANDs.
+    static func advertised(listing: Data?, hidden: Bool, occupied: Int, limit: Int) -> Data? {
+        guard !hidden, occupied < limit else { return nil }
+        return listing
+    }
+
     static func txtRecord(_ data: Data?) -> Data? {
         guard let data, string(data, lan: true) != nil else { return nil }
         var entry = Data("listing=".utf8)
@@ -45,6 +55,58 @@ enum NearbyPlayListing {
         let value = data ?? Data()
         guard offset >= 0, offset <= value.count else { return nil }
         return Data(value.dropFirst(offset))
+    }
+}
+
+/// A multi-seat host's listing state: the JS recruiting switch
+/// (`setListingVisible`) and the Bonjour TXT bytes last handed to its listener.
+/// It lives here, free of Capacitor, so the hide / show / link-count sequences
+/// are tested by the standalone swiftc checks rather than only by reading the plugin.
+struct NearbyPlayHostListing {
+    enum Registration: Equatable {
+        /// The TXT bytes already registered are still right: leave the service alone.
+        case unchanged
+        /// Set the listener's service to these TXT bytes (`nil`: no listing item).
+        case register(Data?)
+    }
+
+    /// Only a running host that advertises to more than one peer recruits by
+    /// listing; the two-player paths never call `setListingVisible`.
+    static func isMultiSeatHost(peerLimit: Int, role: String) -> Bool {
+        peerLimit > 1 && role == "advertise"
+    }
+
+    private(set) var hidden = false
+    private var registered = false
+    private var record: Data?
+
+    /// A fresh start or a stop: recruiting again, nothing registered yet.
+    mutating func reset() { self = NearbyPlayHostListing() }
+
+    mutating func setVisible(_ visible: Bool) { hidden = !visible }
+
+    /// What BLE metadata reads and the TXT record may publish right now.
+    func published(listing: Data?, occupied: Int, limit: Int) -> Data? {
+        NearbyPlayListing.advertised(listing: listing, hidden: hidden, occupied: occupied, limit: limit)
+    }
+
+    /// A new listener always registers; returns the TXT bytes to give it.
+    mutating func register(listing: Data?, occupied: Int, limit: Int) -> Data? {
+        let txt = NearbyPlayListing.txtRecord(published(listing: listing, occupied: occupied, limit: limit))
+        record = txt
+        registered = true
+        return txt
+    }
+
+    /// A link or visibility change on a live listener. Identical bytes are not
+    /// registered again, so a link dropping while the room is hidden or full
+    /// stays invisible to browsers.
+    mutating func refresh(listing: Data?, occupied: Int, limit: Int) -> Registration {
+        let txt = NearbyPlayListing.txtRecord(published(listing: listing, occupied: occupied, limit: limit))
+        guard !registered || txt != record else { return .unchanged }
+        record = txt
+        registered = true
+        return .register(txt)
     }
 }
 

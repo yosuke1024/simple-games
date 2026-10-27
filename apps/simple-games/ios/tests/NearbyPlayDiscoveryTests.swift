@@ -64,6 +64,115 @@ struct NearbyPlayDiscoveryTests {
         check(NearbyPlayListing.read(value, offset: -1) == nil, "Negative offset is invalid")
         check(NearbyPlayListing.read(nil, offset: 0)?.isEmpty == true, "Resume/full host yields empty metadata")
 
+        // Multi-seat recruiting: the JS flag only ANDs with the link-count rule.
+        let room = Data(listing.utf8)
+        check(NearbyPlayListing.advertised(listing: room, hidden: false, occupied: 0, limit: 3) == room, "Empty visible room publishes its listing")
+        check(NearbyPlayListing.advertised(listing: room, hidden: false, occupied: 2, limit: 3) == room, "Visible room with a free seat publishes its listing")
+        check(NearbyPlayListing.advertised(listing: room, hidden: false, occupied: 3, limit: 3) == nil, "Full room publishes nothing, as before")
+        check(NearbyPlayListing.advertised(listing: room, hidden: false, occupied: 4, limit: 3) == nil, "Over-full room publishes nothing")
+        check(NearbyPlayListing.advertised(listing: room, hidden: true, occupied: 0, limit: 3) == nil, "Hidden room with free seats publishes nothing")
+        check(NearbyPlayListing.advertised(listing: room, hidden: true, occupied: 3, limit: 3) == nil, "Hidden full room publishes nothing")
+        check(NearbyPlayListing.advertised(listing: nil, hidden: false, occupied: 0, limit: 3) == nil, "Resume host has no listing to publish")
+        check(NearbyPlayListing.advertised(listing: nil, hidden: true, occupied: 0, limit: 3) == nil, "Hidden resume host still has none")
+        // Hiding withdraws the listing from both channels without an empty value.
+        let shown = NearbyPlayListing.advertised(listing: room, hidden: false, occupied: 1, limit: 3)
+        let hiddenListing = NearbyPlayListing.advertised(listing: room, hidden: true, occupied: 1, limit: 3)
+        check(NearbyPlayListing.txtRecord(shown)?.dropFirst(9) == room, "Visible room publishes the listing TXT item")
+        check(NearbyPlayListing.txtRecord(hiddenListing) == nil, "Hidden room has no TXT item at all, not an empty one")
+        check(NearbyPlayListing.txtRecord(Data()) == nil, "An empty listing is never encoded as a TXT item")
+        check(NearbyPlayListing.read(shown, offset: 0) == room, "Visible room serves its metadata")
+        check(NearbyPlayListing.read(hiddenListing, offset: 0)?.isEmpty == true, "Hidden room answers metadata with a successful empty read")
+        check(NearbyPlayListing.read(hiddenListing, offset: 0) == NearbyPlayListing.read(nil, offset: 0), "Hidden reads exactly like a full room")
+        check(NearbyPlayListing.txtRecord(hiddenListing) == NearbyPlayListing.txtRecord(nil), "Hidden TXT equals the full-room TXT")
+        // Resuming recruitment restores the same bytes, so the dedupe key is stable.
+        let resumed = NearbyPlayListing.advertised(listing: room, hidden: false, occupied: 1, limit: 3)
+        check(NearbyPlayListing.txtRecord(resumed) == NearbyPlayListing.txtRecord(shown), "Hide then show restores the identical TXT bytes")
+        check(NearbyPlayListing.txtRecord(hiddenListing) != NearbyPlayListing.txtRecord(shown), "Hidden and visible TXT differ, so a change re-registers once")
+
+        // The host's listing state, as the plugin drives it: a fresh start, the
+        // JS switch, and links coming and going. Seats are `occupied` of 3.
+        let roomTXT = NearbyPlayListing.txtRecord(room)
+        check(roomTXT != nil, "Fixture listing is TXT-encodable")
+        check(NearbyPlayHostListing.isMultiSeatHost(peerLimit: 3, role: "advertise"), "Three-seat advertiser is a multi-seat host")
+        check(NearbyPlayHostListing.isMultiSeatHost(peerLimit: 2, role: "advertise"), "Any advertiser with more than one seat is a multi-seat host")
+        check(!NearbyPlayHostListing.isMultiSeatHost(peerLimit: 1, role: "advertise"), "Two-player host rejects setListingVisible")
+        check(!NearbyPlayHostListing.isMultiSeatHost(peerLimit: 3, role: "browse"), "Browse session rejects setListingVisible")
+        check(!NearbyPlayHostListing.isMultiSeatHost(peerLimit: 1, role: "browse"), "Two-player browse session rejects setListingVisible")
+        check(!NearbyPlayHostListing.isMultiSeatHost(peerLimit: 3, role: ""), "A stopped session has no role and rejects setListingVisible")
+
+        var host = NearbyPlayHostListing()
+        check(!host.hidden, "A fresh host recruits")
+        check(host.register(listing: room, occupied: 0, limit: 3) == roomTXT, "A new listener registers the listing")
+        check(host.refresh(listing: room, occupied: 1, limit: 3) == .unchanged, "A guest joining a visible room with a free seat changes nothing")
+        check(host.refresh(listing: room, occupied: 2, limit: 3) == .unchanged, "The next guest joining changes nothing either")
+        check(host.refresh(listing: room, occupied: 3, limit: 3) == .register(nil), "A full room withdraws the TXT item")
+        check(NearbyPlayListing.read(host.published(listing: room, occupied: 3, limit: 3), offset: 0)?.isEmpty == true, "A full room answers BLE metadata with a successful empty read")
+        check(host.refresh(listing: room, occupied: 2, limit: 3) == .register(roomTXT), "A seat freeing publishes the listing again")
+        check(host.refresh(listing: room, occupied: 2, limit: 3) == .unchanged, "Refreshing again with identical bytes never re-registers")
+
+        // Match start: hide with free seats.
+        host.setVisible(false)
+        check(host.hidden, "setListingVisible(false) hides")
+        check(host.published(listing: room, occupied: 2, limit: 3) == nil, "A hidden room publishes nothing to BLE")
+        check(NearbyPlayListing.read(host.published(listing: room, occupied: 2, limit: 3), offset: 0)?.isEmpty == true, "A hidden room answers BLE metadata with a successful empty read")
+        check(host.refresh(listing: room, occupied: 2, limit: 3) == .register(nil), "Hiding withdraws the TXT item, never an empty one")
+        check(host.refresh(listing: room, occupied: 2, limit: 3) == .unchanged, "A repeated hide does not re-register")
+        // A guest's link drops mid-match: it must stay invisible to browsers.
+        check(host.refresh(listing: room, occupied: 1, limit: 3) == .unchanged, "A link dropping while hidden does not re-register")
+        check(host.refresh(listing: room, occupied: 0, limit: 3) == .unchanged, "Every link dropping while hidden still does not re-register")
+        check(host.published(listing: room, occupied: 0, limit: 3) == nil, "Free seats do not unhide a hidden room")
+        // Between matches: show.
+        host.setVisible(true)
+        check(!host.hidden, "setListingVisible(true) resumes recruiting")
+        check(host.refresh(listing: room, occupied: 0, limit: 3) == .register(roomTXT), "Showing publishes the listing exactly once")
+        check(host.refresh(listing: room, occupied: 0, limit: 3) == .unchanged, "A repeated show does not re-register")
+
+        // Show while full: the JS flag only ANDs with the link count.
+        check(host.refresh(listing: room, occupied: 3, limit: 3) == .register(nil), "The room fills while visible")
+        host.setVisible(false)
+        check(host.refresh(listing: room, occupied: 3, limit: 3) == .unchanged, "Hiding a full room changes nothing on the wire")
+        host.setVisible(true)
+        check(host.published(listing: room, occupied: 3, limit: 3) == nil, "Showing a full room publishes nothing to BLE")
+        check(host.refresh(listing: room, occupied: 3, limit: 3) == .unchanged, "Showing a full room publishes nothing to Bonjour")
+        check(host.refresh(listing: room, occupied: 2, limit: 3) == .register(roomTXT), "The seat freeing after a show-while-full publishes exactly once")
+        check(host.refresh(listing: room, occupied: 2, limit: 3) == .unchanged, "And only once")
+
+        // Hide, then the room fills and empties while hidden: still nothing until shown.
+        host.setVisible(false)
+        check(host.refresh(listing: room, occupied: 2, limit: 3) == .register(nil), "Hide again with a free seat")
+        check(host.refresh(listing: room, occupied: 3, limit: 3) == .unchanged, "A hidden room filling changes nothing")
+        check(host.refresh(listing: room, occupied: 1, limit: 3) == .unchanged, "A hidden room emptying changes nothing")
+
+        // A fresh start always begins visible and re-registers, whatever came before.
+        check(host.hidden, "The host is hidden before the restart")
+        host.reset()
+        check(!host.hidden, "A fresh start() always begins visible")
+        check(host.published(listing: room, occupied: 0, limit: 3) == room, "A restarted host publishes its listing")
+        check(host.register(listing: room, occupied: 0, limit: 3) == roomTXT, "A restarted listener registers the listing")
+        check(host.refresh(listing: room, occupied: 0, limit: 3) == .unchanged, "The restarted listener starts from its own record")
+
+        // A stop forgets what was registered: the next listener is never skipped.
+        host.reset()
+        check(host.refresh(listing: room, occupied: 0, limit: 3) == .register(roomTXT), "Refreshing before any registration registers rather than skipping")
+
+        // A resume host has no listing: nothing to publish or hide, and one registration only.
+        var resumeHost = NearbyPlayHostListing()
+        check(resumeHost.register(listing: nil, occupied: 0, limit: 3) == nil, "A resume host registers no TXT item")
+        resumeHost.setVisible(false)
+        check(resumeHost.refresh(listing: nil, occupied: 0, limit: 3) == .unchanged, "Hiding a resume host changes nothing")
+        resumeHost.setVisible(true)
+        check(resumeHost.refresh(listing: nil, occupied: 0, limit: 3) == .unchanged, "Showing a resume host publishes nothing")
+        check(resumeHost.published(listing: nil, occupied: 0, limit: 3) == nil, "A resume host never publishes a listing")
+
+        // A listing too long for one TXT item is never encoded, hidden or not.
+        let longBLE = json(bytes: 255)
+        var longHost = NearbyPlayHostListing()
+        check(longHost.published(listing: longBLE, occupied: 0, limit: 3) == longBLE, "BLE still publishes a listing that is too long for TXT")
+        check(longHost.register(listing: longBLE, occupied: 0, limit: 3) == nil, "An oversized listing has no TXT item")
+        longHost.setVisible(false)
+        check(longHost.refresh(listing: longBLE, occupied: 0, limit: 3) == .unchanged, "Hiding an oversized listing changes nothing on Bonjour")
+        check(longHost.published(listing: longBLE, occupied: 0, limit: 3) == nil, "Hiding an oversized listing still withdraws it from BLE")
+
         let index = NearbyPlayDiscoveryIndex()
         for i in 0..<16 {
             check(index.observe("peer\(i)", label: "P-810001", now: 0), "Bounded candidates accepted")

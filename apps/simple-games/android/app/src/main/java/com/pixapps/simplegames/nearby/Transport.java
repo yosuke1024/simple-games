@@ -23,6 +23,9 @@ interface Transport {
     default void disconnect(String peerId) throws Exception {
         throw new IllegalArgumentException("This transport does not support targeted disconnects");
     }
+    default void setListingVisible(boolean visible) throws Exception {
+        throw new IllegalArgumentException("This transport does not support listing visibility");
+    }
     default void drainAndStop(Runnable completed) { stop(); completed.run(); }
     void setForeground(boolean active);
     void stop();

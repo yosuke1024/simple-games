@@ -64,6 +64,10 @@ final class MultiPeerTransport implements Transport {
             delegate.drainAndStop(() -> lost("disconnected"));
         }
     }
+    public void setListingVisible(boolean visible) throws Exception {
+        if (!hosting || delegate == null) throw new IllegalStateException("Only a started multi-seat host can change its listing");
+        delegate.setListingVisible(visible);
+    }
     private void lost(String reason) {
         String id = selected;
         selected = null; ready = false;

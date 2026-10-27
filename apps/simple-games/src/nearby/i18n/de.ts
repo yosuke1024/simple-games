@@ -7,7 +7,9 @@ export const de: NearbyMessages = {
   groupCpu: 'CPU',
   groupHuman: 'Mensch',
   groupOpen: 'Warten auf einen Spieler',
-  groupDisconnected: 'Verbindung getrennt',
+  groupAway: 'Abwesend',
+  groupReconnecting: 'Verbindung wird wiederhergestellt …',
+  groupLeaveSeat: 'Dein Platz geht an die CPU, und du kannst nicht zu diesem Spiel zurückkehren.',
   groupCpuName: 'CPU {seat}',
   groupHostStops: 'Wenn der Host die Runde verlässt, endet das Spiel für alle.',
   groupConnection:

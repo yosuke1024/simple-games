@@ -59,6 +59,7 @@ vi.mock('./groupController', async () => {
   const { createLudo, applyLudo, isLudoState, ludoCpuAction, ludoResult } =
     await import('./games/ludo');
   const game = {
+    id: 'ludo' as const,
     capacity: 4,
     create: () => createLudo(() => 0),
     valid: isLudoState,
@@ -116,8 +117,9 @@ vi.mock('./groupController', async () => {
       this.notify();
     });
     block = vi.fn(async (peer: string) => {
-      if (this.hostSession) this.hostSession.disconnect(peer);
-      else await this.stop();
+      const seat = this.hostSession?.members.get(peer);
+      if (seat !== undefined) this.hostSession!.release(seat);
+      else if (!this.hostSession) await this.stop();
       this.participants.delete(peer);
       this.notify();
     });
@@ -350,12 +352,17 @@ describe('Ludo group room', () => {
       session.ready('guest-a');
       session.ready();
       session.start();
+      // Seated: guest-a acknowledged a state before its link dropped.
+      session.receive('guest-a', {
+        group: 1,
+        type: 'ack',
+        room: session.options.room,
+        revision: session.revision,
+      });
       session.disconnect('guest-a');
     });
     fireEvent.click(screen.getByText(text('groupSeats'), { selector: 'summary' }));
-    expect(
-      screen.getByText(text('groupDisconnected'), { selector: '[role="status"]' }),
-    ).toBeVisible();
+    expect(screen.getByText(text('groupAway'), { selector: '[role="status"]' })).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Roll the die' })).not.toBeInTheDocument();
     expect(screen.getByText(text('groupWaiting'))).toBeVisible();
     fireEvent.change(screen.getByLabelText(text('groupSwitch', { seat: 2 })), {
@@ -363,6 +370,51 @@ describe('Ludo group room', () => {
     });
     expect(screen.queryByText(text('groupWaiting'))).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Roll the die' })).toBeEnabled();
+  });
+
+  it('offers an applicant only seats that no person holds, even while their person is away', async () => {
+    await hostRoom();
+    const session = last().hostSession!;
+    act(() => {
+      session.request('guest-a', 'Aki');
+      session.approve('guest-a', 1);
+      // Seated: guest-a acknowledged a state before its link dropped.
+      session.receive('guest-a', {
+        group: 1,
+        type: 'ack',
+        room: session.options.room,
+        revision: session.revision,
+      });
+      session.disconnect('guest-a');
+      session.request('guest-b', 'Bo');
+    });
+    const card = screen.getByText(text('request', { name: 'Bo' })).closest('section')!;
+    expect(
+      within(card).queryByRole('button', { name: text('groupJoinSeat', { seat: 2 }) }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(card).getByRole('button', { name: text('groupJoinSeat', { seat: 3 }) }),
+    ).toBeVisible();
+  });
+
+  it('keeps the board on a guest that is reconnecting and warns that leaving gives the seat away', async () => {
+    await mount({ name: 'Guest', roomName: 'Saturday Ludo', label: 'P-8E1234', transport: 'ble' });
+    const snapshot = guestSnapshot();
+    snapshot.state = createLudo(() => 0);
+    snapshot.round = 1;
+    act(() => {
+      last().receiveSnapshot(snapshot);
+    });
+    act(() => {
+      last().status = 'reconnecting';
+      last().notify();
+    });
+    expect(screen.getByText(text('groupReconnecting'))).toBeVisible();
+    expect(document.querySelector('.ludo-board, [class*="ludo"]')).not.toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: text('leave') }));
+    const dialog = screen.getByRole('alertdialog');
+    expect(within(dialog).getByText(text('groupLeaveSeat'))).toBeVisible();
+    expect(within(dialog).queryByText(text('groupHostStops'))).not.toBeInTheDocument();
   });
 
   it('requires leave confirmation and ends the host room without navigating away', async () => {

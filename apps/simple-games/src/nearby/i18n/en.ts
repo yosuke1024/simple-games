@@ -4,7 +4,9 @@ export const en = {
   groupCpu: 'CPU',
   groupHuman: 'Human',
   groupOpen: 'Waiting for a player',
-  groupDisconnected: 'Disconnected',
+  groupAway: 'Away',
+  groupReconnecting: 'Reconnecting…',
+  groupLeaveSeat: 'Your slot switches to a CPU, and you cannot return to this game.',
   groupCpuName: 'CPU {seat}',
   groupHostStops: 'The game stops for everyone when the host leaves.',
   groupConnection:

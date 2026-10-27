@@ -7,7 +7,9 @@ export const vi: NearbyMessages = {
   groupCpu: 'CPU',
   groupHuman: 'Người',
   groupOpen: 'Đang chờ người chơi',
-  groupDisconnected: 'Mất kết nối',
+  groupAway: 'Vắng mặt',
+  groupReconnecting: 'Đang kết nối lại…',
+  groupLeaveSeat: 'Vị trí của bạn sẽ chuyển sang CPU và bạn không thể quay lại ván chơi này.',
   groupCpuName: 'CPU {seat}',
   groupHostStops: 'Khi chủ phòng rời đi, ván chơi của tất cả mọi người sẽ kết thúc.',
   groupConnection:

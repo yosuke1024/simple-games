@@ -31,6 +31,21 @@ final class ListingPayload {
                 .onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(value)).toString();
         } catch (CharacterCodingException error) { return null; }
     }
+    /**
+     * The LAN TXT "listing" item, or null when the record must leave the item out. A hidden room
+     * leaves it out and never carries an empty string: Android browsers withdraw a peer whose
+     * listing is empty or invalid, and a dropped guest could then no longer find the host by label.
+     */
+    static String txtListing(byte[] listing, boolean listed) {
+        return listed ? decode(listing) : null;
+    }
+    /**
+     * What a metadata read serves. A room that is hidden, or whose links are all taken, serves the
+     * successful empty read; the label stays advertised so a dropped guest can still find it.
+     */
+    static byte[] served(byte[] listing, boolean visible, int links) {
+        return visible && links < PeerLinks.CAPACITY ? listing : null;
+    }
     static byte[] read(byte[] value, int offset) {
         byte[] data = value == null ? new byte[0] : value;
         if (offset < 0 || offset > data.length) throw new IllegalArgumentException("Invalid listing offset");

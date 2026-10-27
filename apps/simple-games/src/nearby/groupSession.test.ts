@@ -12,6 +12,7 @@ import {
 function room(dice: number[] = [1, 6]) {
   const draw = vi.fn(() => ((dice.shift() ?? 1) - 0.5) / 6);
   const game: GroupGame = {
+    id: 'ludo',
     capacity: 4,
     create: () => createLudo(draw),
     valid: isLudoState,
@@ -126,7 +127,7 @@ describe('four-seat host session with the real Ludo rules', () => {
     expect(session.state).toEqual(moved);
   });
 
-  it('requires a new host approval to replace a departed human and revokes their old command identity', () => {
+  it("holds an away human's seat: everyone waits, nobody else can take it, and joins are closed mid-match", () => {
     const { session, add, act, acknowledge, send } = room();
     add('Alice', 1);
     session.ready();
@@ -135,19 +136,55 @@ describe('four-seat host session with the real Ludo rules', () => {
     act('Alice', { kind: 'roll' });
     const position = structuredClone(session.state);
     session.disconnect('Alice');
-    send.mockClear();
-    session.control(1, 'cpu');
-    expect(session.request('Returned', 'Alice')).toBe(true);
-    expect(session.members.has('Returned')).toBe(false);
-    expect(session.approve('Returned', 1)).toBe(true);
+    expect(session.seats[1]).toMatchObject({ name: 'Alice', control: 'human', connected: false });
+    expect(session.isHeld(1)).toBe(true);
     acknowledge();
-    expect(session.state).toEqual(position);
-    expect(session.members.has('Alice')).toBe(false);
+    expect(session.synchronized).toBe(false);
+    expect(session.cpuStep()).toBe(false);
+    expect(session.joinOpen).toBe(false);
+    expect(session.discoverable).toBe(false);
+    expect(session.request('Returned', 'Someone')).toBe(false);
+    expect(session.pending.size).toBe(0);
+    // Even a CPU the host chooses does not open the seat to someone new mid-match.
+    expect(session.control(1, 'cpu')).toBe(true);
+    expect(session.isHeld(1)).toBe(true);
+    expect(session.approve('Returned', 1)).toBe(false);
+    send.mockClear();
+    acknowledge();
+    expect(session.cpuStep()).toBe(true);
+    expect((session.state as State).rollIndex).toBe((position as State).rollIndex);
     expect(send.mock.calls.some(([peer]) => peer === 'Alice')).toBe(false);
+  });
+
+  it('returns a held seat to its person on a new link without approval, keeping a CPU the host chose', () => {
+    const { session, add, act, acknowledge } = room();
+    add('Alice', 1);
+    session.ready();
+    session.start();
+    act('host', { kind: 'roll' });
+    act('Alice', { kind: 'roll' });
+    const before = structuredClone(session.state);
+    const stale = session.snapshot('Alice');
+    session.disconnect('Alice');
+    expect(session.resume('Alice-2', 2)).toBe(false); // Seat 2 is a CPU nobody holds.
+    expect(session.resume('Alice-2', 1)).toBe(true);
+    expect(session.members.get('Alice-2')).toBe(1);
+    expect(session.seats[1]).toMatchObject({ control: 'human', connected: true });
+    expect(session.state).toEqual(before);
     expect(
-      session.act('Alice', session.revision, session.seats[1]!.epoch, { kind: 'move', pawn: 0 }),
+      session.act('Alice', session.revision, stale.seats[1]!.epoch, { kind: 'move', pawn: 0 }),
     ).toBe(false);
-    expect(act('Returned', { kind: 'move', pawn: 0 })).toBe(true);
+    expect(act('Alice-2', { kind: 'move', pawn: 0 })).toBe(true);
+
+    session.disconnect('Alice-2');
+    expect(session.control(1, 'cpu')).toBe(true);
+    expect(session.resume('Alice-3', 1)).toBe(true);
+    expect(session.seats[1]).toMatchObject({ control: 'cpu', connected: true });
+    acknowledge();
+    expect(session.control(1, 'human')).toBe(true);
+    expect((session.state as State).turn).toBe(1); // The six earned another roll.
+    expect(act('Alice-3', { kind: 'roll' })).toBe(true);
+    expect(session.snapshot('Alice-3').you).toBe(1);
   });
 
   it('never transfers the host seat and ends all admitted and pending peers exactly once', () => {
@@ -168,52 +205,96 @@ describe('four-seat host session with the real Ludo rules', () => {
     expect(session.cpuStep()).toBe(false);
   });
 
-  it('requires fresh approval when the same native peer ID reconnects to the same seat', () => {
-    const { session, add, act, acknowledge, send } = room();
-    add('Alice', 1);
-    session.ready();
-    session.start();
-    act('host', { kind: 'roll' });
-    act('Alice', { kind: 'roll' });
-    const before = structuredClone(session.state);
-    const stale = session.snapshot('Alice');
-    session.disconnect('Alice');
-    expect(session.members.has('Alice')).toBe(false);
-    expect(session.request('Alice', 'Alice again')).toBe(true);
-    expect(
-      session.act('Alice', session.revision, stale.seats[1]!.epoch, { kind: 'move', pawn: 0 }),
-    ).toBe(false);
-    send.mockClear();
+  it('releases a seat whose person dropped before acknowledging any state', () => {
+    const { session } = room();
+    expect(session.request('Alice', 'Alice')).toBe(true);
     expect(session.approve('Alice', 1)).toBe(true);
-    expect(send).not.toHaveBeenCalledWith('Alice', { group: 1, type: 'replaced' });
-    expect(session.state).toEqual(before);
-    acknowledge();
-    expect(act('Alice', { kind: 'move', pawn: 0 })).toBe(true);
+    expect(session.disconnect('Alice')).toBe(true);
+    expect(session.seats[1]).toMatchObject({ control: 'cpu', name: '' });
+    expect(session.isHeld(1)).toBe(false);
+    expect(session.request('Alice', 'Alice')).toBe(true); // They can simply apply again.
   });
 
-  it('does not revoke a reconnected peer in a new seat when somebody takes their old seat', () => {
-    const { session, add, act, send } = room();
+  it('gives a deliberately left seat to a CPU at once and stops holding it', () => {
+    const { session, add, act, acknowledge } = room();
     add('Alice', 1);
+    add('Bob', 2);
     session.ready();
     session.start();
     act('host', { kind: 'roll' });
     act('Alice', { kind: 'roll' });
-    const before = structuredClone(session.state);
-    session.disconnect('Alice');
-    expect(session.request('Alice', 'Alice returned')).toBe(true);
-    expect(session.approve('Alice', 2)).toBe(true);
-    expect(session.request('Carol', 'Carol')).toBe(true);
-    send.mockClear();
-    expect(session.approve('Carol', 1)).toBe(true);
-    expect(session.members.get('Alice')).toBe(2);
-    expect(session.snapshot('Alice').you).toBe(2);
+    const before = structuredClone(session.state as State);
+    session.leave('Alice');
+    expect(session.seats[1]).toMatchObject({ name: '', control: 'cpu', connected: false });
+    expect(session.isHeld(1)).toBe(false);
+    expect(session.members.has('Alice')).toBe(false);
+    expect(session.resume('Alice-2', 1)).toBe(false);
+    acknowledge();
+    expect(session.synchronized).toBe(true);
+    expect(session.cpuStep()).toBe(true);
+    expect((session.state as State).rollIndex).toBe(before.rollIndex);
     expect(session.seats[2]!.connected).toBe(true);
-    expect(send).not.toHaveBeenCalledWith('Alice', { group: 1, type: 'replaced' });
-    expect(session.state).toEqual(before);
-    expect(act('Carol', { kind: 'move', pawn: 0 })).toBe(true);
-    expect(act('Carol', { kind: 'roll' })).toBe(true);
-    expect(act('Carol', { kind: 'move', pawn: 0 })).toBe(true);
+    session.request('Carol', 'Carol');
+    expect(session.pending.size).toBe(0); // Mid-match, the freed seat waits for the next match.
+  });
+
+  it('recruits only between matches and while a guest seat is not human', () => {
+    const { session, add, acknowledge } = room();
+    expect(session.discoverable).toBe(true);
+    add('Alice', 1);
+    add('Bob', 2);
+    expect(session.discoverable).toBe(true);
+    add('Carol', 3);
+    expect(session.discoverable).toBe(false);
+    session.leave('Carol');
+    expect(session.discoverable).toBe(true);
+    acknowledge(); // Bob has seen his seat.
+    session.disconnect('Bob');
+    expect(session.discoverable).toBe(true); // Seat 3 is a CPU again; Bob's seat stays his.
+    expect(session.request('Dan', 'Dan')).toBe(true);
+    expect(session.approve('Dan', 2)).toBe(false);
+    expect(session.approve('Dan', 3)).toBe(true);
+    expect(session.discoverable).toBe(false);
+    session.ready();
+    session.ready('Alice');
+    session.ready('Dan');
+    expect(session.canStart).toBe(false); // Bob is away and still human.
+    expect(session.control(2, 'cpu')).toBe(true);
+    expect(session.start()).toBe(true);
+    expect(session.discoverable).toBe(false);
+  });
+
+  it('freezes the seats as a round finishes and sends them, so a later leave cannot rename the result', () => {
+    const { session, add, act, game } = room([1]);
+    add('Alice', 1);
+    session.ready();
+    session.start();
+    expect(session.snapshot('Alice').final).toBeUndefined();
+    session.state = {
+      ...createLudo(() => 0),
+      pawns: [
+        [0, 0, 0, 0],
+        [58, 59, 59, 59],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+      ],
+      turn: 1,
+      rollIndex: 4,
+      lastRoll: { seat: 0, die: 1, kind: 'autoPass' },
+    } satisfies State;
     expect(act('Alice', { kind: 'roll' })).toBe(true);
+    expect(act('Alice', { kind: 'move', pawn: 0 })).toBe(true);
+    expect(ludoResult(session.state as State)?.winner).toBe(1);
+    session.leave('Alice');
+    expect(session.seats[1]).toMatchObject({ control: 'cpu', name: '' });
+    const snapshot = session.snapshot();
+    expect(snapshot.final![1]).toMatchObject({ control: 'human', name: 'Alice' });
+    expect(validGroupSnapshot(snapshot, game)).toBe(true);
+    expect(validGroupSnapshot({ ...snapshot, final: snapshot.final!.slice(1) }, game)).toBe(false);
+    expect(validGroupSnapshot({ ...snapshot, state: createLudo(() => 0) }, game)).toBe(false);
+    session.ready();
+    expect(session.start()).toBe(true);
+    expect(session.snapshot().final).toBeUndefined();
   });
 
   it('requires Ready for newly approved or restored humans after a finished round', () => {

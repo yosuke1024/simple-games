@@ -7,7 +7,9 @@ export const tr: NearbyMessages = {
   groupCpu: 'CPU',
   groupHuman: 'İnsan',
   groupOpen: 'Oyuncu bekleniyor',
-  groupDisconnected: 'Bağlantı kesildi',
+  groupAway: 'Uzakta',
+  groupReconnecting: 'Yeniden bağlanılıyor…',
+  groupLeaveSeat: 'Yeriniz CPU’ya geçer ve bu oyuna geri dönemezsiniz.',
   groupCpuName: 'CPU {seat}',
   groupHostStops: 'Ev sahibi ayrılırsa oyun herkes için sona erer.',
   groupConnection:

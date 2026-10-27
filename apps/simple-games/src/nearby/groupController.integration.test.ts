@@ -4,7 +4,7 @@ import { setImmediate as nextTurn } from 'node:timers/promises';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GroupController, ludoGroupGame } from './groupController';
 import { NearbyController } from './controller';
-import { applyLudo, type State } from './games/ludo';
+import { applyLudo, createLudo, type State } from './games/ludo';
 import type { GroupGame } from './groupSession';
 import type { NativeEvent, NearbyPlugin } from './native';
 
@@ -22,7 +22,10 @@ function radio() {
     const emit = (event: NativeEvent) => {
       for (const listener of listeners) listener(event);
     };
-    const close = (guest: string) => {
+    const close = (guest: string, drain: boolean) => {
+      // A targeted disconnect drains what native send already queued (as Android and iOS do);
+      // stopping the radio drops that queue, so a final notice needs the controller's drain window.
+      if (drain) deliver();
       if (!connected.delete(guest)) return;
       nodes.get('host')!.emit({ type: 'disconnected', peerId: guest, reason: 'peer-disconnected' });
       nodes.get(guest)!.emit({ type: 'disconnected', peerId: 'host', reason: 'peer-disconnected' });
@@ -43,11 +46,12 @@ function radio() {
         sent.push(frame);
       }),
       disconnect: vi.fn(async ({ peerId }) => {
-        close(id === 'host' ? peerId : id);
+        close(id === 'host' ? peerId : id, true);
       }),
+      setListingVisible: vi.fn(async () => {}),
       stop: vi.fn(async () => {
-        if (id === 'host') for (const peer of [...connected]) close(peer);
-        else close(id);
+        if (id === 'host') for (const peer of [...connected]) close(peer, false);
+        else close(id, false);
       }),
       addListener: async (_event, listener) => {
         listeners.add(listener);
@@ -101,6 +105,8 @@ async function until(condition: () => boolean, deliver = () => {}) {
     await nextTurn();
   }
 }
+/** Lets a stopping controller finish its final notice's drain window (1 s + 750 ms). */
+const drained = () => vi.advanceTimersByTimeAsync(1751);
 async function encryptedMessage(controller: GroupController, peer: string, value: unknown) {
   const links = (
     controller as unknown as {
@@ -167,11 +173,11 @@ async function gathering(guestCount: number, dice: number[] = [1, 6], hostBlocke
     });
     await until(() => controller.peers.length === 1);
     await controller.join('host');
-    await pump(() =>
-      options?.rejected
-        ? controller.status === 'ended' && !host.hostSession!.pending.has(id)
-        : host.hostSession!.pending.has(id),
-    );
+    if (options?.rejected) {
+      await pump(() => controller.status === 'ended');
+      await drained();
+      await pump(() => !host.hostSession!.pending.has(id));
+    } else await pump(() => host.hostSession!.pending.has(id));
     const guest = { controller, native, id };
     guests.push(guest);
     return guest;
@@ -195,7 +201,14 @@ async function gathering(guestCount: number, dice: number[] = [1, 6], hostBlocke
         host.hostSession!.synchronized,
     );
   };
-  return { network, host, hostNative, guests, pump, start, addGuest, approveAll };
+  /** A seated guest that lost its link finds the host again by label alone (no listing). */
+  const rediscover = async (guest: (typeof guests)[number]) => {
+    await vi.advanceTimersByTimeAsync(3000);
+    await until(() => guest.native.setup?.resume === true);
+    guest.native.emit({ type: 'peer', id: 'host', name: hostNative.setup!.label });
+    await pump(() => guest.controller.status !== 'reconnecting');
+  };
+  return { network, host, hostNative, guests, pump, start, addGuest, approveAll, rediscover };
 }
 
 beforeEach(() => {
@@ -204,7 +217,7 @@ beforeEach(() => {
 });
 afterEach(async () => {
   const stops = controllers.splice(0).map((c) => c.stop());
-  await vi.advanceTimersByTimeAsync(501);
+  await vi.advanceTimersByTimeAsync(1751);
   await Promise.all(stops);
   vi.useRealTimers();
   vi.unstubAllGlobals();
@@ -237,13 +250,14 @@ describe('four devices using real WebCrypto group channels', () => {
     );
     const stopping = r.host.stop();
     await r.pump(() => r.guests.every((g) => g.controller.status === 'ended'));
+    await drained();
     await stopping;
     expect(r.network.connected.size).toBe(0);
     expect(r.hostNative.listeners.size).toBe(0);
     expect(r.guests.every((g) => g.native.listeners.size === 0)).toBe(true);
   });
 
-  it('continues with three humans/one CPU, replaces a human after a six without rerolling, and explicitly approves a returning human', async () => {
+  it('waits for a guest whose link drops, lets only the host choose a CPU without rerolling, and seats the same guest again by proof', async () => {
     const r = await gathering(2);
     await r.start();
     expect(r.host.snapshot!.seats[3]!.control).toBe('cpu');
@@ -257,11 +271,16 @@ describe('four devices using real WebCrypto group channels', () => {
         r.guests[0]!.controller.canAct,
     );
     const before = structuredClone(r.host.snapshot!.state as State);
-    const leaving = r.guests[0]!.controller.stop();
-    await r.pump(() => !r.host.snapshot!.seats[1]!.connected);
-    await leaving;
-    expect(r.host.snapshot!.state).toEqual(before);
+    const lost = r.guests[0]!;
+    await lost.native.plugin.disconnect!({ peerId: 'host' });
+    await r.pump(
+      () => !r.host.snapshot!.seats[1]!.connected && lost.controller.status === 'reconnecting',
+    );
+    expect(r.host.snapshot!.seats[1]).toMatchObject({ control: 'human', name: 'guest1' });
     expect(r.guests[1]!.controller.status).toBe('room');
+    await vi.advanceTimersByTimeAsync(451);
+    await r.pump(() => r.host.hostSession!.synchronized === false);
+    expect(r.host.snapshot!.state).toEqual(before); // Everyone waits; nothing moves by itself.
     r.host.control(1, 'cpu');
     await r.pump(() => r.host.hostSession!.synchronized);
     await vi.advanceTimersByTimeAsync(451);
@@ -272,14 +291,365 @@ describe('four devices using real WebCrypto group channels', () => {
     expect(after.rollIndex).toBe(before.rollIndex);
     expect(after.lastRoll).toEqual(before.lastRoll);
     expect(after.pawns[1].some((p) => p > 0)).toBe(true);
-    const returned = await r.addGuest('returned');
-    expect(returned.controller.snapshot).toBeNull();
-    r.host.approve('returned', 1);
-    await r.pump(() => returned.controller.status === 'room' && r.host.hostSession!.synchronized);
-    expect(returned.controller.snapshot!.you).toBe(1);
-    expect(returned.controller.snapshot!.state).toEqual(after);
+    await r.rediscover(lost);
+    await r.pump(() => lost.controller.status === 'room' && r.host.hostSession!.synchronized);
+    expect(lost.controller.snapshot!.you).toBe(1);
+    expect(lost.controller.snapshot!.state).toEqual(r.host.snapshot!.state);
+    expect(r.host.snapshot!.seats[1]).toMatchObject({ control: 'cpu', connected: true });
+    expect(r.host.hostSession!.pending.size).toBe(0);
+    r.host.control(1, 'human'); // Handing the seat back is the host's call.
+    await r.pump(() => lost.controller.snapshot!.seats[1]!.control === 'human');
+    expect(r.network.connected).toEqual(new Set(['guest1', 'guest2']));
     expect(r.guests[1]!.controller.status).toBe('room');
-    expect(r.network.connected).toEqual(new Set(['guest2', 'returned']));
+  });
+
+  it('turns a deliberate leave into a CPU seat at once and turns the leaver away from the match', async () => {
+    const r = await gathering(2);
+    await r.start();
+    const leaving = r.guests[0]!.controller.stop();
+    await r.pump(() => r.host.snapshot!.seats[1]!.control === 'cpu');
+    await drained();
+    await leaving;
+    expect(r.host.snapshot!.seats[1]).toMatchObject({ name: '', connected: false });
+    expect(r.host.hostSession!.isHeld(1)).toBe(false);
+    await r.pump(() => r.host.hostSession!.synchronized); // Nobody waits for a seat that left.
+    const late = await r.addGuest('late', { rejected: true });
+    expect(late.controller.reason).toBe('declined');
+    expect(r.guests[1]!.controller.status).toBe('room');
+  });
+
+  it('hides the room while a match is in progress and while every guest seat is human', async () => {
+    const r = await gathering(3);
+    const visible = vi.mocked(r.hostNative.plugin.setListingVisible!);
+    expect(visible).not.toHaveBeenCalled();
+    await r.approveAll();
+    expect(visible).toHaveBeenLastCalledWith({ visible: false });
+    const leaving = r.guests[2]!.controller.stop();
+    await r.pump(() => r.host.snapshot!.seats[3]!.control === 'cpu');
+    await drained();
+    await leaving;
+    expect(visible).toHaveBeenLastCalledWith({ visible: true });
+    r.host.ready();
+    r.guests.slice(0, 2).forEach((g) => g.controller.ready());
+    await r.pump(() => r.host.hostSession!.canStart && r.host.hostSession!.synchronized);
+    r.host.startRound();
+    await r.pump(() => visible.mock.lastCall?.[0].visible === false);
+  });
+
+  it('keeps a held seat when a returning device cannot prove it, and keeps that device looking', async () => {
+    const r = await gathering(1);
+    await r.start();
+    const guest = r.guests[0]!;
+    await guest.native.plugin.disconnect!({ peerId: 'host' });
+    await r.pump(() => guest.controller.status === 'reconnecting');
+    (guest.controller as unknown as { resumeKey: CryptoKey }).resumeKey =
+      (await webcrypto.subtle.generateKey({ name: 'HMAC', hash: 'SHA-256' }, false, [
+        'sign',
+      ])) as unknown as CryptoKey;
+    const disconnects = vi.mocked(r.hostNative.plugin.disconnect!).mock.calls.length;
+    await vi.advanceTimersByTimeAsync(3000);
+    await until(() => guest.native.setup?.resume === true);
+    guest.native.emit({ type: 'peer', id: 'host', name: r.hostNative.setup!.label });
+    // The host turns the unproven device away; its plain refusal cannot end a held seat.
+    await r.pump(() => vi.mocked(r.hostNative.plugin.disconnect!).mock.calls.length > disconnects);
+    await r.pump(() => !r.network.connected.has('guest1'));
+    expect(guest.controller.status).toBe('reconnecting');
+    expect(r.host.snapshot!.seats[1]).toMatchObject({ control: 'human', connected: false });
+    expect(r.host.hostSession!.isHeld(1)).toBe(true);
+  });
+
+  it('refuses a released person provably, so their device stops looking', async () => {
+    const r = await gathering(1);
+    await r.approveAll();
+    const guest = r.guests[0]!;
+    await guest.native.plugin.disconnect!({ peerId: 'host' });
+    await r.pump(() => guest.controller.status === 'reconnecting');
+    // Between matches the host gives the away person's seat to someone new.
+    r.host.control(1, 'cpu');
+    const late = await r.addGuest('late');
+    r.host.approve('late', 1);
+    await r.pump(() => late.controller.status === 'room');
+    await r.rediscover(guest);
+    await r.pump(() => guest.controller.status === 'ended');
+    expect(guest.controller.reason).toBe('declined');
+    expect(r.host.snapshot!.seats[1]).toMatchObject({ control: 'human', name: 'late' });
+  });
+
+  it('does not let an unverified device end a guest that is looking for its host', async () => {
+    const r = await gathering(1);
+    await r.start();
+    const guest = r.guests[0]!;
+    await guest.native.plugin.disconnect!({ peerId: 'host' });
+    await r.pump(() => guest.controller.status === 'reconnecting');
+    const internals = guest.controller as unknown as {
+      links: Map<string, { participant?: unknown }>;
+      receive(peer: string, raw: string): Promise<void>;
+    };
+    // A lookalike that copied the label has a link but never sent the host's hello.
+    internals.links.set('lookalike', {});
+    for (const type of ['declined', 'ended', 'replaced'])
+      await expect(
+        internals.receive('lookalike', JSON.stringify({ group: 1, type })),
+      ).rejects.toThrow();
+    internals.links.delete('lookalike');
+    expect(guest.controller.status).toBe('reconnecting');
+    await r.rediscover(guest);
+    await r.pump(() => guest.controller.status === 'room' && r.host.hostSession!.synchronized);
+  });
+
+  it('declines a newcomer while every guest seat belongs to a person, and tells a blocked guest', async () => {
+    const r = await gathering(3);
+    await r.approveAll();
+    // An away person keeps their seat but frees a radio link, so a newcomer can reach the host.
+    await r.guests[0]!.native.plugin.disconnect!({ peerId: 'host' });
+    await r.pump(() => !r.host.snapshot!.seats[1]!.connected);
+    expect(r.host.hostSession!.discoverable).toBe(false);
+    const late = await r.addGuest('late', { rejected: true });
+    expect(late.controller.reason).toBe('declined');
+    await r.host.block('guest2');
+    await r.pump(() => r.guests[1]!.controller.status === 'ended');
+    expect(r.guests[1]!.controller.reason).toBe('declined');
+    expect(r.host.snapshot!.seats[2]).toMatchObject({ control: 'cpu', name: '' });
+    expect(r.host.snapshot!.seats[1]).toMatchObject({ control: 'human', name: 'guest1' });
+    expect(r.guests[2]!.controller.status).toBe('room');
+  });
+
+  it('refuses a blocked guest provably when the first refusal was lost', async () => {
+    const r = await gathering(2);
+    await r.start();
+    const guest = r.guests[0]!;
+    const send = vi.mocked(r.hostNative.plugin.send);
+    const originalSend = send.getMockImplementation()!;
+    // The refusal sent with the block never reaches guest1.
+    send.mockImplementation(async (frame) => {
+      if (frame.peerId !== 'guest1') await originalSend(frame);
+    });
+    await r.host.block('guest1');
+    await r.pump(() => guest.controller.status === 'reconnecting');
+    send.mockImplementation(originalSend);
+    expect(r.host.snapshot!.seats[1]).toMatchObject({ control: 'cpu', name: '' });
+    await r.rediscover(guest);
+    await r.pump(() => guest.controller.status === 'ended');
+    expect(guest.controller.reason).toBe('declined');
+    expect(r.host.snapshot!.seats[1]!.control).toBe('cpu');
+    expect(r.guests[1]!.controller.status).toBe('room');
+  });
+
+  it('retries a host radio restart whose start reports an error but still resolves', async () => {
+    const r = await gathering(1);
+    await r.start();
+    r.hostNative.emit({ type: 'error', code: 'LAN_LISTEN', message: 'listener failed' });
+    await r.pump(() => r.host.status === 'reconnecting');
+    const start = vi.mocked(r.hostNative.plugin.start);
+    const attempts = start.mock.calls.length;
+    start.mockImplementationOnce(async () => {
+      r.hostNative.emit({ type: 'error', code: 'LAN_LISTEN', message: 'listener failed again' });
+      for (let i = 0; i < 5; i++) await nextTurn();
+    });
+    await vi.advanceTimersByTimeAsync(3000);
+    await until(() => start.mock.calls.length === attempts + 1);
+    for (let i = 0; i < 10; i++) await nextTurn();
+    expect(r.host.status).toBe('reconnecting');
+    await vi.advanceTimersByTimeAsync(3000);
+    await r.pump(() => r.host.status === 'room' && start.mock.calls.length === attempts + 2);
+  });
+
+  it('makes a guest whose move goes unanswered look for the host again, keeping its seat', async () => {
+    const r = await gathering(1);
+    await r.start();
+    r.host.act({ kind: 'roll' });
+    const guest = r.guests[0]!;
+    await r.pump(() => guest.controller.canAct && r.host.hostSession!.synchronized);
+    // A host in the background ignores moves, like a half-open link that never answers.
+    r.host.setForeground(false);
+    guest.controller.act({ kind: 'roll' });
+    await r.pump(() => guest.native.frames.length === 0);
+    await vi.advanceTimersByTimeAsync(15000);
+    await r.pump(() => guest.controller.status === 'reconnecting');
+    await r.pump(() => !r.host.snapshot!.seats[1]!.connected);
+    expect(r.host.hostSession!.isHeld(1)).toBe(true);
+    r.host.setForeground(true);
+    await r.rediscover(guest);
+    await r.pump(() => guest.controller.status === 'room' && r.host.hostSession!.synchronized);
+    expect(guest.controller.snapshot!.you).toBe(1);
+  });
+
+  it('tries again when the radio refuses to hide the room', async () => {
+    const r = await gathering(1);
+    await r.approveAll();
+    const visible = vi.mocked(r.hostNative.plugin.setListingVisible!);
+    visible.mockRejectedValueOnce(new Error('unregister failed'));
+    r.host.ready();
+    r.guests[0]!.controller.ready();
+    await r.pump(() => r.host.hostSession!.canStart && r.host.hostSession!.synchronized);
+    r.host.startRound();
+    await until(() => visible.mock.calls.length === 1);
+    for (let i = 0; i < 5; i++) await nextTurn();
+    await vi.advanceTimersByTimeAsync(3000);
+    await until(() => visible.mock.calls.length === 2);
+    expect(visible.mock.calls.map(([options]) => options.visible)).toEqual([false, false]);
+  });
+
+  it('keeps the names of a finished round after its winner leaves', async () => {
+    const r = await gathering(1, [1]);
+    await r.start();
+    const session = r.host.hostSession!;
+    // Arrange a board one move from a guest win, then publish it.
+    session.state = {
+      ...createLudo(() => 0),
+      pawns: [
+        [0, 0, 0, 0],
+        [58, 59, 59, 59],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+      ],
+      turn: 1,
+      rollIndex: 4,
+      lastRoll: { seat: 0, die: 1, kind: 'autoPass' },
+    } satisfies State;
+    r.host.control(2, 'cpu');
+    const guest = r.guests[0]!;
+    await r.pump(() => guest.controller.canAct && session.synchronized);
+    guest.controller.act({ kind: 'roll' });
+    await r.pump(() => guest.controller.canAct && (session.state as State).die === 1);
+    guest.controller.act({ kind: 'move', pawn: 0 });
+    await r.pump(() => r.host.finishedSeats?.round === 1);
+    const leaving = guest.controller.stop();
+    await r.pump(() => r.host.snapshot!.seats[1]!.control === 'cpu');
+    await drained();
+    await leaving;
+    for (let i = 0; i < 10; i++) await nextTurn();
+    const history = JSON.parse((await r.hostNative.plugin.readHistory()).data!);
+    expect(history.groups[0].rounds[0]).toMatchObject({ round: 1, winner: 1, finished: true });
+    expect(history.groups[0].rounds[0].names[1]).toBe('guest1');
+    expect(r.host.finishedSeats!.seats[1]!.name).toBe('guest1');
+  });
+
+  it('gives a guest that returns after a round ended the names the round ended with', async () => {
+    const r = await gathering(2, [1]);
+    await r.start();
+    const session = r.host.hostSession!;
+    const [winner, away] = r.guests as [(typeof r.guests)[number], (typeof r.guests)[number]];
+    await away.native.plugin.disconnect!({ peerId: 'host' });
+    await r.pump(() => away.controller.status === 'reconnecting');
+    r.host.control(2, 'cpu'); // The host lets a CPU play the away seat.
+    session.state = {
+      ...createLudo(() => 0),
+      pawns: [
+        [0, 0, 0, 0],
+        [58, 59, 59, 59],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+      ],
+      turn: 1,
+      rollIndex: 4,
+      lastRoll: { seat: 0, die: 1, kind: 'autoPass' },
+    } satisfies State;
+    r.host.control(3, 'cpu');
+    await r.pump(() => winner.controller.canAct && session.synchronized);
+    winner.controller.act({ kind: 'roll' });
+    await r.pump(() => winner.controller.canAct && (session.state as State).die === 1);
+    winner.controller.act({ kind: 'move', pawn: 0 });
+    await r.pump(() => r.host.finishedSeats?.round === 1);
+    const leaving = winner.controller.stop();
+    await r.pump(() => r.host.snapshot!.seats[1]!.control === 'cpu');
+    await drained();
+    await leaving;
+    await r.rediscover(away);
+    await r.pump(() => away.controller.status === 'room');
+    expect(away.controller.finishedSeats!.seats[1]).toMatchObject({
+      control: 'human',
+      name: 'guest1',
+    });
+    expect(away.controller.snapshot!.seats[1]!.control).toBe('cpu');
+  });
+
+  it('ends a guest whose verified host floods it, as two-player rooms do', async () => {
+    const r = await gathering(1);
+    await r.start();
+    const guest = r.guests[0]!;
+    for (let i = 0; i < 65; i++) guest.native.emit({ type: 'connected', peerId: 'host' });
+    await r.pump(() => guest.controller.status === 'ended');
+    expect(guest.controller.reason).toBe('connection');
+  });
+
+  it('releases a seat when the approved guest drops before its first state arrives', async () => {
+    const r = await gathering(1);
+    r.host.approve('guest1', 1);
+    // The link drops before the first room state reaches the guest.
+    await r.guests[0]!.native.plugin.disconnect!({ peerId: 'host' });
+    await r.pump(() => r.guests[0]!.controller.status === 'ended');
+    expect(r.host.snapshot!.seats[1]).toMatchObject({ control: 'cpu', name: '' });
+    expect(r.host.hostSession!.isHeld(1)).toBe(false);
+    const again = await r.addGuest('guest1');
+    expect(r.host.hostSession!.pending.has('guest1')).toBe(true);
+    r.host.approve('guest1', 1);
+    await r.pump(() => again.controller.status === 'room');
+  });
+
+  it('counts queued events per sender, so one flood cannot evict another guest', async () => {
+    const r = await gathering(2);
+    await r.start();
+    // Repeated 'connected' events for a live link are no-ops that still occupy the queue.
+    for (let i = 0; i < 64; i++) r.hostNative.emit({ type: 'connected', peerId: 'guest1' });
+    r.hostNative.emit({ type: 'connected', peerId: 'guest2' });
+    expect(r.host.snapshot!.seats[2]).toMatchObject({ control: 'human', connected: true });
+    r.hostNative.emit({ type: 'connected', peerId: 'guest1' });
+    await r.pump(() => r.host.snapshot!.seats[1]!.control === 'cpu');
+    expect(r.host.snapshot!.seats[2]).toMatchObject({ control: 'human', connected: true });
+    expect(r.guests[1]!.controller.status).toBe('room');
+  });
+
+  it('bounds the event queue under connection churn and closes the strangers it sheds', async () => {
+    const r = await gathering(2);
+    await r.start();
+    const internals = r.host as unknown as { queuedTotal: number };
+    for (let i = 0; i < 1000; i++) r.hostNative.emit({ type: 'connected', peerId: `churn-${i}` });
+    expect(internals.queuedTotal).toBeLessThanOrEqual(256);
+    expect(r.hostNative.plugin.disconnect).toHaveBeenCalledWith({ peerId: 'churn-999' });
+    r.host.act({ kind: 'roll' });
+    await r.pump(() => r.host.hostSession!.synchronized && internals.queuedTotal === 0);
+    expect(r.host.status).toBe('room');
+    expect(r.guests.every((g) => g.controller.status === 'room')).toBe(true);
+  });
+
+  it('turns away one flooding peer without ending the gathering', async () => {
+    const r = await gathering(2);
+    await r.start();
+    for (let i = 0; i < 70; i++)
+      r.hostNative.emit({ type: 'data', peerId: 'guest1', data: 'not a frame' });
+    await r.pump(
+      () => r.host.snapshot!.seats[1]!.control === 'cpu' && !r.network.connected.has('guest1'),
+    );
+    expect(r.host.status).toBe('room');
+    expect(r.guests[1]!.controller.status).toBe('room');
+  });
+
+  it('restarts the host radio after a native failure and keeps every seat for its guest', async () => {
+    const r = await gathering(2);
+    await r.start();
+    const starts = vi.mocked(r.hostNative.plugin.start).mock.calls.length;
+    r.hostNative.emit({ type: 'error', code: 'LAN_LISTEN', message: 'listener failed' });
+    await r.pump(() => r.host.status === 'reconnecting');
+    expect(r.host.snapshot!.seats.slice(1, 3).every((s) => !s.connected)).toBe(true);
+    await vi.advanceTimersByTimeAsync(3000);
+    await r.pump(() => r.host.status === 'room');
+    const restart = vi.mocked(r.hostNative.plugin.start).mock.calls[starts]![0];
+    expect(restart).toMatchObject({
+      role: 'advertise',
+      label: r.hostNative.setup!.label,
+      maxPeers: 3,
+    });
+    expect(restart.resume).toBeUndefined();
+    expect(restart.listing).toBeTypeOf('string');
+    expect(r.hostNative.plugin.setListingVisible).toHaveBeenLastCalledWith({ visible: false });
+    await r.pump(() => r.guests.every((g) => g.controller.status === 'reconnecting'));
+    for (const guest of r.guests) await r.rediscover(guest);
+    await r.pump(
+      () =>
+        r.guests.every((g) => g.controller.status === 'room') && r.host.hostSession!.synchronized,
+    );
+    expect(r.host.snapshot!.seats.map((s) => s.connected)).toEqual([true, true, true, false]);
   });
 
   it('declines one applicant without disrupting other encrypted links', async () => {
@@ -332,8 +702,15 @@ describe('four devices using real WebCrypto group channels', () => {
     );
     const moved = structuredClone(r.host.snapshot!.state);
     r.hostNative.emit({ type: 'data', peerId: 'guest1', data: replay });
-    await r.pump(() => !r.host.snapshot!.seats[1]!.connected);
+    // A replay is a protocol violation: the sender loses its seat to a CPU and is turned away.
+    await r.pump(
+      () =>
+        r.host.snapshot!.seats[1]!.control === 'cpu' &&
+        !r.network.connected.has('guest1') &&
+        guest.controller.status === 'ended',
+    );
     expect(r.host.snapshot!.state).toEqual(moved);
+    expect(guest.controller.reason).toBe('declined');
     expect(r.guests[1]!.controller.status).toBe('room');
     expect(r.network.connected).toEqual(new Set(['guest2']));
   });
@@ -447,12 +824,13 @@ describe('four devices using real WebCrypto group channels', () => {
       r.host as unknown as { links: Map<string, { outgoing: Promise<void> }> }
     ).links.get('guest1')!;
     send.mockImplementation(originalSend);
-    await r.guests[0]!.native.plugin.disconnect!({ peerId: 'host' });
+    const replacement = r.guests[0]!;
+    await replacement.native.plugin.disconnect!({ peerId: 'host' });
     await r.pump(
-      () => !r.host.snapshot!.seats[1]!.connected && r.guests[0]!.controller.status === 'ended',
+      () =>
+        !r.host.snapshot!.seats[1]!.connected && replacement.controller.status === 'reconnecting',
     );
-    const replacement = await r.addGuest('guest1');
-    r.host.approve('guest1', 1);
+    await r.rediscover(replacement);
     await r.pump(
       () => replacement.controller.status === 'room' && r.host.hostSession!.synchronized,
     );
@@ -483,6 +861,7 @@ describe('four devices using real WebCrypto group channels', () => {
     });
     const stopping = r.host.stop();
     await r.pump(() => r.host.status === 'ended' && r.guests[0]!.controller.status === 'ended');
+    await drained();
     await stopping;
     expect(r.hostNative.plugin.stop).toHaveBeenCalledTimes(1);
     expect(r.hostNative.listeners.size).toBe(0);
@@ -569,7 +948,7 @@ describe('four devices using real WebCrypto group channels', () => {
       await r.pump(
         () => !r.host.snapshot!.seats[1]!.connected && r.guests[0]!.controller.status === 'ended',
       );
-      expect(r.host.snapshot!.seats[1]!.name).toBe(original.name);
+      expect(r.host.snapshot!.seats[1]).toMatchObject({ name: '', control: 'cpu' });
       expect(r.host.participants.has('guest1')).toBe(false);
       expect(
         [...r.host.participants.values()].some(
@@ -620,6 +999,7 @@ describe('four devices using real WebCrypto group channels', () => {
         [field]: field === 'identity' ? 'c'.repeat(32) : 'Replacement',
       });
       await r.pump(() => guest.status === 'ended');
+      await drained();
       expect(guest.participants.size).toBe(0);
       expect(guest.codes.size).toBe(0);
       expect(r.host.status).toBe('room');

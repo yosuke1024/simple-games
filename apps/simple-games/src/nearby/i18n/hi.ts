@@ -7,7 +7,9 @@ export const hi: NearbyMessages = {
   groupCpu: 'CPU',
   groupHuman: 'इंसान',
   groupOpen: 'खिलाड़ी का इंतज़ार है',
-  groupDisconnected: 'कनेक्शन टूट गया',
+  groupAway: 'अनुपस्थित',
+  groupReconnecting: 'फिर से कनेक्ट हो रहा है…',
+  groupLeaveSeat: 'आपकी सीट CPU को मिल जाएगी, और आप इस बाज़ी में वापस नहीं आ पाएँगे।',
   groupCpuName: 'CPU {seat}',
   groupHostStops: 'होस्ट के जाने पर सभी की बाज़ी समाप्त हो जाती है।',
   groupConnection:

@@ -210,6 +210,16 @@ public class NearbyPlayPlugin extends Plugin {
         } catch (Exception error) { call.reject(message(error)); }
     }); }
 
+    @PluginMethod public void setListingVisible(PluginCall call) { main.post(() -> {
+        try {
+            if (transport == null || !multiPeer) throw new IllegalStateException("No multi-seat session");
+            Boolean visible = call.getBoolean("visible");
+            if (visible == null) throw new IllegalArgumentException("visible must be true or false");
+            transport.setListingVisible(visible);
+            call.resolve();
+        } catch (Exception error) { call.reject(message(error)); }
+    }); }
+
     @PluginMethod public void stop(PluginCall call) { main.post(() -> {
         backgroundEvents.clear(); end("stopped"); call.resolve();
     }); }

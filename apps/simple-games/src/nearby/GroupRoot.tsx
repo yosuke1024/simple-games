@@ -5,7 +5,7 @@ import { useSettings } from '../state/SettingsContext';
 import { ConfirmDialog } from '../ui/components/ConfirmDialog';
 import { IconBack } from '../ui/components/icons';
 import { GroupController, type GroupSetup } from './groupController';
-import type { Control } from './groupSession';
+import type { Control, GroupSeat } from './groupSession';
 import { useNearbyText } from './i18n';
 import { isPlayerName, isRoomName } from './session';
 import { isAllowedNearbyText, filteredNearbyText } from './contentFilter';
@@ -68,10 +68,13 @@ export default function GroupRoot({
   const state = snapshot?.state;
   const result = isLudoState(state) ? ludoResult(state) : null;
   const safeName = (name: string) => filteredNearbyText(name, n('contentHidden'));
-  const names =
-    snapshot?.seats.map((seat, i) =>
-      seat.control === 'cpu' ? n('groupCpuName', { seat: i + 1 }) : safeName(seat.name),
-    ) ?? [];
+  const seatName = (seat: GroupSeat, i: number) =>
+    seat.control === 'cpu' ? n('groupCpuName', { seat: i + 1 }) : safeName(seat.name);
+  const names = snapshot?.seats.map(seatName) ?? [];
+  // The result names the players as the round ended, even if one has left since.
+  const finished = controller?.finishedSeats;
+  const resultNames =
+    result && finished && finished.round === snapshot?.round ? finished.seats.map(seatName) : names;
   const showHistory = async () => {
     const request = ++historyRequest.current;
     try {
@@ -484,7 +487,8 @@ export default function GroupRoot({
                     {host.seats.map(
                       (seat, i) =>
                         i > 0 &&
-                        (seat.control !== 'human' || !seat.connected) && (
+                        // A human seat stays its person's, even while they are away.
+                        seat.control !== 'human' && (
                           <button
                             key={i}
                             className="btn btn-primary"
@@ -520,7 +524,7 @@ export default function GroupRoot({
                           <span>{safeName(seat.name)}</span>
                         )}
                         {seat.control === 'human' && !seat.connected && (
-                          <span role="status">{n('groupDisconnected')}</span>
+                          <span role="status">{n('groupAway')}</span>
                         )}
                         {host && i > 0 && active && (
                           <label className="nearby-field">
@@ -532,9 +536,9 @@ export default function GroupRoot({
                               <option value="cpu">{n('groupCpu')}</option>
                               {seat.connected && <option value="human">{n('groupHuman')}</option>}
                               {!state && <option value="open">{n('groupOpen')}</option>}
-                              {state != null && seat.control === 'human' && !seat.connected && (
+                              {seat.control === 'human' && !seat.connected && (
                                 <option value="human" disabled>
-                                  {n('groupDisconnected')}
+                                  {n('groupAway')}
                                 </option>
                               )}
                             </select>
@@ -557,7 +561,8 @@ export default function GroupRoot({
                       className="btn btn-primary"
                       disabled={
                         snapshot.seats[snapshot.you]?.ready ||
-                        snapshot.seats[snapshot.you]?.control !== 'human'
+                        snapshot.seats[snapshot.you]?.control !== 'human' ||
+                        (!host && controller.status !== 'room')
                       }
                       onClick={() => controller.ready()}
                     >
@@ -573,6 +578,9 @@ export default function GroupRoot({
                       </button>
                     )}
                   </div>
+                )}
+                {controller.status === 'reconnecting' && (
+                  <p role="status">{n('groupReconnecting')}</p>
                 )}
                 {active &&
                   (!state || snapshot.seats.some((s) => s.control === 'human' && !s.connected)) && (
@@ -592,7 +600,7 @@ export default function GroupRoot({
                   <p role="status">
                     {result.winner === null
                       ? n('groupFinished')
-                      : n('groupWinner', { name: names[result.winner]! })}
+                      : n('groupWinner', { name: resultNames[result.winner]! })}
                   </p>
                 )}
               </>
@@ -656,7 +664,9 @@ export default function GroupRoot({
           )}
           body={n(
             question.type === 'leave'
-              ? 'groupHostStops'
+              ? controller?.setup.host === false
+                ? 'groupLeaveSeat'
+                : 'groupHostStops'
               : question.type === 'clear'
                 ? 'clearBody'
                 : question.type === 'block'

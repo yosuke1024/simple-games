@@ -7,7 +7,9 @@ export const es: NearbyMessages = {
   groupCpu: 'CPU',
   groupHuman: 'Persona',
   groupOpen: 'Esperando a un jugador',
-  groupDisconnected: 'Sin conexión',
+  groupAway: 'Ausente',
+  groupReconnecting: 'Reconectando…',
+  groupLeaveSeat: 'Tu puesto pasa a la CPU y no podrás volver a esta partida.',
   groupCpuName: 'CPU {seat}',
   groupHostStops: 'Si el anfitrión sale, la partida termina para todos.',
   groupConnection:

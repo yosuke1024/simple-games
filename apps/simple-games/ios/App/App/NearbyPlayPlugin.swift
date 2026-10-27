@@ -49,6 +49,7 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "connect", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "send", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "disconnect", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setListingVisible", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "stop", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "readHistory", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "writeHistory", returnType: CAPPluginReturnPromise),
@@ -77,10 +78,18 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
     private var role = ""
     private var label = ""
     private var listingData: Data?
+    // A multi-seat host's JS recruiting switch (setListingVisible) and the TXT
+    // bytes last handed to Bonjour. It only ever narrows what listingData and
+    // the link count would publish; its sequences are tested by tests/NearbyPlayDiscoveryTests.swift.
+    private var hostListing = NearbyPlayHostListing()
     private var peerLimit = 1
     private var selectedPeerId: String?
     private var links: [String: NearbyPlayLink] = [:]
-    private var multiHost: Bool { peerLimit > 1 && role == "advertise" }
+    private var multiHost: Bool { NearbyPlayHostListing.isMultiSeatHost(peerLimit: peerLimit, role: role) }
+    /// What a multi-seat host's BLE metadata reads may publish right now.
+    private var publicListing: Data? {
+        hostListing.published(listing: listingData, occupied: links.count, limit: peerLimit)
+    }
     private var epoch = 0
     private var lifecycleObservers: [NSObjectProtocol] = []
     private let eventBuffer = NearbyPlayEventBuffer()
@@ -214,6 +223,8 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
             self.role = role
             self.label = label
             self.listingData = listing
+            // A fresh start always recruits; only setListingVisible hides it.
+            self.hostListing.reset()
             self.peerLimit = peerLimit
             // A multi-seat host can play with only CPU seats or continue after
             // its final guest leaves. Its explicit room lifetime owns advertising.
@@ -316,6 +327,25 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
             } else if self.selectedPeerId == id {
                 self.stopSession(reason: "disconnected")
             }
+            call.resolve()
+        }
+    }
+
+    /// Multi-seat host only: stop or resume recruiting. The label keeps being
+    /// advertised so a guest whose link dropped can still find the room and
+    /// prove itself in JS; only the listing (BLE metadata / TXT item) is withheld.
+    @objc func setListingVisible(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            guard let visible = call.getBool("visible") else {
+                call.reject("Expected visible.", "ARGUMENT")
+                return
+            }
+            guard self.running, self.multiHost else {
+                call.reject("Listing visibility applies only to a running multi-seat host.", "STATE")
+                return
+            }
+            self.hostListing.setVisible(visible)
+            self.refreshHostListing()
             call.resolve()
         }
     }
@@ -460,6 +490,7 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
         localNotifyCharacteristic = nil; subscribedCentral = nil
         blePeers.removeAll(); lanPeers.removeAll(); lanListings.removeAll()
         discoveryIndex.removeAll(); listingData = nil
+        hostListing.reset()
         received.removeAll(); outgoing.removeAll()
         offset = 0; writeInFlight = 0; networkSending = false
         // A stopped manager's old poweredOn value cannot establish current radio availability.
@@ -653,9 +684,13 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
 
     private func refreshHostListing() {
         guard running, multiHost, let listener else { return }
-        let publicListing = links.count < peerLimit ? listingData : nil
+        // Same name/type/domain; only the TXT item changes (absent when hidden
+        // or full, never an empty string). The listener is neither cancelled nor
+        // recreated, and an unchanged record is not re-registered.
+        guard case .register(let record) = hostListing.refresh(
+            listing: listingData, occupied: links.count, limit: peerLimit) else { return }
         listener.service = NWListener.Service(name: "NP-" + label, type: Self.bonjour, domain: "local.",
-            txtRecord: NearbyPlayListing.txtRecord(publicListing))
+            txtRecord: record)
     }
 
     private func receiveLink(_ data: Data, from link: NearbyPlayLink) {
@@ -873,8 +908,12 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
             do {
                 let server = try NWListener(using: Self.lanParameters(), on: .any)
                 listener = server
+                // The two-player host registers exactly what it always did.
+                let record = multiHost
+                    ? hostListing.register(listing: listingData, occupied: links.count, limit: peerLimit)
+                    : NearbyPlayListing.txtRecord(listingData)
                 server.service = NWListener.Service(name: "NP-" + label, type: Self.bonjour, domain: "local.",
-                    txtRecord: NearbyPlayListing.txtRecord(listingData))
+                    txtRecord: record)
                 server.stateUpdateHandler = { [weak self] state in
                     guard let self, self.running, self.epoch == generation else { return }
                     switch state {
@@ -1191,7 +1230,7 @@ extension NearbyPlayPlugin: CBPeripheralManagerDelegate {
         }
         // Reading public metadata never subscribes a central, claims the seat,
         // stops advertising, or emits a game connection/disconnection event.
-        let listing = multiHost ? (links.count < peerLimit ? listingData : nil) : (connected ? nil : listingData)
+        let listing = multiHost ? publicListing : (connected ? nil : listingData)
         guard let value = NearbyPlayListing.read(listing, offset: request.offset) else {
             peripheral.respond(to: request, withResult: .invalidOffset); return
         }

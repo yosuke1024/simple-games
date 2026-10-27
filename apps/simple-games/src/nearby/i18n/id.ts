@@ -7,7 +7,9 @@ export const id: NearbyMessages = {
   groupCpu: 'CPU',
   groupHuman: 'Manusia',
   groupOpen: 'Menunggu pemain',
-  groupDisconnected: 'Terputus',
+  groupAway: 'Tidak di tempat',
+  groupReconnecting: 'Menghubungkan ulang…',
+  groupLeaveSeat: 'Kursi Anda dialihkan ke CPU, dan Anda tidak dapat kembali ke permainan ini.',
   groupCpuName: 'CPU {seat}',
   groupHostStops: 'Jika host keluar, permainan berakhir untuk semua pemain.',
   groupConnection:

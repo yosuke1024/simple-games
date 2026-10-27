@@ -24,14 +24,25 @@ public final class MultiPeerTransportTest {
         boolean stopped;
         String sentTo;
         String disconnected;
+        Boolean listingVisible;
+        int listingCalls;
         boolean rejectConnect;
         public void start(boolean advertise, String label, byte[] listing) {}
         public void connect(String id) { if (rejectConnect) throw new IllegalArgumentException("unknown peer"); }
         public void send(byte[] data) { sentTo = "guest-host"; }
         public void send(byte[] data, String id) { sentTo = id; }
         public void disconnect(String id) { disconnected = id; }
+        public void setListingVisible(boolean visible) { listingVisible = visible; listingCalls++; }
         public void setForeground(boolean foreground) {}
         public void stop() { stopped = true; }
+    }
+    /** A transport that never overrides the optional methods, like BleTransport or the two-player LAN path. */
+    private static final class Bare implements Transport {
+        public void start(boolean advertise, String label, byte[] listing) {}
+        public void connect(String id) {}
+        public void send(byte[] data) {}
+        public void setForeground(boolean foreground) {}
+        public void stop() {}
     }
     private MultiPeerTransport create(Recorded events, Fake fake) {
         return new MultiPeerTransport(events, (hosting, callbacks) -> { fake.events = callbacks; return fake; });
@@ -69,5 +80,35 @@ public final class MultiPeerTransportTest {
         try { multi.connect("stale"); fail(); } catch (IllegalArgumentException expected) {}
         fake.rejectConnect = false; multi.connect("fresh"); fake.events.connected();
         assertEquals("connected:fresh", events.received.get(0));
+    }
+    @Test public void hostForwardsEveryListingVisibilityRequestToItsDelegate() throws Exception {
+        Recorded events = new Recorded(); Fake fake = new Fake();
+        MultiPeerTransport multi = create(events, fake);
+        multi.start(true, "P-8E1234", null);
+        assertNull(fake.listingVisible);
+        multi.setListingVisible(false); assertEquals(Boolean.FALSE, fake.listingVisible);
+        multi.setListingVisible(true); assertEquals(Boolean.TRUE, fake.listingVisible);
+        assertEquals(2, fake.listingCalls);
+        assertFalse(fake.stopped);
+    }
+    @Test public void listingVisibilityNeedsAStartedHost() throws Exception {
+        Recorded events = new Recorded(); Fake fake = new Fake();
+        MultiPeerTransport multi = create(events, fake);
+        try { multi.setListingVisible(false); fail(); } catch (IllegalStateException expected) {}
+        multi.start(false, "P-8E1234", null);
+        try { multi.setListingVisible(false); fail(); } catch (IllegalStateException expected) {}
+        multi.connect("browse-1");
+        try { multi.setListingVisible(true); fail(); } catch (IllegalStateException expected) {}
+        assertEquals(0, fake.listingCalls);
+    }
+    @Test public void aDelegateWithoutListingSupportSurfacesTheDefaultRejection() throws Exception {
+        Recorded events = new Recorded(); Bare bare = new Bare();
+        MultiPeerTransport multi = new MultiPeerTransport(events, (hosting, callbacks) -> bare);
+        multi.start(true, "P-8E1234", null);
+        try { multi.setListingVisible(false); fail(); }
+        catch (IllegalArgumentException expected) {
+            assertEquals("This transport does not support listing visibility", expected.getMessage());
+        }
+        try { bare.setListingVisible(true); fail(); } catch (IllegalArgumentException expected) {}
     }
 }

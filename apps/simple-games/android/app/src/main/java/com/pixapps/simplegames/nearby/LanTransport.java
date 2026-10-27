@@ -71,6 +71,19 @@ final class LanTransport implements Transport {
     private boolean advertising;
     private boolean discovering;
     private boolean registering;
+    private int advertisedPort;
+    // Multi-seat host only. NsdManager cannot update a TXT record in place, so a change in whether
+    // the room is listed is an unregister followed by a register of the same name and port.
+    private HostRegistration hostRegistration;
+    private boolean announced;
+    private final ListingRegistration registrations = new ListingRegistration(new ListingRegistration.Driver() {
+        public void register(boolean listed) {
+            HostRegistration next = new HostRegistration();
+            hostRegistration = next;
+            nsd.registerService(serviceInfo(listed), NsdManager.PROTOCOL_DNS_SD, next);
+        }
+        public void unregister() { nsd.unregisterService(hostRegistration); }
+    });
     private boolean ready;
     private boolean writing;
     private Runnable drained;
@@ -166,20 +179,29 @@ final class LanTransport implements Transport {
                     created.setSoTimeout(0); // stop/deadline closes every blocking accept.
                     bound.add(created);
                 }
-                final int advertisedPort = port;
+                final int boundPort = port;
                 run(() -> {
-                    NsdServiceInfo info = new NsdServiceInfo();
-                    info.setServiceName(label); info.setServiceType(TYPE); info.setPort(advertisedPort);
-                    if (listing != null) info.setAttribute("listing", ListingPayload.decode(listing));
-                    if (Build.VERSION.SDK_INT >= 33) info.setNetwork(wifi);
+                    advertisedPort = boundPort;
                     registering = true;
-                    nsd.registerService(info, NsdManager.PROTOCOL_DNS_SD, registration);
+                    // A multi-seat host may already have asked to be hidden; its first registration honours that.
+                    if (multiHost) registrations.open();
+                    else nsd.registerService(serviceInfo(true), NsdManager.PROTOCOL_DNS_SD, registration);
                 });
                 for (ServerSocket created : bound) {
                     new Thread(() -> accept(created), "nearby-lan-accept").start();
                 }
             } catch (Exception e) { run(() -> fail("listen-failed", "LAN listener stopped: " + e.getClass().getSimpleName())); }
         }, "nearby-lan-listener").start();
+    }
+
+    private NsdServiceInfo serviceInfo(boolean listed) {
+        NsdServiceInfo info = new NsdServiceInfo();
+        info.setServiceName(label); info.setServiceType(TYPE); info.setPort(advertisedPort);
+        // A hidden room omits the item (never an empty value); see ListingPayload.txtListing.
+        String txtListing = ListingPayload.txtListing(listing, listed);
+        if (txtListing != null) info.setAttribute("listing", txtListing);
+        if (Build.VERSION.SDK_INT >= 33) info.setNetwork(wifi);
+        return info;
     }
 
     private void accept(ServerSocket source) {
@@ -471,6 +493,29 @@ final class LanTransport implements Transport {
         public void onUnregistrationFailed(NsdServiceInfo info, int code) { run(() -> fail("unregister-failed", "LAN unregister failed: " + code)); }
     };
 
+    /** One per multi-seat registration, so a late callback of an older one is recognised and dropped. */
+    private final class HostRegistration implements NsdManager.RegistrationListener {
+        public void onServiceRegistered(NsdServiceInfo info) { main.post(() -> {
+            if (!active) { try { nsd.unregisterService(this); } catch (Exception ignored) {} return; }
+            if (hostRegistration != this) return;
+            try {
+                if (!announced) { announced = true; events.status("LAN advertised as " + info.getServiceName()); }
+                registrations.registered();
+            } catch (Exception error) { fail("lan-error", "LAN operation failed: " + error.getClass().getSimpleName()); }
+        }); }
+        public void onRegistrationFailed(NsdServiceInfo info, int code) { run(() -> {
+            if (hostRegistration == this) fail("advertise-failed", "LAN registration failed: " + code);
+        }); }
+        public void onServiceUnregistered(NsdServiceInfo info) { main.post(() -> {
+            if (!active || hostRegistration != this) return;
+            try { registrations.unregistered(); }
+            catch (Exception error) { fail("lan-error", "LAN operation failed: " + error.getClass().getSimpleName()); }
+        }); }
+        public void onUnregistrationFailed(NsdServiceInfo info, int code) { run(() -> {
+            if (hostRegistration == this) fail("unregister-failed", "LAN unregister failed: " + code);
+        }); }
+    }
+
     private void connectResolved(NsdServiceInfo info) {
             if (!chosenName.equals(info.getServiceName())) {
                 fail("invalid-peer", "Resolved service name no longer matches the selected peer"); return;
@@ -617,8 +662,14 @@ final class LanTransport implements Transport {
         if (discovering) { discovering = false; try { nsd.stopServiceDiscovery(discovery); } catch (Exception ignored) {} }
     }
     private void unregister() {
+        if (multiHost) { registrations.stop(); return; }
         if (registering) { try { nsd.unregisterService(registration); } catch (Exception ignored) {} }
         // Keep the flag for the late onServiceRegistered cleanup; unregister is idempotently guarded by Android.
+    }
+    public void setListingVisible(boolean visible) throws Exception {
+        if (!multiHost) { Transport.super.setListingVisible(visible); return; }
+        if (!active) throw new IllegalStateException("LAN host is not running");
+        registrations.setListed(visible);
     }
     public void drainAndStop(Runnable completed) {
         if (drained != null) return;
