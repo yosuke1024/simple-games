@@ -17,6 +17,7 @@ interface FixtureController {
   reason: string;
   hostSession: GroupSession | null;
   snapshot: GroupSnapshot | null;
+  codes: Map<string, string>;
   participants: Map<string, { name: string; identity: string }>;
   block: Mock;
   start: Mock;
@@ -540,21 +541,72 @@ describe('Ludo room report and block controls', () => {
     expect(controller.status).toBe('room');
   });
 
-  it('lets a guest report the host and block them before approval', async () => {
+  it.each(['before approval', 'in the lobby'])(
+    'lets a guest report the host and block them %s',
+    async (stage) => {
+      await mount({
+        name: 'Guest',
+        roomName: 'Saturday Ludo',
+        label: 'P-8E1234',
+        transport: 'ble',
+      });
+      const controller = last();
+      act(() => {
+        controller.status = 'connecting';
+        controller.participants.set('host-link', { name: 'Host', identity: 'f'.repeat(32) });
+        controller.codes.set('host-link', '123456');
+        if (stage === 'in the lobby') controller.receiveSnapshot(guestSnapshot());
+        controller.notify();
+      });
+      expect(screen.getByText(text('confirmation', { code: '123456' }))).toBeVisible();
+      expect(screen.getByRole('button', { name: text('report') })).toBeVisible();
+      fireEvent.click(screen.getByRole('button', { name: text('report') }));
+      const report = screen.getByRole('dialog');
+      expect(
+        (within(report).getByLabelText(text('reportContent')) as HTMLTextAreaElement).value,
+      ).toContain('Saturday Ludo\nHost');
+      fireEvent.click(within(report).getByRole('button', { name: text('cancel') }));
+      fireEvent.click(screen.getByRole('button', { name: text('blockPlayer') }));
+      await act(async () => {
+        fireEvent.click(
+          within(screen.getByRole('alertdialog')).getByRole('button', {
+            name: text('blockPlayer'),
+          }),
+        );
+      });
+      expect(controller.block).toHaveBeenCalledWith('host-link');
+      expect(controller.status).toBe('ended');
+    },
+  );
+
+  it('keeps host details inside the collapsed seat controls during a round and preserves their actions', async () => {
     await mount({ name: 'Guest', roomName: 'Saturday Ludo', label: 'P-8E1234', transport: 'ble' });
     const controller = last();
+    const snapshot = guestSnapshot();
+    snapshot.state = createLudo(() => 0);
+    snapshot.round = 1;
     act(() => {
-      controller.status = 'connecting';
       controller.participants.set('host-link', { name: 'Host', identity: 'f'.repeat(32) });
-      controller.notify();
+      controller.codes.set('host-link', '123456');
+      controller.receiveSnapshot(snapshot);
     });
-    fireEvent.click(screen.getByRole('button', { name: text('report') }));
+    const controls = document.querySelector('.group-seat-controls')! as HTMLElement;
+    const code = screen.getByText(text('confirmation', { code: '123456' }));
+    const reportButton = within(controls).getByRole('button', { name: text('report') });
+    expect(controls).not.toHaveAttribute('open');
+    expect(controls).toContainElement(code);
+    expect(code).not.toBeVisible();
+    expect(reportButton).not.toBeVisible();
+    fireEvent.click(within(controls).getByText(text('groupSeats'), { selector: 'summary' }));
+    expect(code).toBeVisible();
+    expect(reportButton).toBeVisible();
+    fireEvent.click(reportButton);
     const report = screen.getByRole('dialog');
     expect(
       (within(report).getByLabelText(text('reportContent')) as HTMLTextAreaElement).value,
     ).toContain('Saturday Ludo\nHost');
     fireEvent.click(within(report).getByRole('button', { name: text('cancel') }));
-    fireEvent.click(screen.getByRole('button', { name: text('blockPlayer') }));
+    fireEvent.click(within(controls).getByRole('button', { name: text('blockPlayer') }));
     await act(async () => {
       fireEvent.click(
         within(screen.getByRole('alertdialog')).getByRole('button', { name: text('blockPlayer') }),

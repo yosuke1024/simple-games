@@ -2,10 +2,12 @@ import '../../games/ludo/i18n';
 import '../../games/ludo/ui/ludo.css';
 import './ludoView.css';
 import { useSettings } from '@/state/SettingsContext';
+import { useNearbyText } from '../i18n';
 import { legalMovesFor } from '../../games/ludo/game/engine';
-import { HOME_PROGRESS, isSeat, SEATS } from '../../games/ludo/game/types';
+import { bySeat, isSeat } from '../../games/ludo/game/types';
 import { LudoBoard } from '../../games/ludo/ui/components/LudoBoard';
 import { LudoDie } from '../../games/ludo/ui/components/LudoDie';
+import { LudoPlayers } from '../../games/ludo/ui/components/LudoPlayers';
 import type { State } from './ludo';
 
 export interface LudoViewProps {
@@ -27,6 +29,7 @@ export default function LudoView({
   visible = true,
 }: LudoViewProps) {
   const { t } = useSettings();
+  const n = useNearbyText();
   if (!visible || !isSeat(seat)) return null;
   const ownTurn = state.result === null && state.turn === seat;
   const enabled = canAct && ownTurn;
@@ -41,7 +44,7 @@ export default function LudoView({
         ? state.die !== null
           ? t('ludoTurnMove', { die: state.die })
           : t(state.sixStreak > 0 ? 'ludoRollAgain' : 'ludoTurnRoll')
-        : (names[state.turn] ?? '');
+        : n('playerTurn', { name: names[state.turn] ?? '' });
   const notice =
     state.lastRoll?.kind === 'autoPass'
       ? t('ludoAutoPass')
@@ -50,27 +53,17 @@ export default function LudoView({
         : null;
   return (
     <div className="ld-body nearby-ludo-view">
-      <ul className="ld-seats nearby-ludo-seats">
-        {SEATS.map((player) => {
-          const home = state.pawns[player].filter((progress) => progress === HOME_PROGRESS).length;
-          return (
-            <li
-              key={player}
-              className={`ld-seat-item ${state.turn === player && state.result === null ? 'ld-seat-on' : ''}`}
-            >
-              <span className={`ld-chip ld-seat-${player}`} aria-hidden="true" />
-              <span className="ld-seat-name">{names[player]}</span>
-              <span className="ld-seat-home" aria-label={t('ludoSeatHome', { home })}>
-                {home}/4
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+      <LudoPlayers
+        pawns={state.pawns}
+        names={bySeat((player) => names[player] ?? '')}
+        turn={state.result === null ? state.turn : null}
+        className="nearby-ludo-seats"
+      />
       <LudoBoard
         pawns={state.pawns}
         movable={movable}
         playing={enabled}
+        activeSeat={state.result === null ? state.turn : undefined}
         ownSeat={seat}
         names={names}
         onPawn={(pawn) => act({ kind: 'move', pawn })}
@@ -81,6 +74,7 @@ export default function LudoView({
           rollSerial={state.rollIndex}
           canRoll={enabled && state.die === null}
           onRoll={() => act({ kind: 'roll' })}
+          activeSeat={state.result === null ? state.turn : undefined}
         />
         <p className="ld-line" role="status">
           {notice ? `${notice} ${line}` : line}

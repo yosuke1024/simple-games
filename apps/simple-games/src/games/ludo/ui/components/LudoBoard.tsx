@@ -104,9 +104,9 @@ const HOME_COLUMN: readonly Cell[] = Array.from({ length: HOME_COLUMN_LENGTH }, 
 /** Seat 0's four yard slots — one per pawn, so a yard never stacks. */
 const YARD_SLOTS: readonly Cell[] = [
   { row: 10, col: 1 },
-  { row: 10, col: 3 },
-  { row: 12, col: 1 },
-  { row: 12, col: 3 },
+  { row: 10, col: 4 },
+  { row: 13, col: 1 },
+  { row: 13, col: 4 },
 ];
 
 /** Seat 0's yard block, as a grid area. The other three are quarter-turns. */
@@ -159,6 +159,7 @@ interface Placed {
 
 export interface LudoBoardProps {
   pawns: BySeat<readonly [number, number, number, number]>;
+  activeSeat?: Seat;
   /** Local seat stays at the bottom; omitted for the unchanged solo board. */
   ownSeat?: Seat;
   names?: readonly string[];
@@ -176,6 +177,7 @@ export const LudoBoard = memo(function LudoBoard({
   onPawn,
   ownSeat = YOU,
   names,
+  activeSeat,
 }: LudoBoardProps) {
   const { t } = useSettings();
   const reducedMotion = useReducedMotion();
@@ -226,7 +228,7 @@ export const LudoBoard = memo(function LudoBoard({
       {SEATS.map((seat) => (
         <div
           key={`yard-${seat}`}
-          className={`ld-yard ld-seat-${seat}`}
+          className={`ld-yard ld-seat-${seat}${activeSeat === seat ? ' ld-yard-active' : ''}`}
           style={at(YARD_BLOCKS[relativeSeat(seat)], 6)}
           aria-hidden="true"
         />
@@ -259,6 +261,17 @@ export const LudoBoard = memo(function LudoBoard({
           </div>
         );
       })}
+
+      <svg className="ld-center" viewBox="0 0 100 100" aria-hidden="true">
+        {SEATS.map((seat) => (
+          <path
+            key={seat}
+            className={`ld-seat-${seat}`}
+            d="M0 100L50 50L100 100Z"
+            transform={`rotate(${relativeSeat(seat) * 90} 50 50)`}
+          />
+        ))}
+      </svg>
 
       {SEATS.map((seat) =>
         Array.from({ length: HOME_COLUMN_LENGTH }, (_, step) => (
@@ -318,6 +331,7 @@ export const LudoBoard = memo(function LudoBoard({
         const className = [
           'ld-pawn',
           `ld-seat-${one.seat}`,
+          one.progress === 0 ? 'ld-pawn-yard' : '',
           size > 1 ? 'ld-pawn-fanned' : '',
           moved ? 'ld-pawn-walk' : '',
         ]

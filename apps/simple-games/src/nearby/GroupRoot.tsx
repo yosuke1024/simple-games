@@ -130,6 +130,20 @@ export default function GroupRoot({
       </button>
     </div>
   );
+  const guestHostDetails = !host && controller && (
+    <>
+      {active &&
+        [...controller.participants].map(([peer, person]) => (
+          <section className="nearby-card" key={peer}>
+            <p>{safeName(person.name)}</p>
+            {personActions(peer, person.name)}
+          </section>
+        ))}
+      {[...controller.codes.values()].map((code) => (
+        <p key={code}>{n('confirmation', { code })}</p>
+      ))}
+    </>
+  );
   const confirm = async () => {
     const action = question;
     if (!action || busy) return;
@@ -459,18 +473,7 @@ export default function GroupRoot({
             {controller.status === 'connecting' && (
               <p role="status">{n(controller.codes.size ? 'awaiting' : 'connecting')}</p>
             )}
-            {!host &&
-              active &&
-              [...controller.participants].map(([peer, person]) => (
-                <section className="nearby-card" key={peer}>
-                  <p>{safeName(person.name)}</p>
-                  {personActions(peer, person.name)}
-                </section>
-              ))}
-            {!host &&
-              [...controller.codes.values()].map((code) => (
-                <p key={code}>{n('confirmation', { code })}</p>
-              ))}
+            {state == null && guestHostDetails}
             {host &&
               [...host.pending].map(([peer, name]) => (
                 <section className="nearby-card" key={peer}>
@@ -507,6 +510,7 @@ export default function GroupRoot({
                 >
                   <summary>{n('groupSeats')}</summary>
                   {!state && <p className="nearby-note">{n('groupHostStops')}</p>}
+                  {state != null && guestHostDetails}
                   <div className="group-seats">
                     {snapshot.seats.map((seat, i) => (
                       <div className="nearby-card" key={i}>
