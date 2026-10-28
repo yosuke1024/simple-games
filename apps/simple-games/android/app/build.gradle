@@ -86,10 +86,12 @@ android {
             // Code/resource shrinking is release-only; debug builds stay
             // unshrunk so local development keeps fast, debuggable builds.
             // Keep rules (and the audit that justifies them) live in
-            // proguard-rules.pro next to this file.
+            // proguard-rules.pro next to this file. The -optimize defaults let
+            // R8 optimize as well as shrink (the plain proguard-android.txt
+            // carries -dontoptimize); Play Console flags the plain file.
             minifyEnabled true
             shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             if (sgMetaEnabled) {
                 resValue "string", "sg_meta_app_id", sgMetaAppId
                 resValue "string", "sg_meta_client_token", sgMetaClientToken

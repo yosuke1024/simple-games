@@ -4,7 +4,25 @@ Google Play への公開前に、この順で確認する。
 **チェックが通らない項目を「たぶん大丈夫」で飛ばさない。**
 実施していない検証を成功扱いにしないこと([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))。
 
-## 2026-10-26: 1.6.0／10600 本番公開の準備
+## 2026-10-28: Android リリースビルドの R8 最適化(次の版)
+
+Play Console の推奨(1.6.0 の「R8 の最適化が有効になっていない」「最適化されたリソース削除が
+有効になっていない」)への対応。`proguard-android.txt`(`-dontoptimize` を含む)を
+`proguard-android-optimize.txt` に替え、`android.r8.optimizedResourceShrinking=true` を足した。
+AGP は 8.13.0 のまま。推奨の 3 つ目「AGP 9.0 以上」は見送る —— Capacitor 8 は AGP 9 を
+公式にサポートしておらず(公式ガイドは AGP 8.13.0)、Capacitor 9 は minSdk 26 を求めるので、
+minSdk 24 の方針の判断が先になる。最適化されたリソース削除は、Cordova が名前で引く
+`res/xml/config.xml` を消した(起動ログ `config.xml is missing!`)ため、`res/raw/keep_resources.xml` で残す。
+
+- [x] リリースビルドの `configuration.txt` に `-dontoptimize` が無い。AAB に
+      `com.android.tools/r8.json` と mapping(`proguard.map`)が入る。`check-android-artifact.sh off` 通過。
+- [x] debug 鍵で署名したリリース APK を Android 17 エミュレータ(Pixel 7)で起動。起動ログに
+      ClassNotFound / NoSuchMethod / `config.xml is missing` 等が無い。ゲーム(Reversi の一手と CPU の応手)、
+      設定の保存(テーマ)、バックアップの書き出しと共有シート、ホーム画面ショートカットの追加画面、
+      Nearby の Wi-Fi 募集でフォアグラウンドサービスが起動し解散で止まる、UMP の初期化、
+      テスト広告のバナー表示を確認。
+- [ ] 課金(購入・復元)、アプリ内レビュー、Club 招待の App Links(本番の署名鍵が要る)、
+      Nearby の 2 台での接続と対局を、内部テストの配布版で確認。
 
 オーナーは対応ゲームリンクの追加、Bluetooth関連の申告確認、本番公開を明示依頼した。
 1.5.4の内部テスト／TestFlight公開と、本番1.6.0の公開は分けて記録する。

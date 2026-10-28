@@ -33,7 +33,7 @@
 #   are remote AARs that bundle their own consumer rules; adding broad
 #   -keep class com.google.** rules here would only defeat shrinking.
 # - @android.webkit.JavascriptInterface members (Capacitor's bridge) are kept
-#   by the default proguard-android.txt referenced from build.gradle.
+#   by AGP's default proguard-android-optimize.txt referenced from build.gradle.
 # - capacitor-cordova-android-plugins is generated empty by `cap sync` (no
 #   Cordova plugins installed); core's consumer rules cover Cordova plugin
 #   subclasses anyway.
@@ -41,8 +41,9 @@
 # If a future plugin breaks under R8, add a targeted keep for its real FQCN
 # here with a comment naming the plugin — never a wildcard package keep.
 
-# Keep file/line info so release crash stacks stay mappable via the
-# mapping.txt produced by the release build (docs/RELEASE_CHECKLIST.md).
+# Keep file/line info so release crash stacks stay mappable. The AAB carries
+# the mapping (BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map),
+# so Play Console deobfuscates crashes without a separate upload.
 -keepattributes SourceFile,LineNumberTable
 # Hide the original source file name in stack traces while keeping line info.
 -renamesourcefileattribute SourceFile
