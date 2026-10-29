@@ -8,7 +8,9 @@
  * half of the gesture.
  *
  * A filled cell is painted as a solid square, never merely tinted, so the
- * state survives a screen read and a colour-blind eye alike (§12).
+ * state survives a screen read and a colour-blind eye alike (§12). Its colour
+ * is the tone of the piece family that put it there (`bp-tone-N`, §12) — paint,
+ * not state: the label says filled or empty, and nothing reads the tone.
  *
  * Two marks are drawn on the same grid: the piece in hand, which is where the
  * carried piece is right now and whether it fits (§3), and the fade left
@@ -24,10 +26,12 @@
  */
 import { memo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
-import { colOf, rowOf, type Board } from '../../game';
+import { colOf, LEGACY_TONE, rowOf, type Board, type Tones } from '../../game';
 
 export interface BlockBoardProps {
   board: Board;
+  /** Paint per cell (§12): read for filled cells and for cells fading out. */
+  tones: Tones;
   /** Board indices the carried piece covers, or empty while not dragging (§3). */
   hand: readonly number[];
   /** Whether releasing now would place the piece — it is drawn either way. */
@@ -51,6 +55,7 @@ const CLEAR_STAGGER_MS = 20;
 
 export const BlockBoard = memo(function BlockBoard({
   board,
+  tones,
   hand,
   handFits,
   willClear,
@@ -75,12 +80,16 @@ export const BlockBoard = memo(function BlockBoard({
         const row = rowOf(index);
         const col = colOf(index);
         const classes = ['bp-cell'];
+        const leaving = clearing.indexOf(index) !== -1;
         if (filled) classes.push('bp-cell-filled');
+        // A cleared cell is already empty on the board; it fades in the paint
+        // it had (§12). The tone class only sets a variable, so the ghost and
+        // the lit line below still win over it exactly as before.
+        if (filled || leaving) classes.push(`bp-tone-${tones[index] || LEGACY_TONE}`);
         if (hand.indexOf(index) !== -1) {
           classes.push(handFits ? 'bp-cell-ghost' : 'bp-cell-ghost-blocked');
         }
         if (willClear.indexOf(index) !== -1) classes.push('bp-cell-will-clear');
-        const leaving = clearing.indexOf(index) !== -1;
         if (leaving) classes.push('bp-cell-clearing');
         // Chebyshev distance: the wave leaves as a square ring, which is what
         // a row and a column clearing together want — a straight-line measure

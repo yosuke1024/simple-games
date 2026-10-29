@@ -13,10 +13,24 @@
  * re-drew on undo would quietly turn the free help into a reroll.
  *
  * No clock on screen (§12); elapsed seconds are carried here for statistics.
+ *
+ * The paint (`tones`, §12) rides alongside the board and is stepped the same
+ * way — painted by a placement, put back by undo — but no rule reads it:
+ * legality, clearing and the ending are decided on `board` alone.
  */
 import { canPlace, clearLines, hasAnyMove, place, scoreFor } from './engine';
 import { drawBatch, pieceById, type Piece } from './pieces';
-import { emptyBoard, TRAY_SIZE, type Board, type GameStatus, type Tray } from './types';
+import { legacyTones, paintTones } from './tones';
+import {
+  CELL_COUNT,
+  emptyBoard,
+  emptyTones,
+  TRAY_SIZE,
+  type Board,
+  type GameStatus,
+  type Tones,
+  type Tray,
+} from './types';
 
 /** Practically unlimited undo; a real game never comes close (§7). */
 export const UNDO_HISTORY_LIMIT = 2000;
@@ -24,6 +38,7 @@ export const UNDO_HISTORY_LIMIT = 2000;
 /** One step back: everything a placement touched, exactly as it was (§7). */
 export interface HistoryEntry {
   readonly board: Board;
+  readonly tones: Tones;
   readonly tray: Tray;
   readonly score: number;
   readonly batchIndex: number;
@@ -35,6 +50,8 @@ export interface HistoryEntry {
 export interface BlockSession {
   readonly seed: string;
   readonly board: Board;
+  /** Paint per cell (§12). The rules read `board` only. */
+  readonly tones: Tones;
   /** Three slots; a used one holds null until all three are spent (§1). */
   readonly tray: Tray;
   readonly score: number;
@@ -80,6 +97,7 @@ export function createSession(seed: string = blockSeed(newSeedToken())): BlockSe
   return {
     seed,
     board,
+    tones: emptyTones(),
     tray,
     score: 0,
     batchIndex: 0,
@@ -96,12 +114,21 @@ export function createSession(seed: string = blockSeed(newSeedToken())): BlockSe
  * (§10): a resumed board starts from the position it was saved in, which is
  * the position the player left. `placements` restarts for the same reason —
  * it describes the run in memory and nothing on screen reads it.
+ *
+ * `tones` is optional: a record saved before the paint existed (v1, §10) comes
+ * back with every filled square in the accent it was drawn in.
  */
 export function restoreSession(
-  data: Omit<BlockSession, 'history' | 'status' | 'placements'>,
+  data: Omit<BlockSession, 'history' | 'status' | 'placements' | 'tones'> & {
+    readonly tones?: Tones;
+  },
 ): BlockSession {
   return {
     ...data,
+    tones:
+      data.tones !== undefined && data.tones.length === CELL_COUNT
+        ? data.tones
+        : legacyTones(data.board),
     history: [],
     placements: 0,
     status: statusFor(data.board, data.tray),
@@ -146,6 +173,7 @@ export function placePiece(
     ...session.history,
     {
       board: session.board,
+      tones: session.tones,
       tray: session.tray,
       score: session.score,
       batchIndex: session.batchIndex,
@@ -159,6 +187,9 @@ export function placePiece(
   return {
     ...session,
     board: cleared.board,
+    // Painted before the clear and left as painted: the cleared cells are
+    // empty on `board`, and their tone is what the fade is drawn in (§12).
+    tones: paintTones(session.tones, piece, row, col),
     tray: nextTray,
     score: session.score + scoreFor(placed.cells, cleared.lines),
     batchIndex,
@@ -174,8 +205,8 @@ export function canUndo(session: BlockSession): boolean {
 }
 
 /**
- * Takes one placement back, whole (§7): board, tray, score, lines, and the
- * refill counter. Pure inverse of `placePiece`, including the status it
+ * Takes one placement back, whole (§7): board, paint, tray, score, lines, and
+ * the refill counter. Pure inverse of `placePiece`, including the status it
  * restores; whether the screen still offers it after a run has ended is the
  * context's call, not this function's.
  */
@@ -185,6 +216,7 @@ export function undo(session: BlockSession): BlockSession | null {
   return {
     ...session,
     board: previous.board,
+    tones: previous.tones,
     tray: previous.tray,
     score: previous.score,
     batchIndex: previous.batchIndex,

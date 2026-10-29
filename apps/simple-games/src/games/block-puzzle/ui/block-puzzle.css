@@ -5,7 +5,46 @@
    about it.
 
    Class names are prefixed `bp-` so this file can never collide with the
-   shell or with another game. */
+   shell or with another game.
+
+   The piece colours below are game content, not chrome
+   (docs/architecture/css-split.md, docs/BRAND.md「盤面が自前の色階調を持つ場合の
+   例外」; values and reasons in docs/BLOCK_PUZZLE_RULES.md §12). Four matte
+   pigments, one per family of the catalogue (game/tones.ts): 2 indigo (the
+   corners of a 3×3), 3 celadon (the bars), 4 ochre (the corners of a 2×2),
+   5 bengara (the squares). Tone 1 is the accent itself — what every square of
+   a board saved before colours wears — and no piece is dealt it. None of the
+   four is in the accent's hue family, so the piece in hand, which is always
+   the accent (like Hanoi's lifted disk), never looks placed. Each clears 3:1
+   on --surface and on --surface-recessed in its theme (ui/contrast.test.ts).
+
+   The rest of the two blocks is neutral light and shade — a block's top edge
+   and underside, the lit line's veil — and one mark that points at a series
+   token: the recess drawn into an empty cell. No colour is written anywhere
+   else in this file; ui/contrast.test.ts holds it to that. */
+
+:root {
+  --bp-tone-2: #35558a;
+  --bp-tone-3: #25797c;
+  --bp-tone-4: #8f6f2c;
+  --bp-tone-5: #a05a4e;
+  --bp-lit: rgba(255, 255, 255, 0.2);
+  --bp-shade: rgba(0, 0, 0, 0.14);
+  --bp-shade-lit: rgba(0, 0, 0, 0.1);
+  --bp-veil: rgba(255, 255, 255, 0.45);
+  --bp-veil-ghost: rgba(255, 255, 255, 0.4);
+  --bp-well: var(--surface-recessed);
+}
+
+:root[data-theme='dark'] {
+  --bp-tone-2: #7896cf;
+  --bp-tone-3: #5aaeb0;
+  --bp-tone-4: #bd9b55;
+  --bp-tone-5: #c3847a;
+  /* The floor is too close to a dark cell (1.10:1) to read as a recess; the
+     paper under the board is a step deeper. */
+  --bp-well: var(--paper);
+}
 
 /* ---------- body ---------- */
 
@@ -46,28 +85,83 @@
   padding: 4px;
   border-radius: var(--radius);
   background: var(--surface-recessed);
-  box-shadow: var(--shadow);
+  /* The collection's board frame: a paper edge and a shallow lift, the lift
+     listed first so it paints over the paper ring rather than under it
+     (scripts/codemods/2026-10-29-board-lift-order.mjs). All four sit outside
+     the box, inside .bp-body's padding, so the height budget above holds. */
+  box-shadow:
+    0 3px 0 var(--line),
+    0 0 0 3px var(--paper),
+    0 0 0 4px var(--line),
+    0 8px 18px var(--accent-ring-soft);
   /* A drag must not become a page scroll (§12). */
   touch-action: none;
 }
 
 /* An empty cell is a recess in the tray, not a button that wants pressing:
-   the board is something you read first and act on second. */
+   the board is something you read first and act on second. The recess is
+   drawn rather than claimed — a band of shadow along its top edge
+   (--bp-well) — so a block reads as dropping into a hole, and a cleared line
+   as the holes coming back (§12). */
 .bp-cell {
   aspect-ratio: 1;
   padding: 0;
   border: none;
   border-radius: 3px;
   background: var(--surface);
+  box-shadow: inset 0 2px 0 var(--bp-well);
   /* Fills sink in rather than pop, so a placement settles (§12). */
   transition: background-color 0.11s ease;
 }
 
+/* A cell's (or a tray piece's) paint. Only a variable is set, never a
+   background, so the ghost, the blocked ghost and the lit line below keep
+   winning exactly as they did when every face was the accent. A tone this
+   build does not paint (6–9, from a newer save — game/tones.ts) has no rule
+   and falls back to the accent. */
+.bp-tone-1 {
+  --bp-face: var(--accent);
+}
+
+.bp-tone-2 {
+  --bp-face: var(--bp-tone-2);
+}
+
+.bp-tone-3 {
+  --bp-face: var(--bp-tone-3);
+}
+
+.bp-tone-4 {
+  --bp-face: var(--bp-tone-4);
+}
+
+.bp-tone-5 {
+  --bp-face: var(--bp-tone-5);
+}
+
 /* Filled cells are painted solid — never colour alone (§12): the difference
-   between taken and open is a filled face against an empty recess. */
+   between taken and open is a filled face against an empty recess. A matte
+   block: a pixel of light along the top, the two-pixel shade underneath, no
+   gloss and no gradient — the edge the Hanoi tray is drawn with. A line on
+   its way out (.bp-cell-clearing, below) is still that block while it fades,
+   so it keeps the edges; it is listed here, ahead of the hand and the lit
+   line, so either of those still wins on a cell that has both. */
+.bp-cell-filled,
+.bp-cell-clearing {
+  box-shadow:
+    inset 0 1px 0 var(--bp-lit),
+    inset 0 -2px 0 var(--bp-shade);
+}
+
 .bp-cell-filled {
-  background: var(--accent);
-  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.14);
+  background: var(--bp-face, var(--accent));
+  /* The placement settles (§12): the carried piece's ring melts into the
+     block's own edges while the face takes its colour, over the same 110ms.
+     A transition belongs to the state being entered, so this eases only the
+     arrival of a block — the hand arriving over one stays instant (below). */
+  transition:
+    background-color 0.11s ease,
+    box-shadow 0.11s ease;
 }
 
 /* The piece in hand, where it would land. Part of the operation, not an
@@ -79,10 +173,14 @@
    floor, and --accent-ring is the accent already carried at 38%), and the
    outline is the accent at full strength. Against an empty recess that is
    unmistakably a piece hovering; against a filled cell it still reads,
-   because a filled cell is solid accent and this one is outlined. */
+   because a filled cell is a solid block in its family's pigment and this one
+   is the accent, outlined. Held is the accent, placed is the pigment — the
+   word Hanoi's lifted disk already uses (§12). */
 .bp-cell-ghost {
   background: var(--accent-ring);
   box-shadow: inset 0 0 0 2px var(--accent);
+  /* The ring is the aim, so it lands at once — over a block too. */
+  transition: background-color 0.11s ease;
 }
 
 /* The same piece where it will not go: still drawn, because "I cannot see
@@ -93,6 +191,7 @@
   background: var(--accent-ring-soft);
   box-shadow: inset 0 0 0 2px var(--ink-soft);
   opacity: 0.75;
+  transition: background-color 0.11s ease;
 }
 
 /* The lines this placement would take, shown while the piece is still in
@@ -108,45 +207,58 @@
    in the light one, so anything mixed *from* it would brighten in one theme
    and darken in the other. A veil only ever goes one way. (A computed tint
    would be the obvious tool, and `color-mix` is Chromium 111 — past the
-   supported floor.) */
+   supported floor.) It also keeps each block's own pigment under it, so the
+   line lights up in the colours it is made of (§12). */
 .bp-cell-will-clear {
   background-color: var(--accent);
-  background-image: linear-gradient(rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.45));
+  background-image: linear-gradient(var(--bp-veil), var(--bp-veil));
   box-shadow: inset 0 0 0 2px var(--accent);
 }
 
 .bp-cell-filled.bp-cell-will-clear {
-  background-color: var(--accent);
-  background-image: linear-gradient(rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.45));
-  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.1);
+  background-color: var(--bp-face, var(--accent));
+  background-image: linear-gradient(var(--bp-veil), var(--bp-veil));
+  box-shadow: inset 0 -2px 0 var(--bp-shade-lit);
 }
 
 /* The carried piece where it overlaps a line it would finish: lit like the
    rest of the line, and still outlined, because it is also the piece. */
 .bp-cell-ghost.bp-cell-will-clear {
   background-color: var(--accent-ring);
-  background-image: linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4));
+  background-image: linear-gradient(var(--bp-veil-ghost), var(--bp-veil-ghost));
   box-shadow: inset 0 0 0 2px var(--accent);
 }
 
 /* A cleared line, on its way out. The board has already settled; this paints
    the cell as it was and fades it, so the line is seen to go rather than
    simply being absent on the next frame (§12). Reduced Motion never applies
-   the class at all, so there is nothing here to switch off. */
+   the class at all; the rules at the end of this file would stop it anyway. */
 .bp-cell-clearing {
   /* The delay is set per cell by the board, from how far that cell is from
      the piece that finished the line (§12). */
   animation: bp-clear 0.15s ease-out both;
 }
 
+/* The cleared cell is already empty; the board keeps its tone class, so the
+   line fades in the colours it had (§12). It lifts a little as it goes — a
+   tile taken off the board rather than a colour switched off. 6% of a 42px
+   cell is about 1.3px a side, inside the 2px gap, so a leaving tile never
+   covers a neighbour. What moves here is opacity and transform. The colour
+   stop holds one value at both ends: it only repaints the face, because the
+   emptied cell's own background is --surface. (The 110ms settle above is a
+   different thing — it does ease background-color and box-shadow, once per
+   cell that changes state.) Nothing is drawn on an element that follows the
+   pointer; the piece in hand is the cells' own classes (§3). */
 @keyframes bp-clear {
   from {
-    background-color: var(--accent);
+    background-color: var(--bp-face, var(--accent));
     opacity: 1;
+    transform: none;
   }
   to {
-    background-color: var(--accent);
+    background-color: var(--bp-face, var(--accent));
     opacity: 0;
+    transform: scale(1.06);
   }
 }
 
@@ -173,11 +285,20 @@
   border-radius: var(--radius);
   background: var(--surface);
   border: 1px solid var(--line);
+  /* The same recess an empty cell has: a piece sits in the tray, it is not
+     printed on it. */
+  box-shadow: inset 0 2px 0 var(--bp-well);
   cursor: pointer;
 }
 
-.bp-slot:active {
+/* Pressed in by a pixel, so the touch is felt before the drag begins. A
+   state, not a movement: nothing animates it. Only a slot that can be pressed:
+   a spent one is a disabled button, and whether :active still matches one of
+   those is left to the engine, so the rule does not ask — a spent slot that
+   sank under a finger would look as if it could still be played (§1). */
+.bp-slot:enabled:active {
   background: var(--surface-recessed);
+  transform: translateY(1px);
 }
 
 /* Picked by the tap path. Outlined as well as tinted, so the selection is
@@ -196,6 +317,7 @@
 .bp-slot-used {
   background: transparent;
   border-style: dashed;
+  box-shadow: none;
   cursor: default;
 }
 
@@ -214,9 +336,14 @@
   border-radius: 2px;
 }
 
+/* .bp-tone-N sits on .bp-piece and the cells inherit it: the same block as
+   the board, in the colour it will leave there (§12). The ring around a
+   selected slot stays the accent. */
 .bp-piece-cell-filled {
-  background: var(--accent);
-  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.14);
+  background: var(--bp-face, var(--accent));
+  box-shadow:
+    inset 0 1px 0 var(--bp-lit),
+    inset 0 -2px 0 var(--bp-shade);
 }
 
 /* ---------- top bar ---------- */
@@ -315,12 +442,28 @@
 /* Reduced Motion: the dealt pieces are simply there, and the score simply
    says its new number. Both are set from the in-app setting and the OS
    preference alike (useReducedMotion drives the class the screen applies;
-   this is the belt for the OS-only case). */
+   this is the belt for the OS-only case). A placement lands without easing
+   and a cleared line is simply gone, under either switch: the screen never
+   applies the clearing class then, and these rules stop the rest even if it
+   did. The hand is drawn either way (§12). */
 @media (prefers-reduced-motion: reduce) {
   .bp-piece-dealt,
-  .bp-score-bump {
+  .bp-score-bump,
+  .bp-board .bp-cell-clearing {
     animation: none;
   }
+
+  .bp-board .bp-cell {
+    transition: none;
+  }
+}
+
+:root[data-reduced-motion='true'] .bp-cell-clearing {
+  animation: none;
+}
+
+:root[data-reduced-motion='true'] .bp-cell {
+  transition: none;
 }
 
 /* ---------- wide viewports (issue #93) ----------
