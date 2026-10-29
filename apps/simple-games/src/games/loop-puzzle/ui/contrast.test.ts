@@ -2,12 +2,18 @@
  * docs/LOOP_PUZZLE_RULES.md §13 promises numbers that can be read on the board
  * in both themes: the line (the accent) at 3:1 or more against the board's
  * ground, the numbers and the × — full ink, and the softer ink of a met number
- * — at 4.5:1 or more, and the warn rings at 3:1 or more. The board is drawn on
- * --surface. Those are numbers, so they are measured here from the shared
- * stylesheet rather than trusted to a comment (the shape of Dots and Boxes'
- * ui/contrast.test.ts): each must clear its floor and match the value §13's
- * table states. This game's CSS writes no colour of its own
- * (docs/architecture/css-split.md), which is also checked.
+ * — at 4.5:1 or more, the warn rings at 3:1 or more, and the printed dots (the
+ * soft ink, lighter than the pen's line) at 3:1 or more on the hint's (and the
+ * press) ground. The board is drawn on --surface. Those are numbers, so they
+ * are measured here from the shared stylesheet rather than trusted to a
+ * comment (the shape of Dots and Boxes' ui/contrast.test.ts): each must clear
+ * its floor and match the value §13's table states. This game's CSS writes no
+ * colour of its own (docs/architecture/css-split.md), which is also checked.
+ *
+ * One ground is recorded, not guaranteed: the faint line a mouse's hover
+ * previews on an empty edge ends under the dot, and the dark theme's dot falls
+ * below 3:1 there (§13). It is measured below so the document cannot drift,
+ * but it carries no floor — whether to accept it is the owner's to decide.
  *
  * The rest of this file pins the rules of loop-puzzle.css that the board's
  * behaviour rests on and that jsdom cannot see (it computes no layout and
@@ -49,19 +55,67 @@ function contrast(a: string, b: string): number {
   return (light! + 0.05) / (dark! + 0.05);
 }
 
-/** §13's table: line, numbers, met numbers and ×, warn rings — on --surface. */
+/**
+ * An rgba token of the accent (`--accent-ring-soft`, `--accent-ring`) laid over
+ * a ground, as the browser composites it: the result is rounded to 8 bits per
+ * channel at every layer, which is what a painted layer is. (Without the
+ * rounding the hint's ground measures 4.15 on the dark theme, not 4.16, and
+ * §13's table would disagree with the screen by a hundredth.)
+ */
+function over(source: string, selector: string, token: string, ground: string): string {
+  const start = source.indexOf(`\n${selector} {`);
+  expect(start, `${selector} is missing`).toBeGreaterThan(-1);
+  const body = source.slice(source.indexOf('{', start) + 1, source.indexOf('}', start));
+  const match = new RegExp(
+    `${token}:\\s*rgba\\((\\d+),\\s*(\\d+),\\s*(\\d+),\\s*([\\d.]+)\\)`,
+  ).exec(body);
+  expect(match, `${selector} declares no ${token}`).not.toBeNull();
+  const alpha = Number(match![4]);
+  const channels = [1, 3, 5].map((at, i) =>
+    Math.round(
+      Number(match![i + 1]) * alpha + parseInt(ground.slice(at, at + 2), 16) * (1 - alpha),
+    ),
+  );
+  return `#${channels.map((c) => c.toString(16).padStart(2, '0')).join('')}`;
+}
+
+/**
+ * §13's table: line, numbers, met numbers and ×, warn rings, printed dots — on
+ * --surface; `dotHint` is the same dot over the hint's ground and `dotPaper`
+ * the Quick Rules figure's dot on the page's --paper. `dotHover` and
+ * `dotHoverPress` are the recorded (floor-less) grounds under the mouse's
+ * hover: the hover line alone, and the hover line over the press ground.
+ */
 const THEMES = [
   {
     name: 'light',
     base: ':root',
     accent: '.accent-loop-puzzle',
-    table: { line: 5.97, ink: 14.24, soft: 5.68, warn: 4.1 },
+    table: {
+      line: 5.97,
+      ink: 14.24,
+      soft: 5.68,
+      warn: 4.1,
+      dotHint: 4.79,
+      dotPaper: 5.07,
+      dotHover: 3.2,
+      dotHoverPress: 2.8,
+    },
   },
   {
     name: 'dark',
     base: ":root[data-theme='dark']",
     accent: "[data-theme='dark'] .accent-loop-puzzle",
-    table: { line: 3.99, ink: 12.06, soft: 4.96, warn: 5.15 },
+    table: {
+      line: 3.99,
+      ink: 12.06,
+      soft: 4.96,
+      warn: 5.15,
+      dotHint: 4.16,
+      dotPaper: 5.92,
+      dotHover: 2.79,
+      dotHoverPress: 2.48,
+    },
   },
 ] as const;
 
@@ -103,13 +157,38 @@ describe('the board reads in both themes (§13)', () => {
         4.5,
       );
       expect(contrast(shared.get('--warn')!, ground), 'warn rings').toBeGreaterThanOrEqual(3);
+      // The printed dots are drawn in --ink-soft: over the hint's ground (the
+      // ratio on the board itself is the met numbers' 4.5:1 above), and the
+      // Quick Rules figure's dots over the page's --paper.
+      const soft = shared.get('--ink-soft')!;
+      const hintGround = over(sharedCss, theme.accent, '--accent-ring-soft', ground);
+      expect(contrast(soft, hintGround), 'dots on the hint').toBeGreaterThanOrEqual(3);
+      expect(contrast(soft, shared.get('--paper')!), 'figure dots').toBeGreaterThanOrEqual(3);
       // …and the values §13 states for them.
       expect(contrast(accent!, ground)).toBeCloseTo(theme.table.line, 2);
       expect(contrast(shared.get('--ink')!, ground)).toBeCloseTo(theme.table.ink, 2);
-      expect(contrast(shared.get('--ink-soft')!, ground)).toBeCloseTo(theme.table.soft, 2);
+      expect(contrast(soft, ground)).toBeCloseTo(theme.table.soft, 2);
       expect(contrast(shared.get('--warn')!, ground)).toBeCloseTo(theme.table.warn, 2);
+      expect(contrast(soft, hintGround)).toBeCloseTo(theme.table.dotHint, 2);
+      expect(contrast(soft, shared.get('--paper')!)).toBeCloseTo(theme.table.dotPaper, 2);
+      // Recorded, not a floor (see the header): the hover line's end under a
+      // dot, alone and over the press ground.
+      const hoverGround = over(sharedCss, theme.accent, '--accent-ring', ground);
+      const hoverPressGround = over(sharedCss, theme.accent, '--accent-ring', hintGround);
+      expect(contrast(soft, hoverGround)).toBeCloseTo(theme.table.dotHover, 2);
+      expect(contrast(soft, hoverPressGround)).toBeCloseTo(theme.table.dotHoverPress, 2);
     });
   }
+
+  it('draws the printed dots lighter than the pen: soft ink unused, the accent once the loop passes (§13)', () => {
+    // A dot is the printed grid, so it takes the soft ink; the numbers keep the
+    // full ink. A dot on the loop joins the line's colour and width.
+    expect(rule('.lp-dot::before')).toMatch(/background:\s*var\(--ink-soft\);/);
+    expect(rule('.lp-dot-used::before')).toMatch(/background:\s*var\(--accent\);/);
+    expect(rule('.lp-clue-digit')).toMatch(/color:\s*var\(--ink\);/);
+    // The Quick Rules figure shows the board's look, so its dots follow it.
+    expect(rule('.lp-fig-dot')).toMatch(/fill:\s*var\(--ink-soft\);/);
+  });
 
   it('keeps the middle of a cell a tap target of its own (§4)', () => {
     // A rule that depends on :active is what makes the browser treat the pad
