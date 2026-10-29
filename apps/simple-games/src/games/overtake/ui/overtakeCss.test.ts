@@ -7,7 +7,15 @@
  *   light and the dark theme, and nothing else — no other hex, no rgb() /
  *   hsl(), no colour name — with `--ot-rival-ink` naming `var(--surface)`;
  * - the blue clears 3:1 against `--surface` in both themes (a shape on the
- *   board), and the digit drawn on it clears 4.5:1 (small text at 0.55×).
+ *   board), and the digit drawn on it clears 4.5:1 (small text at 0.55×);
+ * - the depth added on 2026-10-29 writes no colour at all: `--ot-verge` (the
+ *   off-road) is an alias of `--line` / `--paper`, the thickness under cars is
+ *   `--line`, the finish band is ink and `--line`; the board's frame and the
+ *   pad keys are the collection's recipes (src/ui/styles.css `.action-btn`).
+ *
+ * This file keeps its name (the contrast/colour check other games call
+ * `ui/contrast.test.ts`): it predates that convention and also holds the
+ * rivals' blue checks; docs/OVERTAKE_RULES.md §16 cites it by this name.
  *
  * Contrast here is arithmetic on the declared colours (WCAG 2 relative
  * luminance), not a measurement of a rendered page. The ratios are printed.
@@ -128,4 +136,90 @@ describe('the blue reads on the road, and the digit reads on the blue (§11, WCA
       expect(digit).toBeGreaterThanOrEqual(4.5);
     });
   }
+});
+
+/** The shared token a `var(--name)` alias points at, or null for anything else. */
+function aliasOf(value: string): string | null {
+  return /^var\((--[\w-]+)\)$/.exec(value)?.[1] ?? null;
+}
+
+/** A declaration's value with its whitespace collapsed, from one rule's body. */
+function declaration(body: string, property: string): string {
+  const match = new RegExp(`(?:^|[\\s;])${property}:\\s*([^;]+);`).exec(body);
+  expect(match, `${property} is missing`).not.toBeNull();
+  return match![1]!.replace(/\s+/g, ' ').trim();
+}
+
+const SHELL_TOKEN_THEMES = [
+  { name: 'light', selector: ':root', verge: '--line' },
+  { name: 'dark', selector: ":root[data-theme='dark']", verge: '--paper' },
+] as const;
+
+describe('the off-road, the thickness and the finish band are tokens, not colours (§11「見た目」)', () => {
+  for (const theme of SHELL_TOKEN_THEMES) {
+    it(`--ot-verge names ${theme.verge} under ${theme.selector}, and the road stands higher (${theme.name})`, () => {
+      const alias = token(ruleBody(code, theme.selector), '--ot-verge');
+      expect(aliasOf(alias), '--ot-verge is a var() alias, not a colour').toBe(theme.verge);
+      const shellTokens = ruleBody(shell, theme.selector);
+      const surface = token(shellTokens, '--surface');
+      const verge = token(shellTokens, theme.verge);
+      const line = token(shellTokens, '--line');
+      const ink = token(shellTokens, '--ink');
+      // The road (--surface) is the lighter of the two in both themes: the
+      // off-road sinks away from it. --line in the dark theme is lighter than
+      // the road, which is the direction this alias exists to turn round.
+      expect(luminance(verge)).toBeLessThan(luminance(surface));
+      // The finish band is ink and --line squares: a checker only if the two
+      // differ clearly (a shape on the board, 3:1).
+      const checker = contrast(ink, line);
+      expect(checker).toBeGreaterThanOrEqual(3);
+      console.log(
+        `[overtake] depth ${theme.name}: verge ${theme.verge} ${verge} vs road --surface ${surface} = ` +
+          `${contrast(verge, surface).toFixed(2)}:1 (verge darker); ` +
+          `car thickness --line ${line} vs road = ${contrast(line, surface).toFixed(2)}:1 (texture, carries no meaning); ` +
+          `finish checker ink ${ink} vs --line ${line} = ${checker.toFixed(2)}:1`,
+      );
+    });
+  }
+
+  it('adds no animation or transition: the depth is still, so Reduced Motion has nothing to stop', () => {
+    expect(code).not.toMatch(/(?:transition|animation|@keyframes)/);
+  });
+});
+
+describe('the board frame and the pad keys are the collection’s recipes (§11)', () => {
+  // The lift first; the same string the other boards carry.
+  const FRAME =
+    '0 3px 0 var(--line), 0 0 0 3px var(--paper), 0 0 0 4px var(--line), 0 8px 18px var(--accent-ring-soft)';
+
+  for (const selector of ['.ot-canvas', '.ot-figure']) {
+    it(`${selector} wears the board frame, and keeps the radius`, () => {
+      const body = ruleBody(code, selector);
+      expect(declaration(body, 'box-shadow')).toBe(FRAME);
+      expect(declaration(body, 'border-radius')).toBe('var(--radius)');
+    });
+  }
+
+  it('the pad keys use the .action-btn face and step, and on :active fill with the accent and drop the step', () => {
+    const shared = ruleBody(shell, '.action-btn');
+    const key = ruleBody(code, '.ot-pad-btn');
+    for (const property of ['background', 'box-shadow']) {
+      expect(declaration(key, property), property).toBe(declaration(shared, property));
+    }
+    expect(declaration(key, 'background')).toBe('linear-gradient(var(--surface), var(--paper))');
+    expect(declaration(key, 'box-shadow')).toBe(
+      'inset 0 1px 0 var(--surface), 0 2px 0 var(--line)',
+    );
+    // The press fills with the accent and the 2px step goes: the sink is the
+    // step vanishing, not a shade. The shared key's `inset 0 1px 2px --line` is
+    // pale on an accent fill, and --accent-ring is the accent at an alpha, so
+    // neither would read; nothing is drawn but the fill.
+    const pressed = ruleBody(code, '.ot-pad-btn:active');
+    expect(declaration(pressed, 'background')).toBe('var(--accent)');
+    expect(declaration(pressed, 'color')).toBe('var(--accent-ink)');
+    expect(declaration(pressed, 'box-shadow')).toBe('none');
+    // Nothing moves under a captured pointer: the 48px target stays put.
+    expect(key).not.toMatch(/transform/);
+    expect(pressed).not.toMatch(/transform/);
+  });
 });

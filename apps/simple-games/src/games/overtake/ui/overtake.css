@@ -15,6 +15,14 @@
    other colour is a shared token, and the accent is the one the shell
    stamps for this game (traffic, cones, works).
 
+   `--ot-verge`, the off-road beside the road, is not a colour either: an
+   alias of a shared token, `--line` in the light theme and `--paper` in the
+   dark one (§11「見た目」). `--line` is a shade darker than the road in the
+   light theme but a shade LIGHTER than it in the dark one, so the off-road
+   rose above the road there; `--paper` is darker than the road in both, so
+   the road is the higher surface in either theme. The alias is read into the
+   canvas palette by ui/draw.ts (readPalette), like the rivals' blue.
+
    Colour is never the only carrier: a racer also wears its digit and
    window cut-outs, traffic is an accent car without a digit, and the
    player's car is the ink fill at a fixed place on the board. */
@@ -24,6 +32,7 @@
      digit reads on it and the car reads on the road. */
   --ot-rival: #2453a8;
   --ot-rival-ink: var(--surface);
+  --ot-verge: var(--line);
 }
 
 :root[data-theme='dark'] {
@@ -31,6 +40,7 @@
      5.34:1 against the dark --surface. */
   --ot-rival: #5b9cf0;
   --ot-rival-ink: var(--surface);
+  --ot-verge: var(--paper);
 }
 
 /* ---------- the board's size (§11「寸法」) ----------
@@ -76,13 +86,22 @@
   line-height: 0;
 }
 
+/* The collection's board frame (§11「見た目」), the lift first: a --line step
+   under the card, the paper rim and its hairline, then the soft accent glow.
+   box-shadow takes no room, so the width formula above and the table of sizes
+   in §11 stand as they were; the rim and the lift fit in .ot-body's 12px
+   side padding and the 8px gap to the buttons. */
 .ot-canvas {
   display: block;
   width: 100%;
   height: auto;
   aspect-ratio: 9 / 16;
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow:
+    0 3px 0 var(--line),
+    0 0 0 3px var(--paper),
+    0 0 0 4px var(--line),
+    0 8px 18px var(--accent-ring-soft);
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
@@ -176,7 +195,14 @@
 
 /* ---------- ◀ ▼ ▶ (§3) ----------
    In Drag the row holds ▼ alone, and only where a finger is the pointer;
-   in Buttons it is always there. CSS decides, never a device sniff. */
+   in Buttons it is always there. CSS decides, never a device sniff.
+   The keys are the shared control-key recipe (.action-btn in ui/styles.css):
+   a face that catches light from the top, a 2px step under it, and a press
+   that sinks the step. No transform, so the 48px target never moves under a
+   captured pointer; a press still fills with the accent, as it did. The press
+   drops the step and adds no inset shade: --line is pale on an accent fill in
+   the light theme (a blur at the edge, not a sink), and --accent-ring is the
+   accent itself at an alpha (it would vanish on the fill). */
 
 .ot-pad {
   display: flex;
@@ -202,7 +228,10 @@
   justify-content: center;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: var(--paper);
+  background: linear-gradient(var(--surface), var(--paper));
+  box-shadow:
+    inset 0 1px 0 var(--surface),
+    0 2px 0 var(--line);
   color: var(--ink);
   touch-action: none;
   user-select: none;
@@ -213,6 +242,7 @@
 .ot-pad-btn:active {
   background: var(--accent);
   color: var(--accent-ink);
+  box-shadow: none;
 }
 
 .ot-pad-glyph {
@@ -257,9 +287,17 @@
   padding: 0 16px;
 }
 
+/* The figure wears the board's frame, so its road reads as the same object
+   (§10). Same recipe as .ot-canvas, same radius. */
 .ot-figure {
   display: block;
   width: min(70vw, 220px);
   height: auto;
   aspect-ratio: 360 / 220;
+  border-radius: var(--radius);
+  box-shadow:
+    0 3px 0 var(--line),
+    0 0 0 3px var(--paper),
+    0 0 0 4px var(--line),
+    0 8px 18px var(--accent-ring-soft);
 }
