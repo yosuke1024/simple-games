@@ -1519,7 +1519,15 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Falling Blocks',
     category: 'arcade',
     glyph: '▥',
-    channel: 'web-beta',
+    // Withdrawn from the browser's early-release channel on 2026-10-29 (the
+    // product owner's decision): the seven tetrominoes in a ten-wide well with
+    // a next-piece preview and a landing outline are the combination Tetris
+    // Holding v. Xio Interactive (2012) treated as protected expression, and
+    // docs/plans/2026-08-07-checkers-and-gomoku.md had already passed on the
+    // genre for that reason. 'in-development' keeps the chunk in the bundle
+    // but offers the title nowhere (app/gameChannel.ts) until it is remade
+    // away from that combination or dropped (docs/FALLING_BLOCKS_RULES.md).
+    channel: 'in-development',
     storageKeys: Object.values(FB_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/falling-blocks/ui/FallingBlocksRoot').then((m) => ({

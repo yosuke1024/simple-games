@@ -52,23 +52,29 @@ const WEB_BETA_IDS = [
   'three-peaks',
   'knight-tour',
   'invaders',
-  'falling-blocks',
   'paddle-rally',
   'hanoi-towers',
   'maze-escape',
 ];
 
 /**
- * The titles in development today, in registry order: none. The last were the
- * five of docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md
+ * The titles in development today, in registry order: Falling Blocks (No. 63),
+ * withdrawn from the early-release channel on 2026-10-29 by the product
+ * owner's decision — its seven tetrominoes in a ten-wide well with a preview
+ * and a landing outline are the combination Tetris Holding v. Xio Interactive
+ * (2012) treated as protected expression, the reason
+ * docs/plans/2026-08-07-checkers-and-gomoku.md had passed on the genre
+ * (docs/FALLING_BLOCKS_RULES.md). It stays here until it is remade away from
+ * that combination or dropped. Before it, the last were the five of
+ * docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md
  * (Nos. 47–51), scaffolds from 2026-10-20 until they became playable on
  * 2026-10-22 and moved to WEB_BETA_IDS — as the 2026-10-20 plan's five did
  * (three on 2026-10-21, Overtake and Scopa on 2026-10-22). The next scaffold
  * of scripts/new-game.mjs joins this list on purpose, and leaves it in the
- * change that makes it playable. While it is empty, the synthetic
- * in-development entry below is what keeps the guard's closed doors tested.
+ * change that makes it playable. The synthetic in-development entry below
+ * keeps the guard's closed doors tested even when this list is empty.
  */
-const IN_DEVELOPMENT_IDS: string[] = [];
+const IN_DEVELOPMENT_IDS: string[] = ['falling-blocks'];
 
 /** A beta title that exists only in this file: a released game's shape, a channel of its own. */
 const SYNTHETIC_BETA: GameDefinition = {
@@ -135,7 +141,8 @@ describe('the channels', () => {
   it('hold exactly the titles this file says they do', () => {
     const beta = GAMES.filter((game) => game.channel === 'web-beta').map((game) => game.id);
     expect(beta).toEqual(WEB_BETA_IDS);
-    expect(beta).toHaveLength(21);
+    // 20 since 2026-10-29: Falling Blocks withdrawn to 'in-development' (see above).
+    expect(beta).toHaveLength(20);
     expect(GAMES.filter((game) => game.channel === undefined)).toHaveLength(45);
     const building = GAMES.filter((game) => game.channel === 'in-development').map(
       (game) => game.id,
