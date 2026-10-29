@@ -1,13 +1,60 @@
 import { useCallback, useEffect, useRef, type PointerEvent } from 'react';
 import { useSettings } from '@/state/SettingsContext';
+import { IconBack, IconRetry } from '@/ui/components/icons';
 import type { Action } from '../../game';
 const CONTROLS = [
-  ['left', '←', 'fallingBlocksLeft'],
-  ['rotate', '↻', 'fallingBlocksRotate'],
-  ['right', '→', 'fallingBlocksRight'],
-  ['softDrop', '↓', 'fallingBlocksSoftDrop'],
-  ['hardDrop', '⇓', 'fallingBlocksHardDrop'],
+  ['left', 'fallingBlocksLeft'],
+  ['rotate', 'fallingBlocksRotate'],
+  ['right', 'fallingBlocksRight'],
+  ['softDrop', 'fallingBlocksSoftDrop'],
+  ['hardDrop', 'fallingBlocksHardDrop'],
 ] as const;
+
+/**
+ * Hard drop: an arrow onto a floor. The shell's icon set has no such glyph and
+ * one title needs it, so it stays here in the set's voice (24 grid, 1.75
+ * stroke, round caps) instead of being promoted to icons.tsx.
+ */
+function IconDrop() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="1em"
+      height="1em"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M12 4v11" />
+      <path d="m7 10 5 5 5-5" />
+      <path d="M5 20h14" />
+    </svg>
+  );
+}
+
+/**
+ * Drawn arrows rather than the ← ↻ → ↓ ⇓ characters, which each WebView sets in
+ * its own font and weight (icons.tsx). The shell has one arrow, pointing left;
+ * right and down turn it with a class, so every direction has the same stroke.
+ */
+function ControlIcon({ action }: { action: Action }) {
+  switch (action) {
+    case 'left':
+      return <IconBack />;
+    case 'right':
+      return <IconBack className="fb-ico-right" />;
+    case 'softDrop':
+      return <IconBack className="fb-ico-down" />;
+    case 'rotate':
+      return <IconRetry />;
+    case 'hardDrop':
+      return <IconDrop />;
+  }
+}
 export function Controls({ enabled, play }: { enabled: boolean; play: (action: Action) => void }) {
   const { t } = useSettings();
   const timeoutRef = useRef<number | null>(null);
@@ -38,7 +85,7 @@ export function Controls({ enabled, play }: { enabled: boolean; play: (action: A
   }, [enabled, stop]);
   return (
     <div className="fb-controls">
-      {CONTROLS.map(([action, symbol, label]) => (
+      {CONTROLS.map(([action, label]) => (
         <button
           key={action}
           type="button"
@@ -71,7 +118,7 @@ export function Controls({ enabled, play }: { enabled: boolean; play: (action: A
           }}
         >
           <span className="fb-control-symbol" aria-hidden="true">
-            {symbol}
+            <ControlIcon action={action} />
           </span>
           <span className="fb-control-label">{t(label)}</span>
         </button>

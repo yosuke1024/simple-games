@@ -50,9 +50,27 @@ export function TutorialScreen() {
                   d="M80 25h20v20H80zM60 45h20v20H60zM80 45h20v20H80zM100 45h20v20h-20z"
                   fill="currentColor"
                 />
-                <text x="90" y="105" textAnchor="middle" fontSize="28" fill="currentColor">
-                  ← ↻ →
-                </text>
+                {/* The three move keys, drawn as on the real keys (Controls.tsx): the shell's arrow, its retry, the arrow turned. 24 grid, 1.75 stroke, round caps. */}
+                <g
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <g transform="translate(39 80) scale(1.25)">
+                    <path d="M19 12H5" />
+                    <path d="m12 19-7-7 7-7" />
+                  </g>
+                  <g transform="translate(75 80) scale(1.25)">
+                    <path d="M23 4v6h-6" />
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                  </g>
+                  <g transform="translate(111 80) scale(1.25) rotate(180 12 12)">
+                    <path d="M19 12H5" />
+                    <path d="m12 19-7-7 7-7" />
+                  </g>
+                </g>
               </>
             ) : step === 1 ? (
               <>

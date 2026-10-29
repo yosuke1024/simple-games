@@ -1,6 +1,38 @@
 import { useId } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { WIDTH, HEIGHT, cells, landingPiece, type Kind, type Session } from '../../game';
+
+/**
+ * One block, built the same way wherever it is drawn (docs/FALLING_BLOCKS_RULES.md §6):
+ * a foot (the shadow it casts on the floor, a little below the body), the body,
+ * and a light along its top edge. A settled block, the piece in hand and the
+ * next piece differ only in the class on the body (and the settled one's mark),
+ * so a piece that lands does not turn into a different object. `x` / `y` are the
+ * cell's top-left corner in board units: 20 per cell, an 18 block and a 2 gap.
+ */
+function Block({
+  x,
+  y,
+  body,
+  fill,
+  mark = false,
+}: {
+  x: number;
+  y: number;
+  body: string;
+  fill?: string;
+  mark?: boolean;
+}) {
+  return (
+    <g>
+      <rect className="fb-foot" x={x + 1} y={y + 2.2} width="18" height="18" rx="3" />
+      <rect className={body} x={x + 1} y={y + 1} width="18" height="18" rx="3" fill={fill} />
+      <path className="fb-block-edge" d={`M${x + 4} ${y + 4}h12`} />
+      {mark ? <path className="fb-fixed-mark" d={`M${x + 7} ${y + 10}h6`} /> : null}
+    </g>
+  );
+}
+
 export function PiecePreview({ kind }: { kind: Kind }) {
   const shape = cells({ kind, x: 0, y: 0, rotation: 0 });
   const left = Math.min(...shape.map(([x]) => x));
@@ -10,22 +42,21 @@ export function PiecePreview({ kind }: { kind: Kind }) {
   return (
     <svg className="fb-preview" viewBox="0 0 100 80" role="img" aria-label={kind}>
       {shape.map(([x, y]) => (
-        <rect
+        <Block
           key={`${x},${y}`}
-          x={(100 - width) / 2 + (x - left) * 20 + 1}
-          y={(80 - height) / 2 + (y - top) * 20 + 1}
-          width="18"
-          height="18"
-          rx="3"
-          fill="currentColor"
+          x={(100 - width) / 2 + (x - left) * 20}
+          y={(80 - height) / 2 + (y - top) * 20}
+          body="fb-preview-block"
         />
       ))}
     </svg>
   );
 }
+
 export function Board({ session }: { session: Session }) {
   const { t } = useSettings();
-  const wellId = useId();
+  const rimId = useId();
+  const gridId = useId();
   const blockId = useId();
   const active = session.status === 'over' ? [] : cells(session.active);
   const ghost = session.status === 'over' ? [] : cells(landingPiece(session));
@@ -41,49 +72,28 @@ export function Board({ session }: { session: Session }) {
       })}
     >
       <defs>
-        <linearGradient id={wellId} x2="0" y2="1">
-          <stop stopColor="var(--surface)" />
-          <stop offset="1" stopColor="var(--paper)" />
+        {/* The well's top wall: a shade that fades out over the first row, so the floor reads as sunk. */}
+        <linearGradient id={rimId} x2="0" y2="1">
+          <stop className="fb-rim-top" />
+          <stop className="fb-rim-bottom" offset="1" />
         </linearGradient>
+        {/* One 20-unit tile for the whole floor: the empty cells, in the same places as before. */}
+        <pattern id={gridId} width="20" height="20" patternUnits="userSpaceOnUse">
+          <rect className="fb-grid-cell" x="1" y="1" width="18" height="18" rx="2" />
+        </pattern>
+        {/* The piece in hand fades only to .88: a settled block is a flat .7 of the accent, so a
+            lower end would leave the two nearly the same colour in their lower halves (§6). */}
         <linearGradient id={blockId} x2="0" y2="1">
           <stop stopColor="var(--accent)" />
-          <stop offset="1" stopColor="var(--accent)" stopOpacity=".78" />
+          <stop offset="1" stopColor="var(--accent)" stopOpacity=".88" />
         </linearGradient>
       </defs>
-      <rect
-        className="fb-board-bg"
-        width={WIDTH * 20}
-        height={HEIGHT * 20}
-        rx="5"
-        fill={`url(#${wellId})`}
-      />
-      {Array.from({ length: WIDTH * HEIGHT }, (_, i) => (
-        <rect
-          className="fb-grid-cell"
-          key={i}
-          x={(i % WIDTH) * 20 + 1}
-          y={Math.floor(i / WIDTH) * 20 + 1}
-          width="18"
-          height="18"
-          rx="2"
-        />
-      ))}
+      <rect className="fb-board-bg" width={WIDTH * 20} height={HEIGHT * 20} rx="5" />
+      <rect width={WIDTH * 20} height={HEIGHT * 20} rx="5" fill={`url(#${gridId})`} />
+      <rect width={WIDTH * 20} height="16" rx="5" fill={`url(#${rimId})`} />
       {session.board.map((value, i) =>
         value ? (
-          <g key={i}>
-            <rect
-              className="fb-fixed"
-              x={(i % WIDTH) * 20 + 1}
-              y={Math.floor(i / WIDTH) * 20 + 1}
-              width="18"
-              height="18"
-              rx="3"
-            />
-            <path
-              className="fb-fixed-mark"
-              d={`M${(i % WIDTH) * 20 + 7} ${Math.floor(i / WIDTH) * 20 + 10}h6`}
-            />
-          </g>
+          <Block key={i} x={(i % WIDTH) * 20} y={Math.floor(i / WIDTH) * 20} body="fb-fixed" mark />
         ) : null,
       )}
       {ghost.map(([x, y]) => (
@@ -98,18 +108,7 @@ export function Board({ session }: { session: Session }) {
         />
       ))}
       {active.map(([x, y]) => (
-        <g key={`${x},${y}`}>
-          <rect
-            className="fb-active"
-            x={x * 20 + 1}
-            y={y * 20 + 1}
-            width="18"
-            height="18"
-            rx="3"
-            fill={`url(#${blockId})`}
-          />
-          <path className="fb-block-edge" d={`M${x * 20 + 4} ${y * 20 + 4}h12`} />
-        </g>
+        <Block key={`${x},${y}`} x={x * 20} y={y * 20} body="fb-active" fill={`url(#${blockId})`} />
       ))}
     </svg>
   );
