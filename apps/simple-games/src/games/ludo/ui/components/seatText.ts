@@ -12,7 +12,14 @@
  * second copy of the board's geometry.
  */
 import type { MessageKey, TranslateVars } from '@/i18n';
-import { globalSquareOf, isSafeSquare, HOME_PROGRESS, RING_SIZE, YOU, type Seat } from '../../game';
+import {
+  globalSquareOf,
+  isSafeSquare,
+  HOME_PROGRESS,
+  RING_SIZE,
+  YOU,
+  type Seat,
+} from '../../game/types';
 
 export type Translate = (key: MessageKey, vars?: TranslateVars) => string;
 
@@ -36,5 +43,5 @@ export function placeLabel(t: Translate, seat: Seat, progress: number): string {
 }
 
 /** A pawn, read out as the seat that owns it and the square it stands on. */
-export const pawnLabel = (t: Translate, seat: Seat, progress: number): string =>
-  t('ludoPawnAt', { seat: seatLabel(t, seat), where: placeLabel(t, seat, progress) });
+export const pawnLabel = (t: Translate, seat: Seat, progress: number, name?: string): string =>
+  t('ludoPawnAt', { seat: name ?? seatLabel(t, seat), where: placeLabel(t, seat, progress) });

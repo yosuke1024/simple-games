@@ -64,5 +64,5 @@ export const es: LudoMessages = {
     'Dos fichas tuyas en la misma casilla no bloquean a nadie ni las protegen. Si un rival cae ahí, todo el montón vuelve de golpe a la salida — un montón es un blanco, no una fortaleza.',
   ludoStep5Title: 'A la meta con el número exacto',
   ludoStep5Body:
-    'Una tirada que se pase de la meta no mueve esa ficha. Lleva tus cuatro fichas a la meta para ganar. Cada número sale de la semilla de la partida, los seis valores son igual de probables, y a ningún jugador se le tira distinto.',
+    'Una tirada que se pase de la meta no mueve esa ficha. Lleva tus cuatro fichas a la meta para ganar. Los seis valores son igual de probables, y a ningún jugador se le tira distinto.',
 };

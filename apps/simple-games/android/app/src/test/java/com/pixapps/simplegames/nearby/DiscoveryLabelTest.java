@@ -22,6 +22,13 @@ public final class DiscoveryLabelTest {
         assertNull(DiscoveryLabel.fromBytes(new byte[] {'P', '-', '1', '2', '3', '4', '5', (byte) 0xff}));
     }
 
+    @Test public void ludoMetadataCanBeProbedWithoutEnablingUnknownGames() {
+        assertTrue(DiscoveryLabel.metadataCapable("P-8E1234"));
+        assertTrue(DiscoveryLabel.metadataCapable("P-8eabcd"));
+        assertFalse(DiscoveryLabel.metadataCapable("P-0E1234"));
+        assertFalse(DiscoveryLabel.metadataCapable("P-8F1234"));
+    }
+
     @Test public void acceptsOnlyKnownBonjourCollisionSuffixes() {
         for (String invalid : new String[] {null, "", "NP-", "SG-P-123456", "P-123456", "NP-P-1234567",
                 "NP-P-123456(2)", "NP-P-123456 (0)", "NP-P-123456 (02)", "NP-P-123456 (10000)",

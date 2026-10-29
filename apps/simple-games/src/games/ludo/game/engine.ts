@@ -151,8 +151,14 @@ export interface RollOutcome {
  */
 export function rollDie(state: MatchState, seed: string): RollOutcome | null {
   if (state.result !== null || state.die !== null) return null;
+  return rollDieValue(state, rollFor(seed, state.rollIndex));
+}
+
+/** Resolve a host-drawn face using the same rules as the seeded solo game. */
+export function rollDieValue(state: MatchState, die: number): RollOutcome | null {
+  if (state.result !== null || state.die !== null) return null;
+  if (!Number.isInteger(die) || die < 1 || die > 6) return null;
   const seat = state.turn;
-  const die = rollFor(seed, state.rollIndex);
   const rollIndex = state.rollIndex + 1;
 
   // The cap is checked against the *count of rolls made*. Reaching it

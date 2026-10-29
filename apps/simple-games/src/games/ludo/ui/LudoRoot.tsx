@@ -16,6 +16,7 @@
 // Register this game's 14-locale catalog the moment the chunk loads,
 // before anything below renders (issue #38, src/i18n/registry.ts).
 import '../i18n';
+import type { PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';
 import { loadRecord } from '../../../storage/repo';
@@ -37,7 +38,7 @@ import { LudoHomeScreen } from './screens/HomeScreen';
 import { LudoStatsScreen } from './screens/StatsScreen';
 import { LudoTutorialScreen } from './screens/TutorialScreen';
 
-export function LudoScreens() {
+export function LudoScreens(together: PlayTogetherProps = {}) {
   const { screen } = useLudo();
   switch (screen) {
     case 'tutorial':
@@ -48,7 +49,7 @@ export function LudoScreens() {
       return <LudoStatsScreen />;
     case 'home':
     default:
-      return <LudoHomeScreen />;
+      return <LudoHomeScreen {...together} />;
   }
 }
 
@@ -59,7 +60,7 @@ interface LoadedData {
   session: LudoSession | null;
 }
 
-export interface LudoRootProps {
+export interface LudoRootProps extends PlayTogetherProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
   /**
@@ -91,7 +92,13 @@ async function loadRecords(kv: KVStore): Promise<LoadedData> {
   return { stats, flags, prefs, session };
 }
 
-export function LudoRoot({ onExit, entry, kv = preferencesKV }: LudoRootProps) {
+export function LudoRoot({
+  onExit,
+  entry,
+  onPlayTogether,
+  playTogetherActive,
+  kv = preferencesKV,
+}: LudoRootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
@@ -104,7 +111,7 @@ export function LudoRoot({ onExit, entry, kv = preferencesKV }: LudoRootProps) {
       onExit={onExit}
       entry={entry}
     >
-      <LudoScreens />
+      <LudoScreens onPlayTogether={onPlayTogether} playTogetherActive={playTogetherActive} />
     </LudoProvider>
   );
 }

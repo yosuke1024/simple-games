@@ -215,6 +215,7 @@ const allImports = files.flatMap(importsOf);
 const gamesDir = join(SRC, 'games') + sep;
 const registryFile = join(SRC, 'app', 'registry.ts');
 const nearbyIds = new Set([
+  'ludo',
   'yacht',
   'reversi',
   'connect-four',
@@ -255,6 +256,7 @@ function nearbyGameImport(entry: Import): boolean {
     return pure;
   if (nearbyGameOf(entry.file) !== targetGame) return false;
   return (
+    (targetGame === 'ludo' && path === 'game/cpu') ||
     pure ||
     /^i18n(?:\/|$)/.test(path) ||
     /^ui\/(?:components\/|hooks\/|use[A-Z][^/]*$|selection$|[^/]+\.css$)/.test(path)
@@ -483,7 +485,8 @@ function nearbyRuntimeOffenders(imports: Import[], roots: string[]): string[] {
         entry.kind === 'glob' ||
         /^(?:club(?:\/|$)|ui\/(?:clubBridge|components\/ClubResultAction)(?:\.|$))/.test(path) ||
         /^games\/[^/]+\/(?:storage|state|challenge)(?:\/|$)/.test(path) ||
-        /^games\/[^/]+\/game\/(?:[^/]+\/)*(?:cpu|ai)(?:[/.]|$)/i.test(path) ||
+        (/^games\/[^/]+\/game\/(?:[^/]+\/)*(?:cpu|ai)(?:[/.]|$)/i.test(path) &&
+          !/^games\/ludo\/game\/cpu(?:\.ts)?$/.test(path)) ||
         // Nim's original module combines rules and CPU functions. Nearby uses
         // its shared position leaf; the ordinary game's API stays unchanged.
         /^games\/nim\/game(?:\/index)?(?:\.ts)?$/.test(path) ||

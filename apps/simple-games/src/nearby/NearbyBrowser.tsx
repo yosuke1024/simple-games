@@ -14,6 +14,7 @@ import { loadHistory } from './history';
 import { isAllowedNearbyText } from './contentFilter';
 import { ReportDialog } from './ReportDialog';
 import { listingKey, type ReportTarget } from './report';
+import type { GroupSelection } from './GroupRoot';
 
 interface Selection {
   id: string;
@@ -28,6 +29,7 @@ export function NearbyBrowser({
   onExit,
   onChanged,
   onJoin,
+  onJoinGroup,
   onOpenGame,
   onRegisterStop,
   visible = true,
@@ -36,6 +38,7 @@ export function NearbyBrowser({
   onExit: () => void;
   onChanged: () => void;
   onJoin: (controller: NearbyController, gameId: NearbyGameId, game: NearbyGame) => void;
+  onJoinGroup?: (selection: GroupSelection) => void;
   onOpenGame?: (gameId: NearbyGameId) => void;
   onRegisterStop?: (stop: (() => Promise<void>) | null) => void;
 }) {
@@ -171,6 +174,17 @@ export function NearbyBrowser({
     setBusy(true);
     setFailed(false);
     try {
+      if (selection.gameId === 'ludo') {
+        await controller.stop();
+        if (!current()) return;
+        onJoinGroup?.({
+          name: name.trim(),
+          roomName: selection.roomName,
+          label: selection.name,
+          transport,
+        });
+        return;
+      }
       const game = await loadNearbyGame(selection.gameId);
       if (!current()) return;
       if (
@@ -307,12 +321,16 @@ export function NearbyBrowser({
                               <button
                                 type="button"
                                 className="nearby-peer"
-                                aria-label={`${peer.roomName} ${GAME_TITLES[peer.gameId]} ${n('participants', { count: 1, capacity: 2 })}`}
+                                aria-label={`${peer.roomName} ${GAME_TITLES[peer.gameId]} ${peer.gameId === 'ludo' ? n('groupFourSeats') : n('participants', { count: 1, capacity: 2 })}`}
                                 onClick={() => setSelection(peer)}
                               >
                                 <strong>{peer.roomName}</strong>
                                 <span>{GAME_TITLES[peer.gameId]}</span>
-                                <span>{n('participants', { count: 1, capacity: 2 })}</span>
+                                <span>
+                                  {peer.gameId === 'ludo'
+                                    ? n('groupFourSeats')
+                                    : n('participants', { count: 1, capacity: 2 })}
+                                </span>
                               </button>
                               <div className="nearby-actions nearby-listing-actions">
                                 <button

@@ -8,6 +8,7 @@ export interface NearbyGame {
   makeAdapter?: (size: 3 | 4 | 5) => GameAdapter;
 }
 export const GAME_TITLES: Record<NearbyGameId, string> = {
+  ludo: 'Ludo',
   yacht: 'Yacht',
   reversi: 'Reversi',
   'connect-four': 'Connect Four',
@@ -23,6 +24,7 @@ export const GAME_TITLES: Record<NearbyGameId, string> = {
   nim: 'Nim',
 };
 export const GAME_NAME_KEYS: Record<NearbyGameId, MessageKey> = {
+  ludo: 'ludoName',
   yacht: 'yachtName',
   reversi: 'reversiName',
   'connect-four': 'fourName',
@@ -37,7 +39,7 @@ export const GAME_NAME_KEYS: Record<NearbyGameId, MessageKey> = {
   scopa: 'scopaName',
   nim: 'nimName',
 };
-const loaders: Record<NearbyGameId, () => Promise<NearbyGame>> = {
+const loaders: Record<Exclude<NearbyGameId, 'ludo'>, () => Promise<NearbyGame>> = {
   yacht: async () => {
     const view = await import('./games/yachtView');
     return { adapter: view.adapter, Board: view.default };
@@ -93,6 +95,7 @@ const loaders: Record<NearbyGameId, () => Promise<NearbyGame>> = {
 };
 const cache = new Map<NearbyGameId, Promise<NearbyGame>>();
 export function loadNearbyGame(id: NearbyGameId): Promise<NearbyGame> {
+  if (id === 'ludo') return Promise.reject(new Error('Ludo uses the four-seat room'));
   let loading = cache.get(id);
   if (!loading) {
     loading = loaders[id]().catch((error: unknown) => {
