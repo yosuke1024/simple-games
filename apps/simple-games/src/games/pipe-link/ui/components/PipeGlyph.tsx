@@ -7,14 +7,17 @@
  * and the whole drawing is turned by CSS, so a turn can be animated as the
  * turn it is (§10: the angle is kept cumulative by the board). The tile
  * carries no words: a pipe is a shape, and lit versus unlit is a shape too —
- * a hollow tube (an outline around the tile's colour) against a full one
- * (filled in the accent) — never colour alone.
+ * an empty groove (a dark outline round a core sunk below the tile's ground)
+ * against a full tube (the accent in the core, inside a faint wall of the
+ * same colour) — never colour alone.
  *
- * Each shape is drawn twice: once with a thick stroke in the edge colour,
- * then again on top with no stroke in the core colour. Overlapping shapes
- * so merge into one tube with one outline. The arms run past the square, so
- * the outline across a pipe's mouth falls outside the tile and two tiles'
- * pipes meet as one.
+ * Each shape is drawn first with a thick stroke in the edge colour, then
+ * with no stroke in the core colour (laid down twice — see the render below).
+ * Overlapping shapes so merge into one tube with one outline. The arms run
+ * past the square, so the outline across a pipe's mouth falls outside the
+ * tile and two tiles' pipes meet as one. The colours are set on the groups
+ * (ui/pipe-link.css) and the shapes inherit them, which is what lets the
+ * light come on as one short transition per group (§10).
  */
 import { orientationMasks, type TileType } from '../../game';
 
@@ -56,6 +59,18 @@ export function PipeGlyph({ type, turns, lit, className }: PipeGlyphProps) {
       style={{ transform: `rotate(${turns * 90}deg)` }}
     >
       <g className="pn-pipe-edge">
+        <Shapes type={type} mask={mask} />
+      </g>
+      {/* The core twice, on purpose (§10, the seam between tiles). Where a
+          tile boundary falls inside a device pixel (a fractional cell, which
+          is what a browser without round() lays out), both neighbours cover
+          that pixel only partly, so the ground and the edge's fill show
+          through the core's anti-aliased rim as a hairline across the pipe. A
+          second identical coat of the core shuts most of it: same paint, same
+          pixels, no new shape, colour or layout. The lit pipe needs it more
+          since its edge became a 0.4 wall, which no longer underlays the core
+          as an opaque amber did. Decoration only — the svg is aria-hidden. */}
+      <g className="pn-pipe-core">
         <Shapes type={type} mask={mask} />
       </g>
       <g className="pn-pipe-core">
