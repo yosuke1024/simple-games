@@ -10,7 +10,9 @@
  *
  * - a filled cell's face against an empty cell (--surface) and against the
  *   board's groove (--surface-recessed) — taken against open (§1, §12);
- * - the carried piece's ring against the groove and an empty cell (§3).
+ * - the carried piece's ring against the groove and an empty cell (§3);
+ * - the blocked piece's ink ring, at the cell's opacity, against the groove;
+ * - the carried piece's ring against its own fill where it crosses a lit line.
  *
  * The lit line itself is a lift in brightness, not a 3:1 mark; it is held to
  * the lift the accent already shipped with (1.55 in the dark theme).
@@ -149,6 +151,15 @@ function themeResolver(theme: (typeof THEMES)[number]) {
   return colour;
 }
 
+/** The opacity a rule sets, as written in the stylesheet. */
+function opacityOf(header: string): number {
+  const value = /(?:^|;|\s)opacity:\s*([\d.]+)\s*;/.exec(
+    stripComments(block(gameCss, header)),
+  )?.[1];
+  expect(value, `opacity in ${header.trim()}`).toBeDefined();
+  return Number(value);
+}
+
 const TONES = [1, 2, 3, 4, 5] as const;
 
 describe('where colour is written (docs/architecture/css-split.md)', () => {
@@ -243,6 +254,31 @@ for (const theme of THEMES) {
       expect(block(gameCss, '\n.bp-cell-ghost {')).toContain('inset 0 0 0 2px var(--accent)');
       expect(contrast(accent, groove)).toBeGreaterThanOrEqual(3);
       expect(contrast(accent, surface)).toBeGreaterThanOrEqual(3);
+    });
+
+    it('draws the blocked piece’s ink ring at 3:1 against the groove, at the cell’s opacity', () => {
+      expect(block(gameCss, '\n.bp-cell-ghost-blocked {')).toContain(
+        'inset 0 0 0 2px var(--ink-soft)',
+      );
+      const opacity = opacityOf('\n.bp-cell-ghost-blocked {');
+      const ring = over(colour('--ink-soft'), groove, opacity);
+      const ratio = contrast(ring, groove);
+      console.info(
+        `[block-puzzle contrast] ${theme.name} blocked ring at ${opacity}: groove ${ratio.toFixed(2)}`,
+      );
+      expect(ratio).toBeGreaterThanOrEqual(3);
+    });
+
+    it('keeps the carried piece’s ring at 3:1 against its own fill on a lit line', () => {
+      const rule = block(gameCss, '\n.bp-cell-ghost.bp-cell-will-clear {');
+      expect(rule).toContain('background-color: var(--accent-ring);');
+      expect(rule).toContain('linear-gradient(var(--bp-veil-ghost), var(--bp-veil-ghost))');
+      expect(rule).toContain('inset 0 0 0 2px var(--bp-lit-ring)');
+      // The ghost's fill is translucent over the board's groove, then veiled.
+      const fill = over(colour('--bp-veil-ghost'), over(colour('--accent-ring'), groove));
+      const ratio = contrast(colour('--bp-lit-ring'), fill);
+      console.info(`[block-puzzle contrast] ${theme.name} lit ghost ring: ${ratio.toFixed(2)}`);
+      expect(ratio).toBeGreaterThanOrEqual(3);
     });
 
     it('keeps the pigments off the warning colour and out of the accent’s family', () => {
