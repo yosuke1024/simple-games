@@ -1,14 +1,54 @@
-/* Card suits are game content. Every surface and decoration uses series tokens. */
+/* Three Peaks — all of this game's styling, imported by ThreePeaksRoot. Chrome
+   (the table, the keys, the playable edge) comes from the series tokens; the
+   accent arrives via the data-game tokens the shell stamps.
+
+   The card paper and the card red below are game content, not chrome
+   (docs/architecture/css-split.md, docs/THREE_PEAKS_RULES.md §6). Card faces
+   stay paper in BOTH themes, as Solitaire, Hearts, Scopa, Gin Rummy and
+   FreeCell do (owner's decision, 2026-10-29): a dark face would turn the black
+   suits near-white and put the cards below the table in brightness. The dark
+   theme dims the paper instead of inverting it, and the table around it is
+   already dark. The dark paper is a little brighter than Solitaire's #e6e2d9
+   so that a playable card's 2px accent edge keeps 3:1 against it (§6;
+   ui/contrast.test.ts pins every pair).
+
+   The other tokens are shadow and light, not colours the player reads: the
+   lift under a card, the lamp over the table, the recess the table sits in.
+   They are rgba because a shadow has to be translucent, and they live here so
+   that nothing below these two blocks names a colour. Light comes from the
+   top in both themes. A card is paper with a hairline edge and a soft shadow
+   (a pile of them reads as objects, not as a striped rectangle); the dark
+   theme needs the shadow stronger to show on its darker table. The gloss is
+   white on paper in both themes, so only :root declares it. */
+:root {
+  --tp-face: #fffdf8;
+  --tp-ink: #232a33;
+  --tp-face-line: #ddd7ca;
+  --tp-red: #9f2634;
+  --tp-gloss: linear-gradient(160deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 55%);
+  --tp-lift: 0 1px 2px rgba(20, 24, 30, 0.24), 0 0 0 0.5px rgba(20, 24, 30, 0.08);
+  --tp-lift-raised: 0 5px 8px rgba(20, 24, 30, 0.28), 0 0 0 0.5px rgba(20, 24, 30, 0.08);
+  --tp-press: 0 0 0 0.5px rgba(20, 24, 30, 0.2);
+  --tp-stack-cast: 3px 6px 8px rgba(20, 24, 30, 0.22);
+  --tp-lamp: radial-gradient(120% 62% at 50% 0%, rgba(255, 255, 255, 0.38), rgba(0, 0, 0, 0) 72%);
+  --tp-well: inset 0 2px 5px rgba(35, 42, 51, 0.14);
+}
+
+:root[data-theme='dark'] {
+  --tp-face: #eae6dd;
+  --tp-ink: #1d232b;
+  --tp-face-line: #bfb9ac;
+  --tp-red: #9f2634;
+  --tp-lift: 0 2px 4px rgba(0, 0, 0, 0.55);
+  --tp-lift-raised: 0 6px 10px rgba(0, 0, 0, 0.6);
+  --tp-press: 0 0 0 0.5px rgba(0, 0, 0, 0.5);
+  --tp-stack-cast: 3px 6px 8px rgba(0, 0, 0, 0.5);
+  --tp-lamp: radial-gradient(120% 62% at 50% 0%, rgba(255, 255, 255, 0.045), rgba(0, 0, 0, 0) 72%);
+  --tp-well: inset 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
 .tp-home-content {
   display: contents;
-}
-.tp-game,
-.tp-tutorial {
-  --tp-red: #9f2634;
-}
-:root[data-theme='dark'] .tp-game,
-:root[data-theme='dark'] .tp-tutorial {
-  --tp-red: #ef9ba1;
 }
 .tp-game {
   max-width: 680px;
@@ -41,6 +81,11 @@
   border: 1px solid var(--line);
   border-radius: 16px;
   background: var(--accent-soft);
+  /* Lit from above, the way a table under a lamp is, and set into the page
+     rather than printed on it: without both, a table that is one colour edge
+     to edge reads as a flat panel (§6). The colour stays the title's accent. */
+  background-image: var(--tp-lamp);
+  box-shadow: var(--tp-well);
 }
 .tp-status {
   display: flex;
@@ -48,19 +93,21 @@
   justify-content: space-between;
   gap: 8px;
   margin: 0 4px 18px;
-  color: var(--ink-soft);
+  /* --ink, not --ink-soft, in both themes: a 12px label needs 4.5:1 on the
+     table, and --ink-soft is 3.93:1 in the dark theme and 4.09:1 in the light
+     one before the lamp (§6). The "/ 28" inside inherits it; its size and
+     weight, not a paler colour, keep it quieter than the count. */
+  color: var(--ink);
   font-size: 12px;
   font-weight: 500;
 }
 .tp-status strong {
-  color: var(--ink);
   font-family: var(--font-display);
   font-size: 17px;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
 }
 .tp-status strong span {
-  color: var(--ink-soft);
   font-size: 11px;
   font-weight: 400;
 }
@@ -76,11 +123,20 @@
 .tp-example-card {
   position: relative;
   padding: 0;
-  border: 1px solid var(--line);
+  border: 1px solid var(--tp-face-line);
   border-radius: 5px;
-  background: var(--surface);
-  color: var(--ink);
+  background: var(--tp-face);
+  color: var(--tp-ink);
   font-family: var(--font-display);
+  /* Paper on a table: the shadow, not the 1.02:1 edge line, is what parts a
+     card from the table and from the card it overlaps by a pixel or two. */
+  box-shadow: var(--tp-lift);
+}
+/* A printed face catches the lamp; a back is covered by its panel anyway. */
+.tp-face,
+.tp-waste,
+.tp-example-card:not(.tp-covered) {
+  background-image: var(--tp-gloss);
 }
 .tp-card {
   position: absolute;
@@ -142,12 +198,16 @@
   top: 51%;
   left: 43%;
 }
+/* A back is paper too: the title's accent is printed inside a paper margin
+   (the card's own border plus the 7% of the artwork outside the panel), the way
+   a real back is, not poured over the whole card. It reveals nothing about the
+   face (§6). The marks are drawn in --accent-ink on the accent panel. */
 .tp-card.tp-covered,
 .tp-example-card.tp-covered,
 .tp-stock {
-  background: var(--accent);
+  background: var(--tp-face);
   color: var(--accent-ink);
-  border-color: var(--surface);
+  border-color: var(--tp-face-line);
   opacity: 1;
 }
 .tp-card-back {
@@ -157,7 +217,15 @@
   fill: none;
   stroke: currentColor;
   stroke-width: 1.6;
-  opacity: 0.72;
+  /* stroke-opacity rather than opacity: the panel is a fill and must stay
+     solid against the paper around it. */
+  stroke-opacity: 0.72;
+}
+/* No stroke on the panel: half of it would fall on the paper, white on paper
+   in the light theme and near-black in the dark one. The edge is the fill. */
+.tp-card-back .tp-back-panel {
+  fill: var(--accent);
+  stroke: none;
 }
 .tp-back-weave {
   opacity: 0.3;
@@ -191,6 +259,18 @@
   outline: 3px solid var(--ink);
   outline-offset: 3px;
   z-index: 20;
+}
+/* A card's ring is two-tone. Most of it falls on the paper of the neighbouring
+   cards (a row overlaps by a pixel or two), and in the dark theme --ink is
+   paper-coloured there (1.00:1), so the outline alone melts into them. The 3px
+   band in --tp-ink fills the outline offset and carries the ring on paper; the
+   outline carries it on the table. The lift stays in the list so a focused card
+   keeps its shadow. The hover and press rules below repeat the band because they
+   set box-shadow at the same specificity (§6). */
+.tp-card:focus-visible {
+  box-shadow:
+    0 0 0 3px var(--tp-ink),
+    var(--tp-lift);
 }
 .tp-piles {
   display: grid;
@@ -229,6 +309,39 @@
   height: 84px;
   border-radius: 6px;
 }
+/* The stock is a pile, not one card: three paper edges stepped down and to the
+   right (the card edge, its face, the card edge again), then the cast shadow.
+   Static, and it says "a stack" without a second element or a number (the
+   count is already beside it). Empty, the stock is the flat recess below. */
+.tp-stock:not(:disabled) {
+  box-shadow:
+    1px 1px 0 var(--tp-face-line),
+    2px 2px 0 var(--tp-face),
+    3px 3px 0 var(--tp-face-line),
+    var(--tp-stack-cast);
+}
+/* The waste is a pile of one: a single edge under the card. */
+.tp-waste {
+  box-shadow:
+    1px 1px 0 var(--tp-face-line),
+    var(--tp-lift);
+}
+/* The card that was just laid down settles for 140ms: it lands from a few
+   pixels above and its shadow tightens as it arrives. Only `from` is written,
+   so the end is whatever the resting waste is. GameScreen adds the class only
+   after the waste has changed once (not when the screen opens) and re-keys the
+   element on every change so each one plays (§6). */
+.tp-waste-settle {
+  animation: tp-settle 140ms ease-out;
+}
+@keyframes tp-settle {
+  from {
+    transform: translateY(-6px) rotate(-1.5deg);
+    box-shadow:
+      1px 1px 0 var(--tp-face-line),
+      var(--tp-lift-raised);
+  }
+}
 .tp-waste .tp-card-rank,
 .tp-example-card .tp-card-rank {
   font-size: 18px;
@@ -244,6 +357,7 @@
   color: var(--ink-soft);
   cursor: default;
   opacity: 1;
+  box-shadow: none;
 }
 .tp-empty-stock {
   font-size: 22px;
@@ -282,7 +396,18 @@
   height: 36px;
   border: 1px solid var(--line);
   border-radius: 50%;
-  background: var(--surface);
+  /* The shared key recipe (.action-btn in ui/styles.css): a lit top edge and
+     a 2px lift that the press sinks. Disabled, it is flat. */
+  background: linear-gradient(var(--surface), var(--paper));
+  box-shadow:
+    inset 0 1px 0 var(--surface),
+    0 2px 0 var(--line);
+}
+.tp-undo:active:not(:disabled) .tp-undo-icon {
+  box-shadow: inset 0 1px 2px var(--line);
+}
+.tp-undo:disabled .tp-undo-icon {
+  box-shadow: none;
 }
 .tp-undo-icon svg {
   width: 18px;
@@ -342,8 +467,25 @@
   .tp-keyboard {
     display: block;
   }
+  /* The lift is eased, not instant, and the shadow grows with it. z-index 2
+     keeps the larger shadow above the card to the right (later in the DOM). */
+  .tp-card,
+  .tp-stock {
+    transition:
+      transform 120ms ease-out,
+      box-shadow 120ms ease-out;
+  }
   .tp-playable:hover {
     transform: translateY(-2px);
+    box-shadow: var(--tp-lift-raised);
+    z-index: 2;
+  }
+  /* Keyboard focus keeps the z-index: 20 it has everywhere else, and its band. */
+  .tp-playable:hover:focus-visible {
+    box-shadow:
+      0 0 0 3px var(--tp-ink),
+      var(--tp-lift-raised);
+    z-index: 20;
   }
   .tp-stock:not(:disabled):hover {
     transform: translateY(-1px);
@@ -352,11 +494,45 @@
     color: var(--accent);
   }
 }
+/* A card pressed by a finger sinks 1px and loses its lift. This is not limited
+   to a fine pointer: touch has no hover to show that the card was taken. */
+.tp-playable:active {
+  transform: translateY(1px);
+  box-shadow: var(--tp-press);
+}
+.tp-playable:active:focus-visible {
+  box-shadow:
+    0 0 0 3px var(--tp-ink),
+    var(--tp-press);
+}
+/* Reduced Motion, by both routes (the OS preference and the app's own
+   setting): no eased lift, no settle, no movement on hover or press. The
+   shadow still changes, so the state is told without anything travelling. */
 @media (prefers-reduced-motion: reduce) {
   .tp-playable:hover,
+  .tp-playable:active,
   .tp-stock:not(:disabled):hover {
     transform: none;
   }
+  .tp-card,
+  .tp-stock {
+    transition: none;
+  }
+  .tp-waste-settle {
+    animation: none;
+  }
+}
+:root[data-reduced-motion='true'] .tp-playable:hover,
+:root[data-reduced-motion='true'] .tp-playable:active,
+:root[data-reduced-motion='true'] .tp-stock:not(:disabled):hover {
+  transform: none;
+}
+:root[data-reduced-motion='true'] .tp-card,
+:root[data-reduced-motion='true'] .tp-stock {
+  transition: none;
+}
+:root[data-reduced-motion='true'] .tp-waste-settle {
+  animation: none;
 }
 @media (max-width: 360px) {
   .tp-card {
