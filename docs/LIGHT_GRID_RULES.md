@@ -182,7 +182,8 @@ not jump when Hint is pressed. The player's chosen 3×3, 4×4 or 5×5 size never
 changes to fit the screen. Game content scrolls within the viewport; the web ad
 reservation stays outside that scroll area so actions remain reachable above
 the fixed ad, including at 320×568 or with enlarged text. The standard header,
-action bar and ad slot remain in place.
+action bar and ad slot remain in place. Layout is awaiting the parent browser
+pass for this revision.
 
 App banner (2026-10-29): in the app the reserved `BannerSlot` sat inside the
 scrolling `.game-content`, so on a short screen the strip scrolled with the
@@ -198,8 +199,7 @@ by 3 px (64 px slot) or 29 px (90 px slot), at 411×914 not at all. The web buil
 is unchanged (`BannerSlot` renders nothing there). Emulator screenshots at both
 sizes show the top band of the tray, with the column numbers, painted over in
 the page colour, also before this change; hit-testing puts the tray on top, so
-it looks like a raster artefact, not a layout overlap — not checked on a device. Layout is awaiting the parent browser
-pass for this revision.
+it looks like a raster artefact, not a layout overlap — not checked on a device.
 
 Calculated sRGB contrasts, light / dark theme, printed by ui/contrast.test.ts
 (2026-10-29; the gate is 4.5:1 for marks and 3:1 for frames): the sun on a lit

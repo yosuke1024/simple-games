@@ -44,12 +44,17 @@
     540px,
     calc((100vh - var(--bo-chrome) - var(--bo-reserve) - var(--bo-edges)) * 0.5625)
   );
-  width: min(
-    100%,
-    540px,
-    calc((100svh - var(--bo-chrome) - var(--bo-reserve) - var(--bo-edges)) * 0.5625)
-  );
   line-height: 0;
+}
+
+@supports (height: 100svh) {
+  .bo-stage {
+    width: min(
+      100%,
+      540px,
+      calc((100svh - var(--bo-chrome) - var(--bo-reserve) - var(--bo-edges)) * 0.5625)
+    );
+  }
 }
 
 .bo-canvas {

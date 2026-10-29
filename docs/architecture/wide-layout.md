@@ -43,4 +43,8 @@ Connect が要求する 13 インチのスクリーンショットも用意し�
   `docs/<GAME>_RULES.md` の「操作」に書く。
 - Chromium 88 床はワイド段階の規則にも適用する(古い WebView の Android
   タブレットが 900px 幅で到達する)。container query / `:has()` / subgrid は
-  使わず、`svh`/`dvh` は `vh` フォールバックの後にだけ書く。
+  使わず、`svh`/`dvh` は `vh` フォールバックの後にだけ書く。その宣言が `var()` / `env()` を
+  含むとき(カスタムプロパティに `svh` を入れるときも)は `@supports (height: 100svh)` の
+  中に置く — `var()` / `env()` を含む宣言は単位を知らない WebView でも構文解析を通って
+  `vh` の行を上書きし、計算値の時点で無効になって初期値(`width: auto` など)に落ちる
+  (2026-10-30 に 14 本の 28 か所を直した。`src/test/styles.test.ts` が全スタイルシートを検査する)。

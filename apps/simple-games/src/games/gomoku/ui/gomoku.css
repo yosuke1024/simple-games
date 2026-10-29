@@ -439,16 +439,19 @@
 
    In the app the board's height term (52vh of the screen) does not see the
    notch or the native banner strip. Measured on the Android emulator at
-   360×640 (37px notch), the board rose 6px at a 64px slot and 19px at a
-   90px one over the top bar and the column ran
-   into the action bar below. So under `:root[data-sg-app-banner]` the board is
-   also no wider than the height left: --gm-chrome is everything stacked
-   with it — the top bar 64, this body's padding 14, the gap 10, the two-line turn
-   line 36.4 and the action bar 77 — and --gm-edges is the notch (.screen's top
-   padding) and the strip's worst case (`--sg-app-banner-reserve`,
-   ui/styles.css: 90px and the bottom inset), so the board keeps its size when
-   an ad taller than the 64px slot arrives. Each tier keeps its own terms. The
-   web build keeps its board as published. */
+   360×640 (37px notch), the board rose 6px over the top bar at a 64px slot
+   and 19px at a 90px one, and the column ran into the action bar below. So
+   under `:root[data-sg-app-banner]` the board is also no wider than the
+   height left: --gm-chrome is everything stacked with it — the top bar 64,
+   this body's padding 14, the gap 10, the two-line turn line 36.4 and the
+   action bar 77 — and --gm-edges is the notch (.screen's top padding) and
+   the strip's worst case (`--sg-app-banner-reserve`, ui/styles.css: 90px and
+   the bottom inset), so the board keeps its size when an ad taller than the
+   64px slot arrives. Each tier keeps its web terms as a ceiling and adds that
+   budget. The web build keeps its board as published. The svh forms sit
+   under `@supports`: a var() makes a declaration parse, so on a WebView
+   without svh (Chromium 88) it would win over the vh form and then compute
+   to nothing. */
 
 .gm-body {
   --gm-chrome: 202px;
@@ -457,19 +460,43 @@
 
 :root[data-sg-app-banner] .gm-board {
   width: min(100%, 420px, 52vh, calc(100vh - var(--gm-chrome) - var(--gm-edges)));
-  width: min(100%, 420px, 52vh, calc(100svh - var(--gm-chrome) - var(--gm-edges)));
+}
+
+@supports (height: 100svh) {
+  :root[data-sg-app-banner] .gm-board {
+    width: min(100%, 420px, 52vh, calc(100svh - var(--gm-chrome) - var(--gm-edges)));
+  }
 }
 
 @media (min-width: 600px) {
   :root[data-sg-app-banner] .gm-board {
     width: min(100%, 520px, 58vh, calc(100vh - var(--gm-chrome) - var(--gm-edges)));
-    width: min(100%, 520px, 58svh, calc(100svh - var(--gm-chrome) - var(--gm-edges)));
+  }
+
+  @supports (height: 100svh) {
+    :root[data-sg-app-banner] .gm-board {
+      width: min(100%, 520px, 58svh, calc(100svh - var(--gm-chrome) - var(--gm-edges)));
+    }
   }
 }
 
+/* The wide tier's 290px term is already 88px more than the column (still
+   the 202px stack) — most of the web's 116px reservation — so the strip is
+   not taken from it as well: it stays a ceiling, as 52vh and 58vh do in the
+   tiers above, and the app budget is a term of its own. */
 @media (min-width: 900px) and (orientation: landscape) {
   :root[data-sg-app-banner] .gm-board {
-    width: min(100%, 600px, calc(100vh - 290px - var(--gm-edges)));
-    width: min(100%, 600px, calc(100svh - 290px - var(--gm-edges)));
+    width: min(100%, 600px, calc(100vh - 290px), calc(100vh - var(--gm-chrome) - var(--gm-edges)));
+  }
+
+  @supports (height: 100svh) {
+    :root[data-sg-app-banner] .gm-board {
+      width: min(
+        100%,
+        600px,
+        calc(100svh - 290px),
+        calc(100svh - var(--gm-chrome) - var(--gm-edges))
+      );
+    }
   }
 }

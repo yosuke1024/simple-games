@@ -79,8 +79,13 @@
 }
 :root[data-sg-app-banner] .cf-board-frame {
   width: min(100%, max(160px, calc(100vh - var(--cf-chrome) - var(--cf-edges))));
-  width: min(100%, max(160px, calc(100svh - var(--cf-chrome) - var(--cf-edges))));
   margin-inline: auto;
+}
+
+@supports (height: 100svh) {
+  :root[data-sg-app-banner] .cf-board-frame {
+    width: min(100%, max(160px, calc(100svh - var(--cf-chrome) - var(--cf-edges))));
+  }
 }
 .cf-screen .game-content {
   min-height: 0;

@@ -461,10 +461,15 @@
       (100vh - var(--ws-chrome) - var(--ws-edges) - (var(--ws-rows) - 1) * 26px) / var(--ws-rows)
     )
   );
-  max-height: min(
-    calc((68vh - 56px) / var(--ws-rows)),
-    calc(
-      (100svh - var(--ws-chrome) - var(--ws-edges) - (var(--ws-rows) - 1) * 26px) / var(--ws-rows)
-    )
-  );
+}
+
+@supports (height: 100svh) {
+  :root[data-sg-app-banner] .ws-tube-glass {
+    max-height: min(
+      calc((68vh - 56px) / var(--ws-rows)),
+      calc(
+        (100svh - var(--ws-chrome) - var(--ws-edges) - (var(--ws-rows) - 1) * 26px) / var(--ws-rows)
+      )
+    );
+  }
 }

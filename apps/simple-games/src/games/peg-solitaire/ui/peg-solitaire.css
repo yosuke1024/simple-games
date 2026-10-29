@@ -126,13 +126,18 @@
   --pg-aspect: 1;
   position: relative;
   width: max(min(100%, 260px), min(100%, 460px, calc((100vh - 305px) * var(--pg-aspect))));
-  width: max(min(100%, 260px), min(100%, 460px, calc((100svh - 305px) * var(--pg-aspect))));
   aspect-ratio: var(--pg-aspect);
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
+}
+
+@supports (height: 100svh) {
+  .pg-board {
+    width: max(min(100%, 260px), min(100%, 460px, calc((100svh - 305px) * var(--pg-aspect))));
+  }
 }
 
 /* Positioned, so it paints above the board's soft shadow (a positioned
@@ -617,7 +622,12 @@
 @media (min-width: 600px) {
   .pg-board {
     width: max(min(100%, 260px), min(100%, 520px, calc((100vh - 305px) * var(--pg-aspect))));
-    width: max(min(100%, 260px), min(100%, 520px, calc((100svh - 305px) * var(--pg-aspect))));
+  }
+
+  @supports (height: 100svh) {
+    .pg-board {
+      width: max(min(100%, 260px), min(100%, 520px, calc((100svh - 305px) * var(--pg-aspect))));
+    }
   }
 
   .pg-status {
@@ -628,6 +638,11 @@
 @media (min-width: 900px) and (orientation: landscape) {
   .pg-board {
     width: max(min(100%, 260px), min(100%, 560px, calc((100vh - 305px) * var(--pg-aspect))));
-    width: max(min(100%, 260px), min(100%, 560px, calc((100svh - 305px) * var(--pg-aspect))));
+  }
+
+  @supports (height: 100svh) {
+    .pg-board {
+      width: max(min(100%, 260px), min(100%, 560px, calc((100svh - 305px) * var(--pg-aspect))));
+    }
   }
 }

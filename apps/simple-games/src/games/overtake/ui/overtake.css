@@ -89,12 +89,17 @@
     360px,
     calc((100vh - var(--ot-chrome) - var(--ot-reserve) - var(--ot-edges)) * 0.5625)
   );
-  width: min(
-    100%,
-    360px,
-    calc((100svh - var(--ot-chrome) - var(--ot-reserve) - var(--ot-edges)) * 0.5625)
-  );
   line-height: 0;
+}
+
+@supports (height: 100svh) {
+  .ot-board {
+    width: min(
+      100%,
+      360px,
+      calc((100svh - var(--ot-chrome) - var(--ot-reserve) - var(--ot-edges)) * 0.5625)
+    );
+  }
 }
 
 /* The collection's board frame (§11「見た目」), the lift first: a --line step

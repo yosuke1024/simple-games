@@ -1771,10 +1771,12 @@ button:disabled {
    50dp); the slot starts at 64 and only grows to the ad's height, so a board
    sized against this worst case never changes size when an ad loads
    (docs/ADS_POLICY.md「バナー広告の仕様」). Its position can still move: a
-   column centred above the slot rises by half the growth (13px at most), as
-   in every game. The bottom inset is in it because
-   the slot's margin takes it. Games read `var(--sg-app-banner-reserve, 0px)`;
-   nothing changes for a game that does not. */
+   column centred above the slot rises by half the growth (13px at most), a
+   bottom-aligned one by all of it (26px) — in any game, read or not. The
+   bottom inset is in it because the slot's margin takes it. Games read
+   `var(--sg-app-banner-reserve, 0px)`; nothing changes for a game that does
+   not. A declaration that reads it together with svh belongs under
+   `@supports (height: 100svh)` (src/test/styles.test.ts). */
 :root[data-sg-app-banner] {
   --sg-app-banner-reserve: calc(90px + env(safe-area-inset-bottom));
 }

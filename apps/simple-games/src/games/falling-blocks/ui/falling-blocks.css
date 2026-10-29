@@ -85,7 +85,6 @@
 }
 .fb-board {
   width: min(62%, 240px, calc((100vh - 250px - var(--fb-reserve) - var(--fb-insets)) / 1.8));
-  width: min(62%, 240px, calc((100svh - 250px - var(--fb-reserve) - var(--fb-insets)) / 1.8));
   min-width: 100px;
   display: block;
   flex-shrink: 0;
@@ -98,6 +97,12 @@
     0 0 0 3px var(--paper),
     0 0 0 4px var(--line),
     0 8px 18px var(--accent-ring-soft);
+}
+
+@supports (height: 100svh) {
+  .fb-board {
+    width: min(62%, 240px, calc((100svh - 250px - var(--fb-reserve) - var(--fb-insets)) / 1.8));
+  }
 }
 /* The floor is sunk below the page, not raised above it. */
 .fb-board-bg {
@@ -322,7 +327,12 @@
 @media (min-width: 600px) {
   .fb-board {
     width: min(260px, calc((100vh - 250px - var(--fb-reserve) - var(--fb-insets)) / 1.8));
-    width: min(260px, calc((100svh - 250px - var(--fb-reserve) - var(--fb-insets)) / 1.8));
+  }
+
+  @supports (height: 100svh) {
+    .fb-board {
+      width: min(260px, calc((100svh - 250px - var(--fb-reserve) - var(--fb-insets)) / 1.8));
+    }
   }
   .fb-stage {
     gap: 24px;

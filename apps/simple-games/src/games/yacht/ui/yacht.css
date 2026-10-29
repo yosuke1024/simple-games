@@ -537,10 +537,15 @@
     6,
     clamp(36px, calc((100vh - var(--yt-chrome) - var(--yt-edges)) / 6), var(--yt-row-max))
   );
-  grid-template-rows: repeat(
-    6,
-    clamp(36px, calc((100svh - var(--yt-chrome) - var(--yt-edges)) / 6), var(--yt-row-max))
-  );
+}
+
+@supports (height: 100svh) {
+  :root[data-sg-app-banner] .yt-sheet {
+    grid-template-rows: repeat(
+      6,
+      clamp(36px, calc((100svh - var(--yt-chrome) - var(--yt-edges)) / 6), var(--yt-row-max))
+    );
+  }
 }
 
 @media (max-height: 680px) {
@@ -569,5 +574,14 @@
   :root[data-sg-app-banner] .btn.yt-roll {
     min-height: 44px;
     padding: 6px 16px;
+  }
+}
+
+/* A window both wide and short (a tablet held sideways, a split window)
+   takes both blocks above — the short one's tighter gaps and the wide one's
+   64px dice — so its budget is the short one's plus the larger dice's 8px. */
+@media (min-width: 600px) and (max-height: 680px) {
+  .yt-body {
+    --yt-chrome: 254px;
   }
 }

@@ -758,8 +758,10 @@
     --ub-chrome: 236px;
   }
 
+  /* 120px holds no banner term (the web's 236px adds its whole 116px to
+     it), so the app adds the strip's whole worst case. */
   :root[data-sg-app-banner] .ub-board {
-    --ub-chrome: 146px;
+    --ub-chrome: 210px;
   }
 
   .ub-figure {

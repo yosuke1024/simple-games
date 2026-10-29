@@ -180,8 +180,13 @@
    138px at 411 — so 156px. --bu-edges is the notch (.screen's top padding)
    and the strip's worst case (`--sg-app-banner-reserve`, ui/styles.css: 90px
    and the bottom inset), so the board keeps its size when an ad taller than
-   the 64px slot arrives. Each tier keeps its own flat cap and chrome. The web
-   build keeps its board as published. */
+   the 64px slot arrives. The wide tiers keep their web terms (230px and
+   210px) as a ceiling and add the same app budget: those terms are already
+   72–92px more than the 138px stack, so taking the strip from them as well
+   shrank the board by that much more than it needed. The web build keeps
+   its board as published. The svh forms sit under `@supports`: a var() makes a
+   declaration parse, so on a WebView without svh (Chromium 88) it would win
+   over the vh form and then compute to nothing. */
 
 .bu-board-wrap {
   --bu-chrome: 156px;
@@ -190,19 +195,54 @@
 
 :root[data-sg-app-banner] .bu-canvas {
   width: min(100%, 320px, calc((100vh - var(--bu-chrome) - var(--bu-edges)) * 0.476));
-  width: min(100%, 320px, calc((100svh - var(--bu-chrome) - var(--bu-edges)) * 0.476));
+}
+
+@supports (height: 100svh) {
+  :root[data-sg-app-banner] .bu-canvas {
+    width: min(100%, 320px, calc((100svh - var(--bu-chrome) - var(--bu-edges)) * 0.476));
+  }
 }
 
 @media (min-width: 600px) {
   :root[data-sg-app-banner] .bu-canvas {
-    width: min(100%, 400px, calc((100vh - 230px - var(--bu-edges)) * 0.476));
-    width: min(100%, 400px, calc((100svh - 230px - var(--bu-edges)) * 0.476));
+    width: min(
+      100%,
+      400px,
+      calc((100vh - 230px) * 0.476),
+      calc((100vh - var(--bu-chrome) - var(--bu-edges)) * 0.476)
+    );
+  }
+
+  @supports (height: 100svh) {
+    :root[data-sg-app-banner] .bu-canvas {
+      width: min(
+        100%,
+        400px,
+        calc((100svh - 230px) * 0.476),
+        calc((100svh - var(--bu-chrome) - var(--bu-edges)) * 0.476)
+      );
+    }
   }
 }
 
 @media (min-width: 900px) and (orientation: landscape) {
   :root[data-sg-app-banner] .bu-canvas {
-    width: min(100%, 440px, calc((100vh - 210px - var(--bu-edges)) * 0.476));
-    width: min(100%, 440px, calc((100svh - 210px - var(--bu-edges)) * 0.476));
+    width: min(
+      100%,
+      440px,
+      calc((100vh - 210px) * 0.476),
+      calc((100vh - var(--bu-chrome) - var(--bu-edges)) * 0.476)
+    );
+  }
+
+  @supports (height: 100svh) {
+    :root[data-sg-app-banner] .bu-canvas {
+      width: min(
+        100%,
+        440px,
+        calc((100svh - 210px) * 0.476),
+        calc((100svh - var(--bu-chrome) - var(--bu-edges)) * 0.476)
+      );
+    }
   }
 }

@@ -142,11 +142,6 @@
     560px,
     calc(100vh - var(--sn-chrome) - var(--sn-reserve) - var(--sn-insets) - var(--sn-banner))
   );
-  width: min(
-    100%,
-    560px,
-    calc(100svh - var(--sn-chrome) - var(--sn-reserve) - var(--sn-insets) - var(--sn-banner))
-  );
   min-width: 160px;
   aspect-ratio: 1;
   border-radius: 2.5%;
@@ -155,6 +150,16 @@
     0 0 0 3px var(--paper),
     0 0 0 4px var(--line),
     0 8px 18px var(--accent-ring-soft);
+}
+
+@supports (height: 100svh) {
+  .sn-stage-wrap {
+    width: min(
+      100%,
+      560px,
+      calc(100svh - var(--sn-chrome) - var(--sn-reserve) - var(--sn-insets) - var(--sn-banner))
+    );
+  }
 }
 
 /* The board hears the swipe over its whole box. `touch-action: none` because
@@ -472,11 +477,18 @@
       760px,
       calc(100vh - var(--sn-side-chrome) - var(--sn-reserve) - var(--sn-insets) - var(--sn-banner))
     );
-    width: min(
-      100% - 240px,
-      760px,
-      calc(100svh - var(--sn-side-chrome) - var(--sn-reserve) - var(--sn-insets) - var(--sn-banner))
-    );
+  }
+
+  @supports (height: 100svh) {
+    .sn-stage-wrap {
+      width: min(
+        100% - 240px,
+        760px,
+        calc(
+          100svh - var(--sn-side-chrome) - var(--sn-reserve) - var(--sn-insets) - var(--sn-banner)
+        )
+      );
+    }
   }
 }
 

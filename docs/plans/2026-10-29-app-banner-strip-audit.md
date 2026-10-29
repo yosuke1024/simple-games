@@ -100,7 +100,7 @@ v1.7.0 で Web 先行公開の 20 本を収録したとき、画面の高さか�
 | 61 | knight-tour | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 3 / 3 | 0 / 3 |
 | 62 | invaders | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 2 / 2 | 0 / 0 |
 | 63 | paddle-rally | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 3 / 3 | 0 / 0 |
-| 64 | hanoi-towers | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 3 / 3 | 0 / 17 |
+| 64 | hanoi-towers | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 3 / 3 | 0 / 17 (Hearts を先に開いた起動。Hanoi だけなら 3 — `ht-` の衝突、HANOI_TOWERS_RULES) |
 | 65 | maze-escape | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 3 / 3 | 0 / 0 |
 
 ## 直したもの
@@ -117,7 +117,7 @@ Web 版と、広告を削除したアプリには何も変わらない。詳細�
 | Light Grid | `BannerSlot` がスクロールする `.game-content` の中 | `.screen` の最後の子へ(盤は縮めない — 90px のとき最大 29px スクロール) |
 | Hanoi Towers / Invaders / Maze Escape / Paddle Rally | 同上(測った 2 サイズでは重なっていない) | 同上 |
 | Block Puzzle | 高さの見積もりが 64px の枠のまま、ノッチを数えない | 実測の 257px + ノッチ + 90px + 下端に(`--bp-chrome`) |
-| Unblock Puzzle | `--ub-chrome` が 64px の枠で数えていた | 90px で数える(326px、横長の広い段は 146px) |
+| Unblock Puzzle | `--ub-chrome` が 64px の枠で数えていた | 90px で数える(326px、横長の広い段は 146px — 2026-10-30 に 210px へ直した: 120px は枠を数えていない) |
 | Reversi / Gomoku / Dots and Boxes | 盤の上限が画面の高さの割合(52% / 58%) | 盤の幅を残りの高さでも抑える(186 / 202 / 186px) |
 
 ## 修正後

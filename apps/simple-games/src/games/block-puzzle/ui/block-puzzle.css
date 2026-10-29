@@ -517,7 +517,12 @@
 @media (min-width: 600px) {
   .bp-board {
     width: min(100%, 480px, calc(100vh - var(--bp-chrome)));
-    width: min(100%, 480px, calc(100svh - var(--bp-chrome)));
+  }
+
+  @supports (height: 100svh) {
+    .bp-board {
+      width: min(100%, 480px, calc(100svh - var(--bp-chrome)));
+    }
   }
 
   .bp-tray {
@@ -528,7 +533,12 @@
 @media (min-width: 900px) and (orientation: landscape) {
   .bp-board {
     width: min(100%, 520px, calc(100vh - var(--bp-chrome)));
-    width: min(100%, 520px, calc(100svh - var(--bp-chrome)));
+  }
+
+  @supports (height: 100svh) {
+    .bp-board {
+      width: min(100%, 520px, calc(100svh - var(--bp-chrome)));
+    }
   }
 
   .bp-tray {

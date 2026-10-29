@@ -214,3 +214,84 @@ describe('Reduced Motion reaches pseudo-elements', () => {
     expectRoute(rulesIn(source), ":root[data-reduced-motion='true'] ");
   });
 });
+
+/**
+ * The low-spec floor is Chromium 88 (docs/ARCHITECTURE.md), which has no
+ * `svh`. The usual fallback is a `vh` declaration followed by the same one in
+ * `svh`: an engine that does not know the unit drops the second when it
+ * parses the sheet. That stops working once the second holds a var() or an
+ * env(). Such a declaration parses whatever it holds, wins the cascade, and
+ * only fails at computed-value time, when the property falls to its initial
+ * value (`width: auto`, `max-height: none`) instead of the vh line above it.
+ * A custom property holding `svh` fails the same way, since it parses
+ * anything. On 2026-10-30, 28 declarations in 14 game stylesheets had that
+ * shape — the boards of Reversi, Bubble Pop, Snake and Overtake among them —
+ * and with `css: false` in the test setup nothing rendered can see it. They
+ * belong under `@supports (height: 100svh)`, as Bridges and Unblock Puzzle
+ * already wrote theirs (docs/BRIDGES_RULES.md「大きさ」).
+ */
+describe('svh behind var(), env() or a custom property sits under @supports (Chromium 88)', () => {
+  const VIEWPORT_UNIT = /\d(?:svh|dvh|lvh|svw|dvw|lvw|svmin|svmax|dvmin|dvmax)\b/;
+  const DEFERRED = /\b(?:var|env)\(/;
+
+  function stylesheets(dir: string): string[] {
+    return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+      const path = resolve(dir, entry.name);
+      if (entry.isDirectory()) return stylesheets(path);
+      return entry.name.endsWith('.css') ? [path] : [];
+    });
+  }
+
+  /** Each declaration that needs the guard, as guarded or `file:line declaration`. */
+  function scan(file: string): { guarded: number; unguarded: string[] } {
+    // Comments are blanked rather than removed, so line numbers stay true.
+    const text = readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, (comment) =>
+      comment.replace(/[^\n]/g, ' '),
+    );
+    const guards: boolean[] = [];
+    const unguarded: string[] = [];
+    let guarded = 0;
+    let start = 0;
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      if (char !== '{' && char !== '}' && char !== ';') continue;
+      const raw = text.slice(start, i);
+      const chunk = raw.trim();
+      if (char === '{') {
+        // `not` inverts the test and `or` lets another condition pass it on
+        // Chromium 88, so neither guards anything.
+        guards.push(
+          chunk.startsWith('@supports') &&
+            VIEWPORT_UNIT.test(chunk) &&
+            !/\b(?:not|or)\b/.test(chunk),
+        );
+      } else {
+        const custom = chunk.startsWith('--');
+        const declaration = custom || /^[a-z-]+\s*:/.test(chunk);
+        if (declaration && VIEWPORT_UNIT.test(chunk) && (custom || DEFERRED.test(chunk))) {
+          if (guards.includes(true)) {
+            guarded++;
+          } else {
+            const line = text.slice(0, start + raw.length - raw.trimStart().length).split('\n');
+            const where = `${file.slice(resolve('src').length + 1)}:${line.length}`;
+            unguarded.push(`${where} ${chunk.replace(/\s+/g, ' ')}`);
+          }
+        }
+        if (char === '}') guards.pop();
+      }
+      start = i + 1;
+    }
+    return { guarded, unguarded };
+  }
+
+  const results = stylesheets(resolve('src')).map(scan);
+
+  it('finds none outside the guard', () => {
+    expect(results.flatMap((result) => result.unguarded)).toEqual([]);
+  });
+
+  it('reads every stylesheet and the guarded ones — a broken scan would pass the test above vacuously', () => {
+    expect(results.length).toBeGreaterThan(60);
+    expect(results.reduce((sum, result) => sum + result.guarded, 0)).toBeGreaterThan(28);
+  });
+});

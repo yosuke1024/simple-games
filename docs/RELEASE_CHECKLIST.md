@@ -101,7 +101,7 @@ Maze Escape(No. 62・64〜66)。Falling Blocks(No. 63)は 2026-10-29 に先行�
       `--sg-app-banner-reserve` を引く(Bubble Pop・Water Sort・Yacht・Reversi・Gomoku・Dots and Boxes)、64px の枠を数えていた
       見積もりを 90px で数え直す(Memory Match・Block Puzzle・Unblock Puzzle)、Water Sort の列間を 12px で数える。`BannerSlot` は
       スクロールする `.game-content` の外へ移した(Light Grid・Hanoi Towers・Invaders・Maze Escape・Paddle Rally — Color Flood と
-      同じ形。Light Grid は文書どおり盤を縮めず、90px の枠のときだけ最大 29px スクロールする)。**修正後の再計測**: 65 本・2 サイズ・
+      同じ形。Light Grid は文書どおり盤を縮めず、360×640 では遊ぶ領域が 64px の枠で 3px、90px の枠で 29px スクロールする)。**修正後の再計測**: 65 本・2 サイズ・
       64 / 90px のすべてで、枠の下・上部バーの上・隣へのはみ出しが 0px。Web ビルドは触った 21 画面を 360×640 / 390×844 / 412×915 ×
       広告予約あり / なしで変更前のビルドと突き合わせ、寸法が同じ(違いは乱数の盤のアイコンと文字幅だけ)。ゲームごとの表と方法は
       [plans/2026-10-29-app-banner-strip-audit.md](plans/2026-10-29-app-banner-strip-audit.md)。**確かめていないこと**: 実際の広告(エミュレータは描かない — 90px は手で伸ばした枠)、実機・iOS・
@@ -111,6 +111,31 @@ Maze Escape(No. 62・64〜66)。Falling Blocks(No. 63)は 2026-10-29 に先行�
 - [ ] ADS_POLICY「盤面は決して動かない」と、枠が 64px より伸びたときに盤が上へ動くこと(上の計測で 411×914 の 65 本のうち 45 本が
       13px、8 本が 26px — 下寄せの配置 —、1 本が 7px 上へ動く。動かないのは 11 本)のどちらを直すか。枠はゲーム画面に入るたびに 64px から
       作り直され、プラグインが `resumeBanner` のたびに高さを知らせるので、広告が 64px より高い端末では入るたびに動く。製品オーナーの判断待ち
+- [x] **2026-10-30 追記: 上の計測の修正をレビューして直した**(Codex レビューと独立レビュー)。(1) **`svh` の式が Chromium 88 で
+      `vh` に戻らなかった**: `var()` / `env()` を含む宣言は単位を知らない WebView でも構文解析を通るので、`vh` の行を上書きしたうえで
+      計算時に無効になり、盤の幅が `auto`(Water Sort は `max-height: none`、Yacht は行の高さなし)に落ちる。上の修正の 14 か所に加え、
+      以前からの 14 か所(Overtake・Snake・Bounce Up・Peg Solitaire・Color Flood — 1.7.0 で初めてアプリに入る —、Block Puzzle と
+      Memory Match の幅の広い段、収録していない Falling Blocks)も同じ形だった。28 か所すべてを `@supports (height: 100svh)` の中へ
+      移し(`svh` を知る環境では同じ宣言が同じ順で効く)、`src/test/styles.test.ts` に全スタイルシートの検査を足した。挙動は
+      ヘッドレス Chromium で、知らない単位に置き換えて確かめた(`var()` 入りは `auto` に落ち、`@supports` の中なら `vh` の値)。
+      (2) **幅の広い段(600px 以上・900px 以上の横向き)は計算だけで変えていて、誤っていた**: Reversi・Gomoku・Dots and Boxes の
+      900px 以上と Bubble Pop の 600px 以上・900px 以上は、Web の定数(300 / 290 / 230 / 210px — 盤と縦に並ぶ列より 72〜114px
+      大きく、Web の予約のぶんを含む)からさらに枠を引いていた(1280×800 の Reversi で 500 → 410px、収まるのは 524px)。Web の式を上限に残し、アプリの予算を
+      別の項で足す形に直した(小さい段と同じ)。Unblock Puzzle の 900px 以上の横向きは逆に、枠を数えていない 120px に 26px しか
+      足していなかった(146px → 210px)。Yacht は幅が広くて低い窓(600px 以上かつ高さ 680px 以下)で大きい賽の 8px が抜けていた
+      (246px → 254px)。**計測**: ネイティブ向けのビルドをヘッドレス Chromium で Android として開き(`BannerSlot` が枠を確保し
+      `data-sg-app-banner` が立つ)、Reversi・Gomoku・Dots and Boxes・Bubble Pop・Unblock Puzzle・Yacht・Block Puzzle・Memory Match・
+      Water Sort の最初のモードを 360×640 / 411×914 / 600×960 / 800×1280 / 1024×600 / 1280×800 / 1366×768、枠 64 / 90px、
+      セーフエリア 0 で、この修正の前後のビルドで測った。修正後はすべてで枠の下・上部バーの上が 0px。修正前は Unblock Puzzle の
+      1024×600 が枠の下に 5 / 18px、Yacht の 1024×600 が 90px の枠で上部バーに 2px かかっていた。広い段の盤は Reversi の 1280×800 で
+      410 → 500px(Web と同じ)など 26〜90px 戻った。スマホの 2 サイズの寸法は修正前と同じ。**タブレットの幅はエミュレータでも実機
+      でも、ノッチや下端の帯のある画面でも測っていない**
+- [ ] **Hearts と Hanoi Towers のクラス名の衝突**(2026-10-30 に計測の記録から判明): どちらも接頭辞 `ht-` を使い、`.ht-body` と
+      `.ht-actions` を両方のスタイルシートが定義している。ゲームの CSS は遅延チャンクで、一度開くとアプリを閉じるまで残るので、Hearts を
+      開いた後の Hanoi Towers は Hearts の `.ht-body`(`flex: 1; overflow-y: auto` など)を受け、360×640 の 90px の枠で遊ぶ領域が
+      `.ht-body` の中で 17px スクロールする(Hanoi だけなら 3px)。逆向き(Hanoi の後の Hearts)は測っていない。Hanoi Towers は
+      1.7.0 で初めてアプリに入り、Web 版では先行公開のあいだから同じ。全ゲームの CSS を走査して、ゲームをまたぐクラス名の衝突は
+      この組だけ。未修正
 - [ ] 20 本の実機(Android / iPhone)と低スペック端末(§4)での 1 局、アーケード 5 本(Snake / Bounce Up / Overtake /
       Invaders / Paddle Rally)のネイティブ WebView での操作感。確かめるまで「実機で確認済み」と書かない
 - [ ] タグ `v1.7.0`・AAB / IPA の作成・内部テスト / TestFlight・本番審査への提出(人間の明示的な承認が要る)
