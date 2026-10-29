@@ -39,6 +39,7 @@ import {
   memo,
   useCallback,
   useEffect,
+  useId,
   useLayoutEffect,
   useRef,
   useState,
@@ -139,6 +140,56 @@ interface Carry {
 const pointsAttr = (points: readonly (readonly [number, number])[]): string =>
   points.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(' ');
 
+/**
+ * Which of the one wood's two boards a piece is cut from (tangram.css, §10).
+ * The Quick Rules pictures read it too (TangramFigure), so a piece is the same
+ * wood on the board and in the picture.
+ */
+export const shadeOf = (id: PieceId): 'a' | 'b' =>
+  id === 'L1' || id === 'L2' || id === 'SQ' ? 'a' : 'b';
+
+/**
+ * The grain's frame for one piece. Its points arrive already turned —
+ * poseVertices / trayPixels bake Rʳ(Fᶠ(v)) in — so the grain is turned by
+ * hand the same way: its origin on vertex 0 (every local shape's origin,
+ * game/pieces.ts), then 45° × r, clockwise with y down like R. The grain runs
+ * along local x, which F (x → −x) leaves where it was, so a flip needs nothing.
+ */
+const grainFrame = (points: readonly (readonly [number, number])[], o: Orientation): string =>
+  `translate(${points[0]![0].toFixed(2)} ${points[0]![1].toFixed(2)}) rotate(${o.r * 45})`;
+
+/** The grain tile, 48 × 28 px: lines along x as [y, width], sparse and uneven on purpose. */
+const GRAIN_LINES: readonly (readonly [number, number])[] = [
+  [3.5, 0.8],
+  [8.5, 1.2],
+  [13, 0.6],
+  [19, 1],
+  [24.5, 0.7],
+];
+
+/**
+ * The grain's one tile, drawn once in the board's own <svg>; each piece's
+ * pattern inherits it by `href` and adds only its frame. Each line leaves and
+ * comes back at the same height and slope, so the tile repeats without a
+ * seam. Its props never change, so it never re-renders.
+ */
+const GrainTile = memo(function GrainTile({ id }: { id: string }) {
+  return (
+    <defs>
+      <pattern id={id} width="48" height="28" patternUnits="userSpaceOnUse">
+        {GRAIN_LINES.map(([y, width]) => (
+          <path
+            key={y}
+            className="tn-grain-line"
+            strokeWidth={width}
+            d={`M0 ${y} C16 ${y - 0.8} 32 ${y + 0.8} 48 ${y}`}
+          />
+        ))}
+      </pattern>
+    </defs>
+  );
+});
+
 /** The play area's size, measured (with a fallback where nothing can be measured). */
 function usePlaySize(element: HTMLDivElement | null): { width: number; height: number } {
   const [size, setSize] = useState<{ width: number; height: number }>(DEFAULT_PLAY_SIZE);
@@ -193,6 +244,9 @@ export const TangramBoard = memo(function TangramBoard({
   onHoldChange,
 }: TangramBoardProps) {
   const { t } = useSettings();
+  // The grain's ids: one tile, and a pattern per piece that turns it (§10).
+  const grainId = useId();
+  const tileId = `${grainId}tile`;
   const [element, setElement] = useState<HTMLDivElement | null>(null);
   const size = usePlaySize(element);
   const { figure } = session;
@@ -431,6 +485,7 @@ export const TangramBoard = memo(function TangramBoard({
           role="img"
           aria-label={label}
         >
+          <GrainTile id={tileId} />
           <polygon
             className={`tn-silhouette${finished ? ' tn-silhouette-done' : ''}`}
             points={pointsAttr(outlinePx)}
@@ -471,10 +526,12 @@ export const TangramBoard = memo(function TangramBoard({
             ['--tn-axis' as string]: `${axis}deg`,
           } as CSSProperties;
         }
+        const pts = pointsAttr(points);
+        const patternId = `${grainId}${id}`;
         const classes = [
           'tn-piece',
           placed ? 'tn-piece-placed' : 'tn-piece-tray',
-          id === 'L1' || id === 'L2' || id === 'SQ' ? 'tn-shade-a' : 'tn-shade-b',
+          `tn-shade-${shadeOf(id)}`,
           fixed ? 'tn-piece-fixed' : '',
           selected === id ? 'tn-piece-selected' : '',
           lifted ? 'tn-piece-lifted' : '',
@@ -506,9 +563,19 @@ export const TangramBoard = memo(function TangramBoard({
               viewBox={`${box.x} ${box.y} ${Math.max(box.w, 0.01)} ${Math.max(box.h, 0.01)}`}
               aria-hidden="true"
             >
-              <polygon className="tn-underlay" points={pointsAttr(points)} />
-              <polygon className="tn-shape" points={pointsAttr(points)} />
-              <polygon className="tn-ring" points={pointsAttr(points)} />
+              {/* Bottom to top (tangram.css): the opaque face, the grain in the
+                  piece's own frame, the pressable edge, the focus ring. */}
+              <defs>
+                <pattern
+                  id={patternId}
+                  href={`#${tileId}`}
+                  patternTransform={grainFrame(points, o)}
+                />
+              </defs>
+              <polygon className="tn-face" points={pts} />
+              <polygon className="tn-grain" fill={`url(#${patternId})`} points={pts} />
+              <polygon className="tn-shape" points={pts} />
+              <polygon className="tn-ring" points={pts} />
             </svg>
           </button>
         );
@@ -523,7 +590,7 @@ export const TangramBoard = memo(function TangramBoard({
           aria-hidden="true"
         >
           <polygon
-            className={held.outcome.placement ? 'tn-carry-fits' : 'tn-carry-open'}
+            className={`${held.outcome.placement ? 'tn-carry-fits' : 'tn-carry-open'} tn-shade-${shadeOf(held.id)}`}
             points={pointsAttr(heldPx)}
           />
         </svg>

@@ -7,9 +7,10 @@
  * The play area is the column between the top bar and the action bar. The
  * tray takes two rows at the bottom (L1 L2 M P / SQ S1 S2, §5), sized so each
  * cell holds its piece in any of the eight turns; the board is the largest
- * square the rest leaves, and the figure's bounding box is fitted inside its
- * `BOARD_MARGIN_PX`. On a tablet or a desktop the board grows with the room
- * (to `BOARD_MAX_PX`) and stays square (§10).
+ * square the rest leaves below `BOARD_TOP_PX` (room for its frame), and the
+ * figure's bounding box is fitted inside its `BOARD_MARGIN_PX`. On a tablet
+ * or a desktop the board grows with the room (to `BOARD_MAX_PX`) and stays
+ * square (§10).
  */
 import { orientedShape, ptToFloat, type Orientation, type PieceId, type Pt } from '../game';
 
@@ -25,13 +26,20 @@ export const BOARD_MARGIN_PX = 16;
 export const GUTTER_PX = 16;
 /** Between the board and the tray. */
 export const TRAY_GAP_PX = 8;
+/**
+ * The board sits this far below the play area's top edge: the reach of the
+ * collection's board frame above it (tangram.css — a 3 px paper ring and a
+ * 1 px line round the board), which `.tn-play`'s `overflow: hidden` would
+ * otherwise cut. Taken from the board's height, never from the tray (§10).
+ */
+export const BOARD_TOP_PX = 4;
 /** The board never grows past this on a large screen. */
 export const BOARD_MAX_PX = 560;
 /**
- * Nor shrinks below this. A play area shorter than 240 px (the web build on
- * a phone held sideways — the apps are portrait-only) then pushes the tray
- * past `.tn-play`'s `overflow: hidden`, and
- * at 168 px or less the whole tray is gone: a known limit, not reflowed —
+ * Nor shrinks below this. A play area shorter than about 246 px (245.7 —
+ * the web build on a phone held sideways; the apps are portrait-only) then
+ * pushes the tray past `.tn-play`'s `overflow: hidden`, and at 172 px or less
+ * the whole tray is gone: a known limit, not reflowed —
  * docs/TANGRAM_RULES.md §13「横持ちと低い画面」, pinned in layout.test.ts.
  */
 export const BOARD_MIN_PX = 160;
@@ -105,8 +113,11 @@ export function playLayout(width: number, height: number, outline: readonly Pt[]
     (height * TRAY_SHARE) / (ROW1_HEIGHT + ROW2_HEIGHT),
   );
   const trayH = (ROW1_HEIGHT + ROW2_HEIGHT) * trayPpu;
-  const side = Math.max(BOARD_MIN_PX, Math.min(BOARD_MAX_PX, inner, height - trayH - TRAY_GAP_PX));
-  const board: Box = { x: (width - side) / 2, y: 0, w: side, h: side };
+  const side = Math.max(
+    BOARD_MIN_PX,
+    Math.min(BOARD_MAX_PX, inner, height - BOARD_TOP_PX - trayH - TRAY_GAP_PX),
+  );
+  const board: Box = { x: (width - side) / 2, y: BOARD_TOP_PX, w: side, h: side };
 
   const { w, h } = figureExtent(outline);
   const ppu = (side - 2 * BOARD_MARGIN_PX) / Math.max(w, h);
@@ -114,7 +125,12 @@ export function playLayout(width: number, height: number, outline: readonly Pt[]
   const originY = board.y + (side - h * ppu) / 2;
 
   const trayW = ROW1_WIDTH * trayPpu;
-  const tray: Box = { x: (width - trayW) / 2, y: side + TRAY_GAP_PX, w: trayW, h: trayH };
+  const tray: Box = {
+    x: (width - trayW) / 2,
+    y: board.y + side + TRAY_GAP_PX,
+    w: trayW,
+    h: trayH,
+  };
   const cells = {} as Record<PieceId, readonly [number, number]>;
   let x = tray.x;
   for (const id of ROW1) {

@@ -510,6 +510,48 @@ describe('the tap and the drag (§4)', () => {
     expect(css).toMatch(/\.tn-shape \{[^}]*pointer-events: auto;/);
     expect(css).toMatch(/\.tn-play \{[^}]*touch-action: none;/);
   });
+
+  it('stacks each piece face, grain, pressable edge, ring, its grain the board’s one tile (§10)', async () => {
+    // Two faults a player would hardly see, as the face stays opaque: a child
+    // inside a piece's pattern replaces the inherited tile (the grain is
+    // gone), and a grain above `.tn-shape` lies over the pressable edge and
+    // the inner half of the selection's line. Read on a tray piece and a
+    // placed one.
+    taughtAlready();
+    suspend(placePiece(createSession(square), 'S2', sol(square, 'S2'))!);
+    launch();
+    await settle();
+    fireEvent.click(button(/^Resume/));
+    await settle();
+    expect(label('S2')).toMatch(/on the board$/);
+    const tiles = document.querySelectorAll('.tn-board-svg > defs > pattern');
+    expect(tiles).toHaveLength(1);
+    const tile = tiles[0]!;
+    expect(tile.id).not.toBe('');
+    expect(tile.children).toHaveLength(5);
+    expect(tile.querySelectorAll(':scope > path.tn-grain-line')).toHaveLength(5);
+    const patternIds = new Set<string>([tile.id]);
+    for (const id of PIECE_IDS) {
+      const svg = piece(id).querySelector('svg')!;
+      expect(
+        [...svg.children].map((el) => el.getAttribute('class') ?? el.tagName.toLowerCase()),
+        id,
+      ).toEqual(['defs', 'tn-face', 'tn-grain', 'tn-shape', 'tn-ring']);
+      const own = svg.querySelectorAll('defs > pattern');
+      expect(own, id).toHaveLength(1);
+      const pattern = own[0]!;
+      expect(pattern.getAttribute('href'), id).toBe(`#${tile.id}`);
+      expect(pattern.childElementCount, id).toBe(0);
+      expect(svg.querySelector('.tn-grain')!.getAttribute('fill'), id).toBe(`url(#${pattern.id})`);
+      expect(patternIds.has(pattern.id), `${id}'s pattern id is unique`).toBe(false);
+      patternIds.add(pattern.id);
+    }
+    // Only the edge takes a press: the layers over and under it let it through.
+    const css = readFileSync(resolve('src/games/tangram/ui/tangram.css'), 'utf8');
+    for (const layer of ['tn-face', 'tn-grain', 'tn-ring']) {
+      expect(css).toMatch(new RegExp(`\\.${layer} \\{[^}]*pointer-events: none;`));
+    }
+  });
 });
 
 describe('the three buttons (§4)', () => {

@@ -1,15 +1,68 @@
-/* Tangram — all of this game's styling, imported by TangramRoot. Built from
-   the series tokens in src/ui/styles.css (--surface, --surface-recessed,
-   --ink, --ink-soft, --line, --accent, --radius) and the accent the shell
-   swaps in for this title (`:root[data-game='tangram']`), so the game follows
-   the theme without knowing about it. No colour is written here.
+/* Tangram — all of this game's styling, imported by TangramRoot. The chrome
+   (the buttons, the text, the completion edge, the board's frame) reads the
+   series tokens in src/ui/styles.css and the accent the shell swaps in for
+   this title (`:root[data-game='tangram']`).
+
+   The board and the pieces are a wooden object, and wood is game content
+   (docs/architecture/css-split.md, docs/TANGRAM_RULES.md §10): its colours
+   are the two token blocks below and nowhere else — the standing of Chess's
+   squares. The plank is Hanoi Towers' tray wood (the same values written
+   again here: games never import each other). The pieces take the place the
+   accent had — a deeper wood in the light theme, a paler one in the dark —
+   so a piece still parts from the silhouette by its face alone. Seven pieces
+   cut from two boards of one wood (a: L1 L2 SQ; b: the rest), never seven
+   colours (§12).
 
    Class names are prefixed `tn-`. What a mark means is carried by its SHAPE
-   or its line, never by colour alone (docs/TANGRAM_RULES.md §10): the pieces
-   wear the accent in two depths with an ink edge; a fixed piece has a dotted
-   edge and a sunken face; the selected piece a thick edge; the keyboard focus
-   a dashed ring; a carried piece that fits is filled, one that does not is a
-   dashed outline. ui/contrast.test.ts measures the tokens these lean on. */
+   or its line, never by colour alone (§10), and the marks are the series ink
+   as before: the selected piece a thick edge; a fixed piece a dotted edge and
+   a sunken face; the keyboard focus a dashed ring; a carried piece that fits
+   is filled, one that does not is a dashed outline. ui/contrast.test.ts
+   measures every pair these lean on. */
+
+:root {
+  /* The plank (the board and the tray): Hanoi Towers' tray wood. */
+  --tn-plank-hi: #f2e8d7;
+  --tn-plank-lo: #e9ddc8;
+  --tn-plank-edge: #c2af91;
+  --tn-plank-lit: #fff9ed;
+  --tn-plank-shade: #765b3817;
+  /* The plank's grain: three faint bands (decoration — it carries nothing). */
+  --tn-grain-a: #8a643317;
+  --tn-grain-b: #8a64330f;
+  --tn-grain-c: #6b4a2a0b;
+  /* The silhouette and the tray: a film over the plank, so its grain runs on. */
+  --tn-hollow: #6b4a2a1f;
+  /* The silhouette's edge and Easy's inner lines. */
+  --tn-groove: #6e4f2c;
+  /* The pieces: two boards of one wood (a, the deeper: L1 L2 SQ), the cut
+     edge, and the grain on them (decoration). They take the accent's place:
+     a deeper wood here, a paler one in the dark theme. */
+  --tn-wood-a: #765535;
+  --tn-wood-b: #86643f;
+  --tn-edge: #3a2615;
+  --tn-wood-grain: #2a1a0c38;
+}
+
+:root[data-theme='dark'] {
+  /* Hanoi Towers' dark tray; the pieces are the paler wood (b is Hanoi's
+     deepest disk). The cut edge sinks into the dark ground on purpose: here
+     the face carries the piece, and the edge only parts it from its neighbour. */
+  --tn-plank-hi: #39332c;
+  --tn-plank-lo: #302a24;
+  --tn-plank-edge: #695943;
+  --tn-plank-lit: #514739;
+  --tn-plank-shade: #00000026;
+  --tn-grain-a: #00000029;
+  --tn-grain-b: #ffe2b00f;
+  --tn-grain-c: #0000001a;
+  --tn-hollow: #00000040;
+  --tn-groove: #c2a77d;
+  --tn-wood-a: #b8925e;
+  --tn-wood-b: #cbaa7c;
+  --tn-edge: #2a1b0e;
+  --tn-wood-grain: #3a240f33;
+}
 
 /* The play area: board above, tray below, laid out in pixels by ui/layout.ts
    from this box's measured size. `touch-action: none` because pieces are
@@ -29,15 +82,57 @@
 .tn-tray {
   position: absolute;
   border-radius: var(--radius);
+  /* The plank's grain, shared by the board and the tray: three faint soft
+     bands with periods of 13, 22 and 37 px, so no repeat shows, and no hard
+     stop, so the slight tilts never alias. Static decoration: it carries
+     nothing and never moves. */
+  --tn-plank-grain:
+    repeating-linear-gradient(
+      180deg,
+      transparent 0 4px,
+      var(--tn-grain-a) 5px,
+      transparent 6px 13px
+    ),
+    repeating-linear-gradient(
+      179.6deg,
+      transparent 0 8px,
+      var(--tn-grain-b) 9px 10px,
+      transparent 11px 22px
+    ),
+    repeating-linear-gradient(
+      180.5deg,
+      transparent 0 14px,
+      var(--tn-grain-c) 16px,
+      transparent 19px 37px
+    );
 }
 
+/* The board: a plank in the collection's frame — the lift first, so it paints
+   over the paper ring's bottom edge — with its own lit top and shaded foot
+   inside. ui/layout.ts keeps the board BOARD_TOP_PX below the play area's
+   top, or `.tn-play`'s `overflow: hidden` would cut the ring there. Nothing
+   here moves. */
 .tn-board {
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background:
+    var(--tn-plank-grain), linear-gradient(180deg, var(--tn-plank-hi), var(--tn-plank-lo));
+  border: 1px solid var(--tn-plank-edge);
+  box-shadow:
+    inset 0 1px 0 var(--tn-plank-lit),
+    inset 0 -3px 0 var(--tn-plank-shade),
+    0 3px 0 var(--line),
+    0 0 0 3px var(--paper),
+    0 0 0 4px var(--line),
+    0 8px 18px var(--accent-ring-soft);
 }
 
+/* The tray: the same plank, recessed — the silhouette's film laid over it. */
 .tn-tray {
-  background: var(--surface-recessed);
+  background:
+    linear-gradient(var(--tn-hollow), var(--tn-hollow)), var(--tn-plank-grain),
+    linear-gradient(180deg, var(--tn-plank-hi), var(--tn-plank-lo));
+  box-shadow:
+    inset 0 2px 0 var(--tn-plank-shade),
+    inset 0 -1px 0 var(--tn-plank-lit);
 }
 
 .tn-board-svg,
@@ -54,9 +149,11 @@
   height: calc(100% + 2px);
 }
 
+/* The silhouette: a recess in the plank. A film, not a paint, so the plank's
+   grain runs on inside it; its edge is the groove's line. */
 .tn-silhouette {
-  fill: var(--surface-recessed);
-  stroke: var(--ink-soft);
+  fill: var(--tn-hollow);
+  stroke: var(--tn-groove);
   stroke-width: 1.5;
   stroke-linejoin: round;
 }
@@ -68,7 +165,7 @@
 /* Easy's inner lines (§3): thin, under the pieces, never a snap target. */
 .tn-guide {
   fill: none;
-  stroke: var(--ink-soft);
+  stroke: var(--tn-groove);
   stroke-width: 0.75;
 }
 
@@ -88,34 +185,60 @@
   height: 100%;
 }
 
-/* An opaque face under every piece, in the ground the pieces sit on (the
-   silhouette and the tray are both --surface-recessed), so the second
-   shade's 72 % and a fixed piece's 38 % show the ground and never Easy's
-   inner lines through the piece (§3: a placed piece covers them). */
-.tn-underlay {
-  fill: var(--surface-recessed);
+/* A piece is four polygons of one shape (TangramBoard), bottom to top: the
+   face, the grain, the edge, the focus ring. The face is opaque wood, so
+   Easy's inner lines never show through a piece (§3). */
+.tn-face {
+  fill: var(--tn-wood-a);
   stroke: none;
   pointer-events: none;
 }
 
+.tn-shade-b .tn-face {
+  fill: var(--tn-wood-b);
+}
+
+/* The grain, drawn in the piece's own frame (TangramBoard's grainFrame), so
+   it turns with the piece. Decoration: its fill is the piece's pattern, in
+   the markup, and nothing reads it. */
+.tn-grain {
+  stroke: none;
+  pointer-events: none;
+}
+
+.tn-grain-line {
+  fill: none;
+  stroke: var(--tn-wood-grain);
+}
+
+/* The cut edge, and the only thing a finger can press (§10): `transparent`,
+   not `none`, keeps the inside pressable. Drawn above the face and the
+   grain, so neither ever covers the edge, the selection or the dots. */
 .tn-shape {
   pointer-events: auto;
-  fill: var(--accent);
-  stroke: var(--ink);
+  fill: transparent;
+  stroke: var(--tn-edge);
   stroke-width: 1.5;
   stroke-linejoin: round;
 }
 
-.tn-shade-b .tn-shape {
-  fill-opacity: 0.72;
+/* A fixed piece (Medium only — never on the board with Easy's lines, §3):
+   sunken, its face letting the recess through, with a dotted ink edge. */
+.tn-piece-fixed .tn-face {
+  fill-opacity: 0.38;
+}
+
+.tn-piece-fixed .tn-grain {
+  opacity: 0.38;
 }
 
 .tn-piece-fixed .tn-shape {
-  fill-opacity: 0.38;
+  stroke: var(--ink);
   stroke-dasharray: 2 3;
 }
 
 .tn-piece-selected .tn-shape {
+  stroke: var(--ink);
   stroke-width: 3.5;
 }
 
@@ -129,6 +252,8 @@
   pointer-events: none;
 }
 
+/* The focus ring: --surface dashes. A focused piece is always the selected
+   one (focus selects, §4), so the dashes ride on the ink edge in both themes. */
 .tn-piece:focus-visible .tn-ring {
   stroke: var(--surface);
   stroke-width: 2;
@@ -139,14 +264,24 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
+  /* Its own layer, so a drag frame repaints only the piece in the hand, not
+     the plank's gradients and the pieces' grain under it (peg-solitaire's
+     .pg-float). Not measured on a low-spec WebView (§13). */
+  will-change: transform;
 }
 
+/* The piece in the hand is plain wood with an ink edge — no grain, no
+   filter: it is redrawn on every move. */
 .tn-carry-fits {
-  fill: var(--accent);
-  fill-opacity: 0.85;
+  fill: var(--tn-wood-a);
+  fill-opacity: 0.88;
   stroke: var(--ink);
   stroke-width: 2;
   stroke-linejoin: round;
+}
+
+.tn-carry-fits.tn-shade-b {
+  fill: var(--tn-wood-b);
 }
 
 .tn-carry-open {
@@ -158,7 +293,7 @@
 
 /* A turn and a flip, for the look only: the state has already changed (§10).
    Off under Reduced Motion (the screen adds no class, and styles.css stops
-   every animation anyway). */
+   every animation anyway). The grain turns with the piece's svg. */
 .tn-anim-turn {
   animation: tn-turn 160ms ease-out;
 }
@@ -225,6 +360,16 @@
 .tn-figure .tn-silhouette {
   pointer-events: none;
   stroke-width: 0.08;
+}
+
+/* The pictures' pieces: flat wood on the page — no plank, no pattern (the
+   grain's tile is in pixels, and these are drawn in units, §9). */
+.tn-figure .tn-shape {
+  fill: var(--tn-wood-a);
+}
+
+.tn-figure .tn-shade-b .tn-shape {
+  fill: var(--tn-wood-b);
 }
 
 .tn-figure .tn-carry-open {

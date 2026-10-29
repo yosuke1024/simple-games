@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 import { FIGURES, KEYBOARD_TOLERANCE, orientedShape, PIECE_IDS, ptToFloat, TURNS } from '../game';
 import {
   BOARD_MARGIN_PX,
+  BOARD_TOP_PX,
   DEFAULT_PLAY_SIZE,
   figureExtent,
   playLayout,
@@ -63,9 +64,26 @@ describe('the play area on a 360×640 phone (§10)', () => {
     console.info(
       `360×640 web: board ${board.toFixed(1)} px, board leg ≥ ${smallest.toFixed(1)} px, tray leg ${trayLeg.toFixed(1)} px`,
     );
-    expect(board).toBeCloseTo(265.7, 1);
+    // 261.7 since 2026-10-29: the board gave BOARD_TOP_PX (4 px) of its height
+    // to the collection's frame above it (§10). It was 265.7 before — a change
+    // of the spec, recorded in §10 and §13, not a number moved to go green.
+    expect(board).toBeCloseTo(261.7, 1);
     expect(smallest).toBeGreaterThan(30);
     expect(trayLeg).toBeGreaterThan(20);
+  });
+
+  it('leaves the board frame room inside the play area (§10, tangram.css)', () => {
+    // The frame reaches 4 px round the board (a 3 px paper ring and a 1 px
+    // line); `.tn-play` clips at its edges, so the board starts that far down,
+    // keeps that far from the sides, and the ring stops short of the tray.
+    const FRAME_REACH = 4;
+    expect(BOARD_TOP_PX).toBeGreaterThanOrEqual(FRAME_REACH);
+    for (const figure of FIGURES) {
+      const layout = playLayout(WEB_PHONE.width, WEB_PHONE.height, figure.outline);
+      expect(layout.board.y).toBe(BOARD_TOP_PX);
+      expect(layout.board.x).toBeGreaterThanOrEqual(FRAME_REACH);
+      expect(layout.tray.y - (layout.board.y + layout.board.h)).toBeGreaterThan(FRAME_REACH);
+    }
   });
 
   it('keeps each tray piece inside its cell whichever way it is turned', () => {
@@ -112,11 +130,13 @@ describe('a short play area — a phone held sideways (§13「横持ちと低い
     };
   };
 
-  it('keeps the whole tray in view down to 240 px, and clips it below (a known limit)', () => {
-    expect(bottom(240).trayBottom).toBeLessThanOrEqual(240 + 1e-9);
-    expect(bottom(239).trayBottom).toBeGreaterThan(239);
+  // 246 / 245 / 172 since 2026-10-29 (240 / 239 / 168 before): BOARD_TOP_PX
+  // puts the floor-sized board 4 px lower, and the tray with it (§13).
+  it('keeps the whole tray in view down to 246 px, and clips it below (a known limit)', () => {
+    expect(bottom(246).trayBottom).toBeLessThanOrEqual(246 + 1e-9);
+    expect(bottom(245).trayBottom).toBeGreaterThan(245);
     // The board stops at its floor rather than shrinking further.
-    expect(bottom(239).board).toBe(160);
+    expect(bottom(245).board).toBe(160);
     // Sideways without ads: part of the tray is cut off.
     expect(NO_ADS_SIDEWAYS).toBe(227);
     expect(bottom(NO_ADS_SIDEWAYS).trayBottom).toBeGreaterThan(NO_ADS_SIDEWAYS);
@@ -124,7 +144,7 @@ describe('a short play area — a phone held sideways (§13「横持ちと低い
     // Web sideways with ads: the tray starts below the play area — not playable.
     expect(WEB_SIDEWAYS).toBe(111);
     expect(bottom(WEB_SIDEWAYS).trayTop).toBeGreaterThan(WEB_SIDEWAYS);
-    expect(bottom(168).trayTop).toBeGreaterThanOrEqual(168);
+    expect(bottom(172).trayTop).toBeGreaterThanOrEqual(172);
   });
 });
 
