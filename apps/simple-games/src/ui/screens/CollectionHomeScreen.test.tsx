@@ -259,7 +259,6 @@ describe('web-beta titles', () => {
       'three-peaks',
       'knight-tour',
       'invaders',
-      'falling-blocks',
       'paddle-rally',
       'hanoi-towers',
       'maze-escape',
@@ -337,10 +336,11 @@ describe('in-development titles', () => {
   const building = GAMES.filter((game) => game.channel === 'in-development');
 
   it('exist in this registry (a synthetic one, and the real ones whenever there are any), so the tests below are not vacuous', () => {
-    // The real list is app/gameChannel.test.ts's golden — empty since Nos.
-    // 47–51 moved to the beta channel on 2026-10-22; the synthetic title is
-    // appended by the mock above, and is what the tests below exercise today.
-    expect(building.map((game) => game.id)).toEqual(['synthetic-in-development']);
+    // The real list is app/gameChannel.test.ts's golden — Falling Blocks alone
+    // since its withdrawal from the beta channel on 2026-10-29 (Nos. 47–51
+    // moved to the beta channel on 2026-10-22); the synthetic title is appended
+    // by the mock above, and is what the tests below exercise.
+    expect(building.map((game) => game.id)).toEqual(['falling-blocks', 'synthetic-in-development']);
   });
 
   it.each([
