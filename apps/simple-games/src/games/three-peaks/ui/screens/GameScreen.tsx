@@ -18,6 +18,17 @@ export function ThreePeaksGameScreen() {
   const { session, act, applyUndo, goHome, startGame, retryGame } = useThreePeaks();
   const [confirmNew, setConfirmNew] = useState(false);
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
+  // The waste settles when it changes (take, draw, Undo), never when the screen
+  // opens: `settles` turns on the first time the card differs from the one this
+  // screen mounted with, and the key below remounts the element on every change
+  // so each one plays once (§6). Adjusting state during render is React's
+  // pattern for this; an effect would show the new card for a frame first.
+  const [shownWaste, setShownWaste] = useState(session?.waste);
+  const [settles, setSettles] = useState(false);
+  if (session && session.waste !== shownWaste) {
+    setShownWaste(session.waste);
+    if (shownWaste !== undefined) setSettles(true);
+  }
   const finished = session?.status !== 'playing';
   useGameKeys((event) => {
     if (!session) return false;
@@ -139,7 +150,8 @@ export function ThreePeaksGameScreen() {
             <div className="tp-pile">
               <span className="tp-pile-label">{t('threePeaksWaste')}</span>
               <div
-                className={`tp-waste ${suit(session.waste) === 1 || suit(session.waste) === 2 ? 'tp-red' : ''}`}
+                key={session.waste}
+                className={`tp-waste ${settles ? 'tp-waste-settle' : ''} ${suit(session.waste) === 1 || suit(session.waste) === 2 ? 'tp-red' : ''}`}
                 role="img"
                 aria-label={`${rankText(session.waste)} ${suitLabel(session.waste)}`}
               >

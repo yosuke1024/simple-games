@@ -315,3 +315,48 @@ it('stops its only play clock while a restart dialog is open and resumes after C
   await settle();
   expect(active.size).toBe(0);
 });
+
+it('draws every wall as three layers of one path and the token as a ball without a centre mark', async () => {
+  const kv = createMemoryKV();
+  await taught(kv);
+  await saveGame(createSession(5, 33), kv);
+  launch(kv, 'shortcut');
+  await settle();
+  const board = document.querySelector('.me-board')!;
+  // Back to front: the shadow on the floor, the side face, the lit top face.
+  const layers = [...board.querySelectorAll('.me-wall-cast, .me-wall-side, .me-walls')];
+  expect(layers.map((layer) => layer.getAttribute('class'))).toEqual([
+    'me-wall-cast',
+    'me-wall-side',
+    'me-walls',
+  ]);
+  const outline = layers[2]!.getAttribute('d')!;
+  expect(outline).not.toBe('');
+  expect(layers.map((layer) => layer.getAttribute('d'))).toEqual([outline, outline, outline]);
+  // The three sit down and to the right of one another; the top face has no offset.
+  expect(layers[0]!.getAttribute('transform')).toBe('translate(.045 .06)');
+  expect(layers[1]!.getAttribute('transform')).toBe('translate(.025 .035)');
+  expect(layers[2]!.hasAttribute('transform')).toBe(false);
+  // The token: shadow, disc and gloss arc — and no mark in the middle.
+  for (const part of ['.me-player-shadow', '.me-player', '.me-player-light'])
+    expect(board.querySelectorAll(part), part).toHaveLength(1);
+  expect(board.querySelector('.me-player-center')).toBeNull();
+  // The viewBox, and with it the tap mapping, is the same as before the depth cues.
+  expect(board.querySelector('svg')!.getAttribute('viewBox')).toBe('-.15 -.15 5.3 5.3');
+});
+
+it('draws the direction keys with arrow icons, named by their labels rather than by a glyph', async () => {
+  const kv = createMemoryKV();
+  await taught(kv);
+  await saveGame(createSession(5, 33), kv);
+  launch(kv, 'shortcut');
+  await settle();
+  for (const direction of ['up', 'left', 'down', 'right']) {
+    const key = screen.getByRole('button', { name: `Move ${direction}` });
+    expect(key.textContent, direction).toBe('');
+    const icon = key.querySelector('svg')!;
+    expect(icon, direction).not.toBeNull();
+    expect(icon).toHaveAttribute('aria-hidden', 'true');
+    expect(icon.querySelectorAll('path'), direction).toHaveLength(2);
+  }
+});

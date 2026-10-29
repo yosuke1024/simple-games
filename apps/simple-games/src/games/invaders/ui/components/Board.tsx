@@ -43,9 +43,14 @@ export function Board({ session, onAim }: { session: Session; onAim: (x: number)
     >
       <title>{t('invadersControls')}</title>
       <defs>
+        {/* The floor is a shallow tray: the far wall's shadow sinks the top, the rest is the
+            lit surface all the way down so the lower edge never melts into the page (§8). The
+            tray's thickness and ring are the board box's own frame (invaders.css), which is
+            the viewBox's outline because the box keeps the 3:4 ratio (§11). */}
         <linearGradient id={fieldId} x2="0" y2="1">
-          <stop stopColor="var(--surface)" />
-          <stop offset="1" stopColor="var(--paper)" />
+          <stop stopColor="var(--surface-recessed)" />
+          <stop offset=".12" stopColor="var(--surface)" />
+          <stop offset="1" stopColor="var(--surface)" />
         </linearGradient>
       </defs>
       <rect
@@ -58,8 +63,10 @@ export function Board({ session, onAim }: { session: Session; onAim: (x: number)
         fill={`url(#${fieldId})`}
       />
       <rect x="7" y="7" width="346" height="466" rx="7" className="iv-field-inset" />
+      {/* The ship's rail is a groove the hull sits in, not a line it crosses. */}
+      <rect x="14" y="441.5" width="332" height="7" rx="3.5" className="iv-track" />
       <path
-        d="M16 444h328M16 452v8m41-8v5m41-5v5m41-5v5m41-5v8m41-8v5m41-5v5m41-5v5m41-5v8"
+        d="M16 452v8m41-8v5m41-5v5m41-5v5m41-5v8m41-8v5m41-5v5m41-5v5m41-5v8"
         className="iv-field-scale"
       />
       <path d="M16 412h328" className="iv-defense-line" />
@@ -78,7 +85,15 @@ export function Board({ session, onAim }: { session: Session; onAim: (x: number)
             className={`iv-cover iv-cover-${brick.hp}`}
           >
             <rect x="-6.5" y="-6.5" width="13" height="13" rx="2" />
-            {brick.hp === 1 ? <path d="m-2-6 2 5-3 3 4 4" /> : null}
+            {brick.hp === 1 ? (
+              <path d="m-2-6 2 5-3 3 4 4" />
+            ) : (
+              <>
+                {/* A lit top and a shaded foot; a damaged block loses both (§4, §8). */}
+                <path d="M-5-5h10" className="iv-cover-hi" />
+                <path d="M-5 5h10" className="iv-cover-lo" />
+              </>
+            )}
           </g>
         ))}
       {session.bullets.map((bullet) =>

@@ -1,3 +1,35 @@
+/* Invaders — all of this game's styling, imported by InvadersRoot. Screens,
+   buttons and dialogs come from the shared stylesheet (ui/styles.css); the
+   accent arrives via the data-game tokens the shell stamps.
+
+   This file writes no colour literal at all. The board is a shallow tray of
+   the shared paper and ink tokens, lit from above in both themes
+   (docs/INVADERS_RULES.md §8, §11): the aliases below say which shared token
+   plays the lit side and which the shaded side, because the theme decides —
+   --line is darker than the floor in the light theme and lighter than it in
+   the dark one, so a shadow cannot be --line in both. The alphas are how
+   strongly each cue shows. Everything they colour is texture (a cast shadow,
+   a lit top, a shaded foot); what carries meaning keeps its own tokens, and
+   ui/contrast.test.ts measures both. */
+
+:root {
+  --iv-shade: var(--line);
+  --iv-cover-hi: var(--surface);
+  --iv-cover-lo: var(--ink);
+  --iv-cover-hi-alpha: 0.45;
+  --iv-cover-lo-alpha: 0.5;
+  --iv-defense-alpha: 0.75;
+}
+
+:root[data-theme='dark'] {
+  --iv-shade: var(--paper);
+  --iv-cover-hi: var(--ink);
+  --iv-cover-lo: var(--paper);
+  --iv-cover-hi-alpha: 0.35;
+  --iv-cover-lo-alpha: 0.6;
+  --iv-defense-alpha: 0.75;
+}
+
 .iv-home-content {
   display: contents;
 }
@@ -38,6 +70,8 @@
   padding: 5px 10px;
   background: var(--surface);
   border-block: 1px solid var(--line);
+  /* The same 2px lift the keys below carry, so the HUD and the controls share one height. */
+  box-shadow: 0 2px 0 var(--line);
 }
 .iv-metrics > span:first-child {
   border-left: 1px solid var(--line);
@@ -94,26 +128,46 @@
   justify-content: center;
   align-items: center;
   flex: 1;
-  min-height: 200px;
-  padding: 0 16px;
+  /* 5px above and below keep the board's 4px frame ring off the status line and the keys;
+     the floor is raised by the same 10px so the board does not get smaller for it. */
+  min-height: 210px;
+  padding: 5px 16px;
 }
 .iv-field {
   width: 100%;
   height: 100%;
   max-width: 390px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+/* The board's box is the viewBox's outline: width and height are auto and capped by the
+   field, so the SVG keeps its 3:4 ratio and the box shrinks to fit instead of the drawing
+   being letterboxed inside a larger one. That is what lets the collection's board frame
+   sit on the box itself (§11), in the shared order: the lift first. The radius is the
+   floor's own (rx 12 plus half its 2-unit stroke) as a share of the box, so the ring
+   follows the drawn corner at any size. The overflow clip is the board's edge: a shot
+   that misses runs on to y = 495 (game/index.ts) and leaves through the bottom. */
 .iv-board {
-  width: 100%;
-  height: 100%;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
   display: block;
   touch-action: none;
   user-select: none;
   color: var(--ink);
-  border-radius: 12px;
+  border-radius: 3.61% / 2.71%;
+  overflow: hidden;
+  box-shadow:
+    0 3px 0 var(--line),
+    0 0 0 3px var(--paper),
+    0 0 0 4px var(--line),
+    0 8px 18px var(--accent-ring-soft);
 }
 .iv-board:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 3px;
+  outline-offset: 6px;
 }
 .iv-field-bg {
   stroke: var(--line);
@@ -125,6 +179,10 @@
   stroke-width: 0.7;
   opacity: 0.7;
 }
+.iv-track {
+  fill: var(--surface-recessed);
+  stroke: none;
+}
 .iv-field-scale {
   fill: none;
   stroke: var(--ink-soft);
@@ -134,17 +192,36 @@
 .iv-enemy {
   color: var(--accent);
 }
-.iv-enemy path:first-child,
-.iv-ship > path {
+.iv-body {
   stroke: currentColor;
   stroke-width: 0.5;
   stroke-linejoin: round;
 }
+/* The cast shadow: the silhouette pushed down by Shapes.tsx, a plain fill. */
+.iv-shade {
+  fill: var(--iv-shade);
+  stroke: var(--iv-shade);
+  stroke-width: 0.5;
+  stroke-linejoin: round;
+}
+/* A paper rim round the hull, painted under the fill (paint-order), so the ship reads as
+   resting on top of the rail it slides along. The floor there is --surface. */
+.iv-ship > path {
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 2.4;
+  stroke-linejoin: round;
+}
+/* The line that loses the run (§1). Its stroke once named a custom property no stylesheet
+   defines, so it fell back to --line: about 1.4:1. Ink-soft at 0.75 clears 3:1 on the
+   floor in both themes (ui/contrast.test.ts). The dashes stay: the shape, not the colour,
+   says it is a line. */
 .iv-defense-line {
   fill: none;
-  stroke: var(--line-strong, var(--line));
+  stroke: var(--ink-soft);
   stroke-width: 1.5;
   stroke-dasharray: 3 6;
+  opacity: var(--iv-defense-alpha);
 }
 .iv-corner-mark {
   stroke: var(--line);
@@ -156,8 +233,11 @@
 .iv-cover rect {
   fill: currentColor;
 }
+/* A block with one hit left is an outline and a crack, thinned to a pale body rather
+   than emptied (§4): the form still says damaged without colour. */
 .iv-cover-1 rect {
-  fill: none;
+  fill: currentColor;
+  fill-opacity: 0.14;
   stroke: currentColor;
   stroke-width: 1.5;
 }
@@ -165,6 +245,20 @@
   fill: none;
   stroke: currentColor;
   stroke-width: 1;
+}
+/* Only a whole block carries them (Board.tsx); the extra class beats ".iv-cover path". */
+.iv-cover .iv-cover-hi,
+.iv-cover .iv-cover-lo {
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+.iv-cover .iv-cover-hi {
+  stroke: var(--iv-cover-hi);
+  opacity: var(--iv-cover-hi-alpha);
+}
+.iv-cover .iv-cover-lo {
+  stroke: var(--iv-cover-lo);
+  opacity: var(--iv-cover-lo-alpha);
 }
 .iv-player-shot {
   stroke: var(--ink);
@@ -249,7 +343,7 @@
 }
 @media (max-height: 560px) {
   .iv-play-area {
-    min-height: 160px;
+    min-height: 170px;
   }
 
   .iv-state {

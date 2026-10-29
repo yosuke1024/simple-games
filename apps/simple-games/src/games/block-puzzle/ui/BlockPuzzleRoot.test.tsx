@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
-import { createSession, pieceById, placePiece } from '../game';
+import { createSession, pieceById, placePiece, toneOfPiece } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { BP_STORAGE_KEYS } from '../storage/schemas';
 import { BlockPuzzleRoot } from './BlockPuzzleRoot';
@@ -235,6 +235,25 @@ describe('playing', () => {
     expect(screen.getByText(/Score\s*0/)).toBeInTheDocument();
     expect(within(tray()).getByRole('button', { name: /^Piece 1,/ })).toBeInTheDocument();
     expect(undo()).toBeDisabled();
+  });
+
+  it('paints a placed piece in the tone its tray slot shows, and undo takes it back (§7, §12)', async () => {
+    const user = userEvent.setup();
+    renderGame(savedGame);
+    await resume(user);
+
+    const tone = `bp-tone-${toneOfPiece(PINNED.tray[0]!)}`;
+    const slot = within(tray()).getByRole('button', { name: /^Piece 1,/ });
+    expect(slot.querySelector('.bp-piece')).toHaveClass(tone);
+
+    await user.click(slot);
+    await user.click(cell(3, 3));
+    const filled = Array.from(board().querySelectorAll('.bp-cell-filled'));
+    expect(filled).toHaveLength(cellsInSlot(0));
+    for (const square of filled) expect(square).toHaveClass(tone);
+
+    await user.click(screen.getByRole('button', { name: 'Undo' }));
+    expect(board().querySelectorAll('[class*="bp-tone-"]')).toHaveLength(0);
   });
 
   it('carries the piece on the board while dragging and places it on release (§3)', async () => {

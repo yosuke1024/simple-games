@@ -16,7 +16,7 @@ function Figure({ step }: { step: number }) {
         stroke="var(--line)"
       />
       <path d="M20 60 H260" stroke="var(--line)" strokeDasharray="5 5" />
-      <rect x="160" y="15" width="55" height="7" rx="3" fill="var(--ink)" />
+      <rect x="160" y="15" width="55" height="7" rx="3" fill="var(--ink)" className="pr-cpu" />
       <rect x="70" y="98" width="55" height="7" rx="3" fill="var(--accent)" />
       {step === 0 ? (
         <path

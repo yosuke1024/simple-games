@@ -9,6 +9,7 @@ import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
 import { adjacent, solution, destinations, type Direction } from '../../game';
 import { useMazeEscape } from '../../state/GameContext';
 import { Board } from '../components/Board';
+import { DirectionArrow } from '../components/DirectionArrow';
 import { ResultOverlay } from '../components/ResultOverlay';
 export function GameScreen() {
   const { t } = useSettings();
@@ -80,10 +81,10 @@ export function GameScreen() {
   const over = session.status === 'over';
   const available = destinations(session.board, session.size, session.position);
   const controls = [
-    { direction: 'up' as const, label: t('mazeEscapeUp'), symbol: '↑' },
-    { direction: 'left' as const, label: t('mazeEscapeLeft'), symbol: '←' },
-    { direction: 'down' as const, label: t('mazeEscapeDown'), symbol: '↓' },
-    { direction: 'right' as const, label: t('mazeEscapeRight'), symbol: '→' },
+    { direction: 'up' as const, label: t('mazeEscapeUp') },
+    { direction: 'left' as const, label: t('mazeEscapeLeft') },
+    { direction: 'down' as const, label: t('mazeEscapeDown') },
+    { direction: 'right' as const, label: t('mazeEscapeRight') },
   ];
   return (
     <div className="screen game-screen me-screen">
@@ -132,7 +133,7 @@ export function GameScreen() {
             ) : null}
           </p>
           <div className="me-directions" role="group" aria-label={t('mazeEscapeControls')}>
-            {controls.map(({ direction, label, symbol }) => (
+            {controls.map(({ direction, label }) => (
               <button
                 key={direction}
                 type="button"
@@ -143,7 +144,7 @@ export function GameScreen() {
                 }
                 onClick={() => onDirection(direction)}
               >
-                {symbol}
+                <DirectionArrow direction={direction} />
               </button>
             ))}
           </div>

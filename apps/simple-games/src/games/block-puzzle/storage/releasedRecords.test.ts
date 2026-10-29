@@ -2,13 +2,15 @@
  * The records a released build actually wrote, read by today's validators
  * (issue #170, docs/BLOCK_PUZZLE_RULES.md §10).
  *
- * Block Puzzle has never migrated a record, so every stored key is still v1
- * and nothing has forced the question yet. That is exactly why this file
- * exists: the day a schema here goes to v2, the only thing standing between a
- * player and a silently discarded board is a validator, and a validator is
- * only proven by data it did not generate itself. Building the payload from
- * `defaultValue()` would prove nothing — it would follow the schema wherever
- * the schema went.
+ * These payloads were written by v1 builds. The saved game went to v2 on
+ * 2026-10-29 (the piece colours, §12 — the board's alphabet widened from
+ * '0'/'1' to '0'–'9', every v1 '1' reading as tone 1, the accent) and the
+ * expectations below were not touched: the day a schema here goes to v2, the
+ * only thing standing between a player and a silently discarded board is a
+ * validator, and a validator is only proven by data it did not generate
+ * itself. Building the payload from `defaultValue()` would prove nothing — it
+ * would follow the schema wherever the schema went. The v1 → v2 reading is
+ * pinned in ./v2Migration.test.ts against the same payload.
  *
  * Provenance: played in the browser, in this repository's own web build; the
  * three strings below are what Capacitor Preferences held afterwards, copied

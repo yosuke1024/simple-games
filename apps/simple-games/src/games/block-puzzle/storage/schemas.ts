@@ -8,7 +8,7 @@
  */
 import type { SchemaDef } from '../../../storage/schemas';
 import { asBool, asInt, asString, isRecord } from '../../../storage/validate';
-import { CELL_COUNT, TRAY_SIZE } from '../game';
+import { CELL_COUNT, decodeBoard, decodeCells, TRAY_SIZE } from '../game';
 
 import { BP_STORAGE_KEYS } from './keys';
 
@@ -80,11 +80,14 @@ export const statsSchema: SchemaDef<Stats> = {
  * The one suspended game (§10). It carries the position and the counters and
  * nothing else — the undo history is deliberately absent, so a resumed board
  * begins where it was left rather than mid-way through a chain of steps back.
+ *
+ * v2 (the piece colours, §12) widened the board's alphabet and changed nothing
+ * else: a filled cell is written as its tone rather than as '1'.
  */
 export interface PersistedGame {
-  schemaVersion: 1;
+  schemaVersion: 2;
   seed: string;
-  /** '0'/'1' per cell, row-major (serialize.ts). */
+  /** One digit per cell, row-major (serialize.ts `encodeCells`): '0' empty, '1'–'9' the tone. */
   board: string;
   /** Base-36 piece id per slot, '-' for a spent one. */
   tray: string;
@@ -96,7 +99,9 @@ export interface PersistedGame {
 }
 
 const validatePersistedGame = (raw: unknown): PersistedGame | null => {
-  if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
+  if (!isRecord(raw)) return null;
+  const from = raw.schemaVersion;
+  if (from !== 1 && from !== 2) return null;
   const seed = asString(raw.seed);
   const board = asString(raw.board, CELL_COUNT);
   const tray = asString(raw.tray, TRAY_SIZE);
@@ -120,8 +125,15 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
     return null;
   }
 
+  // v1 → v2 (§10). A v1 '1' was drawn in the accent, and the accent is tone 1,
+  // so the text carries over as it is: nothing reinterpreted, nothing lost. A
+  // v1 record is held to its own alphabet, so a '2' that no v1 build could
+  // have written fails closed instead of turning into a colour.
+  const cells = from === 1 ? decodeBoard(board) : decodeCells(board);
+  if (cells === null) return null;
+
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     seed,
     board,
     tray,
@@ -135,7 +147,7 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
 
 export const gameSchema: SchemaDef<PersistedGame | null> = {
   key: BP_STORAGE_KEYS.game,
-  version: 1,
+  version: 2,
   defaultValue: () => null,
   validate: validatePersistedGame,
 };

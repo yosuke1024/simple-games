@@ -3,10 +3,39 @@
    --ink, --line, --accent, --warn, --radius, --font-display, …) so the game
    reads as part of the same app and follows the theme without knowing about
    it. No colour of its own: the bridges are the accent — the most ink on the
-   board — and so are the selection ring and a finished island (§13).
+   board — and so are the selection ring and a finished island (§13). The sea
+   is an alias of two shared tokens (`--bg-water`), never a literal; the
+   islands are paper cut out and set one step above it, lit from the top.
+
+   The two blocks below are the whole of the game's palette, in the shape the
+   other boards use (Chess, Gem Swap): `:root` for the light theme and
+   `:root[data-theme='dark']` for the dark one. They hold aliases only — this
+   game has no colour of its own to declare — and ui/contrast.test.ts reads
+   them, measures the tokens they name against the sea, and fails on any
+   colour literal anywhere in this file.
 
    Class names are prefixed `bg-` so this file can never collide with the
    shell or with another game. */
+
+/* The sea (§13): one step below the paper the islands are cut from, so an
+   island sits on the water instead of being drawn on the same sheet. The
+   light theme tints it with the title's --accent-soft; --bg-water-edge is the
+   top inner wall of that recess, lit from above like the rest of the board.
+   `data-game` is stamped on <html> (App.tsx), so --accent-soft resolves to
+   this title's value here. */
+:root {
+  --bg-water: var(--accent-soft);
+  --bg-water-edge: var(--accent-ring-soft);
+}
+
+/* Dark: --accent-soft there is a notch lighter than --surface, the island's
+   own face, which would put the sea above the islands. The sea is the series'
+   recessed surface instead (below --surface), and the recess wall is the page
+   colour. */
+:root[data-theme='dark'] {
+  --bg-water: var(--surface-recessed);
+  --bg-water-edge: var(--paper);
+}
 
 /* ---------- board ---------- */
 
@@ -62,17 +91,22 @@
   padding: calc(var(--bg-cell) * 0.2);
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: var(--surface);
+  background: var(--bg-water);
   user-select: none;
   -webkit-user-select: none;
 
-  /* A paper edge and shallow lift on the whole board; external rings remain
-     visible around flush child cells without changing board geometry. */
+  /* The collection's board frame, thickness first: the lift under the board,
+     a paper edge, the outer line, then the soft shadow. External rings remain
+     visible around flush child cells without changing board geometry. The
+     inset line is the sea's recess wall (--bg-water-edge, above): it paints
+     inside the border, so it cannot collide with the four outer layers and
+     sits after them to keep their order. */
   box-shadow:
+    0 3px 0 var(--line),
     0 0 0 3px var(--paper),
     0 0 0 4px var(--line),
-    0 3px 0 var(--line),
-    0 8px 18px var(--accent-ring-soft);
+    0 8px 18px var(--accent-ring-soft),
+    inset 0 2px 0 var(--bg-water-edge);
 }
 
 @supports (height: 100svh) {
@@ -88,13 +122,15 @@
   }
 }
 
-/* Solved beat: one wash on the board, not per island (§13). */
+/* Solved beat: one wash on the board, not per island (§13). It is the ring
+   tone, not --accent-soft: the sea is --accent-soft in the light theme, and a
+   wash of the water's own colour would not show. */
 .bg-board::after {
   content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: var(--accent-soft);
+  background: var(--accent-ring);
   border-radius: inherit;
   opacity: 0;
 }
@@ -108,7 +144,7 @@
     opacity: 0;
   }
   30% {
-    opacity: 0.7;
+    opacity: 0.5;
   }
   100% {
     opacity: 0;
@@ -132,8 +168,13 @@
   pointer-events: none;
 }
 
+/* A faint grid on the water: the rows and columns a bridge can run along.
+   The ring tone at 0.7, because --line would vanish on the sea (§5). Up to
+   144 circles, so the alpha is on the fill, not on the element: an opacity
+   would make each one its own compositing group. */
 .bg-dot {
-  fill: var(--line);
+  fill: var(--accent-ring);
+  fill-opacity: 0.7;
 }
 
 /* A bridge: one line, or two side by side (§5). */
@@ -201,6 +242,11 @@
   border-radius: 50%;
   background: transparent;
   color: var(--ink);
+  /* How far the island stands off the water, in cells (negative is up). The
+     disc and its selection ring both read it, so they move together and stay
+     concentric — the ring's border is only 0.13 cell outside the disc, and
+     moving the disc alone would press it against the ring's inner edge. */
+  --bg-rise: 0;
   cursor: pointer;
   /* A press on an island may become a drag (§4): never a scroll or a zoom. */
   touch-action: none;
@@ -222,7 +268,18 @@ span.bg-island {
   box-shadow: inset 0 0 0 2px var(--ink-soft);
 }
 
+/* An island is a paper disc set on the water (§13): a face that is lighter at
+   the top, a rim of thickness under it and a faint shadow, from the board's
+   ring tokens. The thickness (--bg-lift) is a custom property so a state
+   below swaps one value and the disc keeps the same two layers in the same
+   order. The rim hangs 0.06 cell below the disc (0.1 selected), a little past
+   the selection ring's inner edge on a small board; its colour is the ring's
+   own RGB, so over the ring's border it changes nothing (§13). The 1.3-cell
+   tap circle clips nothing, so no hit test or dimension moves. */
 .bg-disc {
+  --bg-lift:
+    0 calc(var(--bg-cell) * 0.06) 0 var(--accent-ring),
+    0 calc(var(--bg-cell) * 0.12) calc(var(--bg-cell) * 0.16) var(--accent-ring-soft);
   position: relative;
   z-index: 1;
   box-sizing: border-box;
@@ -233,17 +290,25 @@ span.bg-island {
   justify-content: center;
   border: 2px solid var(--ink);
   border-radius: 50%;
-  background: var(--surface);
+  /* Colour and gradient apart, so the colour can transition; the complete and
+     over states below set `background:` and drop the gradient — a filled
+     island has no paper face. Same top-lit face as the shell's .action-btn. */
+  background-color: var(--surface);
+  background-image: linear-gradient(var(--surface), var(--paper));
+  box-shadow: var(--bg-lift);
   color: var(--ink);
   font-family: var(--font-display);
   font-size: calc(var(--bg-cell) * 0.46);
   font-weight: 800;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+  transform: translateY(calc(var(--bg-cell) * var(--bg-rise)));
   transition:
     background-color 0.12s ease,
     border-color 0.12s ease,
-    color 0.12s ease;
+    color 0.12s ease,
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
 }
 
 /* Short of its number: the outline alone (above). On it: filled (§5). */
@@ -253,14 +318,42 @@ span.bg-island {
   color: var(--accent-ink);
 }
 
-/* Past it: a double ring in the warn colour — the shape says it, not the hue. */
+/* Past it: a double ring in the warn colour — the shape says it, not the hue.
+   The rim stays: the lift comes first, so this disc has the same rim and
+   shadow as the other states and the double ring is drawn inside it. */
 .bg-island-over .bg-disc {
   border-color: var(--warn);
   background: var(--warn-soft);
   color: var(--ink);
   box-shadow:
+    var(--bg-lift),
     inset 0 0 0 2px var(--warn-soft),
     inset 0 0 0 3.5px var(--warn);
+}
+
+/* Selected, the disc is lifted: about a thirtieth of a cell up and a thicker
+   rim. The ring below stays the sign (§5) — this is the same fact said by
+   height, not a second one — and it rises with the disc (--bg-rise, above).
+   Pressed, it sinks into the page and the rim goes, and that wins (the higher
+   specificity, not the order), so a drag from an island reads as held down.
+   Only a real button presses: the Quick Rules figure draws islands as spans,
+   which must not move when someone touches the picture. */
+.bg-island-selected {
+  --bg-rise: -0.03;
+}
+
+.bg-island-selected .bg-disc {
+  --bg-lift:
+    0 calc(var(--bg-cell) * 0.1) 0 var(--accent-ring),
+    0 calc(var(--bg-cell) * 0.18) calc(var(--bg-cell) * 0.22) var(--accent-ring-soft);
+}
+
+button.bg-island:active {
+  --bg-rise: 0.02;
+}
+
+button.bg-island:active .bg-disc {
+  --bg-lift: 0 0 0 var(--accent-ring), 0 0 0 var(--accent-ring-soft);
 }
 
 /* The selection's ring and a partner's, just outside the disc (§5). */
@@ -271,6 +364,8 @@ span.bg-island {
   height: calc(var(--bg-cell) * 1.1);
   border-radius: 50%;
   pointer-events: none;
+  transform: translateY(calc(var(--bg-cell) * var(--bg-rise)));
+  transition: transform 0.12s ease;
 }
 
 .bg-island-selected .bg-ring,
@@ -301,10 +396,13 @@ span.bg-island {
   pointer-events: none;
 }
 
-/* Reduced Motion: islands change at once, and the solved wash does not play
-   (§13). The shell's global rule already shortens both; this says it here. */
+/* Reduced Motion: islands change at once — colour, lift and press alike, the
+   disc's one transition list, and the ring's rise with it — and the solved
+   wash does not play (§13). The lift itself is a resting height, not motion.
+   The shell's global rule already shortens both; this says it here. */
 @media (prefers-reduced-motion: reduce) {
-  .bg-disc {
+  .bg-disc,
+  .bg-ring {
     transition: none;
   }
   .bg-board-solved::after {
@@ -312,7 +410,8 @@ span.bg-island {
   }
 }
 
-:root[data-reduced-motion='true'] .bg-disc {
+:root[data-reduced-motion='true'] .bg-disc,
+:root[data-reduced-motion='true'] .bg-ring {
   transition: none;
 }
 

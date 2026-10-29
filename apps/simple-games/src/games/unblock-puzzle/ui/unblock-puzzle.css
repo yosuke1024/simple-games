@@ -1,13 +1,56 @@
 /* Unblock Puzzle — all of this game's styling, imported by UnblockPuzzleRoot.
-   Everything is built from the series tokens in src/ui/styles.css (--paper,
-   --surface, --surface-recessed, --ink, --ink-soft, --line, --stone,
-   --stone-line, --accent, --accent-ink, --radius, …), so the game follows the
-   theme without knowing about it and writes no colour of its own. The one
-   accent goes on the target block and the exit, and on the marks that point
-   at a move (the hint, the destination dots' ring); every other block is the
-   neutral face with a groove along its long side (docs/UNBLOCK_PUZZLE_RULES.md
-   §14). Class names are prefixed `ub-` so this file can never collide with the
-   shell or with another game. */
+   The chrome is built from the series tokens in src/ui/styles.css (--paper,
+   --ink, --ink-soft, --line, --accent, --accent-ink, --radius, …), so it
+   follows the theme without knowing about it. The one accent goes on the
+   target block and the exit, and on the marks that point at a move (the
+   hint, the destination dots' ring).
+
+   The tray and the wooden blocks are game content, the same standing as
+   Chess's squares, the exception docs/architecture/css-split.md lists
+   (Hanoi Towers' tray has the same tones, written straight into its CSS
+   without being listed there; docs/UNBLOCK_PUZZLE_RULES.md §14): a
+   material, not a role. Their colours are the `--ub-*` tokens in the two
+   blocks just below and nowhere else;
+   ui/contrast.test.ts measures them in both themes and fails on a colour
+   literal anywhere outside those blocks. The target is the one painted
+   block — the accent, no grain. Which way a block slides is told by the
+   groove along its long side; the grain runs the same way but never carries
+   it alone. Class names are prefixed `ub-` so this file can never collide
+   with the shell or with another game. */
+
+:root {
+  /* The tray: its rim and the ribs between the squares (Hanoi Towers' light
+     tray tone), the edge round it (Hanoi's wood line), and the recessed
+     squares, a step darker — also the exit channel cut through the rim. */
+  --ub-tray: #f2e8d7;
+  --ub-tray-edge: #8c6c49;
+  --ub-floor: #e0ceac;
+  /* A block: the face, the face while pressed, the outline (also the groove
+     and the Quick Rules figure's dashed "was here" outline). */
+  --ub-wood: #f6e8c8;
+  --ub-wood-press: #ead7ae;
+  --ub-edge: #7a5a38;
+  /* Light on a top edge, shade on a bottom edge, grain. Translucent, and none
+     of them carries a meaning. */
+  --ub-hi: rgba(255, 252, 240, 0.5);
+  --ub-lo: rgba(90, 58, 24, 0.18);
+  --ub-grain: rgba(140, 100, 54, 0.13);
+}
+
+:root[data-theme='dark'] {
+  /* Dark walnut with a light outline. The Hint's dashes (the accent) cross a
+     block's own face, so the face stays dark enough to keep them at 3:1, and
+     the light outline is what cuts the block from the floor. */
+  --ub-tray: #3a2e24;
+  --ub-tray-edge: #8a6c4b;
+  --ub-floor: #241b14;
+  --ub-wood: #46362a;
+  --ub-wood-press: #392b1f;
+  --ub-edge: #a98a63;
+  --ub-hi: rgba(255, 236, 205, 0.16);
+  --ub-lo: rgba(0, 0, 0, 0.38);
+  --ub-grain: rgba(255, 226, 180, 0.07);
+}
 
 /* ---------- the board's size ----------
 
@@ -55,19 +98,25 @@
     var(--ub-cell-max)
   );
   position: relative;
+  /* The exit channel sits under the grid (z-index -1, below), and -1 has to
+     stop at the board: the board is its own stacking context. No layer. */
+  isolation: isolate;
   box-sizing: content-box;
   padding: var(--ub-pad);
-  border: var(--ub-border) solid var(--stone-line);
+  border: var(--ub-border) solid var(--ub-tray-edge);
   border-radius: 12px;
-  background: var(--surface-recessed);
+  background: var(--ub-tray);
   margin-right: var(--ub-exit-room);
 
-  /* A paper edge and shallow lift on the whole board; external rings remain
-     visible around flush child cells without changing board geometry. */
+  /* The rim's lit top edge, then the series' board frame — a paper edge and
+     shallow lift on the whole board, the lift first so it shows; external
+     rings remain visible around flush child cells without changing board
+     geometry. */
   box-shadow:
+    inset 0 2px 0 var(--ub-hi),
+    0 3px 0 var(--line),
     0 0 0 3px var(--paper),
     0 0 0 4px var(--line),
-    0 3px 0 var(--line),
     0 8px 18px var(--accent-ring-soft);
 }
 
@@ -110,14 +159,16 @@
   position: relative;
 }
 
-/* The slot a block can stand on: a recessed square, so an empty board reads
-   as a grid without a single line drawn across it. */
+/* The slot a block can stand on: a square routed into the tray, its top edge
+   in shade, so an empty board reads as a grid without a single line drawn
+   across it. */
 .ub-cell::before {
   content: '';
   position: absolute;
   inset: calc(var(--ub-gap) / 2);
   border-radius: 6px;
-  background: var(--paper);
+  background: var(--ub-floor);
+  box-shadow: inset 0 2px 0 var(--ub-lo);
 }
 
 /* Where the selected block can be tapped to (§5): a dot, not a tint. */
@@ -134,7 +185,7 @@
   height: 12px;
   margin: -6px 0 0 -6px;
   border-radius: 50%;
-  background: var(--ink-soft);
+  background: var(--ink);
   box-shadow: 0 0 0 3px var(--accent-ring);
 }
 
@@ -157,14 +208,27 @@
 }
 
 .ub-block {
+  /* Where the two grain layers start, so blocks cut from one board do not
+     all show the same grain (the nth-of-type rules below). */
+  --ub-o1: 0px;
+  --ub-o2: 0px;
+  /* A lit top edge and a shaded bottom edge, inside the outline. Part of the
+     background, so the selected and dragging shadows leave it be. */
+  --ub-bevel: linear-gradient(
+    180deg,
+    var(--ub-hi) 0 2px,
+    transparent 2px calc(100% - 3px),
+    var(--ub-lo) calc(100% - 3px)
+  );
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0;
   padding: 0;
-  border: 2px solid var(--stone-line);
-  background: var(--surface);
-  color: var(--stone-line);
+  border: 2px solid var(--ub-edge);
+  background-color: var(--ub-wood);
+  background-image: var(--ub-bevel);
+  color: var(--ub-edge);
   cursor: grab;
   touch-action: none;
   -webkit-tap-highlight-color: transparent;
@@ -176,27 +240,83 @@
     box-shadow 0.12s ease;
 }
 
-/* Press feedback by ground, never filter (§14). */
+/* Press feedback by ground, never filter (§14): the face darkens; the grain
+   and the edges on it stay. */
 .ub-block:active {
-  background: var(--surface-recessed);
+  background-color: var(--ub-wood-press);
 }
 
+/* The painted block: the accent, the same lit and shaded edges, no grain (it
+   carries neither ub-block-h nor ub-block-v). */
 .ub-block-target {
   border-color: var(--accent);
-  background: var(--accent);
+  background-color: var(--accent);
   color: var(--accent-ink);
 }
 
 .ub-block-target:active {
-  background: var(--accent);
+  background-color: var(--accent);
   border-color: var(--ink);
 }
 
-/* The groove along a block's long side: which way it slides, without colour. */
+/* The grain runs the way the block slides. Two repeating gradients with
+   unrelated periods (9 and 23px) and slightly different angles, so the lines
+   are neither even nor quite parallel. Painted with the block; a slide or a
+   drag only moves it. After `.ub-block`, whose background-image these
+   replace. */
+.ub-block-h {
+  background-image:
+    var(--ub-bevel),
+    repeating-linear-gradient(
+      179.5deg,
+      transparent var(--ub-o1),
+      var(--ub-grain) calc(var(--ub-o1) + 1.5px),
+      transparent calc(var(--ub-o1) + 3px) calc(var(--ub-o1) + 9px)
+    ),
+    repeating-linear-gradient(
+      180.7deg,
+      transparent var(--ub-o2),
+      var(--ub-grain) calc(var(--ub-o2) + 3px),
+      transparent calc(var(--ub-o2) + 6px) calc(var(--ub-o2) + 23px)
+    );
+}
+
+.ub-block-v {
+  background-image:
+    var(--ub-bevel),
+    repeating-linear-gradient(
+      89.5deg,
+      transparent var(--ub-o1),
+      var(--ub-grain) calc(var(--ub-o1) + 1.5px),
+      transparent calc(var(--ub-o1) + 3px) calc(var(--ub-o1) + 9px)
+    ),
+    repeating-linear-gradient(
+      90.7deg,
+      transparent var(--ub-o2),
+      var(--ub-grain) calc(var(--ub-o2) + 3px),
+      transparent calc(var(--ub-o2) + 6px) calc(var(--ub-o2) + 23px)
+    );
+}
+
+/* Three starting points by the block's place among its siblings (the DOM
+   order of the blocks never changes, so a block keeps its grain). */
+.ub-block:nth-of-type(3n + 2) {
+  --ub-o1: 3px;
+  --ub-o2: 9px;
+}
+
+.ub-block:nth-of-type(3n) {
+  --ub-o1: 6px;
+  --ub-o2: 16px;
+}
+
+/* The groove along a block's long side: which way it slides, without colour.
+   Routed in the outline's colour, with a lit lower lip. */
 .ub-groove {
   display: block;
   border-radius: 2px;
-  background: var(--stone);
+  background: var(--ub-edge);
+  box-shadow: 0 1px 0 var(--ub-hi);
   pointer-events: none;
 }
 
@@ -241,12 +361,16 @@
   outline-offset: 3px;
 }
 
-/* Under a finger: no glide, so it stays with the finger, and lifted. */
+/* Under a finger: no glide, so it stays with the finger, and lifted. Its own
+   layer for the length of the drag, so each frame moves the painted block
+   (grain, edges, shadow) instead of painting it again — and only for that
+   long. */
 .ub-block-dragging {
   z-index: 2;
   cursor: grabbing;
   transition: none;
   box-shadow: var(--shadow);
+  will-change: transform;
 }
 
 /* The Hint (§6): a dashed ring around the block, and a dashed outline where
@@ -272,16 +396,21 @@
 
 /* ---------- the exit (§1, §14) ----------
 
-   A gap in the frame at the right end of the target's row, and an arrow just
-   outside it. Both are drawn, not written. */
+   A channel cut through the rim at the right end of the target's row: the
+   floor's colour, running on from the last square (so it also takes in the
+   half gap beside it), under the grid so it never covers a selected or
+   hinted block's frame. And an arrow just outside it. Both are drawn, not
+   written. */
 
 .ub-exit {
   position: absolute;
+  z-index: -1;
   right: calc(-1 * var(--ub-border));
   top: calc(var(--ub-pad) + var(--ub-cell) * var(--ub-exit-row) + var(--ub-gap) / 2);
-  width: calc(var(--ub-pad) + var(--ub-border));
+  width: calc(var(--ub-pad) + var(--ub-border) + var(--ub-gap) / 2);
   height: calc(var(--ub-cell) - var(--ub-gap));
-  background: var(--surface-recessed);
+  background: var(--ub-floor);
+  box-shadow: inset 0 2px 0 var(--ub-lo);
   pointer-events: none;
 }
 
@@ -525,12 +654,12 @@
   transition: none;
 }
 
-/* Where a block was, in a figure only (step 3): a neutral dashed outline.
-   Not the accent dashes of `.ub-ghost` — on the board those mean where the
-   Hint says a block should go, and the picture that teaches the game must
-   not teach the opposite. */
+/* Where a block was, in a figure only (step 3): a dashed outline in the
+   wood's own edge colour. Not the accent dashes of `.ub-ghost` — on the board
+   those mean where the Hint says a block should go, and the picture that
+   teaches the game must not teach the opposite. */
 .ub-figure-was {
-  border: 2px dashed var(--stone-line);
+  border: 2px dashed var(--ub-edge);
   background: transparent;
 }
 

@@ -35,10 +35,11 @@ export function CardFace({ card }: { card: number }) {
   );
 }
 
+/** Decorative artwork only; the first rect is the accent panel inside the paper margin (§6). */
 export function CardBack() {
   return (
     <svg className="tp-card-back" viewBox="0 0 100 140" aria-hidden="true" focusable="false">
-      <rect x="7" y="7" width="86" height="126" rx="4" />
+      <rect className="tp-back-panel" x="7" y="7" width="86" height="126" rx="4" />
       <rect x="12" y="12" width="76" height="116" rx="2" />
       <path
         className="tp-back-weave"

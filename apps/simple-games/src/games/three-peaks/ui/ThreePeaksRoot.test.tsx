@@ -108,6 +108,27 @@ describe('Three Peaks player lifecycle', () => {
     await settle();
     expect((await loadSavedGame(kv))?.actions).toHaveLength(0);
   });
+  it('settles the waste on every change but not when the screen opens (§6)', async () => {
+    const kv = createMemoryKV({
+      [TP_STORAGE_KEYS.flags]: flags,
+      [TP_STORAGE_KEYS.game]: JSON.stringify(toPersisted(createSession(6), 1)),
+    });
+    launch(kv, true);
+    await settle();
+    const waste = () => document.querySelector('.tp-waste')!;
+    const opened = waste();
+    expect(opened).not.toHaveClass('tp-waste-settle');
+    fireEvent.click(screen.getByRole('button', { name: /^Draw/ }));
+    await settle();
+    // A new element each time (key = the card), so the 140ms plays once per change.
+    const drawn = waste();
+    expect(drawn).not.toBe(opened);
+    expect(drawn).toHaveClass('tp-waste-settle');
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    await settle();
+    expect(waste()).not.toBe(drawn);
+    expect(waste()).toHaveClass('tp-waste-settle');
+  });
   it('records a win once despite undo, resume and another completion, then starts fresh', async () => {
     const session = winningPrefix(WINNING_ACTIONS.length - 1);
     const kv = createMemoryKV({

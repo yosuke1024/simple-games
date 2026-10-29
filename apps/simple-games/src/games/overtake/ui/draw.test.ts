@@ -4,20 +4,28 @@
  * when it was made: the palette reads the rival tokens, a rival is a blue car
  * with the traffic's window cut-outs and its digit in `--ot-rival-ink`, and
  * the board draws sand and cones — only those on the board, sand straight
- * after the road, cones before the cars.
+ * after the road, cones before the cars. Depth (2026-10-29): a car and a works
+ * stand LIFT px off the road on a `--line` thickness drawn first and lower, the
+ * works as an opaque slab; the off-road is `--ot-verge`; the finish band is ink
+ * and `--line` (§11「見た目」).
  */
 import { afterEach, describe, expect, it } from 'vitest';
 import { BOARD_HEIGHT, PLAYER_SCREEN_Y, SUB } from '../game/constants';
 import { assembleCourse } from '../game/course';
+import { LEVEL_COUNT } from '../game/levels';
 import { courseFor, createRace } from '../game/race';
 import type { Course, Obstacle, Zone } from '../game/types';
 import {
   CONE_BASE,
+  LIFT,
   SAND_DOT_PITCH,
   SAND_DOT_SIZE,
   drawCar,
+  drawFinish,
   drawRace,
+  drawRoad,
   drawSand,
+  drawWorks,
   readPalette,
   type Palette,
 } from './draw';
@@ -57,6 +65,7 @@ const PALETTE: Palette = {
   ink: 'INK',
   inkSoft: 'INK_SOFT',
   accent: 'ACCENT',
+  verge: 'VERGE',
   rival: 'RIVAL',
   rivalInk: 'RIVAL_INK',
 };
@@ -80,11 +89,22 @@ describe('readPalette', () => {
     expect(palette.accent).toBe('#654321');
   });
 
+  it('reads the off-road colour from --ot-verge, not from --line', () => {
+    style = document.createElement('style');
+    style.textContent = ':root { --ot-verge: #0a0b0c; --line: #cccccc; }';
+    document.head.appendChild(style);
+    const palette = readPalette();
+    expect(palette.verge).toBe('#0a0b0c');
+    expect(palette.line).toBe('#cccccc');
+  });
+
   it('falls back to the light theme’s values where nothing is declared (jsdom)', () => {
     const palette = readPalette();
     expect(palette.rival).toBe('#2453a8');
     expect(palette.rivalInk).toBe(palette.surface);
     expect(palette.surface).toBe('#fffdf8');
+    // The light theme's --ot-verge is --line.
+    expect(palette.verge).toBe(palette.line);
   });
 });
 
@@ -94,8 +114,9 @@ describe('drawCar', () => {
   it('draws a rival as a blue body with two windows cut out and its digit in rival ink', () => {
     const { ctx, calls } = recorder();
     drawCar(ctx, PALETTE, 'rival', 100, 200, 34, 58, '2');
-    // The body, then the windscreen and the rear window in the surface.
-    expect(fills(calls)).toEqual(['RIVAL', 'SURFACE', 'SURFACE']);
+    // The thickness in --line, the body, then the windscreen and the rear
+    // window in the surface.
+    expect(fills(calls)).toEqual(['LINE', 'RIVAL', 'SURFACE', 'SURFACE']);
     // One hairline of surface around the body, right after its fill, so two
     // overlapping rivals still read as two cars (§11).
     const strokes = calls.filter((c) => c.op === 'stroke');
@@ -124,9 +145,110 @@ describe('drawCar', () => {
     ] as const) {
       const { ctx, calls } = recorder();
       drawCar(ctx, PALETTE, look, 100, 200, 34, 58);
-      expect(fills(calls), look).toEqual([body, 'SURFACE', 'SURFACE']);
+      expect(fills(calls), look).toEqual(['LINE', body, 'SURFACE', 'SURFACE']);
       expect(calls.some((c) => c.op === 'fillText')).toBe(false);
     }
+  });
+
+  it('stands every car on a --line thickness LIFT lower, drawn before the body (§11)', () => {
+    expect(LIFT).toBe(4);
+    for (const look of ['player', 'traffic', 'rival'] as const) {
+      const { ctx, calls } = recorder();
+      drawCar(ctx, PALETTE, look, 100, 200, 34, 58, look === 'rival' ? '1' : null);
+      // Each outline starts with a moveTo at its top edge: the first is the
+      // thickness (the body's outline, LIFT lower), the second the body.
+      const tops = calls.filter((c) => c.op === 'moveTo').map((c) => c.args);
+      expect(tops[0], look).toEqual([tops[1]![0], 200 + LIFT]);
+      expect(tops[1]![1], look).toBe(200);
+      // The same width and length, so only the bottom edge shows.
+      const arcs = calls.filter((c) => c.op === 'arcTo');
+      expect(
+        arcs.slice(0, 4).map((c) => (c.args[1] as number) - LIFT),
+        look,
+      ).toEqual(arcs.slice(4, 8).map((c) => c.args[1] as number));
+      // Plain fills only: no blur, no filter, no stroke on the thickness.
+      const firstFill = calls.findIndex((c) => c.op === 'fill');
+      expect(calls[firstFill]!.fillStyle, look).toBe('LINE');
+      expect(calls.slice(0, firstFill).some((c) => c.op === 'stroke')).toBe(false);
+    }
+  });
+});
+
+describe('the thickness never lands on another piece of traffic (§11「重なり」, 100 shipped levels)', () => {
+  it('keeps LIFT of road between pieces side by side, so a thickness falls on no neighbour’s body', () => {
+    // Traffic is drawn rear first (the course keeps it sorted), so a piece's
+    // thickness — LIFT below its own rear edge — is painted over whatever was
+    // drawn before it. It lands on a body only if that body is beside it and
+    // ends within LIFT of its rear. Pieces that share a rear (a row's
+    // neighbours) put the thickness under the neighbour's own thickness, not
+    // on its body. This holds for the generator's constants as they are; if a
+    // gap or a row spacing shrinks below LIFT, this is the test that says so.
+    const lift = LIFT * SUB;
+    const landed: string[] = [];
+    for (let level = 1; level <= LEVEL_COUNT; level++) {
+      const { obstacles } = courseFor(level);
+      for (let a = 0; a < obstacles.length; a++) {
+        const under = obstacles[a]!;
+        for (let b = a + 1; b < obstacles.length; b++) {
+          const over = obstacles[b]!;
+          // Sorted by rear: nothing further on starts any lower.
+          if (over.rear >= under.front + lift) break;
+          const beside = over.left < under.right && under.left < over.right;
+          if (over.rear === under.rear || !beside) continue;
+          landed.push(
+            `Lv${level}: ${over.kind} at ${over.rear / SUB} px is ${(over.rear - under.front) / SUB} px ` +
+              `above the end of a ${under.kind} at ${under.front / SUB} px`,
+          );
+        }
+      }
+    }
+    expect(landed).toEqual([]);
+  });
+});
+
+describe('drawWorks', () => {
+  it('is an opaque surface slab LIFT above a --line thickness, under the accent hatching (§11)', () => {
+    const { ctx, calls } = recorder();
+    drawWorks(ctx, PALETTE, 40, 100, 80, 150);
+    const slabs = calls.filter((c) => c.op === 'fillRect');
+    expect(slabs.map((c) => [c.fillStyle, ...c.args])).toEqual([
+      ['LINE', 40, 100 + LIFT, 80, 150],
+      ['SURFACE', 40, 100, 80, 150],
+    ]);
+    // The hatching and the outline come after the slab, in the accent.
+    const slabEnd = calls.indexOf(slabs[1]!);
+    const strokes = calls.filter((c) => c.op === 'stroke' || c.op === 'strokeRect');
+    expect(strokes.length).toBeGreaterThan(0);
+    for (const stroke of strokes) {
+      expect(calls.indexOf(stroke)).toBeGreaterThan(slabEnd);
+      expect(stroke.strokeStyle).toBe('ACCENT');
+    }
+  });
+});
+
+describe('drawRoad and drawFinish', () => {
+  it('paints the off-road with the verge colour and keeps the dashes in --line', () => {
+    const { ctx, calls } = recorder();
+    drawRoad(ctx, PALETTE, 3, 0);
+    const rects = calls.filter((c) => c.op === 'fillRect');
+    // The road, the two verges, the two shoulder lines, then the dashes.
+    expect(rects.slice(0, 5).map((c) => c.fillStyle)).toEqual([
+      'SURFACE',
+      'VERGE',
+      'VERGE',
+      'INK_SOFT',
+      'INK_SOFT',
+    ]);
+    const dashes = rects.slice(5);
+    expect(dashes.length).toBeGreaterThan(0);
+    for (const dash of dashes) expect(dash.fillStyle).toBe('LINE');
+  });
+
+  it('checkers the finish in ink and --line, never in the road’s own colour', () => {
+    const { ctx, calls } = recorder();
+    drawFinish(ctx, PALETTE, 100);
+    const colours = new Set(calls.filter((c) => c.op === 'fillRect').map((c) => c.fillStyle));
+    expect([...colours].sort()).toEqual(['INK', 'LINE']);
   });
 });
 

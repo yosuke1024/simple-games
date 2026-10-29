@@ -14,11 +14,13 @@
  *
  * Pieces are drawn on their own 5×5 grid — the largest shape the catalogue
  * holds (§6) — so a 1×1 and a 3×3 are drawn to the same scale and the tray
- * shows how big a piece really is.
+ * shows how big a piece really is. A piece wears its family's tone
+ * (`bp-tone-N`, §12) — the colour it will leave on the board — while the
+ * selection around it stays the accent.
  */
 import { memo, type PointerEvent } from 'react';
 import { useSettings } from '@/state/SettingsContext';
-import { pieceById, type Tray } from '../../game';
+import { pieceById, toneOfPiece, type Tray } from '../../game';
 
 /** The box every tray piece is drawn in: the catalogue's largest shape (§6). */
 const PREVIEW_SIZE = 5;
@@ -88,7 +90,11 @@ export const BlockTray = memo(function BlockTray({
             onPointerDown={(event) => onSlotPointerDown(event, slot)}
             onClick={() => onSlotActivate(slot)}
           >
-            <span key={batchIndex} className="bp-piece bp-piece-dealt" aria-hidden="true">
+            <span
+              key={batchIndex}
+              className={`bp-piece bp-piece-dealt bp-tone-${toneOfPiece(piece.id)}`}
+              aria-hidden="true"
+            >
               {Array.from({ length: PREVIEW_SIZE * PREVIEW_SIZE }, (_, index) => {
                 const row = Math.floor(index / PREVIEW_SIZE);
                 const col = index % PREVIEW_SIZE;

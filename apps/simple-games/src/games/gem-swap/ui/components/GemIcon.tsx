@@ -6,14 +6,16 @@
  * and none is one of Bubble Pop's six marks.
  *
  * The fill is the kind's game-content colour token (`--gs-gem-0` … `-5`,
- * gem-swap.css); the one facet line is drawn in the surface colour, so the
- * component itself writes no colour. Decorative: the cell around it carries
- * the spoken name.
+ * gem-swap.css). Three paths, back to front: the shadow the gem casts (its
+ * own outline, pushed down in CSS — a same-shape path rather than a filter,
+ * §10), the outline, and the facet (a smaller copy of the cut, drawn as a
+ * lit face). The component itself writes no colour. Decorative: the cell
+ * around it carries the spoken name.
  */
 import { memo } from 'react';
 import { gemShape, type GemShape } from '../../game';
 
-/** Outline and one facet line per cut, on a 100 × 100 box. */
+/** Outline and facet per cut, on a 100 × 100 box. */
 const PATHS: Readonly<Record<GemShape, { outline: string; facet: string }>> = {
   // Point up and down.
   hexagon: {
@@ -64,6 +66,7 @@ export const GemIcon = memo(function GemIcon({ kind, className }: GemIconProps) 
       aria-hidden="true"
       focusable="false"
     >
+      <path className="gs-gem-shade" d={outline} />
       <path className="gs-gem-body" d={outline} />
       <path className="gs-gem-facet" d={facet} />
     </svg>

@@ -1,10 +1,18 @@
 /* Make the Target — all of this game's styling, imported by MakeTheTargetRoot
    (docs/MAKE_THE_TARGET_RULES.md §1, §4, §12). Built from the series tokens in
    src/ui/styles.css only (--surface, --ink, --line, --accent, --accent-ink,
-   --surface-recessed, --font-display, …), so it follows the theme without
-   knowing about it; no colour is written here (docs/architecture/css-split.md).
-   The accent (紺桔梗, registered in styles.css) is worn by the target's frame,
-   a chosen tile and the made target — nothing else on the board.
+   --accent-soft, --surface-recessed, --font-display, …), so it follows the
+   theme without knowing about it; no colour value is written here — the one
+   property of its own, --tg-dent below, is an alias of two of those tokens
+   (docs/architecture/css-split.md, ui/contrast.test.ts). The accent (紺桔梗,
+   registered in styles.css) is worn by the target's frame and ground, a chosen
+   tile and the made target — nothing else on the board.
+
+   Thickness (§12): only what can be pressed stands up from the paper. A tile,
+   an operator and the panel's buttons carry the key edge of the Undo bar's
+   .action-btn (a lit top, a face that darkens towards the paper, a hard edge
+   underneath) and give way when pressed; the target, a used-up slot, a locked
+   tile and a disabled operator stay flat. Light comes from the top.
 
    Class names are prefixed `tg-` so this file can never collide with the
    shell or with another game.
@@ -14,7 +22,19 @@
    play column takes at most 8 + 52 + 10 + 56 + 10 + 100 + 10 + 4 × 21 + 8 =
    338px, so nothing scrolls. Tiles are (360 − 32 − 4 × 8) / 5 ≈ 59px wide
    with five on the board, the operators 64 × 56px — every target at least
-   48px. Measured in a real browser: not yet (§15). */
+   48px. The edges and shadows are box-shadow, so none of them adds to a
+   height. Measured in a real browser: not yet (§15). */
+
+/* The recess's shade (§12), an alias and never a colour value. Light: the
+   accent's faint ring. Dark: --surface-recessed is *lighter* than the paper,
+   so the ground cannot sink and the shade has to come from the darker side. */
+:root {
+  --tg-dent: var(--accent-ring-soft);
+}
+
+:root[data-theme='dark'] {
+  --tg-dent: var(--paper);
+}
 
 .tg-play {
   flex: 1;
@@ -38,6 +58,10 @@
 
 /* ---------- the target (§1) ---------- */
 
+/* The ground is the accent's tint — the same as this title's artwork on the
+   home — so the target is told from a tile by its ground as well as by the
+   frame's weight and the mark (never by colour alone, §12). Flat: it cannot be
+   pressed, so it has no key edge. */
 .tg-target {
   display: inline-flex;
   align-items: center;
@@ -46,7 +70,7 @@
   padding: 4px 18px;
   border: 3px solid var(--accent);
   border-radius: 14px;
-  background: var(--surface);
+  background: var(--accent-soft);
   color: var(--ink);
 }
 
@@ -91,12 +115,19 @@
   border-radius: 12px;
 }
 
+/* The key edge (§12). The ground is set as longhands, not as `background`:
+   the shorthand would reset the colour the transition below starts from, and
+   a press would flash the paper through. */
 .tg-tile {
   display: flex;
   align-items: center;
   justify-content: center;
   border: 2px solid var(--line);
-  background: var(--surface);
+  background-color: var(--surface);
+  background-image: linear-gradient(var(--surface), var(--paper));
+  box-shadow:
+    inset 0 1px 0 var(--surface),
+    0 3px 0 var(--line);
   color: var(--ink);
   font-family: var(--font-display);
   font-size: 26px;
@@ -109,6 +140,7 @@
   -webkit-user-select: none;
   transition:
     background-color 120ms ease,
+    box-shadow 120ms ease,
     transform 120ms ease;
 }
 
@@ -126,71 +158,112 @@
   font-size: 13px;
 }
 
-/* A press shows as the ground changing, never a filter (§12). */
+/* A press shows as the ground changing and the edge giving way — the face
+   drops by the edge's difference, so the bottom line stays where it was —
+   never a filter (§12). */
 .tg-tile:active:not(:disabled) {
-  background: var(--surface-recessed);
+  background-image: none;
+  background-color: var(--surface-recessed);
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 1px 2px var(--line),
+    0 1px 0 var(--line);
+}
+
+/* Sinking moves the box away from a mouse press that began on the tile's top
+   rim; the strip it leaves stays part of the tile while it is held, so that
+   press still ends as a click on this tile (the technique of
+   echo-pads.css's .ep-pad). It is positioned against the tile because a
+   transformed box is the containing block of what is absolutely positioned
+   inside it, and that box's origin is its padding box: the strip starts one
+   border (2px) plus one sink (2px) above it, and is as tall as the sink. The
+   chosen tile keeps its lift and does not sink, so it has no strip. */
+.tg-tile:not(.tg-tile-selected):active:not(:disabled)::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  right: -2px;
+  left: -2px;
+  height: 2px;
 }
 
 /* Chosen first (§4): the accent face, a heavy ink frame and a lift — never
-   colour alone; `aria-pressed` says the same to a screen reader. */
+   colour alone; `aria-pressed` says the same to a screen reader. The lift
+   shows as the edge stretching to 6px with a soft shadow on the floor under
+   it (the old blur was hard to see on the dark paper). The leading zero-size
+   inset keeps the list the same shape as the resting one, so the 120ms
+   transition interpolates instead of flipping half way. */
 .tg-tile-selected,
 .tg-tile-selected:active:not(:disabled) {
   border: 3px solid var(--ink);
   background: var(--accent);
   color: var(--accent-ink);
   transform: translateY(-3px);
-  box-shadow: var(--shadow);
+  box-shadow:
+    inset 0 0 0 var(--surface),
+    0 6px 0 var(--accent-ring),
+    0 12px 14px var(--accent-ring-soft);
 }
 
 /* Not pressable on the finished or `missed` board, and still fully legible:
    the shared `button:disabled` fades to 0.4, but the board stays in view as
    it is (§4) — the last tile is the number the panel is stating — and keeps
-   BRAND.md's contrast (§12). `disabled` already blocks taps and focus. */
+   BRAND.md's contrast (§12). `disabled` already blocks taps and focus. The
+   edge goes: the tiles sit flat once nothing can be pressed. */
 .tg-tile:disabled {
   cursor: default;
   opacity: 1;
+  box-shadow: none;
 }
 
+/* Where a tile was (§1, §12): a dent in the paper, shaded at the top and lit
+   along the lower lip. It carries no meaning of its own — the number that is
+   gone says the slot is used up — and is `aria-hidden`. */
 .tg-slot-empty {
-  border: 2px dashed var(--line);
+  border: 0;
+  background: var(--surface-recessed);
+  box-shadow:
+    inset 0 2px 4px var(--tg-dent),
+    0 1px 0 var(--surface);
 }
 
-/* The answer arrives from where the left term was (§12): one short slide,
-   two identical keyframes so back-to-back merges into one slot replay it. */
+/* The answer arrives from where the left term was (§12): carried lifted (the
+   3px the chosen tile had) over to its slot, then set down in the last 30%.
+   Only `transform` moves, so it stays on the compositor. Two identical
+   keyframes so back-to-back merges into one slot replay it. */
 .tg-tile-arrive-0 {
-  animation: tg-arrive-0 160ms ease-out;
+  animation: tg-arrive-0 200ms;
 }
 .tg-tile-arrive-1 {
-  animation: tg-arrive-1 160ms ease-out;
+  animation: tg-arrive-1 200ms;
 }
 
 @keyframes tg-arrive-0 {
   from {
-    transform: translateX(calc(var(--tg-from, 0) * (100% + 8px)));
+    transform: translate(calc(var(--tg-from, 0) * (100% + 8px)), -3px);
+    animation-timing-function: ease-out;
+  }
+  70% {
+    transform: translate(0, -3px);
+    animation-timing-function: ease-in;
+  }
+  to {
+    transform: translate(0, 0);
   }
 }
 
 @keyframes tg-arrive-1 {
   from {
-    transform: translateX(calc(var(--tg-from, 0) * (100% + 8px)));
+    transform: translate(calc(var(--tg-from, 0) * (100% + 8px)), -3px);
+    animation-timing-function: ease-out;
   }
-}
-
-/* Reduced Motion (the OS, or the app's own setting): no slide at all. */
-@media (prefers-reduced-motion: reduce) {
-  .tg-tile-arrive-0,
-  .tg-tile-arrive-1 {
-    animation: none;
+  70% {
+    transform: translate(0, -3px);
+    animation-timing-function: ease-in;
   }
-  .tg-tile,
-  .tg-op {
-    transition: none;
+  to {
+    transform: translate(0, 0);
   }
-}
-
-:root[data-reduced-motion='true'] .tg-tile-arrive-0,
-:root[data-reduced-motion='true'] .tg-tile-arrive-1 {
-  animation: none;
 }
 
 /* ---------- the operators, or the `missed` panel (§3, §4) ---------- */
@@ -212,6 +285,9 @@
   gap: 12px;
 }
 
+/* The same key as a tile with a thinner edge (a smaller thing, a smaller
+   step), and in the tile's face — the digits are Nunito, so the signs are
+   too. Longhands for the ground, for the reason given at .tg-tile. */
 .tg-op {
   display: flex;
   align-items: center;
@@ -219,19 +295,42 @@
   height: 56px;
   border: 2px solid var(--line);
   border-radius: 12px;
-  background: var(--surface);
+  background-color: var(--surface);
+  background-image: linear-gradient(var(--surface), var(--paper));
+  box-shadow:
+    inset 0 1px 0 var(--surface),
+    0 2px 0 var(--line);
   color: var(--ink);
+  font-family: var(--font-display);
   font-size: 28px;
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1;
   touch-action: manipulation;
   transition:
     background-color 120ms ease,
+    box-shadow 120ms ease,
     transform 120ms ease;
 }
 
 .tg-op:active:not(:disabled) {
-  background: var(--surface-recessed);
+  background-image: none;
+  background-color: var(--surface-recessed);
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 1px 2px var(--line),
+    0 1px 0 var(--line);
+}
+
+/* The same strip as the tile's (see there; echo-pads.css's .ep-pad is the
+   origin): the operator's border is 2px and its sink 1px. The chosen operator
+   keeps its lift and has none. */
+.tg-op:not(.tg-op-selected):active:not(:disabled)::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  right: -2px;
+  left: -2px;
+  height: 1px;
 }
 
 .tg-op-selected,
@@ -239,13 +338,46 @@
   border: 3px solid var(--ink);
   background: var(--surface-recessed);
   transform: translateY(-3px);
-  box-shadow: var(--shadow);
+  box-shadow:
+    inset 0 0 0 var(--surface),
+    0 5px 0 var(--accent-ring),
+    0 10px 12px var(--accent-ring-soft);
 }
 
-/* Nothing to apply it to yet (§3): it looks it, and is `disabled`. */
+/* Nothing to apply it to yet (§3): it looks it, and is `disabled` — faded
+   and flat, so it reads as a key that has been put away, not one that is
+   merely fading out. */
 .tg-op:disabled {
   opacity: 0.45;
   cursor: default;
+  box-shadow: none;
+}
+
+/* Reduced Motion (the OS, or the app's own setting): no slide at all, and no
+   easing into the press or the lift either. Placed after the last rule that
+   sets a `transition` (.tg-tile above, .tg-op here) on purpose: the
+   selectors are as specific as theirs, so written earlier this would lose to
+   them, and the shell's catch-all would be the only thing switching the
+   operators' easing off. makeTheTargetCss.test.ts pins the order. */
+@media (prefers-reduced-motion: reduce) {
+  .tg-tile-arrive-0,
+  .tg-tile-arrive-1 {
+    animation: none;
+  }
+  .tg-tile,
+  .tg-op {
+    transition: none;
+  }
+}
+
+:root[data-reduced-motion='true'] .tg-tile-arrive-0,
+:root[data-reduced-motion='true'] .tg-tile-arrive-1 {
+  animation: none;
+}
+
+:root[data-reduced-motion='true'] .tg-tile,
+:root[data-reduced-motion='true'] .tg-op {
+  transition: none;
 }
 
 .tg-missed {
@@ -275,6 +407,18 @@
 .tg-missed-actions .btn {
   min-height: 48px;
   white-space: nowrap;
+  box-shadow: 0 2px 0 var(--line);
+}
+
+/* The primary key's edge is the accent's ring, as the shared toggle's is
+   (.action-btn[aria-pressed='true']); a press flattens either one, together
+   with the shared `.btn:active` scale. */
+.tg-missed-actions .btn-primary {
+  box-shadow: 0 2px 0 var(--accent-ring);
+}
+
+.tg-missed-actions .btn:active {
+  box-shadow: none;
 }
 
 /* Undo is pressed several times in a row (§12): no double-tap zoom on either. */

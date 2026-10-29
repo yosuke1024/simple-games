@@ -1,4 +1,66 @@
-/* A quiet mosaic on a framed surface. Colour remains game content; chrome uses series tokens. */
+/* A quiet mosaic on a framed surface. Chrome uses series tokens; the six tile
+   colours are game content (docs/architecture/css-split.md, docs/BRAND.md
+   「盤面が自前の色階調を持つ場合の例外」; values and reasons in
+   docs/COLOR_FLOOD_RULES.md「Visual follow-up (2026-10-29)」).
+
+   Every colour literal in this file sits in the two blocks below and nowhere
+   else; ui/contrast.test.ts reads them and fails on a literal outside. The six
+   tiles are ordered by symbol (0 circle, 1 diamond, 2 triangle, 3 square,
+   4 star, 5 cross) and each has its own symbol, so colour is never the only
+   way to tell two apart. --cf-N-ink is the symbol, the contour of a flooded
+   region and the origin mark drawn on tile N.
+
+   The dark theme has its own six values: the light ones sink into --surface
+   (four of them under 3:1) while the yellow glares. Light yellow and orange
+   stay under 3:1 on the paper by design; the region contour, the board's
+   frame and their symbol carry the edge there (contrast.test.ts names them).
+
+   The last four tokens are the light that falls on the board from above:
+   --cf-light a lit top edge, --cf-shade a shaded bottom edge, --cf-drop what
+   a raised key casts on the paper, --cf-seam the hairline between two tiles
+   that have not been flooded yet. They are texture, not marks; they carry no
+   meaning and have no contrast to clear.
+
+   The light --cf-drop is its own value, not the shared keys' --line (1.26:1 on
+   the paper, against 1.53:1 here): the light yellow key is 1.47:1 on the paper,
+   and its lower edge has only this shadow to rest on. In the dark theme every
+   key is far from the paper, so --line is used as it is. */
+:root {
+  --cf-0: #ad394e;
+  --cf-0-ink: #ffffff;
+  --cf-1: #2564a5;
+  --cf-1-ink: #ffffff;
+  --cf-2: #edc446;
+  --cf-2-ink: #292107;
+  --cf-3: #327758;
+  --cf-3-ink: #ffffff;
+  --cf-4: #7954a5;
+  --cf-4-ink: #ffffff;
+  --cf-5: #d87d30;
+  --cf-5-ink: #23170b;
+  --cf-seam: rgba(255, 255, 255, 0.19);
+  --cf-light: rgba(255, 255, 255, 0.34);
+  --cf-shade: rgba(35, 42, 51, 0.16);
+  --cf-drop: rgba(35, 42, 51, 0.22);
+}
+:root[data-theme='dark'] {
+  --cf-0: #c14a60;
+  --cf-0-ink: #ffffff;
+  --cf-1: #3b74b4;
+  --cf-1-ink: #ffffff;
+  --cf-2: #d1a838;
+  --cf-2-ink: #292107;
+  --cf-3: #3a8260;
+  --cf-3-ink: #ffffff;
+  --cf-4: #8a65b4;
+  --cf-4-ink: #ffffff;
+  --cf-5: #cc762f;
+  --cf-5-ink: #23170b;
+  --cf-seam: rgba(255, 255, 255, 0.19);
+  --cf-light: rgba(255, 255, 255, 0.12);
+  --cf-shade: rgba(0, 0, 0, 0.28);
+  --cf-drop: var(--line);
+}
 .cf-screen .game-content {
   min-height: 0;
   overflow-y: auto;
@@ -78,21 +140,44 @@
   height: 100%;
   background: var(--accent);
   border-radius: inherit;
+  /* The bar follows the flood rather than jumping to it; Reduced Motion turns
+     it off (end of file). */
+  transition: width 0.18s ease-out;
 }
 .cf-board-frame {
   padding: 5px;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--surface);
-  box-shadow: 0 2px 0 var(--line);
+  /* The collection's board frame, the lift first: a paper edge and a line ring
+     round the board, then a soft glow in the title's accent. */
+  box-shadow:
+    0 3px 0 var(--line),
+    0 0 0 3px var(--paper),
+    0 0 0 4px var(--line),
+    0 8px 18px var(--accent-ring-soft);
 }
 .cf-board {
+  position: relative;
   width: 100%;
   aspect-ratio: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   border-radius: 5px;
+}
+/* One sheet of glaze over the whole mosaic: a lit top edge and a shaded bottom
+   edge, drawn once on the board. A bevel on each tile would draw a second grid
+   (and undo the single sheet a flooded region becomes), so the tiles stay flat. */
+.cf-board::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    inset 0 1px 0 var(--cf-light),
+    inset 0 -2px 0 var(--cf-shade);
 }
 .cf-row {
   display: flex;
@@ -106,7 +191,13 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  box-shadow: inset 0 0 0 0.5px #ffffff30;
+  box-shadow: inset 0 0 0 0.5px var(--cf-seam);
+  /* The colour settles in rather than flipping. Background and ink move
+     together so a yellow tile never shows white ink for a frame; the contour
+     (a pseudo-element, which never transitions) follows the tile's ink. */
+  transition:
+    background-color 0.14s ease-out,
+    color 0.14s ease-out;
 }
 .cf-tile .cf-mark {
   width: 55%;
@@ -118,12 +209,19 @@
   display: block;
   fill: currentColor;
 }
-/* A continuous contour, rather than a second grid, shows the growing territory. */
+/* A continuous contour, rather than a second grid, shows the growing territory.
+   Inside it the seams go: a flooded region is one sheet of paint, not a heap of
+   same-coloured tiles (after .cf-tile so the same specificity lets it win). The
+   contour is the tile's own ink, so it reads on every colour; a fixed white
+   left a yellow region's edge at 1.67:1. */
+.cf-connected {
+  box-shadow: none;
+}
 .cf-connected::after {
   content: '';
   position: absolute;
   inset: 0;
-  border: 0 solid #fff;
+  border: 0 solid currentColor;
   pointer-events: none;
 }
 .cf-edge-top::after {
@@ -149,28 +247,28 @@
   border-left: 2px solid currentColor;
 }
 .cf-colour-0 {
-  background: #ad394e;
-  color: #fff;
+  background: var(--cf-0);
+  color: var(--cf-0-ink);
 }
 .cf-colour-1 {
-  background: #2564a5;
-  color: #fff;
+  background: var(--cf-1);
+  color: var(--cf-1-ink);
 }
 .cf-colour-2 {
-  background: #edc446;
-  color: #292107;
+  background: var(--cf-2);
+  color: var(--cf-2-ink);
 }
 .cf-colour-3 {
-  background: #327758;
-  color: #fff;
+  background: var(--cf-3);
+  color: var(--cf-3-ink);
 }
 .cf-colour-4 {
-  background: #7954a5;
-  color: #fff;
+  background: var(--cf-4);
+  color: var(--cf-4-ink);
 }
 .cf-colour-5 {
-  background: #d87d30;
-  color: #23170b;
+  background: var(--cf-5);
+  color: var(--cf-5-ink);
 }
 .cf-palette-label {
   margin: 18px 0 10px;
@@ -197,6 +295,16 @@
   display: grid;
   place-items: center;
   padding: 8px;
+  /* An enamel key like the shared .action-btn: lit top, shaded bottom and a 2px
+     lift. Pressing sinks the shadow only. A translateY would let a finger on
+     the lower edge slide off the disc and lose the click. */
+  box-shadow:
+    inset 0 1px 0 var(--cf-light),
+    inset 0 -2px 0 var(--cf-shade),
+    0 2px 0 var(--cf-drop);
+}
+.cf-paint:active:not(:disabled) {
+  box-shadow: inset 0 1px 2px var(--cf-shade);
 }
 .cf-paint .cf-mark {
   width: 75%;
@@ -214,8 +322,12 @@
 .cf-paint:disabled {
   opacity: 0.38;
   cursor: default;
+  box-shadow: none;
 }
+/* The colour the board already is stays pressed in, with its outline: the
+   outline is the cue that does not rely on the sunk shadow. */
 .cf-paint.cf-current {
+  box-shadow: inset 0 1px 2px var(--cf-shade);
   outline: 1px solid var(--ink-soft);
   outline-offset: 3px;
 }
@@ -243,11 +355,13 @@
 .cf-figure {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 2px;
+  /* No gap: the figure is built like the board it teaches, one sheet of tiles. */
+  gap: 0;
   width: 168px;
   padding: 5px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  /* The board frame's radius, so the corners nest the way the board's do. */
+  border-radius: 10px;
   margin: 8px auto;
 }
 .cf-figure > span {
@@ -255,6 +369,19 @@
   aspect-ratio: 1;
   display: grid;
   place-items: center;
+}
+/* The four corners of a 3x3: TutorialFigure always draws exactly nine cells. */
+.cf-figure > span:nth-child(1) {
+  border-top-left-radius: 5px;
+}
+.cf-figure > span:nth-child(3) {
+  border-top-right-radius: 5px;
+}
+.cf-figure > span:nth-child(7) {
+  border-bottom-left-radius: 5px;
+}
+.cf-figure > span:nth-child(9) {
+  border-bottom-right-radius: 5px;
 }
 .cf-figure .cf-mark {
   width: 55%;
@@ -288,4 +415,17 @@
   .cf-palette-label {
     margin-top: 12px;
   }
+}
+/* Reduced Motion, both routes (the OS preference and the app's own setting):
+   the shared rules in ui/styles.css already cut every duration to 0.01ms;
+   naming the transitions this file adds ends them outright, last so these win. */
+@media (prefers-reduced-motion: reduce) {
+  .cf-tile,
+  .cf-progress > span {
+    transition: none;
+  }
+}
+:root[data-reduced-motion='true'] .cf-tile,
+:root[data-reduced-motion='true'] .cf-progress > span {
+  transition: none;
 }

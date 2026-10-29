@@ -14,8 +14,14 @@
  * Every colour is a token read from computed style — none is written here but
  * the jsdom fallbacks (the light theme's values).
  *
+ * Depth is physical, not decorative (§11「見た目」): a car and a works stand
+ * LIFT px off the road — a `--line` copy of their own shape, drawn first and
+ * lower, so only a bottom edge shows, as if lit from the top. What is painted
+ * on the road (dashes, sand, the finish band, a cone's base) stays flat.
+ *
  * Chromium 88 is the floor: corners are built with arcTo (`roundRect` is
- * Chromium 99), and nothing uses shadowBlur or ctx.filter (§11).
+ * Chromium 99), and nothing uses shadowBlur or ctx.filter (§11) — the
+ * thickness is one plain fill.
  */
 import {
   BOARD_HEIGHT,
@@ -41,6 +47,12 @@ export interface Palette {
   ink: string;
   inkSoft: string;
   accent: string;
+  /**
+   * The off-road beside the shoulders (`--ot-verge`, an alias in overtake.css:
+   * `--line` in the light theme, `--paper` in the dark one, so the road reads
+   * as the higher surface in both — §11).
+   */
+  verge: string;
   /** The other racers' fill (`--ot-rival`, game content — §11). */
   rival: string;
   /** Their digit on that fill (`--ot-rival-ink`, which is `var(--surface)`). */
@@ -57,6 +69,7 @@ export function readPalette(): Palette {
     ink: pick('--ink', '#232a33'),
     inkSoft: pick('--ink-soft', '#5c6772'),
     accent: pick('--accent', '#8e3b46'),
+    verge: pick('--ot-verge', '#ddd7ca'),
     rival: pick('--ot-rival', '#2453a8'),
     rivalInk: pick('--ot-rival-ink', '#fffdf8'),
   };
@@ -83,9 +96,19 @@ export function roundRectPath(
 export type CarLook = 'player' | 'traffic' | 'rival';
 
 /**
+ * How far a car or a works stands off the road, logical px (§11「見た目」):
+ * about 2.2 CSS px at the board's usual 0.55 scale, the same few px as the
+ * collection's keys and board frame. Straight down — the light comes from the
+ * top — so there is no direction to choose and nothing leans.
+ */
+export const LIFT = 4;
+
+/**
  * One car, seen from above, front up: a rounded body with a windscreen cut
- * near the front and a rear window near the back. Its own shape, drawn here
- * (§11) — no livery, no silhouette of anyone else's car.
+ * near the front and a rear window near the back, on a `--line` thickness
+ * LIFT lower. Its own shape, drawn here (§11) — no livery, no silhouette of
+ * anyone else's car. The thickness goes first, under whatever alpha the caller
+ * has set, so a blinking car (§4) blinks with its edge.
  */
 export function drawCar(
   ctx: CanvasRenderingContext2D,
@@ -99,6 +122,9 @@ export function drawCar(
 ): void {
   const x = centreX - width / 2;
   const radius = Math.min(7, width / 4);
+  roundRectPath(ctx, x, frontY + LIFT, width, length, radius);
+  ctx.fillStyle = palette.line;
+  ctx.fill();
   roundRectPath(ctx, x, frontY, width, length, radius);
   ctx.fillStyle =
     look === 'player' ? palette.ink : look === 'rival' ? palette.rival : palette.accent;
@@ -128,7 +154,12 @@ export function drawCar(
   }
 }
 
-/** A closed outer lane: accent hatching inside an accent outline (§11). */
+/**
+ * A closed outer lane: accent hatching inside an accent outline (§11), on an
+ * opaque surface-coloured slab standing LIFT above the road. The slab is
+ * opaque on purpose — the thickness must not show through it, and a closed
+ * lane reads as a thing rather than as marks on the road.
+ */
 export function drawWorks(
   ctx: CanvasRenderingContext2D,
   palette: Palette,
@@ -137,6 +168,10 @@ export function drawWorks(
   width: number,
   height: number,
 ): void {
+  ctx.fillStyle = palette.line;
+  ctx.fillRect(x, y + LIFT, width, height);
+  ctx.fillStyle = palette.surface;
+  ctx.fillRect(x, y, width, height);
   ctx.save();
   ctx.beginPath();
   ctx.rect(x, y, width, height);
@@ -155,14 +190,18 @@ export function drawWorks(
   ctx.strokeRect(x + 1, y + 1, width - 2, height - 2);
 }
 
-/** The finish: a checkered band across the road, ink and surface (§11). */
+/**
+ * The finish: a checkered band across the road, ink and `--line` (§11). Not
+ * the surface: that is the road's own colour, so those squares vanished and
+ * the band read as scattered ink. Flat, painted on the road.
+ */
 export function drawFinish(ctx: CanvasRenderingContext2D, palette: Palette, y: number): void {
   const left = ROAD_LEFT / SUB;
   const right = ROAD_RIGHT / SUB;
   const size = 8;
   for (let row = 0; row < 2; row++) {
     for (let col = 0, cx = left; cx < right; col++, cx += size) {
-      ctx.fillStyle = (row + col) % 2 === 0 ? palette.ink : palette.surface;
+      ctx.fillStyle = (row + col) % 2 === 0 ? palette.ink : palette.line;
       ctx.fillRect(cx, y - size * (row + 1), Math.min(size, right - cx), size);
     }
   }
@@ -174,7 +213,7 @@ export const DASH_PITCH = 210;
 
 /**
  * The road itself: surface, the shoulders as thin ink-soft lines with the
- * off-road beyond them in the line colour, and the lane dashes at `ground`
+ * off-road beyond them in the verge colour, and the lane dashes at `ground`
  * px of ground travelled — so they stream past at the ground speed w + vT.
  */
 export function drawRoad(
@@ -187,7 +226,7 @@ export function drawRoad(
 ): void {
   ctx.fillStyle = palette.surface;
   ctx.fillRect(0, top, BOARD_WIDTH, bottom - top);
-  ctx.fillStyle = palette.line;
+  ctx.fillStyle = palette.verge;
   ctx.fillRect(0, top, SHOULDER_LEFT / SUB, bottom - top);
   ctx.fillRect(SHOULDER_RIGHT / SUB, top, BOARD_WIDTH - SHOULDER_RIGHT / SUB, bottom - top);
   ctx.fillStyle = palette.inkSoft;

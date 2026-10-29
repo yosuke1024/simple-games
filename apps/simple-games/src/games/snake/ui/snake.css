@@ -9,7 +9,27 @@
 
    Nothing here animates. The snake moves cell to cell on the tick and is
    never tweened between; there is no flash, pop, shake or particle to turn
-   off for Reduced Motion because there is none at all (§13). */
+   off for Reduced Motion because there is none at all (§13) — and that
+   includes the keys: pressing one changes its look at once, with no
+   transition.
+
+   This game has no colour of its own (unlike Chess or Gem Swap, whose boards
+   are game content): the one variable below is an alias for a shared token,
+   not a value, and ui/contrast.test.ts holds the file to that. */
+
+/* The shade the wall casts on the floor along the top and left edges, so the
+   rim reads as standing higher than the floor with the light from above-left
+   (§13「見た目」). It is the series' recessed paper — 1.25:1 under the floor
+   in the light theme. In the dark theme that token is only 1.10:1 under the
+   floor, too faint to read as a shade, so the paper (1.20:1) takes its
+   place. */
+:root {
+  --sn-dent: var(--surface-recessed);
+}
+
+:root[data-theme='dark'] {
+  --sn-dent: var(--paper);
+}
 
 /* ---------- game screen ---------- */
 
@@ -97,7 +117,14 @@
 
 /* Square at every size, as large as the column and the height allow. The
    first term is `100%`, not a share of the viewport: a board measured in vw
-   ignores its column's padding and hangs past it (game-2048.css). */
+   ignores its column's padding and hangs past it (game-2048.css).
+
+   The board is a tray on the desk: the collection's frame (the lift first,
+   then a paper edge, a hairline and a soft ring), as on every other board.
+   The radius is the wall's outer corner as a share of the box — 0.36 cell
+   over the 14.32 of the viewBox — so frame and wall turn the same corner at
+   any size (SnakeBoard.tsx). The frame reaches 4px past the box, inside
+   .sn-body's 16px side padding and its 4px top padding (§13「寸法」). */
 .sn-stage-wrap {
   position: relative;
   flex: none;
@@ -105,6 +132,12 @@
   width: min(100%, 560px, calc(100svh - var(--sn-chrome) - var(--sn-reserve) - var(--sn-insets)));
   min-width: 160px;
   aspect-ratio: 1;
+  border-radius: 2.5%;
+  box-shadow:
+    0 3px 0 var(--line),
+    0 0 0 3px var(--paper),
+    0 0 0 4px var(--line),
+    0 8px 18px var(--accent-ring-soft);
 }
 
 /* The board hears the swipe over its whole box. `touch-action: none` because
@@ -131,10 +164,20 @@
   fill: var(--surface);
 }
 
+/* Static, drawn once with the floor (see --sn-dent above). */
+.sn-recess {
+  fill: var(--sn-dent);
+}
+
+/* A printed rule: 1px at any board size. In cells the line was 0.035 — half
+   a pixel on a 14px cell, 1.4px on an iPad's 40px one — and a fraction of a
+   pixel smears into blotches of uneven grey. Chromium 88 has both properties. */
 .sn-grid {
   fill: none;
   stroke: var(--line);
-  stroke-width: 0.035;
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+  shape-rendering: crispEdges;
 }
 
 /* The wall is the board's edge, and it is solid: the snake cannot pass it. */
@@ -143,9 +186,22 @@
   stroke: var(--ink-soft);
 }
 
-.sn-body,
+/* The snake's segments, and the head. `sn-flesh`, not `sn-body`: that name is
+   the screen's layout column (.sn-body above), and a rule written for one
+   would land on the other. The edge is the ink laid over the fill at 30%
+   (darker than the accent in the light theme, a lighter glint in the dark
+   one), so each segment reads as a bead; a neck's edge runs along its sides
+   and a segment's edge crosses the neck's mouth, which is what makes the
+   cord. It is thin on purpose, and the shapes are drawn smaller by its width
+   (SnakeBoard.tsx), so its outer half stays inside the old outline: the gap
+   between two segments that are not neighbours stays visibly open (§13「見た目」),
+   and where the stroke is too fine to resolve it only vanishes. */
+.sn-flesh,
 .sn-head-shape {
   fill: var(--accent);
+  stroke: var(--ink);
+  stroke-opacity: 0.3;
+  stroke-width: 0.045;
 }
 
 .sn-eye {
@@ -176,7 +232,12 @@
 
 /* ---------- direction buttons (SnakePad.tsx) ---------- */
 
+/* Positioned only for the paint order: the board's frame is positioned too,
+   and a positioned box paints over an unpositioned one, so without this the
+   frame's soft shadow (it reaches the top of the cross) would lie over the
+   up key instead of under it. No layout effect. */
 .sn-pad {
+  position: relative;
   flex: none;
   display: grid;
   grid-template-columns: repeat(3, 56px);
@@ -211,16 +272,25 @@
   align-items: center;
   justify-content: center;
   border-radius: 12px;
-  background: var(--surface);
+  /* The shared key (.action-btn in ui/styles.css): a face lit from above, a
+     rim of light on its top edge, and a 2px lip underneath. It fits in the
+     grid's 4px gap, so the tap area and the layout are unchanged. */
+  background: linear-gradient(var(--surface), var(--paper));
   border: 1px solid var(--line);
+  box-shadow:
+    inset 0 1px 0 var(--surface),
+    0 2px 0 var(--line);
   color: var(--accent);
   /* A quick second tap is a second turn, never a zoom. */
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Pressed: the lip is gone and the face sits in. No transition — the key
+   changes the moment the finger lands (§13「Reduced Motion」). */
 .sn-pad-btn:active {
   background: var(--accent-soft);
+  box-shadow: inset 0 1px 2px var(--line);
 }
 
 /* The solid accent, not the translucent ring: a focus mark has to stand
@@ -250,11 +320,18 @@
   background: var(--accent);
   border-color: var(--accent);
   color: var(--accent-ink);
+  box-shadow: 0 2px 0 var(--accent-ring);
 }
 
 .sn-pad-toggle:active {
   background: var(--accent);
+  box-shadow: none;
   opacity: 0.85;
+}
+
+/* The ended run's middle key is out of use: flat, like the keys below. */
+.sn-pad-toggle:disabled {
+  box-shadow: none;
 }
 
 .sn-pad-toggle .sn-pad-glyph {
@@ -263,17 +340,21 @@
 }
 
 /* Straight back over the neck while the run waits: it does nothing (§5),
-   and says so by its outline as well as by being fainter. */
+   and says so by its outline as well as by being fainter. A key that does
+   nothing is not raised either — flat, with no lip — and pressing it does not
+   sink it. */
 .sn-pad-off {
   border-style: dashed;
   border-color: var(--ink-soft);
   color: var(--ink-soft);
   background: transparent;
+  box-shadow: none;
   opacity: 0.6;
 }
 
 .sn-pad-off:active {
   background: transparent;
+  box-shadow: none;
 }
 
 /* ---------- home ---------- */
@@ -321,6 +402,9 @@
   border: 1px solid var(--line);
   border-radius: 12px;
   overflow: hidden;
+  /* The lip of the board's frame, without the paper edge: this is a window
+     onto a board, not the board (§13「見た目」). */
+  box-shadow: 0 2px 0 var(--line);
 }
 
 /* A short screen takes the figure a size down, for the note above it: at

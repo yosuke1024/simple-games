@@ -474,6 +474,7 @@ export function BlockGameScreen() {
         >
           <BlockBoard
             board={session.board}
+            tones={session.tones}
             hand={hand}
             handFits={handFits}
             willClear={willClear}

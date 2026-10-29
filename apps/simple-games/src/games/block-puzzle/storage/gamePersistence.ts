@@ -6,14 +6,18 @@
  * left, down to the three pieces on offer. Only the undo history is dropped,
  * and that is the one thing a save cannot promise anyway — it describes a
  * path, not a position.
+ *
+ * The board is written with its paint (v2, §10): each filled square as the
+ * tone it was placed in. A v1 record arrives here already migrated by the
+ * schema, and reads as a board drawn entirely in the accent.
  */
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';
 import { loadRecord, removeRecord, saveRecord } from '../../../storage/repo';
 import {
-  decodeBoard,
+  decodeCells,
   decodeTray,
-  encodeBoard,
+  encodeCells,
   encodeTray,
   restoreSession,
   type BlockSession,
@@ -22,9 +26,9 @@ import { gameSchema, type PersistedGame } from './schemas';
 
 export function toPersisted(session: BlockSession, savedAt: number): PersistedGame {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     seed: session.seed,
-    board: encodeBoard(session.board),
+    board: encodeCells(session.board, session.tones),
     tray: encodeTray(session.tray),
     score: session.score,
     batchIndex: session.batchIndex,
@@ -36,14 +40,15 @@ export function toPersisted(session: BlockSession, savedAt: number): PersistedGa
 
 function toSession(persisted: PersistedGame | null): BlockSession | null {
   if (persisted === null) return null;
-  const board = decodeBoard(persisted.board);
-  if (board === null) return null;
+  const cells = decodeCells(persisted.board);
+  if (cells === null) return null;
   const tray = decodeTray(persisted.tray);
   if (tray === null) return null;
 
   const session = restoreSession({
     seed: persisted.seed,
-    board,
+    board: cells.board,
+    tones: cells.tones,
     tray,
     score: persisted.score,
     batchIndex: persisted.batchIndex,

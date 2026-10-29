@@ -17,8 +17,9 @@ export interface FigureBlock {
   readonly h: number;
   readonly kind: 'target' | 'h' | 'v';
   /**
-   * Drawn as a neutral dashed outline only: where a block was. Never the
-   * board's accent outline, which is the Hint's "slide it here" (§6, §13).
+   * Drawn as a dashed outline in the wood's edge colour (--ub-edge), never
+   * the accent: where a block was. The board's accent dashes are the Hint's
+   * "slide it here" (§6, §13).
    */
   readonly was?: boolean;
 }

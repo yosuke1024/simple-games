@@ -3,4 +3,5 @@ export * from './pieces';
 export * from './rng';
 export * from './serialize';
 export * from './session';
+export * from './tones';
 export * from './types';

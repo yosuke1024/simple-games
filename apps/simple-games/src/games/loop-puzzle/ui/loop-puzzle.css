@@ -186,7 +186,12 @@
   width: max(6px, calc(var(--lp-cell) * 0.1));
   height: max(6px, calc(var(--lp-cell) * 0.1));
   border-radius: 50%;
-  background: var(--ink);
+  /* The printed grid, lighter than the pen: the soft ink (§13), not the
+     numbers' full ink — a 6px dot in --ink outweighed the ~4.5px line it
+     is meant to frame. 3:1 or more on the board and on the hint's ground
+     in both themes; under the end of the mouse's faint hover line it is
+     less on dark, and on both while pressed (contrast.test.ts records it). */
+  background: var(--ink-soft);
 }
 
 /* A dot the loop passes through takes the line's colour and width, so the
@@ -548,8 +553,10 @@
   stroke-linecap: round;
 }
 
+/* The figure shows the board's look, so its dots are the printed grid's soft
+   ink too (§13). */
 .lp-fig-dot {
-  fill: var(--ink);
+  fill: var(--ink-soft);
 }
 
 .lp-fig-num {

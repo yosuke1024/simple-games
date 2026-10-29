@@ -1,8 +1,10 @@
 /**
  * The three Quick Rules pictures (docs/TANGRAM_RULES.md §9): small still
- * drawings made of the board's own parts — the silhouette, the pieces in the
- * accent, an outline where a piece cannot go. No text on them, and hidden from
- * screen readers: the sentence under each carries the meaning.
+ * drawings made of the board's own parts — the silhouette's film on the page,
+ * the pieces in flat wood (no grain: its tile is in pixels and these are drawn
+ * in units — tangram.css), an outline where a piece cannot go. No text on
+ * them, and hidden from screen readers: the sentence under each carries the
+ * meaning.
  */
 import {
   figureById,
@@ -12,6 +14,7 @@ import {
   type PieceId,
   type Pose,
 } from '../../game';
+import { shadeOf } from './TangramBoard';
 
 const SQUARE = figureById('square')!;
 const SIDE = 4 * Math.SQRT2;
@@ -21,9 +24,6 @@ const points = (vertices: readonly (readonly [number, number])[], dx = 0, dy = 0
 
 const pieceAt = (id: PieceId, pose: Pose, dx = 0, dy = 0): string =>
   points(poseVertices(id, pose).map(ptToFloat), dx, dy);
-
-const shadeOf = (id: PieceId) =>
-  id === 'L1' || id === 'L2' || id === 'SQ' ? 'tn-shade-a' : 'tn-shade-b';
 
 function Silhouette({ dx = 0 }: { dx?: number }) {
   return <polygon className="tn-silhouette" points={points(SQUARE.outline.map(ptToFloat), dx)} />;
@@ -57,7 +57,7 @@ function InsideFigure() {
   return (
     <svg className="tn-figure" viewBox={`-0.4 -0.4 ${SIDE + 3.2} ${SIDE + 0.8}`} aria-hidden="true">
       <Silhouette />
-      <g className="tn-figure-piece tn-shade-a">
+      <g className={`tn-figure-piece tn-shade-${shadeOf('L1')}`}>
         <polygon className="tn-shape" points={pieceAt('L1', L1)} />
       </g>
       <polygon className="tn-carry-open" points={pieceAt('L2', L2, 2.4, 0.6)} />
@@ -71,7 +71,7 @@ function DoneFigure() {
     <svg className="tn-figure" viewBox={`-0.4 -0.4 ${SIDE + 0.8} ${SIDE + 0.8}`} aria-hidden="true">
       <Silhouette />
       {PIECE_IDS.map((id) => (
-        <g key={id} className={`tn-figure-piece ${shadeOf(id)}`}>
+        <g key={id} className={`tn-figure-piece tn-shade-${shadeOf(id)}`}>
           <polygon className="tn-shape" points={pieceAt(id, SQUARE.solution[id])} />
         </g>
       ))}

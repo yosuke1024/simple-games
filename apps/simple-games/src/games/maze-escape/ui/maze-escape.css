@@ -1,3 +1,60 @@
+/* Maze Escape — all of this game's styling, imported by MazeEscapeRoot.
+   Screens, buttons and the action bar come from the shared stylesheet
+   (ui/styles.css); the accent (green) arrives via the data-game tokens the
+   shell stamps, and is used for the token, the goal, the hint, the available
+   direction keys and the move count only. Class names are prefixed `me-`.
+
+   The board is warm paper, not chrome, so its colours are the one exception
+   docs/architecture/css-split.md allows: they are declared here and nowhere
+   else, and ui/contrast.test.ts measures the pairs that carry meaning (walls,
+   start ring, trail, token, goal) at 3:1 in both themes and fails on any
+   colour literal below the two blocks (docs/MAZE_ESCAPE_RULES.md「Visual
+   presentation」, values and ratios recorded there).
+
+   The light comes from the upper left in both themes: a wall has a lit top
+   face, a darker side face that shows below and to its right, and a cast
+   shadow on the floor beyond that; the token is lit the same way. Only the
+   token's gloss uses shared theme tokens, as aliases — the lighter of
+   --surface / --ink in each theme — so it stays light in the dark theme,
+   where the accent-ink is dark. The three alpha numbers are how strongly a
+   shadow or the gloss shows; they are plain numbers, not colour functions, so
+   the test can lay them over the floor. --me-drop is the board's soft outer
+   shadow, a decorative translucent brown the test does not measure. */
+
+:root {
+  --me-floor: #faf5e9;
+  --me-rim: #b7a486;
+  --me-rim-lift: #d7c7ad;
+  --me-drop: rgb(61 43 25 / 10%);
+  --me-wall-top: #706249;
+  --me-wall-side: #4a3f2b;
+  --me-cast: #705c3e;
+  --me-cast-alpha: 0.2;
+  --me-start: #8e7f64;
+  --me-trail: #8e7f64;
+  --me-tray-shade: #3d2b19;
+  --me-tray-alpha: 0.18;
+  --me-gloss: var(--surface);
+  --me-gloss-alpha: 0.6;
+}
+
+:root[data-theme='dark'] {
+  --me-floor: #302d26;
+  --me-rim: #786b53;
+  --me-rim-lift: #4c4232;
+  --me-drop: rgb(0 0 0 / 15%);
+  --me-wall-top: #c8bba1;
+  --me-wall-side: #8f836c;
+  --me-cast: #000000;
+  --me-cast-alpha: 0.45;
+  --me-start: #8e7f64;
+  --me-trail: #84775e;
+  --me-tray-shade: #000000;
+  --me-tray-alpha: 0.35;
+  --me-gloss: var(--ink);
+  --me-gloss-alpha: 0.6;
+}
+
 .me-screen .game-content {
   overflow-y: auto;
 }
@@ -11,20 +68,6 @@
 }
 .me-home-content {
   display: contents;
-}
-.me-logo svg {
-  width: 44px;
-  height: 44px;
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  filter: drop-shadow(0 2px 0 rgb(55 37 26 / 10%));
-}
-.me-logo circle {
-  fill: var(--accent);
-  stroke: none;
 }
 .me-choose {
   text-align: center;
@@ -87,15 +130,37 @@
   stroke-linejoin: round;
 }
 .me-board {
+  position: relative;
   touch-action: none;
-  background: #faf5e9;
+  background: var(--me-floor);
   padding: 0;
-  border: 2px solid #b7a486;
+  border: 2px solid var(--me-rim);
   border-radius: 9px;
   overflow: hidden;
   box-shadow:
-    0 3px 0 #d7c7ad,
-    0 10px 24px rgb(61 43 25 / 10%);
+    0 3px 0 var(--me-rim-lift),
+    0 10px 24px var(--me-drop);
+}
+/* The floor sits one step below the frame: a shallow shadow falls inward from
+   the upper-left edges, over the walls and floor alike. It reaches 5px (the
+   3px offset less the 2px spread, plus the 4px blur), so it stops short of the
+   start ring, whose outer stroke is about 6.7px in from the edge on the
+   smallest, compact 9x9 board; the blur's faint tail past 5px is under 3% of
+   its strength. It is drawn on top of the SVG so the SVG never changes.
+   pointer-events: none keeps the swipe and tap mapping on .me-board exactly as
+   it was. The radius is the frame's minus its 2px border. */
+.me-board::after,
+.me-figure::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 7px;
+  pointer-events: none;
+  opacity: var(--me-tray-alpha);
+  box-shadow: inset 2px 3px 4px -2px var(--me-tray-shade);
 }
 .me-maze {
   display: block;
@@ -103,37 +168,52 @@
   height: auto;
 }
 .me-floor {
-  fill: #faf5e9;
+  fill: var(--me-floor);
 }
+/* A wall is three strokes of the same path: the shadow it casts on the floor,
+   its darker side face (offset down and right, so the lit top face looks
+   raised), and the top face. Square caps and mitred joins make the corners
+   solid in all three. The top is .1 wide, so a passage is still .9 clear —
+   the token's ringed diameter is about .5. The outer cast stays inside the
+   viewBox's .15 margin, so the viewBox and the tap mapping do not change. */
 .me-walls,
-.me-wall-shadow {
+.me-wall-side,
+.me-wall-cast {
   fill: none;
-  stroke: #706249;
-  stroke-width: 0.075;
   stroke-linecap: square;
   stroke-linejoin: miter;
 }
-.me-wall-shadow {
-  stroke: #9c8767;
-  stroke-width: 0.105;
-  opacity: 0.22;
+.me-walls {
+  stroke: var(--me-wall-top);
+  stroke-width: 0.1;
+}
+.me-wall-side {
+  stroke: var(--me-wall-side);
+  stroke-width: 0.1;
+}
+.me-wall-cast {
+  stroke: var(--me-cast);
+  stroke-width: 0.11;
+  opacity: var(--me-cast-alpha);
 }
 .me-start {
   fill: none;
-  stroke: #8e7f64;
+  stroke: var(--me-start);
   stroke-width: 0.035;
   stroke-dasharray: 0.065 0.05;
 }
 .me-trail {
-  fill: #8e7f64;
+  fill: var(--me-trail);
 }
 .me-goal-disc {
   fill: var(--accent-soft);
   stroke: var(--accent);
   stroke-width: 0.025;
 }
+/* The flag cloth is filled so it reads as a solid shape beside the token
+   instead of a 1.5px outline on the smallest boards; the pole stays a stroke. */
 .me-goal {
-  fill: none;
+  fill: var(--accent);
   stroke: var(--accent);
   stroke-width: 0.065;
   stroke-linecap: round;
@@ -145,24 +225,25 @@
   stroke-width: 0.045;
   stroke-dasharray: 0.08 0.05;
 }
+/* The token is a lit ball: an accent disc ringed in the floor colour, a
+   cream gloss at its upper left (--me-gloss is light in both themes, unlike
+   the accent-ink, so the light never comes from below), and a shadow cast
+   down and right like the walls'. There is no centre mark. */
 .me-player {
   fill: var(--accent);
-  stroke: #faf5e9;
+  stroke: var(--me-floor);
   stroke-width: 0.045;
 }
-.me-player-center {
-  fill: var(--accent-ink);
-}
 .me-player-shadow {
-  fill: #55472f;
-  opacity: 0.2;
+  fill: var(--me-cast);
+  opacity: var(--me-cast-alpha);
 }
 .me-player-light {
   fill: none;
-  stroke: var(--accent-ink);
-  stroke-width: 0.025;
+  stroke: var(--me-gloss);
+  stroke-width: 0.03;
   stroke-linecap: round;
-  opacity: 0.6;
+  opacity: var(--me-gloss-alpha);
 }
 .me-position {
   min-height: 46px;
@@ -184,16 +265,21 @@
   width: max-content;
   margin: 0 auto 6px;
 }
+/* The shared control-key recipe (.action-btn in ui/styles.css): the same face,
+   the same lit top edge and the same foot, so the keys keep the shell's
+   texture in both themes. The font-size only sets the arrow icon's em. */
 .me-direction {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--line);
   border-radius: 10px;
   color: var(--accent);
   background: linear-gradient(var(--surface), var(--paper));
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 22%),
+    inset 0 1px 0 var(--surface),
     0 2px 0 var(--line);
   font-size: 1.5rem;
-  font-weight: 700;
   touch-action: manipulation;
   cursor: pointer;
 }
@@ -204,7 +290,7 @@
 }
 .me-direction:active:not([aria-disabled='true']) {
   background: var(--accent-soft);
-  box-shadow: inset 0 1px 2px rgb(50 37 20 / 12%);
+  box-shadow: inset 0 1px 2px var(--line);
 }
 .me-direction:focus-visible {
   outline: 3px solid var(--accent);
@@ -232,36 +318,19 @@
   padding-top: 0;
 }
 .me-figure {
+  position: relative;
   width: 210px;
   max-width: 100%;
   margin: auto;
-  background: #faf5e9;
-  border: 2px solid #b7a486;
+  background: var(--me-floor);
+  border: 2px solid var(--me-rim);
   border-radius: 7px;
-}
-:root[data-theme='dark'] .me-board,
-:root[data-theme='dark'] .me-figure {
-  background: #302d26;
-  border-color: #786b53;
   box-shadow:
-    0 3px 0 #4c4232,
-    0 10px 24px rgb(0 0 0 / 15%);
+    0 3px 0 var(--me-rim-lift),
+    0 10px 24px var(--me-drop);
 }
-:root[data-theme='dark'] .me-floor {
-  fill: #302d26;
-}
-:root[data-theme='dark'] .me-walls {
-  stroke: #c8bba1;
-}
-:root[data-theme='dark'] .me-wall-shadow {
-  stroke: #11100e;
-  opacity: 0.45;
-}
-:root[data-theme='dark'] .me-trail {
-  fill: #84775e;
-}
-:root[data-theme='dark'] .me-player {
-  stroke: #302d26;
+.me-figure::after {
+  border-radius: 5px;
 }
 @media (max-height: 800px) {
   .me-body {

@@ -160,6 +160,8 @@ export function GameScreen() {
             <path d="M12 210 H308" className="pr-net" />
             <circle cx="160" cy="210" r="38" className="pr-ring" />
             <circle cx="160" cy="210" r="3" className="pr-center" />
+            {/* Contact shadow: drawn before the paddles so a ball slipping past one goes under it. */}
+            <circle className="pr-ball-shade" cx={session.x + 0.7} cy={session.y + 2} r="6" />
             <rect x={session.cpu - 34} y="24" width="68" height="8" rx="4" className="pr-cpu" />
             <path d={`M${session.cpu - 27} 26h54`} className="pr-paddle-edge" />
             <rect
@@ -171,7 +173,11 @@ export function GameScreen() {
               className="pr-player"
             />
             <path d={`M${session.player - 27} 390h54`} className="pr-paddle-edge" />
-            <circle cx={session.x} cy={session.y} r="6" className="pr-ball" />
+            {/* The body keeps r=6 (the hit geometry); the arc is the top light, not a mark. */}
+            <g transform={`translate(${session.x} ${session.y})`}>
+              <circle r="6" className="pr-ball" />
+              <path className="pr-ball-glint" d="M-3.8 -1.8A4.2 4.2 0 0 1 -1.4 -3.9" />
+            </g>
           </svg>
           <p className="pr-status" role="status">
             {paused
@@ -203,7 +209,7 @@ export function GameScreen() {
                   if (event.detail === 0) updatePaddle(session.player + dir * 22);
                 }}
               >
-                {dir === -1 ? '←' : '→'}
+                <IconBack className={dir === -1 ? undefined : 'pr-key-arrow-right'} />
               </button>
             ))}
             <button

@@ -13,7 +13,23 @@
    0 hexagon, 1 octagon, 2 drop, 3 marquise, 4 shield, 5 heart. None is in the
    accent's red–rose family, and every gem also has its own cut, so colour is
    never the only way to tell two gems apart. Each clears 3:1 on --surface in
-   its theme (ui/contrast.test.ts). No other colour is written here. */
+   its theme (ui/contrast.test.ts). No other colour literal is written here.
+
+   The light on the board comes from above in both themes (§10): the lit side
+   of a gem is --gs-glint, the side in shade --gs-shade. Both are aliases of
+   the shared theme tokens, not colours of their own, so they follow the theme
+   and the gem colours stay the only literals. The theme decides which token
+   plays which part — the tile's own surface lights a gem in the light theme,
+   the ink does in the dark one, where the surface is darker than the gem —
+   so the glint is the lighter of the two in both and the dark theme no longer
+   reads as lit from below. The four alphas are how strongly each shows: the
+   shade as the gem's hairline edge and as the shadow it casts, the glint as
+   the lit face and the line round it. The dark theme's darkest token is barely
+   darker than its tiles and its gems are pale, so its shadow and lit cues
+   need the tokens close to opaque to show at all. Its edge is the exception,
+   held at 0.5: at 0.8 the hairline read as a black outline round a pale gem,
+   a sticker's keyline, instead of an edge (arithmetic and what was seen in
+   docs/GEM_SWAP_RULES.md §10). */
 
 :root {
   --gs-gem-0: #2c64c8;
@@ -22,6 +38,12 @@
   --gs-gem-3: #7a4fc0;
   --gs-gem-4: #d9682a;
   --gs-gem-5: #1d8fa2;
+  --gs-glint: var(--surface);
+  --gs-shade: var(--ink);
+  --gs-face-alpha: 0.2;
+  --gs-facet-alpha: 0.5;
+  --gs-edge-alpha: 0.22;
+  --gs-cast-alpha: 0.26;
 }
 
 :root[data-theme='dark'] {
@@ -31,6 +53,12 @@
   --gs-gem-3: #a985ec;
   --gs-gem-4: #f0904f;
   --gs-gem-5: #56cde0;
+  --gs-glint: var(--ink);
+  --gs-shade: var(--paper);
+  --gs-face-alpha: 0.3;
+  --gs-facet-alpha: 0.8;
+  --gs-edge-alpha: 0.5;
+  --gs-cast-alpha: 0.8;
 }
 
 /* ---------- game screen ---------- */
@@ -129,7 +157,14 @@
 /* Eight by eight square cells on a recessed plate. `touch-action: none`
    because gems are swiped (§3): without it the page would claim the finger.
    The plate clips, so a refill falling in from above the board is seen only
-   once it is on it. */
+   once it is on it. The paper edge and shallow lift are the collection's
+   board frame, lift first (§9); every layer sits outside the box, so the
+   board's width and the arithmetic in §9 do not change. The frame's fourth
+   layer, the soft glow (`0 8px 18px var(--accent-ring-soft)`), is left out
+   here on purpose: `.gs-body` scrolls, so it clips whatever is more than its
+   8px of bottom padding below the board, and on a short phone, where the
+   board fills the column, the glow ends in a straight faint line (seen on a
+   static page, §9). The three layers kept reach 4px, inside the padding. */
 .gs-board {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
@@ -144,6 +179,10 @@
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
+  box-shadow:
+    0 3px 0 var(--line),
+    0 0 0 3px var(--paper),
+    0 0 0 4px var(--line);
 }
 
 .gs-cell {
@@ -160,17 +199,23 @@
 
 /* Each cell's own tile, inset so neighbours read apart without a grid gap
    (a gap would make one cell's width differ from the pitch a falling gem
-   travels by). */
+   travels by). The inset shadow makes it a shallow dish the gem sits in, lit
+   from above like everything else on the board (§10). */
 .gs-cell::before {
   content: '';
   position: absolute;
   inset: 1.5px;
   border-radius: 7px;
   background: var(--surface);
+  box-shadow: inset 0 1.5px 2px var(--line);
 }
 
 /* The selected gem: a solid accent ring (§10) — a ring, so the state is a
-   shape as well as a colour, and the screen reader says "selected". */
+   shape as well as a colour, and the screen reader says "selected". Same
+   specificity as the dish above and later in the file, so the ring replaces
+   the dish's shadow rather than adding to it. The gem's own edge and shadow
+   are switched off inside the ring (see `.gs-gem-shade`), so the ring looks
+   as it did before the board had any texture. */
 .gs-cell-selected::before {
   box-shadow: inset 0 0 0 3px var(--accent);
 }
@@ -194,14 +239,24 @@
   pointer-events: none;
 }
 
+/* `overflow: visible` so the shadow pushed down below the outline and the
+   edge outside it are never cut at the SVG's box. */
 .gs-gem {
   width: 78%;
   height: 78%;
   overflow: visible;
 }
 
+/* The gem's thin edge: the shade colour stroked wider than the outline and
+   painted first (`paint-order: stroke`), so the fill covers its inner half
+   and only the outer hairline shows — a cut stone's edge. The fill's
+   silhouette is unchanged; the hairline sits outside it (§10). */
 .gs-gem-body {
+  stroke: var(--gs-shade);
+  stroke-opacity: var(--gs-edge-alpha);
+  stroke-width: 6;
   stroke-linejoin: round;
+  paint-order: stroke;
 }
 
 .gs-gem-0 .gs-gem-body {
@@ -228,15 +283,48 @@
   fill: var(--gs-gem-5);
 }
 
-/* One facet line, in the surface colour, inside the outline (§10): it never
-   reaches the edge, so the cut's silhouette stays the shape that counts. */
+/* The table of the stone: a lit face and the line round it, inside the
+   outline (§10). It is the glint colour in both themes, so the light is
+   always on the lit side whatever the theme; the fill and the line are
+   separate opacities because `opacity` would lay the line over the fill
+   twice. It never reaches the edge, so the cut's silhouette stays the shape
+   that counts, and all six kinds get the same treatment — the gems are told
+   apart by their cut, not by how they shine. */
 .gs-gem-facet {
-  fill: none;
-  stroke: var(--surface);
-  stroke-width: 4;
+  fill: var(--gs-glint);
+  fill-opacity: var(--gs-face-alpha);
+  stroke: var(--gs-glint);
+  stroke-opacity: var(--gs-facet-alpha);
+  stroke-width: 3;
   stroke-linejoin: round;
   stroke-linecap: round;
-  opacity: 0.55;
+}
+
+/* The shadow a gem casts: its own outline, drawn first and pushed down, so it
+   is the gem's shape and not a blur (no filter — the gems move every beat of
+   a replay). The offset is in the SVG's 100-unit box, so 5 units is about
+   1.7px under a 33px gem. Nothing here moves or animates. */
+.gs-gem-shade {
+  fill: var(--gs-shade);
+  fill-opacity: var(--gs-cast-alpha);
+  transform: translate(0, 5px);
+}
+
+/* A selected gem is the ring and nothing else: its edge and shadow are off,
+   so no texture reaches the ring (§10). The ring's inner edge is 4.5px from
+   the cell's edge, and on the smallest board (260px, a 31.75px pitch) a
+   gem's tip stands 4.7px in — the edge's 0.7px and the shadow's 1.2px would
+   cross it, and in the dark theme, where the shade is near black and the
+   ring a pale rose, the crossing shows (算術では; seen on a static page).
+   Later than the rules above and one class more specific, so these win. */
+.gs-cell-selected .gs-gem-body,
+.gs-fig-cell-marked .gs-gem-body {
+  stroke-opacity: 0;
+}
+
+.gs-cell-selected .gs-gem-shade,
+.gs-fig-cell-marked .gs-gem-shade {
+  fill-opacity: 0;
 }
 
 /* ---------- the replay (§10) ---------- */
@@ -378,6 +466,7 @@
   inset: 1.5px;
   border-radius: 6px;
   background: var(--surface);
+  box-shadow: inset 0 1.5px 2px var(--line);
 }
 
 .gs-fig-cell .gs-gem {
@@ -440,14 +529,24 @@
    instead: the selection a Highlight ring on Canvas, a remaining swap a
    CanvasText fill, a used one a CanvasText outline. The gems keep their cuts
    and are drawn in CanvasText — `svg.gs-gem` outranks the per-kind fill
-   rules above, whatever the order. */
+   rules above, whatever the order. The texture that rides on the shade and
+   glint colours goes: no hairline edge, no lit face, no cast shadow — the
+   cut and the one facet line are what is left, as thick as it was before
+   the texture (4). */
 @media (forced-colors: active) {
   svg.gs-gem .gs-gem-body {
     fill: CanvasText;
+    stroke: none;
   }
 
   svg.gs-gem .gs-gem-facet {
+    fill: none;
     stroke: Canvas;
+    stroke-width: 4;
+  }
+
+  .gs-gem-shade {
+    display: none;
   }
 
   .gs-cell-selected::before,

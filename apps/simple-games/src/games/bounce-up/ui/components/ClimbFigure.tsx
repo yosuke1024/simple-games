@@ -14,6 +14,7 @@ import {
   drawBody,
   drawPlatform,
   readPalette,
+  REST,
   wrappedCentres,
   type Palette,
 } from '../draw';
@@ -145,7 +146,7 @@ export function drawFigure(
   if (scene.bestLine !== null) drawBestLine(ctx, palette, scene.bestLine);
   for (const [left, top] of scene.clouds) drawPlatform(ctx, palette, 'static', left, top, PW);
   for (const [x, foot] of scene.bodies) {
-    for (const cx of wrappedCentres(x)) drawBody(ctx, palette, cx, foot, false);
+    for (const cx of wrappedCentres(x)) drawBody(ctx, palette, cx, foot, REST);
   }
   for (const points of scene.arrows) arrow(ctx, palette, points);
 }

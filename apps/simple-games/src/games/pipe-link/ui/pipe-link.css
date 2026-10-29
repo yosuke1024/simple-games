@@ -3,9 +3,9 @@
    --ink, --ink-soft, --line, --accent, --accent-soft, --accent-ring, …) so the
    game reads as part of the same app and follows the theme without knowing
    about it. No colour of its own: lit pipes wear the accent — at the end, most
-   of the board — and unlit ones are hollow outlines in --ink-soft
-   (docs/PIPE_LINK_RULES.md §10). Lit and unlit differ by shape as well:
-   a full tube against a hollow one.
+   of the board — and unlit ones are empty grooves, a --surface-recessed core
+   inside an --ink-soft outline (docs/PIPE_LINK_RULES.md §10). Lit and unlit
+   differ by shape as well: a full tube against an empty one.
 
    Class names are prefixed `pn-` so this file can never collide with the
    shell or with another game. */
@@ -65,12 +65,17 @@
   -webkit-user-select: none;
   -webkit-touch-callout: none;
 
-  /* A paper edge and shallow lift on the whole board; external rings remain
-     visible around flush child cells without changing board geometry. */
+  /* The inner bottom edge (§10): the ground sits a little below the rim, lit
+     from above like the grooves on it. It lives in the board's padding (0.2
+     tile, never under 6px), clear of the pipes. Then the series' board frame —
+     a paper edge and shallow lift on the whole board, the lift first so it
+     shows; external rings remain visible around flush child cells without
+     changing board geometry. */
   box-shadow:
+    inset 0 -3px 0 var(--surface-recessed),
+    0 3px 0 var(--line),
     0 0 0 3px var(--paper),
     0 0 0 4px var(--line),
-    0 3px 0 var(--line),
     0 8px 18px var(--accent-ring-soft);
 }
 
@@ -112,8 +117,13 @@
   }
 }
 
-/* Solved beat (§10): one soft wash over the board, then gone. */
-.pn-board::after {
+/* Solved beat (§10): one soft wash lit from behind the pipes, then gone. It is
+   `::before`, so it paints first and the tiles (positioned, later in tree
+   order) paint over it: the finished pipes keep their full strength and the
+   ground warms around them, instead of the wash fading the pipes the player
+   has just completed. Its peak is the full --accent-soft, which the lit core
+   still clears 3:1 against in both themes (ui/contrast.test.ts). */
+.pn-board::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -123,7 +133,7 @@
   opacity: 0;
 }
 
-.pn-board-solved::after {
+.pn-board-solved::before {
   animation: pn-solved-wash 900ms ease-out;
 }
 
@@ -132,7 +142,7 @@
     opacity: 0;
   }
   30% {
-    opacity: 0.6;
+    opacity: 1;
   }
   100% {
     opacity: 0;
@@ -154,10 +164,20 @@
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
-  /* The edge colour of a tube, and its inside. Unlit: an outline around the
-     tile's own ground — hollow. Lit: the accent through and through — full. */
+  /* The edge colour of a tube, and its inside. Unlit: an --ink-soft outline
+     round a core sunk below the ground — an empty groove. Lit: the same tube
+     with the accent in it — a full core, and the outline turned into a faint
+     wall of the same colour (below), so the pipe reads as amber in a channel
+     rather than a flat fill. The groove is one step below the ground, not a
+     contrast of its own: the form (outline against solid) carries lit versus
+     unlit, never the colour. Nor does the groove make the fractional-pixel
+     seams of §10 worse: that hairline is the ground and the outline's fill
+     showing through the core's anti-aliased rim where a tile boundary falls
+     inside a device pixel, whatever the core's colour. The core is drawn
+     twice (PipeGlyph) to shut it, which matters most for a lit pipe, whose
+     0.4 wall no longer underlays the core as an opaque amber outline did. */
   --pn-edge: var(--ink-soft);
-  --pn-core: var(--surface);
+  --pn-core: var(--surface-recessed);
 }
 
 .pn-tile-lit {
@@ -185,24 +205,43 @@
   pointer-events: none;
 }
 
-/* A turn is drawn as the turn it was (§10); the state changed on the tap. */
+/* A turn is drawn as the turn it was (§10); the state changed on the tap. The
+   curve overshoots by about 3% (under 3 degrees of a quarter turn) and settles
+   back, so the part seats with a small click instead of stopping dead. */
 .pn-pipes {
-  transition: transform 0.14s ease-out;
+  transition: transform 0.18s cubic-bezier(0.3, 1.3, 0.5, 1);
 }
 
-.pn-board-still .pn-pipes {
-  transition: none;
-}
-
-.pn-pipe-edge > * {
+/* The colours sit on the groups (the edge, and the core drawn twice) and the
+   shapes inherit them, so a tile animates three elements however many arms it
+   has. Light comes on together in
+   every tile that changed, 160ms, with no order: it is not water flowing, and
+   the board must not read as a clock (§10, §12). The lit outline is one group
+   at 0.4, not 0.4 on each shape, so overlapping shapes do not darken it. */
+.pn-pipe-edge {
   fill: var(--pn-edge);
   stroke: var(--pn-edge);
   stroke-width: 10;
+  transition:
+    fill 0.16s ease-out,
+    stroke 0.16s ease-out,
+    opacity 0.16s ease-out;
 }
 
-.pn-pipe-core > * {
+.pn-tile-lit .pn-pipe-edge {
+  opacity: 0.4;
+}
+
+.pn-pipe-core {
   fill: var(--pn-core);
   stroke: none;
+  transition: fill 0.16s ease-out;
+}
+
+.pn-board-still .pn-pipes,
+.pn-board-still .pn-pipe-edge,
+.pn-board-still .pn-pipe-core {
+  transition: none;
 }
 
 /* The source (§1, §10): a filled dot inside a ring, in ink, over the joint. */
@@ -254,21 +293,26 @@
   text-align: center;
 }
 
-/* Reduced Motion (OS or app): turns and the solved wash happen at once (§10). */
+/* Reduced Motion (OS or app): turns, the light coming on and the solved wash
+   all happen at once (§10). */
 @media (prefers-reduced-motion: reduce) {
-  .pn-pipes {
+  .pn-pipes,
+  .pn-pipe-edge,
+  .pn-pipe-core {
     transition: none;
   }
-  .pn-board-solved::after {
+  .pn-board-solved::before {
     animation: none;
   }
 }
 
-:root[data-reduced-motion='true'] .pn-pipes {
+:root[data-reduced-motion='true'] .pn-pipes,
+:root[data-reduced-motion='true'] .pn-pipe-edge,
+:root[data-reduced-motion='true'] .pn-pipe-core {
   transition: none;
 }
 
-:root[data-reduced-motion='true'] .pn-board-solved::after {
+:root[data-reduced-motion='true'] .pn-board-solved::before {
   animation: none;
 }
 
@@ -311,6 +355,13 @@
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--surface);
+  /* The board's edge, smaller (§9: a figure is the game, smaller): the inner
+     bottom edge, then the series' frame without the accent glow. */
+  box-shadow:
+    inset 0 -3px 0 var(--surface-recessed),
+    0 3px 0 var(--line),
+    0 0 0 3px var(--paper),
+    0 0 0 4px var(--line);
 }
 
 .pn-figure-tile {
