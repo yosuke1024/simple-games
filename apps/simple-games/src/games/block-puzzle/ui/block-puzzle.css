@@ -19,9 +19,10 @@
    on --surface and on --surface-recessed in its theme (ui/contrast.test.ts).
 
    The rest of the two blocks is neutral light and shade — a block's top edge
-   and underside, the lit line's veil — and one mark that points at a series
-   token: the recess drawn into an empty cell. No colour is written anywhere
-   else in this file; ui/contrast.test.ts holds it to that. */
+   and underside, the lit line's veil — and two marks that point at series
+   tokens: the recess drawn into an empty cell, and the carried piece's ring
+   where it crosses a lit line. No colour is written anywhere else in this
+   file; ui/contrast.test.ts holds it to that. */
 
 :root {
   --bp-tone-2: #35558a;
@@ -34,6 +35,7 @@
   --bp-veil: rgba(255, 255, 255, 0.45);
   --bp-veil-ghost: rgba(255, 255, 255, 0.4);
   --bp-well: var(--surface-recessed);
+  --bp-lit-ring: var(--accent);
 }
 
 :root[data-theme='dark'] {
@@ -44,6 +46,10 @@
   /* The floor is too close to a dark cell (1.10:1) to read as a recess; the
      paper under the board is a step deeper. */
   --bp-well: var(--paper);
+  /* Over a lit line the dark theme's veil lifts the carried piece's fill to
+     within 1.13:1 of the pastel accent, so its ring vanished there. The ink
+     drawn on the accent keeps it at 6.57:1 (§12). */
+  --bp-lit-ring: var(--accent-ink);
 }
 
 /* ---------- body ---------- */
@@ -190,7 +196,10 @@
 .bp-cell-ghost-blocked {
   background: var(--accent-ring-soft);
   box-shadow: inset 0 0 0 2px var(--ink-soft);
-  opacity: 0.75;
+  /* 0.85, not the 0.75 it shipped with: at 0.75 the ink ring came to 2.90:1
+     against the board's groove in the light theme, under the 3:1 a graphical
+     mark needs. 0.85 is 3.44 light / 4.32 dark (§12, ui/contrast.test.ts). */
+  opacity: 0.85;
   transition: background-color 0.11s ease;
 }
 
@@ -212,7 +221,7 @@
 .bp-cell-will-clear {
   background-color: var(--accent);
   background-image: linear-gradient(var(--bp-veil), var(--bp-veil));
-  box-shadow: inset 0 0 0 2px var(--accent);
+  box-shadow: inset 0 0 0 2px var(--bp-lit-ring);
 }
 
 .bp-cell-filled.bp-cell-will-clear {
@@ -222,11 +231,13 @@
 }
 
 /* The carried piece where it overlaps a line it would finish: lit like the
-   rest of the line, and still outlined, because it is also the piece. */
+   rest of the line, and still outlined, because it is also the piece. The
+   ring is --bp-lit-ring: the accent in the light theme, the accent's ink in
+   the dark one, where the accent itself disappears into the veil (§12). */
 .bp-cell-ghost.bp-cell-will-clear {
   background-color: var(--accent-ring);
   background-image: linear-gradient(var(--bp-veil-ghost), var(--bp-veil-ghost));
-  box-shadow: inset 0 0 0 2px var(--accent);
+  box-shadow: inset 0 0 0 2px var(--bp-lit-ring);
 }
 
 /* A cleared line, on its way out. The board has already settled; this paints
