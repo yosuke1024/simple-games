@@ -13,6 +13,7 @@ export function MazeDrawing({ session, hint = null }: { session: Session; hint?:
     if (x === size - 1 && !(cell & 2)) lines.push(`M${x + 1} ${y}v1`);
     if (y === size - 1 && !(cell & 4)) lines.push(`M${x} ${y + 1}h1`);
   }
+  const walls = lines.join('');
   return (
     <svg className="me-maze" viewBox={`-.15 -.15 ${size + 0.3} ${size + 0.3}`} aria-hidden="true">
       <rect x="0" y="0" width={size} height={size} className="me-floor" />
@@ -28,8 +29,12 @@ export function MazeDrawing({ session, hint = null }: { session: Session; hint?:
       <circle cx=".5" cy=".5" r=".3" className="me-start" />
       <circle cx={size - 0.5} cy={size - 0.5} r=".38" className="me-goal-disc" />
       <path d={`M${size - 0.72} ${size - 0.2}v-.6h.46l-.13 .17.13 .17h-.46`} className="me-goal" />
-      <path d={lines.join('')} transform="translate(.025 .035)" className="me-wall-shadow" />
-      <path d={lines.join('')} className="me-walls" />
+      {/* One path drawn three times, back to front: the shadow on the floor, the
+          darker side face, the lit top face. The offsets run down and right, so
+          the walls look raised under a light from the upper left. */}
+      <path d={walls} transform="translate(.045 .06)" className="me-wall-cast" />
+      <path d={walls} transform="translate(.025 .035)" className="me-wall-side" />
+      <path d={walls} className="me-walls" />
       {hint !== null ? (
         <rect
           x={(hint % size) + 0.24}
@@ -41,9 +46,9 @@ export function MazeDrawing({ session, hint = null }: { session: Session; hint?:
         />
       ) : null}
       <circle
-        cx={(position % size) + 0.52}
-        cy={Math.floor(position / size) + 0.55}
-        r=".245"
+        cx={(position % size) + 0.53}
+        cy={Math.floor(position / size) + 0.56}
+        r=".25"
         className="me-player-shadow"
       />
       <circle
@@ -55,12 +60,6 @@ export function MazeDrawing({ session, hint = null }: { session: Session; hint?:
       <path
         d={`M${(position % size) + 0.37} ${Math.floor(position / size) + 0.42}a.15 .15 0 0 1 .21-.04`}
         className="me-player-light"
-      />
-      <circle
-        cx={(position % size) + 0.5}
-        cy={Math.floor(position / size) + 0.5}
-        r=".075"
-        className="me-player-center"
       />
     </svg>
   );
