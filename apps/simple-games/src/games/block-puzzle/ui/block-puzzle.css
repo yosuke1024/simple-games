@@ -312,6 +312,22 @@
   transform: translateY(1px);
 }
 
+/* Sinking moves the box away from a mouse press that began on the slot's top
+   edge; the strip it leaves stays part of the slot while it is held, so that
+   press still ends as a click on this slot (the technique of echo-pads.css's
+   .ep-pad). It is positioned against the slot because a transformed box is
+   the containing block of what is absolutely positioned inside it, and that
+   box's origin is its padding box: the strip starts one border (1px) plus
+   one sink (1px) above it, and is as tall as the sink. */
+.bp-slot:enabled:active::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -1px;
+  left: -1px;
+  height: 1px;
+}
+
 /* Picked by the tap path. Outlined as well as tinted, so the selection is
    readable without colour (§12). */
 .bp-slot-selected {

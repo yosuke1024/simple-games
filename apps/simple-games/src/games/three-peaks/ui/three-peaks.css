@@ -500,6 +500,22 @@
   transform: translateY(1px);
   box-shadow: var(--tp-press);
 }
+/* Sinking moves the box away from a mouse press that began on the card's top
+   edge; the strip it leaves stays part of the card while it is held, so that
+   press still ends as a click on this card (the technique of echo-pads.css's
+   .ep-pad). A card is positioned (.tp-card), so the strip is placed against
+   its padding box whether or not it has sunk: the strip starts one border
+   (2px, the playable ring) plus one sink (1px) above that box, and is as tall
+   as the sink. (Under Reduced Motion the card does not sink; the strip is then
+   a 1px band over the edge it is already pressed on.) */
+.tp-playable:active::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  right: -2px;
+  left: -2px;
+  height: 1px;
+}
 .tp-playable:active:focus-visible {
   box-shadow:
     0 0 0 3px var(--tp-ink),

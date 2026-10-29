@@ -319,4 +319,22 @@ describe('the board’s frame and motion (docs/BLOCK_PUZZLE_RULES.md §12)', () 
       ":root[data-reduced-motion='true'] .bp-cell-clearing { animation: none; }",
     );
   });
+
+  it('keeps the band a pressed slot leaves part of the slot, so a press on its top edge still clicks it', () => {
+    // The slot sinks a pixel under the press; the ::before strip stays part of
+    // it while it is held (the technique of echo-pads.css): one 1px border
+    // plus one 1px sink above the padding box, as tall as the sink.
+    expect(flat(block(gameCss, '\n.bp-slot:enabled:active {'))).toContain(
+      'transform: translateY(1px);',
+    );
+    const strip = flat(block(gameCss, '\n.bp-slot:enabled:active::before {'));
+    expect(strip).toContain("content: '';");
+    expect(strip).toContain('position: absolute;');
+    expect(strip).toContain('top: -2px;');
+    expect(strip).toContain('right: -1px;');
+    expect(strip).toContain('left: -1px;');
+    expect(strip).toContain('height: 1px;');
+    // Left at its default so the strip receives the press.
+    expect(strip).not.toContain('pointer-events');
+  });
 });

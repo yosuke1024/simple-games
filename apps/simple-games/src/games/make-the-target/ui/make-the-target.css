@@ -170,6 +170,23 @@
     0 1px 0 var(--line);
 }
 
+/* Sinking moves the box away from a mouse press that began on the tile's top
+   rim; the strip it leaves stays part of the tile while it is held, so that
+   press still ends as a click on this tile (the technique of
+   echo-pads.css's .ep-pad). It is positioned against the tile because a
+   transformed box is the containing block of what is absolutely positioned
+   inside it, and that box's origin is its padding box: the strip starts one
+   border (2px) plus one sink (2px) above it, and is as tall as the sink. The
+   chosen tile keeps its lift and does not sink, so it has no strip. */
+.tg-tile:not(.tg-tile-selected):active:not(:disabled)::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  right: -2px;
+  left: -2px;
+  height: 2px;
+}
+
 /* Chosen first (§4): the accent face, a heavy ink frame and a lift — never
    colour alone; `aria-pressed` says the same to a screen reader. The lift
    shows as the edge stretching to 6px with a soft shadow on the floor under
@@ -302,6 +319,18 @@
   box-shadow:
     inset 0 1px 2px var(--line),
     0 1px 0 var(--line);
+}
+
+/* The same strip as the tile's (see there; echo-pads.css's .ep-pad is the
+   origin): the operator's border is 2px and its sink 1px. The chosen operator
+   keeps its lift and has none. */
+.tg-op:not(.tg-op-selected):active:not(:disabled)::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  right: -2px;
+  left: -2px;
+  height: 1px;
 }
 
 .tg-op-selected,

@@ -208,6 +208,22 @@ describe('the paper cards and their table (docs/THREE_PEAKS_RULES.md §6)', () =
     }
   });
 
+  it('keeps the band a pressed card leaves part of the card, so a press on its top edge still clicks it', () => {
+    // The card sinks a pixel under the press; the ::before strip stays part of
+    // it while it is held (the technique of echo-pads.css): the 2px playable
+    // ring plus the 1px sink above the padding box, as tall as the sink.
+    expect(block(css, '.tp-playable:active {')).toMatch(/transform:\s*translateY\(1px\);/);
+    const strip = block(css, '.tp-playable:active::before {');
+    expect(strip).toMatch(/content:\s*'';/);
+    expect(strip).toMatch(/position:\s*absolute;/);
+    expect(strip).toMatch(/top:\s*-3px;/);
+    expect(strip).toMatch(/right:\s*-2px;/);
+    expect(strip).toMatch(/left:\s*-2px;/);
+    expect(strip).toMatch(/height:\s*1px;/);
+    // Left at its default so the strip receives the press.
+    expect(strip).not.toMatch(/pointer-events/);
+  });
+
   it('turns the lift and the settle off by both Reduced Motion routes', () => {
     // vite.config.ts's test setup turns css off, so nothing rendered can notice
     // a route that is missing; only the source can.

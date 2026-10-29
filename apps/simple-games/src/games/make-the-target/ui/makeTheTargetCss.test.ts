@@ -81,6 +81,29 @@ describe('make-the-target.css against the shared rules', () => {
     expect(rule('.tg-op:active:not(:disabled)')).toMatch(/translateY\(1px\)/);
   });
 
+  it('keeps the band a pressed key leaves part of the key, so a press on its top rim still clicks it (§12)', () => {
+    // The key sinks under the press (above), which moves its top rim out from
+    // under a mouse that went down there; the ::before strip stays part of the
+    // key while it is held (the technique of echo-pads.css), sized from the
+    // key's own border and sink: a tile is 2px + 2px, an operator 2px + 1px.
+    // The chosen tile and operator keep their lift and do not sink, so the
+    // strip is not theirs.
+    for (const [selector, top, height] of [
+      ['.tg-tile:not(.tg-tile-selected):active:not(:disabled)::before', '-4px', '2px'],
+      ['.tg-op:not(.tg-op-selected):active:not(:disabled)::before', '-3px', '1px'],
+    ] as const) {
+      const declarations = rule(selector);
+      expect(declarations, selector).toMatch(/content:\s*'';/);
+      expect(declarations, selector).toMatch(/position:\s*absolute;/);
+      expect(declarations, selector).toMatch(new RegExp(`top:\\s*${top};`));
+      expect(declarations, selector).toMatch(/right:\s*-2px;/);
+      expect(declarations, selector).toMatch(/left:\s*-2px;/);
+      expect(declarations, selector).toMatch(new RegExp(`height:\\s*${height};`));
+      // Left at its default so the strip receives the press.
+      expect(declarations, selector).not.toMatch(/pointer-events/);
+    }
+  });
+
   it('puts the target on the accent ground and the used-up slot in a recess (§1, §12)', () => {
     expect(rule('.tg-target')).toMatch(/background:\s*var\(--accent-soft\)/);
     // `.tg-slot-empty` also ends the selector list that sizes it with the

@@ -111,7 +111,11 @@ recess and one consistent light from above), and the board's geometry (padding
   shade, inside the collection's board frame (lift first, paper edge, line ring,
   soft ring). The coordinate labels are cut into it with a text-shadow. The Quick
   Rules figure has the same tray thickness.
-- Press: a lens sinks 1 px while pressed (0.06 s).
+- Press: a lens sinks 1 px while pressed (0.06 s). The vacated band stays part of
+  the lens through a pseudo-element while it is held, so a mouse press that starts
+  on the top edge still ends as a click on it (2026-10-29, the Echo Pads
+  technique); on a lens the hint outlines, the dashed outline gives way to that
+  band until the press ends.
 - Transitions: a cell comes on in 0.1 s and cools in 0.22 s (ease-out on its
   colour, frame, shadow and gloss opacity, chosen by the state it is changing to).
   They are one-shot CSS transitions — no loop, no timer, no JavaScript. Under

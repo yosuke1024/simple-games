@@ -295,6 +295,31 @@
   transform: translateY(1px);
 }
 
+/* Sinking moves the box away from a mouse press that began on the lens's top
+   edge; the strip it leaves stays part of the lens while it is held, so that
+   press still ends as a click on this lens (the technique of echo-pads.css's
+   .ep-pad). It is positioned against the lens because a transformed box is
+   the containing block of what is absolutely positioned inside it, and that
+   box's origin is its padding box: the strip starts one border (1px) plus
+   one sink (1px) above it, and is as tall as the sink. It is the ::after
+   because the gloss owns ::before. A hint's dashed ring is the ::after of the
+   lenses the hinted one would flip (.lg-affected), so while one of those is
+   held the ring gives way to the strip (its inset, border, radius and
+   pointer-events reset below); a press there plays the cell, which clears the
+   hint, so the ring is only gone from the press to the click. */
+.lg-cell:active::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -1px;
+  bottom: auto;
+  left: -1px;
+  height: 1px;
+  border: 0;
+  border-radius: 0;
+  pointer-events: auto;
+}
+
 /* The mark scales with the cell (3×3 cells are about 89px, 5×5 about 51px) so
    a big lens is not left with a small thin mark: 40% of a lit lens, 33% of an
    unlit one, never below the 24px / 20px of the 5×5 board nor above 40px / 34px.
