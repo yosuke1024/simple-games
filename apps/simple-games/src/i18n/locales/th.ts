@@ -142,6 +142,12 @@ export const th: Messages = {
   webAppPromptTitle: 'เล่นได้เงียบกว่าเดิม ออฟไลน์เต็มรูปแบบตั้งแต่เปิดครั้งแรก',
   webAppPromptBody: 'แอปเปิดจากหน้าจอโฮมได้ทันที และเก็บความคืบหน้าของคุณไว้ในเครื่อง',
 
+  // PixApps' other apps, at the end of the collection home (issue #276)
+  moreFromPixAppsTitle: 'แอปอื่นจาก PixApps',
+  moreFromPixAppsBody: 'แอปแยกต่างหากจากผู้พัฒนารายเดียวกัน ฟีเจอร์และราคาแตกต่างกันในแต่ละแอป',
+  pixMealTagline: 'บันทึกมื้ออาหารได้ทันที แก้ไขข้อผิดพลาดได้ในไม่กี่วินาที',
+  pixWorkTagline: 'สแกนนามบัตร เก็บเป็นรายชื่อติดต่อที่เชื่อถือได้',
+
   // The optional share on a result screen. {game} is the registry title, a
   // proper noun that is not translated; `cleared` is only used for a real win.
   shareAction: 'แชร์',

@@ -28,7 +28,17 @@ enum NearbyPlayListing {
               let code = UInt8(label.dropFirst(2).prefix(2), radix: 16) else { return false }
         // Old Android hosts treat a GATT connection itself as admission. Never
         // probe them; only the new fixed game-code range advertises this ability.
-        return (0x81...0x8d).contains(code)
+        return (0x81...0x8e).contains(code)
+    }
+
+    /// The one recruitment decision shared by Bonjour and BLE. A hidden or full
+    /// room still advertises its label (a dropped guest finds it there and proves
+    /// itself in JS); it only stops publishing a listing. `nil` feeds `txtRecord`
+    /// (TXT item absent) and `read` (successful empty read). Native can therefore
+    /// never publish more than the link count alone would: the JS flag only ANDs.
+    static func advertised(listing: Data?, hidden: Bool, occupied: Int, limit: Int) -> Data? {
+        guard !hidden, occupied < limit else { return nil }
+        return listing
     }
 
     static func txtRecord(_ data: Data?) -> Data? {
@@ -45,6 +55,106 @@ enum NearbyPlayListing {
         let value = data ?? Data()
         guard offset >= 0, offset <= value.count else { return nil }
         return Data(value.dropFirst(offset))
+    }
+}
+
+/// A multi-seat host's listing state: the JS recruiting switch
+/// (`setListingVisible`) and the Bonjour TXT bytes last handed to its listener.
+/// It lives here, free of Capacitor, so the hide / show / link-count sequences
+/// are tested by the standalone swiftc checks rather than only by reading the plugin.
+struct NearbyPlayHostListing {
+    enum Registration: Equatable {
+        /// The TXT bytes already registered are still right: leave the service alone.
+        case unchanged
+        /// Set the listener's service to these TXT bytes (`nil`: no listing item).
+        case register(Data?)
+    }
+
+    /// Only a running host that advertises to more than one peer recruits by
+    /// listing; the two-player paths never call `setListingVisible`.
+    static func isMultiSeatHost(peerLimit: Int, role: String) -> Bool {
+        peerLimit > 1 && role == "advertise"
+    }
+
+    private(set) var hidden = false
+    private var registered = false
+    private var record: Data?
+
+    /// A fresh start or a stop: recruiting again, nothing registered yet.
+    mutating func reset() { self = NearbyPlayHostListing() }
+
+    mutating func setVisible(_ visible: Bool) { hidden = !visible }
+
+    /// What BLE metadata reads and the TXT record may publish right now.
+    func published(listing: Data?, occupied: Int, limit: Int) -> Data? {
+        NearbyPlayListing.advertised(listing: listing, hidden: hidden, occupied: occupied, limit: limit)
+    }
+
+    /// A new listener always registers; returns the TXT bytes to give it.
+    mutating func register(listing: Data?, occupied: Int, limit: Int) -> Data? {
+        let txt = NearbyPlayListing.txtRecord(published(listing: listing, occupied: occupied, limit: limit))
+        record = txt
+        registered = true
+        return txt
+    }
+
+    /// A link or visibility change on a live listener. Identical bytes are not
+    /// registered again, so a link dropping while the room is hidden or full
+    /// stays invisible to browsers.
+    mutating func refresh(listing: Data?, occupied: Int, limit: Int) -> Registration {
+        let txt = NearbyPlayListing.txtRecord(published(listing: listing, occupied: occupied, limit: limit))
+        guard !registered || txt != record else { return .unchanged }
+        record = txt
+        registered = true
+        return .register(txt)
+    }
+}
+
+/// Each physical peer owns its framing and queue. A partial frame or stalled
+/// writer must never consume, reorder, or time out another guest's traffic.
+final class NearbyPlayPeerFrames {
+    static let maxBytes = 4096
+    static let maxFrames = 16
+    enum Failure: Error { case frame, overflow }
+    private(set) var received = Data()
+    private(set) var outgoing: [Data] = []
+    private(set) var offset = 0
+
+    static func valid(_ data: Data) -> Bool {
+        !data.isEmpty && data.count <= maxBytes && !data.contains(10) &&
+            String(data: data, encoding: .utf8) != nil &&
+            (try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed])) != nil
+    }
+
+    func enqueue(_ data: Data) throws {
+        guard Self.valid(data) else { throw Failure.frame }
+        guard outgoing.count < Self.maxFrames else { throw Failure.overflow }
+        var frame = data
+        frame.append(10)
+        outgoing.append(frame)
+    }
+
+    func receive(_ data: Data) throws -> [String] {
+        guard !data.isEmpty else { throw Failure.frame }
+        var frames: [String] = []
+        for byte in data {
+            if byte == 10 {
+                guard Self.valid(received), let text = String(data: received, encoding: .utf8) else { throw Failure.frame }
+                guard frames.count < Self.maxFrames else { throw Failure.overflow }
+                frames.append(text)
+                received.removeAll(keepingCapacity: true)
+            } else {
+                guard received.count < Self.maxBytes else { throw Failure.frame }
+                received.append(byte)
+            }
+        }
+        return frames
+    }
+
+    func advance(_ count: Int) {
+        guard let first = outgoing.first, count > 0, count <= first.count - offset else { return }
+        offset += count
+        if offset == first.count { outgoing.removeFirst(); offset = 0 }
     }
 }
 

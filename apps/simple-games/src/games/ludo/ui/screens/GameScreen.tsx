@@ -28,10 +28,11 @@ import { BannerSlot } from '@/ui/components/BannerSlot';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconRetry } from '@/ui/components/icons';
 import { useTransientTimeout } from '@/ui/useTransientTimeout';
-import { HOME_PROGRESS, SEATS, YOU } from '../../game';
+import { bySeat, YOU } from '../../game';
 import { useLudo } from '../../state/GameContext';
 import { LudoBoard } from '../components/LudoBoard';
 import { LudoDie } from '../components/LudoDie';
+import { LudoPlayers } from '../components/LudoPlayers';
 import { LudoResultOverlay } from '../components/LudoResultOverlay';
 import { seatLabel } from '../components/seatText';
 
@@ -107,17 +108,16 @@ export function LudoGameScreen() {
   // otherwise the extra throw looks like the turn never moved on.
   const throwingAgain = yourTurn && state.die === null && state.sixStreak > 0;
 
-  const line =
-    notice ??
-    (matchOver
-      ? ''
-      : yourTurn
-        ? state.die === null
-          ? throwingAgain
-            ? t('ludoRollAgain')
-            : t('ludoTurnRoll')
-          : t('ludoTurnMove', { die: state.die })
-        : t('ludoTurnCpu', { n: state.turn }));
+  const turnLine = matchOver
+    ? ''
+    : yourTurn
+      ? state.die === null
+        ? throwingAgain
+          ? t('ludoRollAgain')
+          : t('ludoTurnRoll')
+        : t('ludoTurnMove', { die: state.die })
+      : t('ludoTurnCpu', { n: state.turn });
+  const line = notice ? (canRoll ? `${notice} ${turnLine}` : notice) : turnLine;
 
   return (
     <div className="screen game-screen">
@@ -142,35 +142,17 @@ export function LudoGameScreen() {
               standing, never a target being counted down, and never a clock.
               Its own row rather than a slot in the top bar: four seats named
               and counted do not fit between two icon buttons at 320px. */}
-          <ul className="ld-seats">
-            {SEATS.map((seat) => {
-              const home = state.pawns[seat].filter(
-                (progress) => progress === HOME_PROGRESS,
-              ).length;
-              return (
-                <li
-                  key={seat}
-                  className={`ld-seat-item ${state.turn === seat && !matchOver ? 'ld-seat-on' : ''}`}
-                >
-                  <span className={`ld-chip ld-seat-${seat}`} aria-hidden="true" />
-                  <span className="ld-seat-name" aria-hidden="true">
-                    {seatLabel(t, seat)}
-                  </span>
-                  <span className="ld-seat-home" aria-hidden="true">
-                    {home}/4
-                  </span>
-                  <span className="visually-hidden">
-                    {`${seatLabel(t, seat)} — ${t('ludoSeatHome', { home })}`}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
+          <LudoPlayers
+            pawns={state.pawns}
+            names={bySeat((seat) => seatLabel(t, seat))}
+            turn={matchOver ? null : state.turn}
+          />
 
           <LudoBoard
             pawns={state.pawns}
             movable={movable}
             playing={!matchOver && !confirmNewGame}
+            activeSeat={matchOver ? undefined : state.turn}
             onPawn={onPawn}
           />
 
@@ -180,6 +162,7 @@ export function LudoGameScreen() {
               rollSerial={state.rollIndex}
               canRoll={canRoll}
               onRoll={onRoll}
+              activeSeat={matchOver ? undefined : state.turn}
             />
             {/* One line, always present, so the board never jumps: what to do
                 now, or — for a beat — what the throw that just happened did. */}

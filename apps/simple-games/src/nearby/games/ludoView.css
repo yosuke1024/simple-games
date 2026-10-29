@@ -1,0 +1,7 @@
+/* Nearby already has room padding. Give the shared board its full column. */
+.nearby-ludo-view {
+  --ld-board-size: min(100%, 480px);
+  flex: none;
+  padding: 0;
+  overflow: visible;
+}

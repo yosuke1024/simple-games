@@ -23,6 +23,8 @@ import { filteredNearbyText, isAllowedNearbyText } from './contentFilter';
 import { ReportDialog } from './ReportDialog';
 import { listingKey, type ReportTarget } from './report';
 import './nearby.css';
+import type { GroupSelection } from './GroupRoot';
+const GroupRoot = lazy(() => import('./GroupRoot'));
 
 type Screen = 'home' | 'setup' | 'active' | 'history' | 'detail';
 type Question = 'leave' | 'delete' | 'clear' | 'block' | 'blockHistory' | null;
@@ -39,6 +41,7 @@ export interface NearbyRootProps {
 }
 
 export function NearbyRoot(props: NearbyRootProps) {
+  const [groupJoined, setGroupJoined] = useState<GroupSelection | null>(null);
   const fromBrowser = useRef(props.gameId === null).current;
   const [joined, setJoined] = useState<{
     controller: NearbyController;
@@ -58,7 +61,7 @@ export function NearbyRoot(props: NearbyRootProps) {
   const changed = useCallback(() => {
     if (live.current) render((value) => value + 1);
   }, []);
-  const gameId = fromBrowser ? (joined?.gameId ?? null) : props.gameId;
+  const gameId = fromBrowser ? (groupJoined ? 'ludo' : (joined?.gameId ?? null)) : props.gameId;
   const Loaded = useMemo(
     () =>
       lazy(async () => {
@@ -68,6 +71,12 @@ export function NearbyRoot(props: NearbyRootProps) {
       }),
     [gameId],
   );
+  if (gameId === 'ludo')
+    return (
+      <Suspense fallback={<div className="screen" aria-busy="true" />}>
+        <GroupRoot {...props} gameId="ludo" initial={groupJoined ?? undefined} />
+      </Suspense>
+    );
   if (!gameId)
     return (
       <NearbyBrowser
@@ -76,6 +85,10 @@ export function NearbyRoot(props: NearbyRootProps) {
         onOpenGame={props.onOpenGame}
         onRegisterStop={props.onRegisterStop}
         onChanged={changed}
+        onJoinGroup={(selection) => {
+          setGroupJoined(selection);
+          props.onGameSelected?.('ludo');
+        }}
         onJoin={(controller, selectedId, game) => {
           handedOffController.current = controller;
           setJoined({ controller, gameId: selectedId, game });

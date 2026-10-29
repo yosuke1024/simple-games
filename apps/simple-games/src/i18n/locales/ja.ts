@@ -143,6 +143,12 @@ export const ja: Messages = {
   webAppPromptTitle: 'もっと静かに、最初から完全オフラインで。',
   webAppPromptBody: 'アプリなら、ホーム画面からすぐ起動でき、進行状況を端末内に保存できます。',
 
+  // PixApps' other apps, at the end of the collection home (issue #276)
+  moreFromPixAppsTitle: 'PixApps のほかのアプリ',
+  moreFromPixAppsBody: '同じ開発者の別のアプリです。料金や機能はアプリごとに異なります。',
+  pixMealTagline: '食事を撮る。間違いは自分で直せる。',
+  pixWorkTagline: '名刺を撮る。信頼できる連絡先にする。',
+
   // The optional share on a result screen. The message and the picture card
   // carry the facts the result screen showed, passed in by the game as
   // already-formatted strings. {game} is the registry title, a proper noun

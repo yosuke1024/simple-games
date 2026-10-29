@@ -101,6 +101,8 @@ final class BleTransport implements Transport {
     private boolean advertise;
     private boolean ready;
     private boolean writing;
+    private Runnable drained;
+    private final Runnable drainTimeout = this::finishDrain;
     private boolean indicate;
     private boolean observingAdapter;
     private int offset;
@@ -179,6 +181,7 @@ final class BleTransport implements Transport {
     }
 
     public void send(byte[] frame) {
+        if (drained != null) throw new IllegalStateException("Connection is closing");
         if (!active || !ready) throw new IllegalStateException("BLE is not connected and subscribed");
         if (frames.size() >= 16) throw new IllegalStateException("BLE send queue is full (16 frames)");
         frames.add(frame);
@@ -186,6 +189,7 @@ final class BleTransport implements Transport {
     }
 
     private void pump() {
+        if (drained != null && !writing && frames.isEmpty()) { finishDrain(); return; }
         if (!active || !ready || writing || frames.isEmpty()) return;
         byte[] frame = frames.peek();
         currentChunkLength = Math.min(20, frame.length - offset);
@@ -558,6 +562,19 @@ final class BleTransport implements Transport {
     private void stopAdvertising() {
         if (advertiser != null) { try { advertiser.stopAdvertising(advertiseCallback); } catch (Exception ignored) {} }
     }
+    public void drainAndStop(Runnable completed) {
+        if (drained != null) return;
+        drained = completed;
+        if (!active || !ready || (!writing && frames.isEmpty())) finishDrain();
+        else deadlines.post(drainTimeout, 5_000);
+    }
+    private void finishDrain() {
+        Runnable completed = drained;
+        drained = null;
+        stop();
+        if (completed != null) completed.run();
+    }
+
     public void setForeground(boolean active) {
         if (foreground == active) return;
         foreground = active;
@@ -581,6 +598,7 @@ final class BleTransport implements Transport {
     }
 
     public void stop() {
+        drained = null;
         active = false; ready = false; writing = false;
         if (observingAdapter) {
             observingAdapter = false;

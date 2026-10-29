@@ -252,7 +252,7 @@ describe('nearby all-game discovery handoff', () => {
       transport: 'ble',
     });
     p.event({ type: 'peerLost', id: 'nim' });
-    expect(c.peers).toHaveLength(12);
+    expect(c.peers).toHaveLength(13);
     advertise(p, 'yacht', 'yacht', 'New name');
     expect(c.peers.find((p) => p.id === 'yacht')?.roomName).toBe('New name');
     p.event({ type: 'peer', id: 'yacht', name: 'P-811234', listing: '{}' });

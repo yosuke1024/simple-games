@@ -64,5 +64,5 @@ export const vi: LudoMessages = {
     'Hai quân của bạn cùng đứng một ô không chặn ai và cũng không bảo vệ ai. Nếu đối phương đè lên đó, cả chồng quân về chuồng cùng lúc — một chồng quân là mục tiêu, không phải pháo đài.',
   ludoStep5Title: 'Về nhà phải đúng số',
   ludoStep5Body:
-    'Số đổ mà vượt quá đích thì quân đó không được đi. Đưa cả bốn quân về nhà để thắng. Mỗi số đến từ seed của trận đấu, cả sáu mặt có cùng khả năng, và không chỗ nào bị đổ khác đi.',
+    'Số đổ mà vượt quá đích thì quân đó không được đi. Đưa cả bốn quân về nhà để thắng. Cả sáu mặt có cùng khả năng, và không chỗ nào bị đổ khác đi.',
 };

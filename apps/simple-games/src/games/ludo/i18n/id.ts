@@ -65,5 +65,5 @@ export const id: LudoMessages = {
     'Dua bidakmu di satu petak tidak menghalangi siapa pun dan tidak melindungi apa pun. Kalau lawan menginjak petak itu, seluruh tumpukan langsung kembali ke kandang — tumpukan itu sasaran, bukan benteng.',
   ludoStep5Title: 'Sampai rumah harus dengan angka pas',
   ludoStep5Body:
-    'Lemparan yang melebihi rumah membuat bidak itu tidak bisa jalan sama sekali. Bawa keempat bidakmu sampai rumah untuk menang. Setiap angka berasal dari seed pertandingan, keenam angka sama peluangnya, dan tidak ada pemain yang dadunya beda.',
+    'Lemparan yang melebihi rumah membuat bidak itu tidak bisa jalan sama sekali. Bawa keempat bidakmu sampai rumah untuk menang. Keenam angka sama peluangnya, dan tidak ada pemain yang dadunya beda.',
 };

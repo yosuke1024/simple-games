@@ -143,6 +143,17 @@ export function IconChevronRight(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Leaves the app: the arrow out of a box, never the chevron of in-app navigation. */
+export function IconExternal(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M14 4h6v6" />
+      <path d="m20 4-9 9" />
+      <path d="M19 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4" />
+    </Icon>
+  );
+}
+
 export function IconClose(props: SVGProps<SVGSVGElement>) {
   return (
     <Icon {...props}>
@@ -193,6 +204,38 @@ export function IconShare(props: SVGProps<SVGSVGElement>) {
       <path d="M12 15V3" />
       <path d="m8 7 4-4 4 4" />
       <path d="M20 14v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5" />
+    </Icon>
+  );
+}
+
+/**
+ * Club House: two people, one behind the other — the people you play with,
+ * not a building (a house reads as "go home") and not a count of anyone.
+ */
+export function IconPeople(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
+      <path d="M15.5 4.8a3.5 3.5 0 0 1 0 6.4" />
+      <path d="M18 14.3a6.5 6.5 0 0 1 3.5 5.7" />
+    </Icon>
+  );
+}
+
+/**
+ * Find nearby opponents: a point sending out to either side — "someone close
+ * by", whichever radio carries it. Not the Bluetooth or Wi-Fi marks: the
+ * feature is either one, and both are somebody else's logos.
+ */
+export function IconNearby(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="1.75" />
+      <path d="M8.46 8.46a5 5 0 0 0 0 7.08" />
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.08" />
+      <path d="M5.64 5.64a9 9 0 0 0 0 12.72" />
+      <path d="M18.36 5.64a9 9 0 0 1 0 12.72" />
     </Icon>
   );
 }

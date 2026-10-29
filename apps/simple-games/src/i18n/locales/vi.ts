@@ -145,6 +145,13 @@ export const vi: Messages = {
   webAppPromptTitle: 'Chơi yên tĩnh hơn, hoàn toàn ngoại tuyến ngay từ lần mở đầu tiên.',
   webAppPromptBody: 'Ứng dụng mở ngay từ màn hình chính và lưu tiến độ của bạn trên thiết bị.',
 
+  // PixApps' other apps, at the end of the collection home (issue #276)
+  moreFromPixAppsTitle: 'Ứng dụng khác của PixApps',
+  moreFromPixAppsBody:
+    'Các ứng dụng riêng biệt của cùng nhà phát triển. Tính năng và giá khác nhau tùy ứng dụng.',
+  pixMealTagline: 'Ghi lại bữa ăn ngay lập tức. Sửa lỗi chỉ trong vài giây.',
+  pixWorkTagline: 'Quét danh thiếp. Lưu liên hệ đáng tin cậy.',
+
   // The optional share on a result screen. {game} is the registry title, a
   // proper noun that is not translated; `cleared` is only used for a real win.
   shareAction: 'Chia sẻ',

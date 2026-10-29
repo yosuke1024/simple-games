@@ -15,6 +15,7 @@ import { memo, useEffect, useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { useReducedMotion } from '@/ui/useReducedMotion';
 import { useTransientTimeout } from '@/ui/useTransientTimeout';
+import type { Seat } from '../../game/types';
 
 /** The ceiling on the tumble (§12). Nothing here is ever slower than this. */
 export const DIE_SPIN_MS = 220;
@@ -39,9 +40,16 @@ export interface LudoDieProps {
   rollSerial: number;
   canRoll: boolean;
   onRoll: () => void;
+  activeSeat?: Seat;
 }
 
-export const LudoDie = memo(function LudoDie({ face, rollSerial, canRoll, onRoll }: LudoDieProps) {
+export const LudoDie = memo(function LudoDie({
+  face,
+  rollSerial,
+  canRoll,
+  onRoll,
+  activeSeat,
+}: LudoDieProps) {
   const { t } = useSettings();
   const reducedMotion = useReducedMotion();
   const spinTimeout = useTransientTimeout();
@@ -55,17 +63,22 @@ export const LudoDie = memo(function LudoDie({ face, rollSerial, canRoll, onRoll
 
   const label = face === null ? t('ludoDieUnrolled') : t('ludoDieLabel', { die: face });
   const pips = face === null ? [] : (PIPS[face - 1] ?? []);
+  const seatClass = activeSeat === undefined ? '' : `ld-seat-${activeSeat}`;
   const body = (
     <span className={`ld-die-face ${spinning ? 'ld-die-spin' : ''}`} aria-hidden="true">
-      {Array.from({ length: 9 }, (_, spot) => (
-        <span key={spot} className={`ld-pip ${pips.includes(spot) ? 'ld-pip-on' : ''}`} />
-      ))}
+      {face === null ? (
+        <span className="ld-die-unrolled">?</span>
+      ) : (
+        Array.from({ length: 9 }, (_, spot) => (
+          <span key={spot} className={`ld-pip ${pips.includes(spot) ? 'ld-pip-on' : ''}`} />
+        ))
+      )}
     </span>
   );
 
   if (!canRoll) {
     return (
-      <div className="ld-die" role="img" aria-label={label}>
+      <div className={`ld-die ${seatClass}`} role="img" aria-label={label}>
         {body}
       </div>
     );
@@ -73,14 +86,11 @@ export const LudoDie = memo(function LudoDie({ face, rollSerial, canRoll, onRoll
   return (
     <button
       type="button"
-      className="ld-die ld-die-live"
+      className={`ld-die ld-die-live ${seatClass}`}
       aria-label={t('ludoRollLabel')}
       onClick={onRoll}
     >
       {body}
-      <span className="ld-die-hint" aria-hidden="true">
-        {t('ludoRollAction')}
-      </span>
     </button>
   );
 });

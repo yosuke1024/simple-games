@@ -36,6 +36,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 final class LanTransport implements Transport {
     private static final String TYPE = NsdServiceType.NEARBY;
     private final Context context;
+    private final boolean multiHost;
+    private final PeerLinks<Channel> channels = new PeerLinks<>();
     private final Events events;
     private final Handler main = new Handler(Looper.getMainLooper());
     private final PausableDeadlines deadlines = new PausableDeadlines(new PausableDeadlines.Scheduler() {
@@ -69,8 +71,23 @@ final class LanTransport implements Transport {
     private boolean advertising;
     private boolean discovering;
     private boolean registering;
+    private int advertisedPort;
+    // Multi-seat host only. NsdManager cannot update a TXT record in place, so a change in whether
+    // the room is listed is an unregister followed by a register of the same name and port.
+    private HostRegistration hostRegistration;
+    private boolean announced;
+    private final ListingRegistration registrations = new ListingRegistration(new ListingRegistration.Driver() {
+        public void register(boolean listed) {
+            HostRegistration next = new HostRegistration();
+            hostRegistration = next;
+            nsd.registerService(serviceInfo(listed), NsdManager.PROTOCOL_DNS_SD, next);
+        }
+        public void unregister() { nsd.unregisterService(hostRegistration); }
+    });
     private boolean ready;
     private boolean writing;
+    private Runnable drained;
+    private final Runnable drainTimeout = this::finishDrain;
     private String label;
     private String chosenName;
     private final Runnable discoveryTimeout = () -> fail("discovery-timeout", "Discovery ended after 60 seconds; start again to retry");
@@ -91,7 +108,10 @@ final class LanTransport implements Transport {
         }
     };
 
-    LanTransport(Context context, Events events) { this.context = context; this.events = events; }
+    LanTransport(Context context, Events events) { this(context, events, false); }
+    LanTransport(Context context, Events events, boolean multiHost) {
+        this.context = context; this.events = events; this.multiHost = multiHost;
+    }
 
     public void start(boolean advertise, String label, byte[] listing) throws Exception {
         connectivity = context.getSystemService(ConnectivityManager.class);
@@ -122,7 +142,7 @@ final class LanTransport implements Transport {
         connectivity.registerNetworkCallback(new NetworkRequest.Builder()
             .addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build(), networkCallback);
         observingWifi = true;
-        deadlines.post(discoveryTimeout, 60_000);
+        if (!multiHost) deadlines.post(discoveryTimeout, 60_000);
         if (advertise) startListener();
         else {
             discovering = true;
@@ -154,19 +174,18 @@ final class LanTransport implements Transport {
                     }
                     // DNS-SD may advertise every address on this Wi-Fi link. Bind each
                     // concrete address to one shared port; never bind a wildcard/cellular address.
-                    created.bind(new InetSocketAddress(address, port), 1);
+                    created.bind(new InetSocketAddress(address, port), multiHost ? PeerLinks.CAPACITY : 1);
                     if (port == 0) port = created.getLocalPort();
                     created.setSoTimeout(0); // stop/deadline closes every blocking accept.
                     bound.add(created);
                 }
-                final int advertisedPort = port;
+                final int boundPort = port;
                 run(() -> {
-                    NsdServiceInfo info = new NsdServiceInfo();
-                    info.setServiceName(label); info.setServiceType(TYPE); info.setPort(advertisedPort);
-                    if (listing != null) info.setAttribute("listing", ListingPayload.decode(listing));
-                    if (Build.VERSION.SDK_INT >= 33) info.setNetwork(wifi);
+                    advertisedPort = boundPort;
                     registering = true;
-                    nsd.registerService(info, NsdManager.PROTOCOL_DNS_SD, registration);
+                    // A multi-seat host may already have asked to be hidden; its first registration honours that.
+                    if (multiHost) registrations.open();
+                    else nsd.registerService(serviceInfo(true), NsdManager.PROTOCOL_DNS_SD, registration);
                 });
                 for (ServerSocket created : bound) {
                     new Thread(() -> accept(created), "nearby-lan-accept").start();
@@ -175,7 +194,18 @@ final class LanTransport implements Transport {
         }, "nearby-lan-listener").start();
     }
 
+    private NsdServiceInfo serviceInfo(boolean listed) {
+        NsdServiceInfo info = new NsdServiceInfo();
+        info.setServiceName(label); info.setServiceType(TYPE); info.setPort(advertisedPort);
+        // A hidden room omits the item (never an empty value); see ListingPayload.txtListing.
+        String txtListing = ListingPayload.txtListing(listing, listed);
+        if (txtListing != null) info.setAttribute("listing", txtListing);
+        if (Build.VERSION.SDK_INT >= 33) info.setNetwork(wifi);
+        return info;
+    }
+
     private void accept(ServerSocket source) {
+        if (multiHost) { acceptMany(source); return; }
         Socket accepted = null;
         try {
             accepted = source.accept();
@@ -197,6 +227,138 @@ final class LanTransport implements Transport {
                 if (socket == null || socket == failed) fail("listen-failed", "LAN listener stopped: " + error.getClass().getSimpleName());
             });
         }
+    }
+
+    /** Each accepted guest owns its decoder, bounded queue, writer, and progress deadlines. */
+    private final class Channel {
+        final Socket socket;
+        final FrameCodec decoder = new FrameCodec();
+        final ArrayDeque<byte[]> frames = new ArrayDeque<>();
+        final AtomicInteger callbacks = new AtomicInteger();
+        final AtomicBoolean overflow = new AtomicBoolean();
+        final ThreadPoolExecutor writer = new ThreadPoolExecutor(1, 1, 0, TimeUnit.MILLISECONDS,
+            new ArrayBlockingQueue<>(1), task -> new Thread(task, "nearby-lan-peer-writer"));
+        final Runnable writeTimeout = () -> closeChannel(this, "LAN write timed out");
+        final Runnable receiveTimeout = () -> closeChannel(this, "Incomplete LAN frame timed out");
+        final Runnable drainTimeout = () -> closeChannel(this, "disconnected");
+        String id;
+        boolean writing;
+        boolean closing;
+        Channel(Socket socket) { this.socket = socket; }
+        boolean current() { return active && channels.get(id) == this; }
+        void close() {
+            try { socket.close(); } catch (Exception ignored) {}
+            deadlines.remove(writeTimeout); deadlines.remove(receiveTimeout); deadlines.remove(drainTimeout);
+            writer.shutdownNow(); frames.clear(); decoder.clear();
+        }
+    }
+
+    private void acceptMany(ServerSocket source) {
+        while (active && !source.isClosed()) {
+            Socket accepted;
+            try { accepted = source.accept(); }
+            catch (IOException error) {
+                run(() -> fail("listen-failed", "LAN listener stopped")); return;
+            }
+            try {
+                if (!sameSubnet(accepted.getInetAddress())) { accepted.close(); continue; }
+                accepted.setTcpNoDelay(true); accepted.setSoTimeout(0);
+                Channel channel = new Channel(accepted);
+                synchronized (this) {
+                    if (!active || (channel.id = channels.add(channel)) == null) {
+                        accepted.close(); continue;
+                    }
+                }
+                postChannel(channel, () -> events.connected(channel.id));
+                new Thread(() -> readChannel(channel), "nearby-lan-peer-reader").start();
+            } catch (Exception error) {
+                // A rejected guest does not tear down listeners or the other accepted guests.
+                try { accepted.close(); } catch (Exception ignored) {}
+            }
+        }
+    }
+
+    private void readChannel(Channel channel) {
+        try {
+            InputStream input = channel.socket.getInputStream();
+            byte[] buffer = new byte[1024];
+            while (channel.current()) {
+                int length = input.read(buffer);
+                if (length == -1) break;
+                // Decode on main with the send queue and deadlines, never share a decoder.
+                byte[] value = java.util.Arrays.copyOf(buffer, length);
+                postChannel(channel, () -> {
+                    channel.decoder.accept(value, value.length, text -> events.data(channel.id, text));
+                    deadlines.remove(channel.receiveTimeout);
+                    if (channel.decoder.hasPartialFrame()) deadlines.post(channel.receiveTimeout, 5_000);
+                });
+            }
+            postChannel(channel, () -> closeChannel(channel, "LAN peer closed the connection"));
+        } catch (Exception error) {
+            postChannel(channel, () -> closeChannel(channel, "LAN peer connection lost"));
+        }
+    }
+
+    private interface ChannelAction { void run() throws Exception; }
+    private void postChannel(Channel channel, ChannelAction action) {
+        if (!channel.current()) return;
+        if (channel.callbacks.incrementAndGet() > 32) {
+            channel.callbacks.decrementAndGet();
+            if (channel.overflow.compareAndSet(false, true))
+                main.post(() -> closeChannel(channel, "LAN peer receive queue overflow"));
+            return;
+        }
+        main.post(() -> {
+            try { if (channel.current()) action.run(); }
+            catch (Exception error) { closeChannel(channel, "Malformed LAN peer frame"); }
+            finally { channel.callbacks.decrementAndGet(); }
+        });
+    }
+
+    public void send(byte[] frame, String peerId) {
+        if (!multiHost) {
+            if (peerId != null) throw new IllegalArgumentException("Targeted sends require multi-peer mode");
+            send(frame); return;
+        }
+        Channel channel = channels.get(peerId);
+        if (channel == null || !channel.current() || channel.closing) throw new IllegalStateException("LAN peer is not connected");
+        if (channel.frames.size() >= 16) throw new IllegalStateException("LAN peer send queue is full (16 frames)");
+        channel.frames.add(frame); pumpChannel(channel);
+    }
+
+    private void pumpChannel(Channel channel) {
+        if (channel.current() && channel.closing && !channel.writing && channel.frames.isEmpty()) {
+            closeChannel(channel, "disconnected"); return;
+        }
+        if (!channel.current() || channel.writing || channel.frames.isEmpty()) return;
+        channel.writing = true;
+        byte[] frame = channel.frames.peek();
+        deadlines.post(channel.writeTimeout, 5_000);
+        channel.writer.execute(() -> {
+            try {
+                channel.socket.getOutputStream().write(frame); channel.socket.getOutputStream().flush();
+                postChannel(channel, () -> {
+                    deadlines.remove(channel.writeTimeout);
+                    channel.frames.remove(); channel.writing = false; pumpChannel(channel);
+                });
+            } catch (Exception error) { postChannel(channel, () -> closeChannel(channel, "LAN peer write failed")); }
+        });
+    }
+
+    public void disconnect(String peerId) {
+        if (!multiHost || peerId == null) throw new IllegalArgumentException("Targeted disconnect requires a peerId and multi-peer mode");
+        Channel channel = channels.get(peerId);
+        if (channel != null && !channel.closing) {
+            channel.closing = true;
+            deadlines.post(channel.drainTimeout, 5_000);
+            pumpChannel(channel);
+        }
+    }
+
+    private void closeChannel(Channel channel, String reason) {
+        if (channels.get(channel.id) != channel) return;
+        channels.remove(channel.id); channel.close();
+        if (active) events.disconnected(channel.id, reason);
     }
 
     private synchronized void closeListeners() {
@@ -323,13 +485,36 @@ final class LanTransport implements Transport {
             // An asynchronous registration can complete after stop; unregister that exact listener.
             main.post(() -> {
                 if (!active) { unregister(); return; }
-                events.status("LAN advertised as " + info.getServiceName() + " (60-second limit)");
+                events.status("LAN advertised as " + info.getServiceName() + (multiHost ? "" : " (60-second limit)"));
             });
         }
         public void onRegistrationFailed(NsdServiceInfo info, int code) { run(() -> fail("advertise-failed", "LAN registration failed: " + code)); }
         public void onServiceUnregistered(NsdServiceInfo info) {}
         public void onUnregistrationFailed(NsdServiceInfo info, int code) { run(() -> fail("unregister-failed", "LAN unregister failed: " + code)); }
     };
+
+    /** One per multi-seat registration, so a late callback of an older one is recognised and dropped. */
+    private final class HostRegistration implements NsdManager.RegistrationListener {
+        public void onServiceRegistered(NsdServiceInfo info) { main.post(() -> {
+            if (!active) { try { nsd.unregisterService(this); } catch (Exception ignored) {} return; }
+            if (hostRegistration != this) return;
+            try {
+                if (!announced) { announced = true; events.status("LAN advertised as " + info.getServiceName()); }
+                registrations.registered();
+            } catch (Exception error) { fail("lan-error", "LAN operation failed: " + error.getClass().getSimpleName()); }
+        }); }
+        public void onRegistrationFailed(NsdServiceInfo info, int code) { run(() -> {
+            if (hostRegistration == this) fail("advertise-failed", "LAN registration failed: " + code);
+        }); }
+        public void onServiceUnregistered(NsdServiceInfo info) { main.post(() -> {
+            if (!active || hostRegistration != this) return;
+            try { registrations.unregistered(); }
+            catch (Exception error) { fail("lan-error", "LAN operation failed: " + error.getClass().getSimpleName()); }
+        }); }
+        public void onUnregistrationFailed(NsdServiceInfo info, int code) { run(() -> {
+            if (hostRegistration == this) fail("unregister-failed", "LAN unregister failed: " + code);
+        }); }
+    }
 
     private void connectResolved(NsdServiceInfo info) {
             if (!chosenName.equals(info.getServiceName())) {
@@ -434,12 +619,14 @@ final class LanTransport implements Transport {
     }
 
     public void send(byte[] frame) {
+        if (drained != null) throw new IllegalStateException("Connection is closing");
         if (!active || !ready || socket == null) throw new IllegalStateException("LAN is not connected");
         if (frames.size() >= 16) throw new IllegalStateException("LAN send queue is full (16 frames)");
         frames.add(frame); pump();
     }
 
     private void pump() {
+        if (drained != null && !writing && frames.isEmpty()) { finishDrain(); return; }
         if (!active || !ready || writing || frames.isEmpty()) return;
         writing = true;
         Socket target = socket;
@@ -475,9 +662,28 @@ final class LanTransport implements Transport {
         if (discovering) { discovering = false; try { nsd.stopServiceDiscovery(discovery); } catch (Exception ignored) {} }
     }
     private void unregister() {
+        if (multiHost) { registrations.stop(); return; }
         if (registering) { try { nsd.unregisterService(registration); } catch (Exception ignored) {} }
         // Keep the flag for the late onServiceRegistered cleanup; unregister is idempotently guarded by Android.
     }
+    public void setListingVisible(boolean visible) throws Exception {
+        if (!multiHost) { Transport.super.setListingVisible(visible); return; }
+        if (!active) throw new IllegalStateException("LAN host is not running");
+        registrations.setListed(visible);
+    }
+    public void drainAndStop(Runnable completed) {
+        if (drained != null) return;
+        drained = completed;
+        if (!active || !ready || (!writing && frames.isEmpty())) finishDrain();
+        else deadlines.post(drainTimeout, 5_000);
+    }
+    private void finishDrain() {
+        Runnable completed = drained;
+        drained = null;
+        stop();
+        if (completed != null) completed.run();
+    }
+
     public void setForeground(boolean active) {
         foreground = active;
         deadlines.setActive(active);
@@ -489,9 +695,12 @@ final class LanTransport implements Transport {
     }
 
     public void stop() {
+        drained = null;
         synchronized (this) {
             active = false;
             closeListeners();
+            for (Channel channel : channels.values()) channel.close();
+            channels.clear();
             if (socket != null) { try { socket.close(); } catch (Exception ignored) {} socket = null; }
         }
         ready = false; writing = false;

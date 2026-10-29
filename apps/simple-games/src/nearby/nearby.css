@@ -11,6 +11,24 @@
   text-align: center;
   overflow-wrap: anywhere;
 }
+.group-seats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.group-seats .nearby-card {
+  min-width: 0;
+  padding: 10px;
+  overflow-wrap: anywhere;
+}
+.group-seats select {
+  max-width: 100%;
+}
+@media (max-width: 360px) {
+  .group-seats {
+    grid-template-columns: 1fr;
+  }
+}
 .nearby-stack {
   display: flex;
   flex-direction: column;

@@ -1,5 +1,6 @@
 /** Serializable game views cross the wire; full state and randomness stay on the host. */
 export type NearbyGameId =
+  | 'ludo'
   | 'yacht'
   | 'reversi'
   | 'connect-four'

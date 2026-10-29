@@ -64,5 +64,5 @@ export const fr: LudoMessages = {
     'Deux de tes pions sur une même case ne bloquent personne et ne protègent rien. Si un adversaire atterrit dessus, toute la pile retourne d’un coup à l’écurie — un tas de pions est une cible, pas un fort.',
   ludoStep5Title: 'On rentre à la maison au nombre exact',
   ludoStep5Body:
-    'Un lancer qui dépasserait la maison ne fait pas bouger ce pion. Fais rentrer tes quatre pions pour gagner. Chaque chiffre vient de la graine de la partie, les six faces ont la même chance, et aucune place n’est lancée différemment.',
+    'Un lancer qui dépasserait la maison ne fait pas bouger ce pion. Fais rentrer tes quatre pions pour gagner. Les six faces ont la même chance, et aucune place n’est lancée différemment.',
 };

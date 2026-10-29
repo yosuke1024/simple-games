@@ -86,6 +86,47 @@ struct NearbyPlayRuntimeStateTests {
         check(fired == 1, "Progress invalidates the old no-progress timer")
         scheduled[4].action()
         check(fired == 3, "Latest foreground deadline remains operational")
+
+        let alice = NearbyPlayPeerFrames()
+        let bob = NearbyPlayPeerFrames()
+        let carol = NearbyPlayPeerFrames()
+        let partial = try alice.receive(Data("{\"name\":\"あ".utf8))
+        check(partial.isEmpty, "An incomplete guest frame waits only in its own buffer")
+        let completeBob = try bob.receive(Data("{\"seat\":2}\n".utf8))
+        check(completeBob == ["{\"seat\":2}"], "Another guest's complete frame is independently delivered")
+        let completeCarol = try carol.receive(Data("{\"seat\":3}\n{\"move\":1}\n".utf8))
+        check(completeCarol.count == 2, "A third guest can deliver a bounded batch")
+        let completeAlice = try alice.receive(Data("\"}\n".utf8))
+        check(completeAlice == ["{\"name\":\"あ\"}"], "Interleaved guests cannot splice their JSON frames")
+        for index in 0..<NearbyPlayPeerFrames.maxFrames {
+            try alice.enqueue(Data("{\"move\":\(index)}".utf8))
+        }
+        do {
+            try alice.enqueue(Data("{}".utf8))
+            preconditionFailure("The send cap must reject the next frame")
+        } catch NearbyPlayPeerFrames.Failure.overflow { checks += 1 }
+        try bob.enqueue(Data("{\"ok\":true}".utf8))
+        check(bob.outgoing.count == 1 && alice.outgoing.count == 16, "A blocked guest cannot consume another queue's capacity")
+        let first = alice.outgoing[0]
+        alice.advance(2)
+        check(alice.offset == 2 && bob.offset == 0, "Notification fragments advance only their target guest")
+        alice.advance(first.count - 2)
+        check(alice.offset == 0 && alice.outgoing.count == 15, "Only a fully written frame leaves its peer queue")
+        do {
+            _ = try carol.receive(Data("invalid\n".utf8))
+            preconditionFailure("Invalid JSON must fail its peer")
+        } catch NearbyPlayPeerFrames.Failure.frame { checks += 1 }
+        check(bob.outgoing.count == 1 && bob.received.isEmpty, "A failing third link leaves the other links intact")
+        let oversized = NearbyPlayPeerFrames()
+        do {
+            _ = try oversized.receive(Data(repeating: 32, count: NearbyPlayPeerFrames.maxBytes + 1))
+            preconditionFailure("Oversized input must fail its peer")
+        } catch NearbyPlayPeerFrames.Failure.frame { checks += 1 }
+        let many = NearbyPlayPeerFrames()
+        do {
+            _ = try many.receive(Data(String(repeating: "{}\n", count: 17).utf8))
+            preconditionFailure("A receive callback cannot exceed 16 complete frames")
+        } catch NearbyPlayPeerFrames.Failure.overflow { checks += 1 }
         print("NearbyPlayRuntimeState: \(checks) checks passed")
     }
 }
