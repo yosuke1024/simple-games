@@ -1,4 +1,5 @@
 import { useSettings } from '../../state/SettingsContext';
+import { IconNearby } from './icons';
 
 /** A collection-wide joining door. Merely rendering it never loads Nearby. */
 export function FindOpponentButton({
@@ -18,7 +19,8 @@ export function FindOpponentButton({
       disabled={appOnly}
       onClick={appOnly ? undefined : onFindOpponent}
     >
-      <span className="home-play-together-title">
+      <span className="home-play-together-title home-entry-title">
+        <IconNearby className="home-entry-icon" />
         {t(!appOnly && active ? 'returnToTogether' : 'findNearbyOpponents')}
       </span>
       {(!active || appOnly) && (

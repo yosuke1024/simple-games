@@ -71,7 +71,7 @@ import { BrandFooter } from '../components/BrandFooter';
 import { GameActionSheet } from '../components/GameActionSheet';
 import { GameTile } from '../components/GameTile';
 import { FindOpponentButton } from '../components/FindOpponentButton';
-import { IconBack, IconChevronRight, IconGear, IconSearch } from '../components/icons';
+import { IconBack, IconChevronRight, IconGear, IconPeople, IconSearch } from '../components/icons';
 import { GameBetaBadge } from '../components/GameBetaBadge';
 import { WebAdSlot } from '../components/WebAdSlot';
 import { WebAppStoreCard } from '../components/WebAppStoreCard';
@@ -742,13 +742,16 @@ export function CollectionHomeScreen({
               slot whether this device has joined a Club or not — so nothing
               else on the home moves with it. Joined: the heading and the club
               names, as cached, on one line. Not joined: one low-contrast text
-              row. Neither carries a number or a badge — a count would need a
-              request on every paint, and it would be a lure even if it did
-              not — and drawing either one loads nothing: only the press does
-              (app/clubGate.ts). */}
+              row. Both put the same soft-ink glyph before the title, as the
+              Nearby row below does (club.md 判断 55) — it tells the slot from
+              the shelf headings and says nothing about state. Neither carries
+              a number or a badge — a count would need a request on every
+              paint, and it would be a lure even if it did not — and drawing
+              either one loads nothing: only the press does (app/clubGate.ts). */}
           {clubConnections.length > 0 ? (
             <section className="home-club" aria-labelledby="home-club-heading">
-              <h2 className="home-section-label" id="home-club-heading">
+              <h2 className="home-section-label home-entry-title" id="home-club-heading">
+                <IconPeople className="home-entry-icon" />
                 {t('clubEntry')}
               </h2>
               <button type="button" className="home-club-open" onClick={() => onOpenClub('home')}>
@@ -771,7 +774,10 @@ export function CollectionHomeScreen({
               className="home-play-together"
               onClick={() => onOpenClub('discover')}
             >
-              <span className="home-play-together-title">{t('clubEntry')}</span>
+              <span className="home-play-together-title home-entry-title">
+                <IconPeople className="home-entry-icon" />
+                {t('clubEntry')}
+              </span>
               <span className="home-play-together-body">{t('playTogetherBody')}</span>
             </button>
           )}
