@@ -16,7 +16,7 @@ describe('hanoi-towers theme contract', () => {
     // The shell's tokens, plus the board's own wood colours declared in the two
     // blocks at the top of hanoi-towers.css (contrast.test.ts measures those).
     const defined = new Set(
-      [...shared.matchAll(/(--[a-z0-9-]+)\s*:/gi), ...css.matchAll(/(--ht-[a-z0-9-]+)\s*:/gi)].map(
+      [...shared.matchAll(/(--[a-z0-9-]+)\s*:/gi), ...css.matchAll(/(--hn-[a-z0-9-]+)\s*:/gi)].map(
         (match) => match[1],
       ),
     );

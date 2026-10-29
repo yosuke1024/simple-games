@@ -58,9 +58,9 @@ function numbers(body: string): Map<string, number> {
 }
 
 /**
- * What one declaration of one rule says, whitespace folded: `value('.ht-peg {', 'color')`.
- * The header is the rule's opening line exactly as written, so `.ht-disk {` does not
- * find `.ht-disk-0 {` and `color` does not find `border-color`.
+ * What one declaration of one rule says, whitespace folded: `value('.hn-peg {', 'color')`.
+ * The header is the rule's opening line exactly as written, so `.hn-disk {` does not
+ * find `.hn-disk-0 {` and `color` does not find `border-color`.
  */
 function value(header: string, property: string): string {
   const match = new RegExp(`(?:^|[;\\s])${property}:\\s*([^;]+);`).exec(block(gameCss, header));
@@ -150,12 +150,12 @@ function palette(theme: (typeof THEMES)[number]) {
  */
 function trays(theme: (typeof THEMES)[number]): { label: string; colour: string }[] {
   const p = palette(theme);
-  const grain = p.get('--ht-grain');
-  const valid = p.get('--ht-valid');
+  const grain = p.get('--hn-grain');
+  const valid = p.get('--hn-valid');
   const out: { label: string; colour: string }[] = [];
   for (const [end, token] of [
-    ['top', '--ht-tray-top'],
-    ['bottom', '--ht-tray-bottom'],
+    ['top', '--hn-tray-top'],
+    ['bottom', '--hn-tray-bottom'],
   ] as const) {
     const bare = p.get(token).hex;
     const grained = laid(grain.hex, laid(grain.hex, bare, grain.alpha), grain.alpha);
@@ -169,7 +169,7 @@ function trays(theme: (typeof THEMES)[number]): { label: string; colour: string 
   return out;
 }
 
-const DISKS = ['--ht-disk-0', '--ht-disk-1', '--ht-disk-2', '--ht-disk-3', '--ht-disk-4'];
+const DISKS = ['--hn-disk-0', '--hn-disk-1', '--hn-disk-2', '--hn-disk-3', '--hn-disk-4'];
 
 /** Printed for docs/HANOI_TOWERS_RULES.md "Visual presentation"; the gate is the floor after it. */
 function minimum(what: string, theme: string, values: number[]): number {
@@ -216,7 +216,7 @@ describe('the board’s colours (docs/HANOI_TOWERS_RULES.md "Visual presentation
   for (const theme of THEMES) {
     describe(theme.name, () => {
       it('reads the peg numbers at 4.5:1 on every tray background', () => {
-        const ink = palette(theme).get('--ht-peg-ink').hex;
+        const ink = palette(theme).get('--hn-peg-ink').hex;
         const lowest = minimum(
           'peg number',
           theme.name,
@@ -230,7 +230,7 @@ describe('the board’s colours (docs/HANOI_TOWERS_RULES.md "Visual presentation
         const lowest = minimum(
           'disk number',
           theme.name,
-          DISKS.map((disk) => contrast(p.get('--ht-disk-ink').hex, p.get(disk).hex)),
+          DISKS.map((disk) => contrast(p.get('--hn-disk-ink').hex, p.get(disk).hex)),
         );
         expect(lowest).toBeGreaterThanOrEqual(4.5);
       });
@@ -247,13 +247,13 @@ describe('the board’s colours (docs/HANOI_TOWERS_RULES.md "Visual presentation
         const lowest = minimum(
           'disk edge',
           theme.name,
-          DISKS.map((disk) => contrast(p.get('--ht-disk-edge').hex, p.get(disk).hex)),
+          DISKS.map((disk) => contrast(p.get('--hn-disk-edge').hex, p.get(disk).hex)),
         );
         expect(lowest).toBeGreaterThanOrEqual(3);
       });
 
       it('shows the peg on every tray background at 3:1', () => {
-        const peg = palette(theme).get('--ht-peg').hex;
+        const peg = palette(theme).get('--hn-peg').hex;
         const lowest = minimum(
           'peg',
           theme.name,
@@ -273,8 +273,8 @@ describe('the board’s colours (docs/HANOI_TOWERS_RULES.md "Visual presentation
             .filter((tray) => tray.label.startsWith('bottom'))
             .map((tray) =>
               Math.max(
-                contrast(p.get('--ht-base').hex, tray.colour),
-                contrast(p.get('--ht-base-edge').hex, tray.colour),
+                contrast(p.get('--hn-base').hex, tray.colour),
+                contrast(p.get('--hn-base-edge').hex, tray.colour),
               ),
             ),
         );
@@ -299,57 +299,57 @@ describe('the rules read the tokens the floors above measure', () => {
   // wired to another token (a selection tint put back to --accent-soft, say),
   // which would leave the measured figures in the rules doc describing a
   // different picture.
-  const TRAY = '.ht-board,\n.ht-mini-tray {';
+  const TRAY = '.hn-board,\n.hn-mini-tray {';
 
   it('lays the tray on the measured gradient, edge, lit line, shade and front', () => {
     const background = value(TRAY, 'background');
     expect(background).toContain(
-      'linear-gradient(180deg, var(--ht-tray-top), var(--ht-tray-bottom))',
+      'linear-gradient(180deg, var(--hn-tray-top), var(--hn-tray-bottom))',
     );
-    expect(value(TRAY, 'border')).toBe('1px solid var(--ht-tray-edge)');
+    expect(value(TRAY, 'border')).toBe('1px solid var(--hn-tray-edge)');
     const shadow = value(TRAY, 'box-shadow');
-    expect(shadow).toContain('inset 0 1px 0 var(--ht-tray-lit)');
-    expect(shadow).toContain('inset 0 -4px 0 var(--ht-tray-shade)');
-    expect(shadow).toContain('0 5px 0 var(--ht-tray-face)');
+    expect(shadow).toContain('inset 0 1px 0 var(--hn-tray-lit)');
+    expect(shadow).toContain('inset 0 -4px 0 var(--hn-tray-shade)');
+    expect(shadow).toContain('0 5px 0 var(--hn-tray-face)');
   });
 
-  it('washes the selected column with the shell’s soft ring and the destination with --ht-valid', () => {
+  it('washes the selected column with the shell’s soft ring and the destination with --hn-valid', () => {
     // palette() lays --accent-ring-soft over the wood for "selected".
-    expect(value('.ht-selected {', 'background')).toBe('var(--accent-ring-soft)');
-    expect(value('.ht-valid {', 'background')).toBe('var(--ht-valid)');
+    expect(value('.hn-selected {', 'background')).toBe('var(--accent-ring-soft)');
+    expect(value('.hn-valid {', 'background')).toBe('var(--hn-valid)');
   });
 
   it('draws the accent marks and the lifted disk in the measured accent', () => {
-    expect(value('.ht-selected {', 'border-color')).toBe('var(--accent)');
-    expect(value('.ht-valid {', 'border-color')).toBe('var(--accent)');
-    expect(value('.ht-goal-mark {', 'stroke')).toBe('var(--accent)');
-    expect(value('.ht-destination {', 'color')).toBe('var(--accent)');
-    expect(value('.ht-lifted-disk .ht-disk {', 'fill')).toBe('var(--accent)');
-    expect(value('.ht-lifted-disk .ht-disk {', 'stroke')).toBe('var(--accent)');
-    expect(value('.ht-lifted-disk text {', 'fill')).toBe('var(--accent-ink)');
+    expect(value('.hn-selected {', 'border-color')).toBe('var(--accent)');
+    expect(value('.hn-valid {', 'border-color')).toBe('var(--accent)');
+    expect(value('.hn-goal-mark {', 'stroke')).toBe('var(--accent)');
+    expect(value('.hn-destination {', 'color')).toBe('var(--accent)');
+    expect(value('.hn-lifted-disk .hn-disk {', 'fill')).toBe('var(--accent)');
+    expect(value('.hn-lifted-disk .hn-disk {', 'stroke')).toBe('var(--accent)');
+    expect(value('.hn-lifted-disk text {', 'fill')).toBe('var(--accent-ink)');
   });
 
   it('inks the peg numbers, the pegs, the bases and the disks with the measured tokens', () => {
-    expect(value('.ht-peg {', 'color')).toBe('var(--ht-peg-ink)');
-    expect(value('.ht-wood {', 'stroke')).toBe('var(--ht-peg)');
-    expect(value('.ht-base {', 'fill')).toBe('var(--ht-base)');
-    expect(value('.ht-base {', 'stroke')).toBe('var(--ht-base-edge)');
-    expect(value('.ht-disk {', 'stroke')).toBe('var(--ht-disk-edge)');
+    expect(value('.hn-peg {', 'color')).toBe('var(--hn-peg-ink)');
+    expect(value('.hn-wood {', 'stroke')).toBe('var(--hn-peg)');
+    expect(value('.hn-base {', 'fill')).toBe('var(--hn-base)');
+    expect(value('.hn-base {', 'stroke')).toBe('var(--hn-base-edge)');
+    expect(value('.hn-disk {', 'stroke')).toBe('var(--hn-disk-edge)');
     DISKS.forEach((token, disk) => {
-      expect(value(`.ht-disk-${disk} {`, 'fill')).toBe(`var(${token})`);
+      expect(value(`.hn-disk-${disk} {`, 'fill')).toBe(`var(${token})`);
     });
-    expect(value('.ht-tower text {', 'fill')).toBe('var(--ht-disk-ink)');
+    expect(value('.hn-tower text {', 'fill')).toBe('var(--hn-disk-ink)');
   });
 
   it('draws the lit lines, the shade lines and the cast shadows with the tokens the direction test pins', () => {
-    expect(value('.ht-wood-light {', 'stroke')).toBe('var(--ht-peg-lit)');
-    expect(value('.ht-wood-shade {', 'stroke')).toBe('var(--ht-peg-shade)');
-    expect(value('.ht-disk-light {', 'stroke')).toBe('var(--ht-disk-lit)');
-    expect(value('.ht-disk-shade,\n.ht-base-shade {', 'stroke')).toBe('var(--ht-disk-shade)');
-    expect(value('.ht-base-shadow,\n.ht-disk-shadow {', 'fill')).toBe('var(--ht-cast)');
-    expect(value('.ht-base-shadow,\n.ht-disk-shadow {', 'opacity')).toBe('var(--ht-cast-alpha)');
-    expect(value('.ht-lifted-disk .ht-disk-shadow {', 'opacity')).toBe(
-      'var(--ht-cast-lifted-alpha)',
+    expect(value('.hn-wood-light {', 'stroke')).toBe('var(--hn-peg-lit)');
+    expect(value('.hn-wood-shade {', 'stroke')).toBe('var(--hn-peg-shade)');
+    expect(value('.hn-disk-light {', 'stroke')).toBe('var(--hn-disk-lit)');
+    expect(value('.hn-disk-shade,\n.hn-base-shade {', 'stroke')).toBe('var(--hn-disk-shade)');
+    expect(value('.hn-base-shadow,\n.hn-disk-shadow {', 'fill')).toBe('var(--hn-cast)');
+    expect(value('.hn-base-shadow,\n.hn-disk-shadow {', 'opacity')).toBe('var(--hn-cast-alpha)');
+    expect(value('.hn-lifted-disk .hn-disk-shadow {', 'opacity')).toBe(
+      'var(--hn-cast-lifted-alpha)',
     );
   });
 });
@@ -359,70 +359,70 @@ describe('the light comes from above, in both themes', () => {
     it(`lights the top edge and shades the opposite side (${theme.name})`, () => {
       const p = palette(theme);
       // The tray: a lit line over the top of the gradient, an opaque front darker than its bottom.
-      expect(luminance(p.get('--ht-tray-lit').hex)).toBeGreaterThan(
-        luminance(p.get('--ht-tray-top').hex),
+      expect(luminance(p.get('--hn-tray-lit').hex)).toBeGreaterThan(
+        luminance(p.get('--hn-tray-top').hex),
       );
-      expect(luminance(p.get('--ht-tray-face').hex)).toBeLessThan(
-        luminance(p.get('--ht-tray-bottom').hex),
+      expect(luminance(p.get('--hn-tray-face').hex)).toBeLessThan(
+        luminance(p.get('--hn-tray-bottom').hex),
       );
-      expect(p.get('--ht-tray-face').alpha, 'the front is opaque').toBe(1);
+      expect(p.get('--hn-tray-face').alpha, 'the front is opaque').toBe(1);
       // The peg: lit on the left, shade on the right.
-      const peg = p.get('--ht-peg');
-      const pegShade = p.get('--ht-peg-shade');
-      expect(luminance(p.get('--ht-peg-lit').hex)).toBeGreaterThan(luminance(peg.hex));
+      const peg = p.get('--hn-peg');
+      const pegShade = p.get('--hn-peg-shade');
+      expect(luminance(p.get('--hn-peg-lit').hex)).toBeGreaterThan(luminance(peg.hex));
       expect(luminance(laid(pegShade.hex, peg.hex, pegShade.alpha))).toBeLessThan(
         luminance(peg.hex),
       );
       // The disks: a lit line on the top, a shade line near the bottom.
-      const shade = p.get('--ht-disk-shade');
+      const shade = p.get('--hn-disk-shade');
       for (const disk of DISKS) {
         const fill = p.get(disk).hex;
-        expect(luminance(p.get('--ht-disk-lit').hex), disk).toBeGreaterThan(luminance(fill));
+        expect(luminance(p.get('--hn-disk-lit').hex), disk).toBeGreaterThan(luminance(fill));
         expect(luminance(laid(shade.hex, fill, shade.alpha)), disk).toBeLessThan(luminance(fill));
       }
       // The base takes the same shade line.
-      const base = p.get('--ht-base').hex;
+      const base = p.get('--hn-base').hex;
       expect(luminance(laid(shade.hex, base, shade.alpha))).toBeLessThan(luminance(base));
     });
 
     it(`casts a shadow darker than the tray, fainter once the disk is lifted (${theme.name})`, () => {
       const p = palette(theme);
-      const cast = p.get('--ht-cast').hex;
-      for (const token of ['--ht-tray-top', '--ht-tray-bottom']) {
+      const cast = p.get('--hn-cast').hex;
+      for (const token of ['--hn-tray-top', '--hn-tray-bottom']) {
         const tray = p.get(token).hex;
-        const shadowed = laid(cast, tray, p.alpha('--ht-cast-alpha'));
+        const shadowed = laid(cast, tray, p.alpha('--hn-cast-alpha'));
         expect(luminance(shadowed), token).toBeLessThan(luminance(tray));
         // A lifted disk's shadow is still a shadow.
-        expect(luminance(laid(cast, tray, p.alpha('--ht-cast-lifted-alpha'))), token).toBeLessThan(
+        expect(luminance(laid(cast, tray, p.alpha('--hn-cast-lifted-alpha'))), token).toBeLessThan(
           luminance(tray),
         );
       }
-      expect(p.alpha('--ht-cast-lifted-alpha')).toBeLessThan(p.alpha('--ht-cast-alpha'));
+      expect(p.alpha('--hn-cast-lifted-alpha')).toBeLessThan(p.alpha('--hn-cast-alpha'));
     });
 
     it(`keeps the grain to two faint layers of at most 5% alpha (${theme.name})`, () => {
-      const grain = palette(theme).get('--ht-grain');
+      const grain = palette(theme).get('--hn-grain');
       expect(grain.alpha).toBeGreaterThan(0);
       expect(grain.alpha).toBeLessThanOrEqual(0.05);
     });
   }
 
   it('lays the grain as two repeating gradients of 9px and 23px, over the wood', () => {
-    const rule = gameCss.slice(gameCss.indexOf('\n.ht-board,\n.ht-mini-tray {'));
+    const rule = gameCss.slice(gameCss.indexOf('\n.hn-board,\n.hn-mini-tray {'));
     const background = rule.slice(rule.indexOf('background:'), rule.indexOf(';'));
     const layers = [
       ...background.matchAll(/repeating-linear-gradient\((?:[^()]|\([^()]*\))*\)/g),
     ].map((m) => m[0]);
     expect(layers).toHaveLength(2);
-    expect(layers[0]).toMatch(/var\(--ht-grain\) 8px 9px/);
-    expect(layers[1]).toMatch(/var\(--ht-grain\) 21px 23px/);
+    expect(layers[0]).toMatch(/var\(--hn-grain\) 8px 9px/);
+    expect(layers[1]).toMatch(/var\(--hn-grain\) 21px 23px/);
     expect(background.indexOf('linear-gradient(180deg')).toBeGreaterThan(
       background.lastIndexOf('repeating-linear-gradient'),
     );
   });
 
   it('puts the lift first among the tray’s outer shadows, with an opaque front', () => {
-    const rule = gameCss.slice(gameCss.indexOf('\n.ht-board,\n.ht-mini-tray {'));
+    const rule = gameCss.slice(gameCss.indexOf('\n.hn-board,\n.hn-mini-tray {'));
     const shadows = rule.slice(
       rule.indexOf('box-shadow:'),
       rule.indexOf(';', rule.indexOf('box-shadow:')),
@@ -433,7 +433,7 @@ describe('the light comes from above, in both themes', () => {
       .filter(
         (part) => part.length > 0 && !part.startsWith('inset') && !part.startsWith('box-shadow'),
       );
-    expect(outer[0]).toBe('0 5px 0 var(--ht-tray-face)');
+    expect(outer[0]).toBe('0 5px 0 var(--hn-tray-face)');
     expect(outer[1]).toBe('0 8px 18px var(--accent-ring-soft)');
   });
 });
@@ -444,17 +444,17 @@ describe('the lift and the settle (docs/HANOI_TOWERS_RULES.md "Visual presentati
     // transition, and it names transform alone: the shadow's fainter tint
     // switches at once.
     expect(gameCss).toMatch(
-      /\.ht-disk-group,\s*\.ht-lifted-disk,\s*\.ht-disk-shadow\s*\{\s*transition:\s*transform 0\.14s ease-out;\s*\}/,
+      /\.hn-disk-group,\s*\.hn-lifted-disk,\s*\.hn-disk-shadow\s*\{\s*transition:\s*transform 0\.14s ease-out;\s*\}/,
     );
     const transitions = [...gameCss.matchAll(/transition:\s*([^;]+);/g)].map((m) =>
       m[1]!.replace(/\s+/g, ' ').trim(),
     );
     expect(transitions.filter((t) => t !== 'none')).toEqual(['transform 0.14s ease-out']);
     expect(gameCss).not.toMatch(/transition-property/);
-    expect(gameCss).toMatch(/\.ht-lifted-disk\s*\{\s*transform:\s*translateY\(-12px\);\s*\}/);
-    expect(gameCss).toMatch(/\.ht-arrived\s*\{\s*animation:\s*ht-settle 0\.14s ease-out;\s*\}/);
+    expect(gameCss).toMatch(/\.hn-lifted-disk\s*\{\s*transform:\s*translateY\(-12px\);\s*\}/);
+    expect(gameCss).toMatch(/\.hn-arrived\s*\{\s*animation:\s*hn-settle 0\.14s ease-out;\s*\}/);
     expect(gameCss).toMatch(
-      /@keyframes ht-settle\s*\{\s*from\s*\{\s*transform:\s*translateY\(-12px\);\s*\}\s*\}/,
+      /@keyframes hn-settle\s*\{\s*from\s*\{\s*transform:\s*translateY\(-12px\);\s*\}\s*\}/,
     );
     expect(gameCss).not.toMatch(/infinite/);
     expect(gameCss).not.toMatch(/transition:\s*all/);
@@ -465,16 +465,16 @@ describe('the lift and the settle (docs/HANOI_TOWERS_RULES.md "Visual presentati
   it('is removed under the OS setting and under the in-app switch', () => {
     const media = gameCss.slice(gameCss.indexOf('@media (prefers-reduced-motion: reduce)'));
     const mediaBody = media.slice(0, media.indexOf('\n}'));
-    for (const selector of ['.ht-disk-group', '.ht-lifted-disk', '.ht-disk-shadow']) {
+    for (const selector of ['.hn-disk-group', '.hn-lifted-disk', '.hn-disk-shadow']) {
       expect(mediaBody, selector).toContain(selector);
     }
     expect(mediaBody).toMatch(/transition:\s*none/);
-    expect(mediaBody).toMatch(/\.ht-arrived\s*\{\s*animation:\s*none/);
-    for (const selector of ['.ht-disk-group', '.ht-lifted-disk', '.ht-disk-shadow']) {
+    expect(mediaBody).toMatch(/\.hn-arrived\s*\{\s*animation:\s*none/);
+    for (const selector of ['.hn-disk-group', '.hn-lifted-disk', '.hn-disk-shadow']) {
       expect(gameCss, selector).toContain(`:root[data-reduced-motion='true'] ${selector}`);
     }
     expect(gameCss).toMatch(
-      /:root\[data-reduced-motion='true'\] \.ht-arrived\s*\{\s*animation:\s*none;\s*\}/,
+      /:root\[data-reduced-motion='true'\] \.hn-arrived\s*\{\s*animation:\s*none;\s*\}/,
     );
   });
 });

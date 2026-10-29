@@ -161,7 +161,7 @@ it('isolates the Home replacement confirmation and Cancel preserves the save', a
   launch(kv);
   await settle();
   fireEvent.click(screen.getByRole('button', { name: 'Disks: 4' }));
-  expect(document.querySelector('.ht-home-content')).toHaveAttribute('inert');
+  expect(document.querySelector('.hn-home-content')).toHaveAttribute('inert');
   const dialog = screen.getByRole('alertdialog');
   expect(dialog.closest('[inert]')).toBeNull();
   fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
@@ -180,7 +180,7 @@ it('shows legal destinations, rejects a larger disk, and supports peg keyboard c
   fireEvent.keyDown(first, { key: 'ArrowRight' });
   expect(screen.getByRole('button', { name: 'Peg 2, empty' })).toHaveFocus();
   fireEvent.keyDown(window, { key: '1' });
-  expect(document.querySelectorAll('.ht-valid')).toHaveLength(2);
+  expect(document.querySelectorAll('.hn-valid')).toHaveLength(2);
   fireEvent.keyDown(window, { key: '2' });
   await settle();
   expect((await loadSavedGame(kv))?.board).toEqual([1, 0, 0]);
@@ -194,7 +194,7 @@ it('shows legal destinations, rejects a larger disk, and supports peg keyboard c
   await settle();
   expect((await loadSavedGame(kv))?.history).toHaveLength(0);
   fireEvent.keyDown(window, { key: '1', repeat: true });
-  expect(document.querySelectorAll('.ht-selected')).toHaveLength(0);
+  expect(document.querySelectorAll('.hn-selected')).toHaveLength(0);
 });
 
 it('stops its only play clock while a restart dialog is open and resumes after Cancel', async () => {

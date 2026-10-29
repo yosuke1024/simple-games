@@ -215,6 +215,15 @@ describe('Reduced Motion reaches pseudo-elements', () => {
   });
 });
 
+/** Every stylesheet under `dir`, at any depth. */
+function stylesheets(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = resolve(dir, entry.name);
+    if (entry.isDirectory()) return stylesheets(path);
+    return entry.name.endsWith('.css') ? [path] : [];
+  });
+}
+
 /**
  * The low-spec floor is Chromium 88 (docs/ARCHITECTURE.md), which has no
  * `svh`. The usual fallback is a `vh` declaration followed by the same one in
@@ -233,14 +242,6 @@ describe('Reduced Motion reaches pseudo-elements', () => {
 describe('svh behind var(), env() or a custom property sits under @supports (Chromium 88)', () => {
   const VIEWPORT_UNIT = /\d(?:svh|dvh|lvh|svw|dvw|lvw|svmin|svmax|dvmin|dvmax)\b/;
   const DEFERRED = /\b(?:var|env)\(/;
-
-  function stylesheets(dir: string): string[] {
-    return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-      const path = resolve(dir, entry.name);
-      if (entry.isDirectory()) return stylesheets(path);
-      return entry.name.endsWith('.css') ? [path] : [];
-    });
-  }
 
   /** Each declaration that needs the guard, as guarded or `file:line declaration`. */
   function scan(file: string): { guarded: number; unguarded: string[] } {
@@ -293,5 +294,117 @@ describe('svh behind var(), env() or a custom property sits under @supports (Chr
   it('reads every stylesheet and the guarded ones — a broken scan would pass the test above vacuously', () => {
     expect(results.length).toBeGreaterThan(60);
     expect(results.reduce((sum, result) => sum + result.guarded, 0)).toBeGreaterThan(28);
+  });
+});
+
+/**
+ * A game's stylesheet is a lazy chunk, and once the game has been opened its
+ * rules stay loaded until the app closes. A rule that one game anchors on a
+ * class therefore also styles any other game's element with that class.
+ * Hearts and Hanoi Towers both wrote `.ht-body` and `.ht-actions`. After
+ * Hearts had been opened, Hanoi's play area became a scroller of its own:
+ * 17px at 360×640 with a 90px banner slot, against 3px alone. Hanoi's rules
+ * also reached Hearts the other way. Hanoi moved to `hn-` on 2026-10-30.
+ *
+ * A selector's anchor is its first class that the shell does not define. A
+ * shell class is one that starts a selector in a stylesheet outside
+ * src/games: `.segment` counts, but the Yacht classes that nearby.css restyles
+ * under `.nearby-board` do not. A class one game anchors on must not appear in
+ * any other game's stylesheet. Two games may each keep a class under their own
+ * anchor: `.kt-screen .game-title` and `.nim-screen .game-title` cannot reach
+ * each other. This test cannot see a class that another game uses only in its
+ * markup and never in its stylesheet. `@keyframes` names are global in the same
+ * way. With `css: false` in the test setup, nothing rendered can see either
+ * collision (docs/architecture/css-split.md).
+ */
+describe('a class one game anchors on appears in no other game, and no @keyframes name repeats', () => {
+  const games = resolve('src/games');
+  const CLASS = /\.(-?[A-Za-z_][\w-]*)/g;
+
+  type Selector = { classes: string[]; lead: string[] };
+
+  /** Each selector's classes and those of its first compound, and each @keyframes name. */
+  function read(file: string): { selectors: Selector[]; keyframes: string[] } {
+    // Comments and strings go first: a data: URL or a content value may hold
+    // braces, dots or semicolons that are not selectors.
+    const text = readFileSync(file, 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'/g, '""');
+    const selectors: Selector[] = [];
+    const keyframes: string[] = [];
+    for (const match of text.matchAll(/([^{};]*)\{/g)) {
+      const prelude = match[1]!.trim();
+      const frames = /^@(?:-webkit-)?keyframes\s+([\w-]+)/.exec(prelude);
+      if (frames) keyframes.push(frames[1]!);
+      if (!prelude || prelude.startsWith('@') || /^(?:from|to|[\d.]+%)/.test(prelude)) continue;
+      // Attribute values and the arguments of :not() / :is() / :nth-child()
+      // are not where a selector is anchored.
+      let flat = prelude.replace(/\[[^\]]*\]/g, '');
+      while (/\([^()]*\)/.test(flat)) flat = flat.replace(/\([^()]*\)/g, '');
+      for (const selector of flat.split(',')) {
+        const lead = selector.trim().split(/\s*[\s>+~]\s*/)[0] ?? '';
+        selectors.push({
+          classes: [...selector.matchAll(CLASS)].map((m) => m[1]!),
+          lead: [...lead.matchAll(CLASS)].map((m) => m[1]!),
+        });
+      }
+    }
+    return { selectors, keyframes };
+  }
+
+  const shell = new Set<string>();
+  /** Class → the games that anchor a selector on it. */
+  const anchors = new Map<string, Set<string>>();
+  /** Class (not the shell's) → the games whose stylesheets name it anywhere. */
+  const mentions = new Map<string, Set<string>>();
+  /** @keyframes name → the stylesheets' owners, the shell counting as one. */
+  const keyframes = new Map<string, Set<string>>();
+  const add = (map: Map<string, Set<string>>, name: string, owner: string) => {
+    map.set(name, (map.get(name) ?? new Set()).add(owner));
+  };
+  for (const file of stylesheets(resolve('src')).filter((path) => !path.startsWith(`${games}/`))) {
+    const sheet = read(file);
+    sheet.selectors.forEach((selector) => selector.lead.forEach((name) => shell.add(name)));
+    sheet.keyframes.forEach((name) => add(keyframes, name, '(shell)'));
+  }
+  for (const game of readdirSync(games, { withFileTypes: true }).filter((e) => e.isDirectory())) {
+    for (const file of stylesheets(resolve(games, game.name))) {
+      const sheet = read(file);
+      for (const selector of sheet.selectors) {
+        const own = selector.classes.filter((name) => !shell.has(name));
+        if (own[0]) add(anchors, own[0], game.name);
+        own.forEach((name) => add(mentions, name, game.name));
+      }
+      sheet.keyframes.forEach((name) => add(keyframes, name, game.name));
+    }
+  }
+
+  it("finds no class one game anchors on in another game's stylesheet", () => {
+    const clashes = [...anchors.keys()]
+      .map((name) => [name, [...(mentions.get(name) ?? [])].sort()] as const)
+      .filter(([, by]) => by.length > 1)
+      .map(([name, by]) => `${name}: ${by.join(', ')}`)
+      .sort();
+    expect(clashes).toEqual([]);
+  });
+
+  it('finds no @keyframes name defined twice', () => {
+    const clashes = [...keyframes]
+      .filter(([, by]) => by.size > 1)
+      .map(([name, by]) => `${name}: ${[...by].sort().join(', ')}`)
+      .sort();
+    expect(clashes).toEqual([]);
+  });
+
+  it('reads every game, the shell and the keyframes — a broken scan would pass the tests above vacuously', () => {
+    const gamesWithAnchors = new Set([...anchors.values()].flatMap((by) => [...by]));
+    expect(gamesWithAnchors.size).toBeGreaterThan(60);
+    expect(anchors.size).toBeGreaterThan(1000);
+    expect(anchors.get('kt-screen')).toEqual(new Set(['knight-tour']));
+    expect(shell.has('game-content')).toBe(true);
+    expect(shell.has('segment')).toBe(true);
+    expect(shell.has('yt-sheet-foot')).toBe(false);
+    expect(keyframes.size).toBeGreaterThan(50);
+    expect(keyframes.get('hn-settle')).toEqual(new Set(['hanoi-towers']));
   });
 });

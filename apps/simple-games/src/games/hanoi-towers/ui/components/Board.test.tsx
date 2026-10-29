@@ -18,19 +18,19 @@ function after(session: Session, ...actions: number[]): Session {
   return actions.reduce((current, action) => move(current, action)!, session);
 }
 
-const towers = (root: ParentNode) => [...root.querySelectorAll('.ht-tower')];
+const towers = (root: ParentNode) => [...root.querySelectorAll('.hn-tower')];
 
 /** The disk groups of one tower, by class (docs/HANOI_TOWERS_RULES.md "Visual presentation"). */
 const arrivedIn = (root: ParentNode) =>
-  towers(root).map((tower) => tower.querySelectorAll('.ht-arrived').length);
+  towers(root).map((tower) => tower.querySelectorAll('.hn-arrived').length);
 const liftedIn = (root: ParentNode) =>
-  towers(root).map((tower) => tower.querySelectorAll('.ht-lifted-disk').length);
+  towers(root).map((tower) => tower.querySelectorAll('.hn-lifted-disk').length);
 
 describe('the lift and the settle on the board', () => {
   it('lifts only the top disk of the selected peg, by class, with the disk drawn where it rests', () => {
     const start = createSession(3, 5);
     const view = render(wrap(<Board session={start} selected={null} onPeg={vi.fn()} />));
-    const rests = [...view.container.querySelectorAll('.ht-disk')].map((disk) =>
+    const rests = [...view.container.querySelectorAll('.hn-disk')].map((disk) =>
       disk.getAttribute('y'),
     );
     expect(liftedIn(view.container)).toEqual([0, 0, 0]);
@@ -38,10 +38,10 @@ describe('the lift and the settle on the board', () => {
     expect(liftedIn(view.container)).toEqual([1, 0, 0]);
     // The lift is a CSS transform of the group; the rect's own y does not move.
     expect(
-      [...view.container.querySelectorAll('.ht-disk')].map((d) => d.getAttribute('y')),
+      [...view.container.querySelectorAll('.hn-disk')].map((d) => d.getAttribute('y')),
     ).toEqual(rests);
     // Every other disk is an ordinary group, so it can ease back down.
-    expect(view.container.querySelectorAll('.ht-disk-group')).toHaveLength(2);
+    expect(view.container.querySelectorAll('.hn-disk-group')).toHaveLength(2);
   });
 
   it('settles the disk a move carried, once, and not on the first render', () => {
@@ -56,7 +56,7 @@ describe('the lift and the settle on the board', () => {
     // Once: another render of the same board and selection leaves the very same
     // element carrying the class, so a CSS animation is not started again
     // (jsdom runs no animation, so the class and the node are what can be pinned).
-    const settling = view.container.querySelector('.ht-arrived');
+    const settling = view.container.querySelector('.hn-arrived');
     expect(settling).not.toBeNull();
     view.rerender(
       wrap(
@@ -64,8 +64,8 @@ describe('the lift and the settle on the board', () => {
       ),
     );
     expect(arrivedIn(view.container)).toEqual([0, 0, 1]);
-    expect(view.container.querySelector('.ht-arrived')).toBe(settling);
-    expect(settling!.getAttribute('class')).toBe('ht-disk-group ht-arrived');
+    expect(view.container.querySelector('.hn-arrived')).toBe(settling);
+    expect(settling!.getAttribute('class')).toBe('hn-disk-group hn-arrived');
     // Selecting again ends the settle, and cancelling is not an arrival.
     view.rerender(wrap(<Board session={moved} selected={2} onPeg={vi.fn()} />));
     expect(arrivedIn(view.container)).toEqual([0, 0, 0]);
@@ -104,8 +104,8 @@ describe('the lift and the settle on the board', () => {
   it('draws one shade line per disk and per peg, and one under the base', () => {
     const start = createSession(4, 5);
     const view = render(wrap(<Board session={start} selected={null} onPeg={vi.fn()} />));
-    expect(view.container.querySelectorAll('.ht-disk-shade')).toHaveLength(4);
-    expect(view.container.querySelectorAll('.ht-wood-shade')).toHaveLength(3);
-    expect(view.container.querySelectorAll('.ht-base-shade')).toHaveLength(3);
+    expect(view.container.querySelectorAll('.hn-disk-shade')).toHaveLength(4);
+    expect(view.container.querySelectorAll('.hn-wood-shade')).toHaveLength(3);
+    expect(view.container.querySelectorAll('.hn-base-shade')).toHaveLength(3);
   });
 });

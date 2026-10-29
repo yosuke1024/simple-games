@@ -83,13 +83,19 @@ App banner (2026-10-29): the reserved `BannerSlot` is now the last child of the
 `.screen`, after the scrolling `.game-content` (as in Color Flood), so on a short
 screen the play area scrolls above the native strip instead of the strip
 scrolling with it. Measured on the Android emulator, nothing sat under the strip
-before or after at 360×640 or 411×914 with a 64 px or 90 px slot. At 360×640 with
-a 90 px slot the play area scrolls by 3 px when Hanoi Towers is the first game
-opened. It scrolls by 17 px, inside `.ht-body`, once Hearts has been opened in the
-same app run. Hearts' stylesheet uses the same `ht-` prefix, and its `.ht-body`
-rule (`flex: 1; overflow-y: auto`) stays loaded and applies here too. This
-class-name collision is recorded in `docs/RELEASE_CHECKLIST.md` (2026-10-30) and
-is not fixed yet. The web build is unchanged (`BannerSlot` renders nothing there).
+before or after at 360×640 or 411×914 with a 64 px or 90 px slot; at 360×640 with
+a 90 px slot the play area scrolls by 3 px. The web build is unchanged
+(`BannerSlot` renders nothing there).
+
+Class prefix (2026-10-30): this game's classes, custom properties and keyframes
+use `hn-`, the prefix of its storage keys. Until 2026-10-30 they used `ht-`,
+which Hearts also uses. Both stylesheets defined `.ht-body` and `.ht-actions`, and
+a game's stylesheet stays loaded once the game has been opened. So after Hearts,
+this screen picked up Hearts' `.ht-body` rule (`flex: 1; overflow-y: auto`), and
+at 360×640 with a 90 px slot the play area scrolled by 17 px inside it instead of
+by 3 px. The leak ran both ways: this game's rules also reached Hearts' table
+when Hearts was opened after it. `src/test/styles.test.ts` now fails when a
+class that one game anchors a selector on appears in another game's stylesheet.
 
 Lifting and placing is the one motion on the board. This is the owner's decision
 of 2026-10-29, and it reverses the 2026-10-23 sentence "Small shadows give the
@@ -107,20 +113,20 @@ the disk simply is where it is. The timing is not tied to any game state: nothin
 waits for it, and input is never ignored while it runs.
 
 Every colour of the tray, pegs, bases and disks is game content, declared once in
-the two blocks at the top of `hanoi-towers.css` (`--ht-*`, light and dark, as
+the two blocks at the top of `hanoi-towers.css` (`--hn-*`, light and dark, as
 listed in `docs/architecture/css-split.md`) and nowhere else; a custom property
 written with eight hex digits carries its own alpha. The tokens are
-`--ht-tray-top` / `--ht-tray-bottom` (light `#f2e8d7` / `#e9ddc8`, dark
-`#39332c` / `#302a24`), `--ht-tray-edge` (`#c2af91` / `#695943`),
-`--ht-tray-face` (`#c8b490` / `#241f1a`), `--ht-tray-lit` (`#fff9ed` /
-`#514739`), `--ht-tray-shade` (`#765b3817` / `#00000026`), `--ht-grain`
-(`#765b380c` / `#fff0d70a`), `--ht-peg` (`#7d5f3f` / `#b89d77`), `--ht-peg-lit`,
-`--ht-peg-shade`, `--ht-peg-ink` for the peg numbers (`#574632` / `#e4d4ba`),
-`--ht-base` and `--ht-base-edge` (`#b49368` and `#7a5d3d`), `--ht-cast` with
-`--ht-cast-alpha` and `--ht-cast-lifted-alpha` (`#6b4d30`, 0.18 and 0.12 / `#000000`,
-0.32 and 0.21), `--ht-disk-0` to `--ht-disk-4` (`#f0dfbf`, `#e9d2aa`, `#dfc398`,
-`#d5b587`, `#cbaa7c` in both themes), `--ht-disk-edge`, `--ht-disk-lit`,
-`--ht-disk-shade`, `--ht-disk-ink` and `--ht-valid` (the destination wash). The
+`--hn-tray-top` / `--hn-tray-bottom` (light `#f2e8d7` / `#e9ddc8`, dark
+`#39332c` / `#302a24`), `--hn-tray-edge` (`#c2af91` / `#695943`),
+`--hn-tray-face` (`#c8b490` / `#241f1a`), `--hn-tray-lit` (`#fff9ed` /
+`#514739`), `--hn-tray-shade` (`#765b3817` / `#00000026`), `--hn-grain`
+(`#765b380c` / `#fff0d70a`), `--hn-peg` (`#7d5f3f` / `#b89d77`), `--hn-peg-lit`,
+`--hn-peg-shade`, `--hn-peg-ink` for the peg numbers (`#574632` / `#e4d4ba`),
+`--hn-base` and `--hn-base-edge` (`#b49368` and `#7a5d3d`), `--hn-cast` with
+`--hn-cast-alpha` and `--hn-cast-lifted-alpha` (`#6b4d30`, 0.18 and 0.12 / `#000000`,
+0.32 and 0.21), `--hn-disk-0` to `--hn-disk-4` (`#f0dfbf`, `#e9d2aa`, `#dfc398`,
+`#d5b587`, `#cbaa7c` in both themes), `--hn-disk-edge`, `--hn-disk-lit`,
+`--hn-disk-shade`, `--hn-disk-ink` and `--hn-valid` (the destination wash). The
 peg, the peg numbers and the base edge were darkened from `#8c6c49`, `#5f4d39`
 and `#8d6f4e` so that they still clear their floors under the translucent
 selection wash and the grain; the tray colours are unchanged.
@@ -141,7 +147,7 @@ shade and the cast shadow are darker, the front is opaque and darker than the
 tray, the grain stays at or below 5% alpha) and the motion's 140 ms,
 transform-only form with its Reduced Motion removal. It also pins the wiring the
 figures above depend on: the selected column's `--accent-ring-soft` wash, the
-destination's `--ht-valid`, and which rule reads which token (the peg numbers,
+destination's `--hn-valid`, and which rule reads which token (the peg numbers,
 pegs, base, disk fills, edges and numbers, the accent marks, the lifted disk's
 number, the lit and shade lines and the cast shadows), so a rule that is pointed
 at another token fails instead of leaving these numbers describing a different

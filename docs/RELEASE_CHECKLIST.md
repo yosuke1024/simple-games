@@ -130,12 +130,19 @@ Maze Escape(No. 62・64〜66)。Falling Blocks(No. 63)は 2026-10-29 に先行�
       1024×600 が枠の下に 5 / 18px、Yacht の 1024×600 が 90px の枠で上部バーに 2px かかっていた。広い段の盤は Reversi の 1280×800 で
       410 → 500px(Web と同じ)など 26〜90px 戻った。スマホの 2 サイズの寸法は修正前と同じ。**タブレットの幅はエミュレータでも実機
       でも、ノッチや下端の帯のある画面でも測っていない**
-- [ ] **Hearts と Hanoi Towers のクラス名の衝突**(2026-10-30 に計測の記録から判明): どちらも接頭辞 `ht-` を使い、`.ht-body` と
-      `.ht-actions` を両方のスタイルシートが定義している。ゲームの CSS は遅延チャンクで、一度開くとアプリを閉じるまで残るので、Hearts を
-      開いた後の Hanoi Towers は Hearts の `.ht-body`(`flex: 1; overflow-y: auto` など)を受け、360×640 の 90px の枠で遊ぶ領域が
-      `.ht-body` の中で 17px スクロールする(Hanoi だけなら 3px)。逆向き(Hanoi の後の Hearts)は測っていない。Hanoi Towers は
-      1.7.0 で初めてアプリに入り、Web 版では先行公開のあいだから同じ。全ゲームの CSS を走査して、ゲームをまたぐクラス名の衝突は
-      この組だけ。未修正
+- [x] **Hearts と Hanoi Towers のクラス名の衝突**(2026-10-30 に計測の記録から判明・同日修正): どちらも接頭辞 `ht-` を使い、
+      `.ht-body` と `.ht-actions` を両方のスタイルシートが定義していた。ゲームの CSS は遅延チャンクで、一度開くとアプリを閉じるまで残るので、
+      Hearts を開いた後の Hanoi Towers は Hearts の `.ht-body`(`flex: 1; overflow-y: auto` など)を受け、360×640 の 90px の枠で
+      遊ぶ領域が `.ht-body` の中で 17px スクロールした(Hanoi だけなら 3px)。Hanoi Towers は 1.7.0 で初めてアプリに入り、Web 版では
+      先行公開のあいだから同じだった。Hanoi Towers のクラス・カスタムプロパティ・`@keyframes` を保存キーと同じ `hn-` に改め(Hearts は
+      変えない)、`src/test/styles.test.ts` に門を足した: あるゲームがセレクタの起点(シェルが定義しないクラスのうち最初のもの)に
+      するクラスがほかのゲームのスタイルシートに出てこないこと、`@keyframes` の名前が重ならないこと(改名前の Hanoi の CSS に戻すと
+      `ht-actions` / `ht-body` を名指しして落ち、Hearts に `.hn-body` を起点とする規則を 1 行足しても落ちる)。走査で見つかった
+      ゲームをまたぐ衝突はこの組だけ(Knight Tour と Nim の `.game-title` は各自の画面のクラスの下にあり、衝突しない)。**確かめたこと**:
+      ネイティブ向けのビルドをヘッドレス Chromium で Android として開き(360×640)、同じページの中で Hearts → Hanoi Towers と開くと、
+      改名前は Hanoi の本体が Hearts の規則を受けて `overflow-y: auto`・`flex: 1 0 0%`・`justify-content: flex-start` になり、改名後は
+      Hanoi だけを開いたときと同じ(`visible`・`0 0 auto`・`normal`)。逆の順でも、改名前は Hanoi の規則が Hearts に漏れて Hearts の
+      本体のスクロール量が 84 → 74px に変わり、改名後は 84px のまま。エミュレータ・実機では確かめていない
 - [ ] 20 本の実機(Android / iPhone)と低スペック端末(§4)での 1 局、アーケード 5 本(Snake / Bounce Up / Overtake /
       Invaders / Paddle Rally)のネイティブ WebView での操作感。確かめるまで「実機で確認済み」と書かない
 - [ ] タグ `v1.7.0`・AAB / IPA の作成・内部テスト / TestFlight・本番審査への提出(人間の明示的な承認が要る)
