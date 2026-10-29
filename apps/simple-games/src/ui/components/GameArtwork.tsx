@@ -239,17 +239,8 @@ function Cards({
   );
 }
 
-function DiscBoard({
-  kind,
-}: {
-  kind: 'reversi' | 'checkers' | 'gomoku' | 'connect-four' | 'peg-solitaire';
-}) {
-  const filled =
-    kind === 'gomoku'
-      ? [4, 5, 6, 7, 8, 10]
-      : kind === 'peg-solitaire'
-        ? [1, 4, 5, 6, 7, 9, 10, 11, 13, 14]
-        : [5, 6, 8, 9, 10, 13, 14];
+function DiscBoard({ kind }: { kind: 'reversi' | 'checkers' | 'gomoku' | 'connect-four' }) {
+  const filled = kind === 'gomoku' ? [4, 5, 6, 7, 8, 10] : [5, 6, 8, 9, 10, 13, 14];
   return (
     <Board>
       {Array.from({ length: 16 }, (_, i) => {
@@ -306,6 +297,108 @@ function DiscBoard({
     </Board>
   );
 }
+
+/**
+ * Peg Solitaire's own board: the 15-hole triangle (rows of 1 to 5), a peg
+ * standing in every hole but the middle one. Holes are the board's recess, the
+ * pegs are the title's one colour with a small light from above. Only
+ * currentColor and the paper token are used (no other var()): the Android
+ * shortcut rasterizer resolves exactly those two.
+ */
+function PegTriangle() {
+  return (
+    <Board>
+      {[0, 1, 2, 3, 4].map((r) =>
+        Array.from({ length: r + 1 }, (_, c) => {
+          const x = 60 + (c - r / 2) * 11;
+          const y = 25 + r * 9.5;
+          const empty = r === 2 && c === 1;
+          return (
+            <g key={`${r}-${c}`}>
+              {empty ? (
+                <circle
+                  cx={x}
+                  cy={y}
+                  r="4.6"
+                  fill="currentColor"
+                  opacity=".18"
+                  stroke="currentColor"
+                  strokeOpacity=".35"
+                />
+              ) : (
+                <>
+                  <circle cx={x} cy={y} r="4.6" fill="currentColor" opacity=".1" />
+                  <circle cx={x} cy={y + 1} r="3.8" fill="currentColor" opacity=".22" />
+                  <circle cx={x} cy={y} r="3.8" fill="currentColor" />
+                  <circle cx={x - 1.2} cy={y - 1.4} r="1.1" fill={PAPER} opacity=".5" />
+                </>
+              )}
+            </g>
+          );
+        }),
+      )}
+    </Board>
+  );
+}
+
+/**
+ * Three of Gem Swap's real cuts, copied from `PATHS` in
+ * games/gem-swap/ui/components/GemIcon.tsx (100 x 100 boxes; the shell may not
+ * import a game, so the path data is duplicated on purpose). `pear` is the drop.
+ */
+const GEM_CUTS = [
+  {
+    outline: 'M50 7 L87 28.5 L87 71.5 L50 93 L13 71.5 L13 28.5 Z',
+    facet: 'M50 24 L72 37 L72 63 L50 76 L28 63 L28 37 Z',
+  },
+  {
+    outline: 'M50 5 C61 24 83 42 83 62 A33 33 0 0 1 17 62 C17 42 39 24 50 5 Z',
+    facet: 'M50 30 C56 42 66 52 66 62 A16 16 0 0 1 34 62 C34 52 44 42 50 30 Z',
+  },
+  {
+    outline: 'M14 9 L86 9 L86 54 L50 93 L14 54 Z',
+    facet: 'M30 23 L70 23 L70 50 L50 72 L30 50 Z',
+  },
+] as const;
+
+/**
+ * A Bounce Up platform cloud in miniature: the same construction as
+ * `cloudPath` in games/bounce-up/ui/draw.ts (flat top with rounded corners,
+ * two shallow bumps below), drawn `w` wide from its top-left corner.
+ */
+function cloudD(x: number, y: number, w: number): string {
+  const r = 2.5;
+  const lip = y + 4.2;
+  const sag = y + 9;
+  const mid = x + w / 2;
+  const end = x + w;
+  return (
+    `M${x + r} ${y}H${end - r}Q${end} ${y} ${end} ${y + r}V${lip}` +
+    `Q${(mid + end) / 2} ${sag} ${mid} ${lip}Q${(x + mid) / 2} ${sag} ${x} ${lip}` +
+    `V${y + r}Q${x} ${y} ${x + r} ${y}Z`
+  );
+}
+
+/**
+ * The invaders' three silhouettes and the ship, copied from Invader / Ship in
+ * games/invaders/ui/components/Shapes.tsx (the shell may not import a game).
+ * `eyes` is the paper stroke each one carries.
+ */
+const INVADER_SHAPES = [
+  {
+    body: 'M-10 2-7-5H-3L0-9 3-5H7L10 2 6 8H2V4H-2V8H-6Z',
+    eyes: 'M-5-1h2m6 0h2',
+  },
+  {
+    body: 'M-11-3-6-7H6L11-3 8 4 11 8H6L3 4H-3L-6 8H-11L-8 4Z',
+    eyes: 'M-5-1h3m4 0h3',
+  },
+  {
+    body: 'M0-9 5-5 9-6 11 1 7 7 3 5 0 8-3 5-7 7-11 1-9-6-5-5Z',
+    eyes: 'M-5 0h3m4 0h3',
+  },
+] as const;
+const INVADER_SHIP = 'M0-13 4-6 4-2 12 5 12 10H5L0 7-5 10H-12V5L-4-2V-6Z';
 
 function Knight({ x = 60, y = 46, scale = 1 }: { x?: number; y?: number; scale?: number }) {
   return (
@@ -819,8 +912,9 @@ function Motif({ id }: { id: GameId }): ReactNode {
     case 'checkers':
     case 'gomoku':
     case 'connect-four':
-    case 'peg-solitaire':
       return <DiscBoard kind={id} />;
+    case 'peg-solitaire':
+      return <PegTriangle />;
     case 'chess':
       return (
         <Board>
@@ -1125,12 +1219,26 @@ function Motif({ id }: { id: GameId }): ReactNode {
     case 'gem-swap':
       return (
         <Board>
-          {Array.from({ length: 9 }, (_, i) => (
-            <g key={i} transform={`translate(${41 + (i % 3) * 19} ${25 + Math.floor(i / 3) * 19})`}>
-              <path d="m0-7 7 7-7 7-7-7Z" fill="currentColor" opacity={i % 3 ? 0.35 : 0.8} />
-              <path d="m-4 0 4-4 4 4" fill="none" stroke={PAPER} strokeOpacity=".6" />
-            </g>
-          ))}
+          {Array.from({ length: 9 }, (_, i) => {
+            // Hexagon, drop, shield: a 3 x 3 Latin square, so no cut repeats in a row or column.
+            const cut = GEM_CUTS[(Math.floor(i / 3) + (i % 3)) % 3]!;
+            return (
+              <g
+                key={i}
+                transform={`translate(${41 + (i % 3) * 19} ${25 + Math.floor(i / 3) * 19}) scale(.15) translate(-50 -50)`}
+              >
+                <path d={cut.outline} fill="currentColor" opacity={i % 3 ? 0.35 : 0.8} />
+                <path
+                  d={cut.facet}
+                  fill="none"
+                  stroke={PAPER}
+                  strokeOpacity=".6"
+                  strokeWidth="6"
+                  strokeLinejoin="round"
+                />
+              </g>
+            );
+          })}
         </Board>
       );
     case 'block-puzzle':
@@ -1256,25 +1364,20 @@ function Motif({ id }: { id: GameId }): ReactNode {
         <Arcade>
           {(
             [
-              [42, 27],
-              [60, 27],
-              [78, 27],
-              [51, 42],
-              [69, 42],
+              [42, 26, 1],
+              [60, 26, 0],
+              [78, 26, 1],
+              [51, 40, 2],
+              [69, 40, 2],
             ] as const
-          ).map(([x, y]) => (
-            <g key={x + y} transform={`translate(${x} ${y})`} fill="currentColor">
-              <path d="M-5-4h10l3 6v3H4v-3h-8v3h-4V2Zm-2-3h2v3h-2Zm12 0h2v3H5Z" />
-              <path d="M-4-1h2v2h-2Zm6 0h2v2H2Z" fill={PAPER} />
+          ).map(([x, y, kind]) => (
+            <g key={x + y} transform={`translate(${x} ${y}) scale(.6)`}>
+              <path d={INVADER_SHAPES[kind].body} fill="currentColor" />
+              <path d={INVADER_SHAPES[kind].eyes} stroke={PAPER} strokeWidth="2" />
             </g>
           ))}
-          <path
-            d="M60 53v5m-9 9 3-6h12l3 6Z"
-            fill="currentColor"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
+          <path d="M60 47v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path transform="translate(60 62) scale(.6)" d={INVADER_SHIP} fill="currentColor" />
         </Arcade>
       );
     case 'falling-blocks':
@@ -1410,10 +1513,8 @@ function Motif({ id }: { id: GameId }): ReactNode {
       return (
         <Arcade>
           <path
-            d="M35 63h20m12-17h18M36 29h17"
-            stroke="currentColor"
-            strokeWidth="4"
-            strokeLinecap="round"
+            d={cloudD(35, 61, 20) + cloudD(67, 44, 18) + cloudD(36, 27, 17)}
+            fill="currentColor"
             opacity=".45"
           />
           <path
@@ -1424,8 +1525,14 @@ function Motif({ id }: { id: GameId }): ReactNode {
             strokeWidth="1.5"
             strokeDasharray="2 3"
           />
-          <circle cx="63" cy="31" r="6" fill="currentColor" />
-          <path d="m60 28 3-1" stroke={PAPER} strokeWidth="2" strokeLinecap="round" opacity=".6" />
+          <g transform="translate(63 37.5)">
+            <path
+              d="M-1.1-13H1.1Q6.5-13 6.5-7.6V-1.9Q6.5 0 4.6 0H-4.6Q-6.5 0-6.5-1.9V-7.6Q-6.5-13-1.1-13Z"
+              fill="currentColor"
+            />
+            <circle cx="-2.5" cy="-7.8" r="1.3" fill={PAPER} />
+            <circle cx="2.5" cy="-7.8" r="1.3" fill={PAPER} />
+          </g>
         </Arcade>
       );
     case 'overtake':
