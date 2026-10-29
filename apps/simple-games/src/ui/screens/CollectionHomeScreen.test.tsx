@@ -238,32 +238,12 @@ describe('web-beta titles', () => {
   const beta = GAMES.filter((game) => game.channel === 'web-beta');
   const released = GAMES.filter((game) => !game.channel);
 
-  it('exist in this registry (the real ones and a synthetic one), so the tests below are not vacuous', () => {
-    // The real list is app/gameChannel.test.ts's golden; the synthetic title
-    // is appended by the mock above.
-    expect(beta.map((game) => game.id)).toEqual([
-      'unblock-puzzle',
-      'snake',
-      'loop-puzzle',
-      'bridges',
-      'peg-solitaire',
-      'gem-swap',
-      'pipe-link',
-      'bounce-up',
-      'echo-pads',
-      'overtake',
-      'make-the-target',
-      'tangram',
-      'light-grid',
-      'color-flood',
-      'three-peaks',
-      'knight-tour',
-      'invaders',
-      'paddle-rally',
-      'hanoi-towers',
-      'maze-escape',
-      'synthetic-beta',
-    ]);
+  it('exist in this registry (a synthetic one, and the real ones when there are any), so the tests below are not vacuous', () => {
+    // The real list is app/gameChannel.test.ts's golden — empty since
+    // 2026-10-29, when all twenty graduated into the app (v1.7.0). The
+    // synthetic title appended by the mock above keeps the tests below
+    // walking a beta door.
+    expect(beta.map((game) => game.id)).toEqual(['synthetic-beta']);
     expect(released.length).toBeGreaterThan(20);
   });
 

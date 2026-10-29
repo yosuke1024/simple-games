@@ -75,6 +75,15 @@ Nearby Play は下表の KV / Preferences に保存しない。専用 native plu
 `src/app/gameKeys.test.ts` が固定し、保存 payload の形は各ゲームの
 `storage/releasedRecords.test.ts` が固定する。以後は移行だけで変える。
 
+**2026-10-29 に、Web 先行公開だった残る 20 本のキーもすべて凍結した**(v1.7.0 の正式収録 —
+`docs/WEB_VERSION.md`「先行公開」、`docs/RELEASE_CHECKLIST.md` の 2026-10-29 の節): `ub.*` / `sn.*` / `lp.*` /
+`bg.*` / `pg.*`、`gs.*` / `pn.*` / `bo.*` / `ep.*`、`ot.*` / `tg.*` / `tn.*`、`lg.*` / `cf.*` / `tp.*` / `kt.*`、
+`iv.*` / `pr.*` / `hn.*` / `me.*`(`ch.*` / `nt.*` / `sc.*` / `ni.*` は 2026-10-25 に凍結済み)。キーの一覧は
+`src/app/gameKeys.test.ts` が固定し、保存 payload の形は各ゲームの `storage/releasedRecords.test.ts`(公開中の
+Web ビルドで実際に遊んで保存された payload のリテラル)が固定する。以後は移行だけで変える。**下の各段落の
+「ベータのキーなので凍結しない」は当時の記録で、いまは当てはまらない。** 取り下げた Falling Blocks の `fb.*` だけは
+`'in-development'` のキーで、凍結していない。
+
 `ub.*` から `pg.*` までの 5 本は **Web 先行公開(ベータ)のキー**(2026-10-17 に実装し、
 2026-10-19 から Web 版で配信中 — `docs/WEB_VERSION.md`「先行公開」)。表は各ゲームの `storage/keys.ts`
 (import ゼロの葉)が宣言する実際のキーで、registry の `storageKeys` はその `Object.values`、

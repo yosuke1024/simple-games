@@ -1,5 +1,7 @@
 # Color Flood — canonical rules
 
+**2026-10-29 更新(正式収録、v1.7.0):** 製品オーナーの判断で Web 先行公開(ベータ)から正式収録した(registry の `channel` を外した — アプリのホーム・検索・ショートカットにも出る)。保存スキーマはこの収録で凍結し、以後は移行だけで変える — 公開中の Web ビルドが実際に書いた保存を `storage/releasedRecords.test.ts` が今の読み込み経路へ通す([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §0 と 2026-10-29 の節)。以下の「正式収録まで凍結しない」「アプリには出ない」などのベータ段階の記述は当時の記録である。収録は 2 週間の安定稼働・滞在時間の確認・実機での確認を満たしたという意味ではない。
+
 2026-10-23. New Web beta title. No native release or Club House registration.
 
 ## Rules and boards
@@ -264,3 +266,42 @@ checked by eye: the app itself, the transitions (that page had Reduced Motion
 on), a 14×14 board and its possible hairlines between flooded tiles where tile
 widths are fractional (about 24.4 px) at device pixel ratios of 2 to 3, the
 contour on orange, and any device, emulator or screen-reader session.
+
+## Layout and the app banner (2026-10-29, v1.7.0)
+
+Measured on the Android emulator with the 1.7.0 debug APK at 360×640: the
+reserved `BannerSlot` sat inside `.game-content`, which is the scrolling play
+area, and the play area was 49 px taller than the room left (the board took the
+column's width whatever the height). So the strip scrolled with the content and
+the Undo row ended 39 px under the native banner, against ADS_POLICY.md
+「バナー広告の仕様」. Two changes, both presentation:
+
+1. `<BannerSlot />` is now the last child of the `.screen`, after
+   `.game-content`, so the play area scrolls above the strip and the strip never
+   moves with it.
+2. The board frame is as wide as the column, but no wider than
+   `100svh − --cf-chrome − --cf-edges` (with the `100vh` form first), floored at
+   160 px. `--cf-chrome` is everything stacked with the board: 308 px, 282 px
+   under the existing `max-height: 680px` rule (measured 301 / 276 px, with room
+   for the widest column's taller palette and the narrow-screen palette).
+   `--cf-edges` is the top safe-area inset plus
+   `var(--sg-app-banner-reserve, 0px)`, the native banner's worst case (90 px plus
+   the bottom inset) that the shell sets only while a reserved slot is mounted
+   (ARCHITECTURE.md「広告と課金」). The cap applies only under
+   `:root[data-sg-app-banner]`, so on the web and in the app with ads removed
+   the board keeps the column's width as before. Only the board gives way:
+   the palette keeps the column's width because its keys are what the player
+   taps. Below the floor the play area scrolls, above the strip.
+
+Checked in the desktop browser pane (Chromium, the dev server, not the app) at
+360×579 — the emulator's 360×640 less its 37 px top and 24 px bottom insets —
+with `data-sg-app-banner` and a 64 px / 90 px `.banner-slot` added by hand: the
+frame is 207 px, the palette keys stay 41.5 px, the Undo row ends at 505 / 479
+against the strip's top at 515 / 489, and nothing scrolls. Not re-measured on the
+emulator or a device after the change. The web layout is unchanged (the cap is
+not applied there): a first version applied it everywhere, and a comparison
+against the published web build showed it shrank the web board below about
+570 px of height at 360 px wide, so it was gated to the app before release.
+As in every game, the board keeps its size when the strip grows from 64 px to
+the ad's height, but its centred column can move up by half the growth (at most
+13 px).

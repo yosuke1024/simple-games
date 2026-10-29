@@ -1,5 +1,7 @@
 # Loop Puzzle — 正式ゲームルール
 
+**2026-10-29 更新(正式収録、v1.7.0):** 製品オーナーの判断で Web 先行公開(ベータ)から正式収録した(registry の `channel` を外した — アプリのホーム・検索・ショートカットにも出る)。保存スキーマはこの収録で凍結し、以後は移行だけで変える — 公開中の Web ビルドが実際に書いた保存を `storage/releasedRecords.test.ts` が今の読み込み経路へ通す([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §0 と 2026-10-29 の節)。以下の「正式収録まで凍結しない」「アプリには出ない」などのベータ段階の記述は当時の記録である。収録は 2 週間の安定稼働・滞在時間の確認・実機での確認を満たしたという意味ではない。 この文書が正式収録の前に求めていた確認、または製品オーナーの確認待ちとしていた [GAME_LIFECYCLE.md](GAME_LIFECYCLE.md) の読み込み時の再証明の例外(製品オーナーの確認待ち) は**未了のまま**収録した(製品オーナーの判断。未了の一覧は RELEASE_CHECKLIST.md の 2026-10-29 の節)。
+
 この文書は Simple Games の新作「Loop Puzzle」(No. 44)の唯一のルールソースである。
 実装(`apps/simple-games/src/games/loop-puzzle/`)、Hint、テスト、Quick Rules は
 すべてこの文書に従う。コードはここへ `§n` で言及する。挙動や数値を変えるときは、

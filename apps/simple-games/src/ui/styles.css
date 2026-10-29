@@ -1762,6 +1762,23 @@ button:disabled {
   padding-bottom: calc(116px + env(safe-area-inset-bottom));
 }
 
+/* The app's own banner strip, for the games that size their board from the
+   viewport's height (100svh less fixed rows) and so cannot see the
+   .banner-slot under them. BannerSlot marks the root with
+   `data-sg-app-banner` while a reserved slot is mounted (never on the web,
+   never once ads are removed). 90px is the tallest anchored adaptive banner
+   on a phone (Google: at most 90dp or 15% of the screen height, at least
+   50dp); the slot starts at 64 and only grows to the ad's height, so a board
+   sized against this worst case never changes size when an ad loads
+   (docs/ADS_POLICY.md「バナー広告の仕様」). Its position can still move: a
+   column centred above the slot rises by half the growth (13px at most), as
+   in every game. The bottom inset is in it because
+   the slot's margin takes it. Games read `var(--sg-app-banner-reserve, 0px)`;
+   nothing changes for a game that does not. */
+:root[data-sg-app-banner] {
+  --sg-app-banner-reserve: calc(90px + env(safe-area-inset-bottom));
+}
+
 /* Dialogs need the clearance of their own: `.overlay` is fixed to the
    viewport, so it does NOT inherit the reservation above — measured on a
    375x450 viewport, the privacy dialog ran 11px under the anchor, and a
@@ -2823,6 +2840,18 @@ button:disabled {
 
 .tutorial-actions .btn-primary {
   min-width: 180px;
+}
+
+/* A full-width primary (btn-big — Hanoi Towers, Invaders and their batch)
+   takes the room Back leaves instead of squeezing Back to one character per
+   line ("戻/る" on a 412dp phone) and pressing against it. */
+.tutorial-actions > .btn-big {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.tutorial-actions > * + .btn-big {
+  margin-left: 12px;
 }
 
 /* ---------- settings ---------- */

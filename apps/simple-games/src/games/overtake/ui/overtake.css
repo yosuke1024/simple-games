@@ -47,12 +47,15 @@
    The board is as wide as min(100%, 360px, usable height × 9/16), the usable
    height being the screen less everything stacked with it: the top bar (64),
    the race row (28), the gaps (24) and — when shown — the button row (56),
-   and on the web the 116px kept for the anchor ad. Not measured on a device
-   yet: §11 records what was checked. */
+   the notch (.screen's top padding), on the web the 116px kept for the
+   anchor ad, and in the app the native banner's worst case
+   (`--sg-app-banner-reserve`, ui/styles.css). §11 records what was checked. */
 
 .ot-screen {
   --ot-chrome: 116px;
   --ot-reserve: 0px;
+  /* The notch and, in the app, the native banner's worst case. */
+  --ot-edges: calc(env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve, 0px));
 }
 
 .ot-screen.ot-buttons {
@@ -81,8 +84,16 @@
 }
 
 .ot-board {
-  width: min(100%, 360px, calc((100vh - var(--ot-chrome) - var(--ot-reserve)) * 0.5625));
-  width: min(100%, 360px, calc((100svh - var(--ot-chrome) - var(--ot-reserve)) * 0.5625));
+  width: min(
+    100%,
+    360px,
+    calc((100vh - var(--ot-chrome) - var(--ot-reserve) - var(--ot-edges)) * 0.5625)
+  );
+  width: min(
+    100%,
+    360px,
+    calc((100svh - var(--ot-chrome) - var(--ot-reserve) - var(--ot-edges)) * 0.5625)
+  );
   line-height: 0;
 }
 

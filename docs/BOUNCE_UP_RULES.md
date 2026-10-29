@@ -1,5 +1,7 @@
 # Bounce Up — 正式ゲームルール
 
+**2026-10-29 更新(正式収録、v1.7.0):** 製品オーナーの判断で Web 先行公開(ベータ)から正式収録した(registry の `channel` を外した — アプリのホーム・検索・ショートカットにも出る)。保存スキーマはこの収録で凍結し、以後は移行だけで変える — 公開中の Web ビルドが実際に書いた保存を `storage/releasedRecords.test.ts` が今の読み込み経路へ通す([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §0 と 2026-10-29 の節)。以下の「正式収録まで凍結しない」「アプリには出ない」などのベータ段階の記述は当時の記録である。収録は 2 週間の安定稼働・滞在時間の確認・実機での確認を満たしたという意味ではない。 この文書が正式収録の前に求めていた 商標の検索システムを直接引く題の調査(冒頭)と、横向きで遊べるかの実機での見直し は**未了のまま**収録した(製品オーナーの判断。未了の一覧は RELEASE_CHECKLIST.md の 2026-10-29 の節)。
+
 この文書が Bounce Up の仕様の正本である。実装(`apps/simple-games/src/games/bounce-up/`)、テスト、Quick Rules は
 ここに従う。コードはここへ `§n` で言及する。挙動を変えるときは、同じコミットでこの文書を直す。計画
 [plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md](plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md)
@@ -455,12 +457,14 @@ Chromium**(Playwright、`isMobile` / `hasTouch`、DPR 2。開発用の頁に Roo
 
 - `.bo-stage` の幅 = `min(100%, 540px, (100svh − 104px − 予約) × 9/16)`(`100svh` を知らない端末には `100vh` の
   同じ式)。104px はヘッダ 64・状態の行 24・盤の上下の余白 16。Web の広告予約は `:root[data-sg-web-ads]` のとき
-  116px、アプリでは 0。高さは `aspect-ratio: 9 / 16` で幅から決まる(縦につぶれない)。上限 540px は論理の 1.5 倍
+  116px、アプリでは 0。2026-10-29(v1.7.0 の正式収録)からは `--bo-edges` = 上の safe area + アプリのバナー枠の
+  最悪値も引く(下の「アプリのバナー」)。高さは `aspect-ratio: 9 / 16` で幅から決まる(縦につぶれない)。上限 540px は論理の 1.5 倍
   (初期値)。canvas の裏の画素は表示の幅 × devicePixelRatio(2 まで)で、ResizeObserver が追う。
 - 算術では:
   - **360×640・Web(予約 116px)**: 盤は 236×420 CSS px(倍率 0.66)。主人公の上に見える 360 論理 px は約 236 CSS px で、
     段差は 128 px 以下なので、主人公の上に足場が 2 段以上見える(§2「カメラ」。計画の下限)。
-  - **360×640・アプリ(予約なし)**: 301×536 CSS px(倍率 0.84)。
+  - **360×640・アプリ(予約なし)**: 301×536 CSS px(倍率 0.84)。これはベータの間の式で、バナー枠を引いて
+    いなかった(下の「アプリのバナー」で直した)。
   - **広い画面**: 幅 540px(高さ 960px)で止まる。
   - **横向きの電話・Web(568×320)**: 予約を引くと使える高さは 100px で、盤は 56×100 CSS px(倍率 0.16)。遊べる
     大きさではない(下の「横向きの電話」)。
@@ -483,6 +487,18 @@ Chromium**(Playwright、`isMobile` / `hasTouch`、DPR 2。開発用の頁に Roo
   - `ui/bounceUpCss.test.ts` が、枠と ◀ ▶ の式、`:active` が動かさないこと、0.85 のままであること、CSS に色のリテラルが
     無いこと、CSS 全体に `transition`・`animation`・`@keyframes`・`transform` が無いこと(上の「動きは増えない」の根拠)、
     `.bo-canvas`・`.bo-pad-btn` の規則が 1 つずつしか無く、後ろの規則が影を上書きしないことを固定する。
+
+### アプリのバナー(2026-10-29、v1.7.0)
+
+ベータの間の式はアプリの `BannerSlot` も上の safe area(`.screen` の上余白)も引いていなかった。Android
+エミュレータ(1.7.0 の debug APK)の 360×640 で、盤が 54px・◀ ▶ が 44px バナー枠の下に入り、盤が上部バーの
+アイコンに重なった(411×914 でも盤が 1.5px)。いまは `--bo-edges` = `env(safe-area-inset-top)` +
+`var(--sg-app-banner-reserve, 0px)` を使える高さから引く。後者はアプリで予約済みの `BannerSlot` があるあいだだけ
+`ui/styles.css` が立てる最悪値 90px + 下の safe area([ARCHITECTURE.md](ARCHITECTURE.md)「広告と課金」)で、Web と
+広告削除時は 0 — Web の寸法(下の表)は変わらない。確かめ方: 開発サーバーをデスクトップのブラウザペイン
+(Chromium)で開き、`data-sg-app-banner` と 64px / 90px の `.banner-slot` を手で足した 360×579(エミュレータの
+360×640 から上 37・下 24 の safe area を引いた高さ)で、盤 217×385(上端 109 / 96・下端 494 / 481)に対し
+バナー枠の上端 515 / 489、盤の上端は上部バーより下。**実機・エミュレータでは修正後まだ測っていない。**
 
 ### 測った寸法(ヘッドレス Chromium。実機ではない)
 

@@ -56,14 +56,15 @@ PixApps が運用する Public Club House は
 
 ## アプリと収録ゲーム
 
-アプリは 1 つだけで、現在 45 本のゲームを収録しています。
+アプリは 1 つだけで、現在 65 本のゲームを収録しています。
 
 - appId: `com.pixapps.simplegames`
 - appName: `Simple Games: Offline Games`(ランチャー表示名: `Simple Games`)
 - パス: [apps/simple-games](apps/simple-games)
 
 2026-10-25のオーナー判断でChess / Nested Tic-Tac-Toe / Scopa / Nimを正式収録へ変更しました。
-以下のWeb公開経緯は当時の記録です。現在のコードは正式45本＋Webベータ21本＝66本です。
+2026-10-29のオーナー判断で、Web先行公開(ベータ)だった残り20本もすべて正式収録へ変更しました(1.7.0)。
+以下のWeb公開経緯は当時の記録です。現在のコードは正式65本＋実装中1本(Falling Blocks。2026-10-29にWeb先行公開から取り下げ)＝66本です。
 Android / iOSでは1対1ターン制13本の各ゲームtopから「誰かと遊ぶ」で近くの相手を募集・検索できます。
 Bluetoothまたは同一Wi-Fi、host承認と双方Readyで元のゲーム画面を使います。募集時のチャットは既定OFF、ONなら任意の会話と端末内履歴を使えます。
 対象: Yacht / Reversi / Connect Four / Gomoku / Checkers / Gin Rummy / Mancala / Dominoes /
@@ -116,10 +117,30 @@ Dots and Boxes / Chess / Nested Tic-Tac-Toe / Scopa / Nim。Web版は引き続�
 | Binary Balance(二値配置・リンクつき) | `binary-balance/`     | 難易度 3 種 + デイリー                   | Hint(Undo なし)                                    | [docs/BINARY_BALANCE_RULES.md](docs/BINARY_BALANCE_RULES.md)       |
 | Sudoku 6×6(小さな数独)               | `sudoku-6x6/`         | 難易度 3 種 + デイリー                   | Undo / Hint / メモ                                 | [docs/SUDOKU_6X6_RULES.md](docs/SUDOKU_6X6_RULES.md)               |
 | Box Regions(長方形分割)              | `box-regions/`        | 難易度 3 種 + デイリー                   | Undo / Hint                                        | [docs/BOX_REGIONS_RULES.md](docs/BOX_REGIONS_RULES.md)             |
+| Unblock Puzzle                       | `unblock-puzzle/`     | 難易度 3 種 + デイリー                   | Undo / Reset / Hint(最短解の次の一手)              | [ルール](docs/UNBLOCK_PUZZLE_RULES.md)                             |
+| Snake                                | `snake/`              | エンドレス(速度 3 種、デイリーなし)      | なし(Pause と、同じ盤面での再挑戦)                 | [ルール](docs/SNAKE_RULES.md)                                      |
+| Loop Puzzle                          | `loop-puzzle/`        | 盤 3 サイズ + デイリー                   | Undo / Hint                                        | [ルール](docs/LOOP_PUZZLE_RULES.md)                                |
+| Bridges                              | `bridges/`            | 難易度 3 種 + デイリー                   | Undo / Hint                                        | [ルール](docs/BRIDGES_RULES.md)                                    |
+| Peg Solitaire                        | `peg-solitaire/`      | 盤 2 種(English / Triangle 54 問)        | Undo / Restart(Hint なし)                          | [ルール](docs/PEG_SOLITAIRE_RULES.md)                              |
 | Chess(チェス)                        | `chess/`              | CPU 3段階・先後選択 / 近隣対戦           | CPU戦Undo・合法手表示                              | [ルール](docs/CHESS_RULES.md)                                      |
+| Gem Swap                             | `gem-swap/`           | Free Play(5 色 / 6 色)                   | Undo(ラウンドの中で無制限)                         | [ルール](docs/GEM_SWAP_RULES.md)                                   |
+| Pipe Link                            | `pipe-link/`          | 難易度 3 種 + デイリー                   | Undo / Hint(盤面から証明できる 1 枚)               | [ルール](docs/PIPE_LINK_RULES.md)                                  |
+| Bounce Up                            | `bounce-up/`          | エンドレス(足場 Normal / Wide)           | なし(即時リトライ・Wide)                           | [ルール](docs/BOUNCE_UP_RULES.md)                                  |
+| Echo Pads                            | `echo-pads/`          | Levels 22 + デイリー                     | 聞き直し / Pace 3 段(Hint なし)                    | [ルール](docs/ECHO_PADS_RULES.md)                                  |
+| Overtake                             | `overtake/`           | Levels 100(1 位でクリア)                 | なし(同一コースの即時再走)                         | [ルール](docs/OVERTAKE_RULES.md)                                   |
+| Make the Target                      | `make-the-target/`    | 難易度 3 種 + デイリー                   | Undo / Restart(Hint なし)                          | [ルール](docs/MAKE_THE_TARGET_RULES.md)                            |
 | Nested Tic-Tac-Toe                   | `nested-tic-tac-toe/` | CPU 3段階・先後選択 / 近隣対戦           | CPU戦Undo・打てる小盤表示                          | [ルール](docs/NESTED_TIC_TAC_TOE_RULES.md)                         |
 | Scopa                                | `scopa/`              | 11点先取・CPU / 近隣対戦                 | 取れる札の表示                                     | [ルール](docs/SCOPA_RULES.md)                                      |
+| Tangram                              | `tangram/`            | 図形集 3 ティア + デイリー               | Undo / Easy の内側の線(Hint なし)                  | [ルール](docs/TANGRAM_RULES.md)                                    |
+| Light Grid                           | `light-grid/`         | 盤 3 サイズ                              | Undo / 再挑戦 / Hint(解の 1 マス)                  | [ルール](docs/LIGHT_GRID_RULES.md)                                 |
+| Color Flood                          | `color-flood/`        | 盤 3 サイズ(手数の上限なし)              | Undo / 同じ盤面に再挑戦                            | [ルール](docs/COLOR_FLOOD_RULES.md)                                |
+| Three Peaks                          | `three-peaks/`        | フリー配札(デイリーなし)                 | Undo / 同じ配札に再挑戦                            | [ルール](docs/THREE_PEAKS_RULES.md)                                |
 | Nim                                  | `nim/`                | CPU 3段階 / 近隣対戦                     | CPU戦Undo                                          | [ルール](docs/NIM_RULES.md)                                        |
+| Knight’s Tour                        | `knight-tour/`        | 盤 3 サイズ(5×5 / 6×6 / 8×8)             | 合法手表示 / Undo / 再挑戦                         | [ルール](docs/KNIGHT_TOUR_RULES.md)                                |
+| Invaders                             | `invaders/`           | 20 ステージ                              | なし(同じ開始条件での即時リトライ)                 | [ルール](docs/INVADERS_RULES.md)                                   |
+| Paddle Rally                         | `paddle-rally/`       | CPU 対戦・難易度 3 種                    | なし(即時の再戦)                                   | [ルール](docs/PADDLE_RALLY_RULES.md)                               |
+| Hanoi Towers                         | `hanoi-towers/`       | 円盤 3 / 4 / 5 枚                        | Undo(Hint なし)                                    | [ルール](docs/HANOI_TOWERS_RULES.md)                               |
+| Maze Escape                          | `maze-escape/`        | 迷路 3 サイズ                            | Undo / Hint(次の 1 歩)                             | [ルール](docs/MAZE_ESCAPE_RULES.md)                                |
 
 「フリープレイ」は、レベルの坂とデイリーの隣にある**ティアを選んで新しい盤面を引く入口**です
 (2026-09-03 追加)。ティアはレベル 10 / 50 / 95 と同じ生成条件で seed だけが違い、レベル進行にも
@@ -212,9 +233,18 @@ Mancala と Dots and Boxes は完全情報の CPU 対戦なので Undo を持ち
 戻せば山を覗くことになり、Hit & Blow は推測そのものが情報なので消せば推理が壊れます —
 どちらも Undo を持たず、Hit & Blow は推測回数に上限を置きません。
 
-### Web 先行公開(ベータ)
+### 2026-10-29 に正式収録した 20 本(Web 先行公開の記録)
 
-**この組を追加した当時は正式収録41本＋Web先行公開20本＝61本。現在は上記の45本＋21本です。** No. 57〜61 は
+上の表の Unblock Puzzle から Maze Escape までのうち、2026-10-25 に収録した Chess / Nested Tic-Tac-Toe / Scopa / Nim を除く 20 本は Web 版だけで先行公開(ベータ)し、
+**2026-10-29 に製品オーナーの判断でアプリへ正式収録**しました(1.7.0)。2 週間の安定稼働という基準を
+満たす前の収録です(経緯は [docs/WEB_VERSION.md](docs/WEB_VERSION.md)「先行公開」と
+[docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md) の 2026-10-29 の節)。保存スキーマはこの収録で
+凍結し、以後は移行だけで変えます。20 本ともゲーム別ガイドページがまだ無いので、「詳しく見る」のリンクは
+ありません。各ルール文書が正式収録の前に求めていた題の商標・ストアの検索などは未了のまま収録しました
+(各文書の冒頭)。Falling Blocks は同日に先行公開から取り下げ、収録していません。**以下の段落と表は
+先行公開の当時の記録で、「アプリには出ません」「ストア掲載文にも載せません」などは当時の状態です。**
+
+**この組を追加した当時は正式収録41本＋Web先行公開20本＝61本。** No. 57〜61 は
 2026-10-23 の追加です。公開と検証の記録は
 [今回の追加記録](docs/plans/2026-10-23-five-games-57-61.md)を参照してください。
 
@@ -361,17 +391,17 @@ simple-games/
 │           │   ├── binary-balance/
 │           │   ├── sudoku-6x6/
 │           │   ├── box-regions/
-│           │   ├── unblock-puzzle/  # ここから 5 本は Web 先行公開(ベータ)。アプリには出ない
+│           │   ├── unblock-puzzle/  # ここから 5 本は Web 先行公開を経て 2026-10-29 に正式収録
 │           │   ├── snake/
 │           │   ├── loop-puzzle/
 │           │   ├── bridges/
 │           │   ├── peg-solitaire/
-│           │   ├── chess/       # ここから 5 本は Web 先行公開(ベータ。channel: 'web-beta'、2026-10-22 に実装)。5 本とも 2026-10-23(JST)から Web 版に配信中。アプリには出ない
+│           │   ├── chess/       # ここから 5 本は Web 先行公開を経て正式収録(Chess は 2026-10-25、残り 4 本は 2026-10-29)
 │           │   ├── gem-swap/
 │           │   ├── pipe-link/
 │           │   ├── bounce-up/
 │           │   ├── echo-pads/
-│           │   ├── overtake/    # ここから 5 本は Web 先行公開(ベータ。channel: 'web-beta')。5 本とも 2026-10-22 から Web 版に配信中。アプリには出ない
+│           │   ├── overtake/    # ここから 5 本は Web 先行公開を経て正式収録(Nested Tic-Tac-Toe と Scopa は 2026-10-25、残り 3 本は 2026-10-29)
 │           │   ├── make-the-target/
 │           │   ├── nested-tic-tac-toe/
 │           │   ├── scopa/
@@ -424,9 +454,8 @@ Android / iOS のビルド手順は [apps/simple-games/README.md](apps/simple-ga
 pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条件を満たすまで見送っています。
 カタログは全言語同梱で、言語追加は「locale ファイル 1 つ + 登録」で完結します。
 **en と ja 以外は来歴 `machine` です — AI の助けを借りて書いており、その言語の
-ネイティブは一人も読んでいません。**Web 先行公開の 15 本(2026-10-19 から配信中の 42〜46、2026-10-23(JST)
-から配信中の 47〜51、2026-10-22 から配信中の 52〜56)のゲーム別の文言は、ja も AI が書いたもので、作者は
-まだ読んでいません(15 本の文言に高リスクキーはありません)。
+ネイティブは一人も読んでいません。**Web 先行公開を経て 2026-10-25 と 2026-10-29 に収録した 24 本(No. 42〜66 のうち、取り下げた Falling Blocks を除く)の
+ゲーム別の文言は、ja も AI が書いたもので、作者はまだ読んでいません(これらの文言に高リスクキーはありません)。
 この製品は一人でつくっているため、14 言語の
 ネイティブレビューは供給できません。代わりに、約束を背負う高リスクキーだけは
 リリース前に逆翻訳を作者が読む門を通し、自然さは来歴の開示と読者からの報告に
@@ -509,7 +538,8 @@ Copyright 2026 Yosuke Suzuki
 ### Web先行公開 No. 62〜66 (2026-10-23)
 
 Invaders / Falling Blocks / Paddle Rally / Hanoi Towers / Maze Escape を追加。
-正式収録41本に加え、Web先行公開は25本になる。詳細と公開記録は
+正式収録41本に加え、Web先行公開は25本になる(当時の記録)。2026-10-29 に Falling Blocks を取り下げ、
+残る 4 本は同日に正式収録した。詳細と公開記録は
 [追加と公開の記録](docs/plans/2026-10-23-five-games-62-66.md)。
 
 | ゲーム         | 規則                                                    |

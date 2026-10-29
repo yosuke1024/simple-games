@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
+import { BannerSlot } from '@/ui/components/BannerSlot';
 import { RestartDialog } from '@/ui/components/RestartDialog';
 import { IconBack, IconRetry, IconUndo } from '@/ui/components/icons';
 import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
@@ -175,6 +176,7 @@ export function ThreePeaksGameScreen() {
           <p className="tp-help">{t('threePeaksUndoHint')}</p>
           <p className="tp-keyboard">{t('threePeaksKeyboard')}</p>
         </div>
+        <BannerSlot />
       </div>
       <RestartDialog
         open={confirmNew}

@@ -90,7 +90,8 @@ describe('WebBetaNotice', () => {
   });
 
   it('shows the badge and the save caveat for every real beta title too', () => {
-    expect(realBeta.length).toBeGreaterThan(0);
+    // None since 2026-10-29 (all twenty graduated, v1.7.0): the synthetic
+    // title below carries the mechanism until the next one arrives.
     for (const game of realBeta) {
       renderNotice(game.id, 'en');
       expect(screen.getByText('BETA')).toBeInTheDocument();

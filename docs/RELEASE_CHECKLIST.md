@@ -4,6 +4,93 @@ Google Play への公開前に、この順で確認する。
 **チェックが通らない項目を「たぶん大丈夫」で飛ばさない。**
 実施していない検証を成功扱いにしないこと([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))。
 
+## 2026-10-29: 1.7.0／10700 — Web 先行公開 20 本の正式収録
+
+製品オーナーの指示(2026-10-29):「Web版のベータのゲームも十分検証取れました。ベータを外して、次バージョンで
+リリースしましょう。1.7.0です。」 対象は registry で `channel: 'web-beta'` だった 20 本すべて —
+Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire(No. 42〜46)、Gem Swap / Pipe Link /
+Bounce Up / Echo Pads(No. 48〜51)、Overtake / Make the Target / Tangram(No. 52・53・56)、Light Grid /
+Color Flood / Three Peaks / Knight's Tour(No. 57〜59・61)、Invaders / Paddle Rally / Hanoi Towers /
+Maze Escape(No. 62・64〜66)。Falling Blocks(No. 63)は 2026-10-29 に先行公開から取り下げており
+(`'in-development'`)、対象外。registry は正式収録 65 本・先行公開 0 本・実装中 1 本になる。
+1.7.0 には main の #291(4 席 Ludo)・#292(R8)・#293(ホームのアイコン)・#294(More from PixApps)・
+#295・#296 も入る。2026-10-28 に本番版として予定した 1.6.3 は採番されていない(`v1.6.3` のタグは無い)ので、
+これらは 1.7.0 が最初の本番版になる(各節の未了項目はそのまま)。
+
+- [ ] 基準 1(直近 2 週間の安定稼働)。**未達 — 製品オーナーが明示的に免除した**(上の指示)。Web 版での
+      配信開始は 42〜46 が 2026-10-19、Make the Target / Tangram / Overtake が 2026-10-22、47〜51 の 4 本と
+      57〜66 の 8 本が 2026-10-23 で、2026-10-29 時点の経過は 10 / 7 / 6 日([WEB_VERSION.md](WEB_VERSION.md)
+      「先行公開」)。基準そのものは変えない
+- [ ] 基準 2(滞在時間)。**確認した記録は無い。** 収録の根拠は上のオーナーの判断
+- [x] スキーマ凍結。20 本の `games/<id>/storage/releasedRecords.test.ts` を作成した(121 テスト)。payload は、公開中の
+      Web ビルド(pixapps-landing `dcb9a887` の `public/simple-games/play` — このリポジトリの `1fb236b` のビルド)を
+      127.0.0.1 で配信し、外部への通信をすべて止めたヘッドレス Chromium で**実際の入力だけ**(クリック・キー・ポインタ)で遊んで
+      保存されたもの。ストレージへの書き込み・時計の差し替え・アプリ内部の呼び出しは無い。各ファイルの冒頭に操作の手順と、
+      採れたキー・採れなかった状態(例: Snake の盤面全消し、Invaders の 20 面クリア、Overtake の 4 面以降)を書いた。
+      20 本とも今の読み込み経路は公開版の保存を 1 件も拒まなかった。作成とは別のエージェントが、(1) リテラルが採取した値と
+      バイト単位で一致すること、(2) 採取スクリプトに書き込みや内部呼び出しが無いこと、(3) payload を 1 か所壊すとテストが
+      落ちること(計 200 件以上の突然変異。落ちなかった Snake の 2 件は値の検査を足して塞いだ)を確かめた。
+      `ls apps/simple-games/src/games/*/storage/releasedRecords.test.ts` は 39 本
+- [x] registry の 20 本から `channel: 'web-beta'` を外した。`app/gameChannel.test.ts` の golden は
+      先行公開 0 本・正式収録 65 本。`gameKeys.test.ts` は注釈だけを「凍結」に直し、キーの値は変えていない。
+      実在のベータ作品を前提にしていたテスト 3 件(CollectionHomeScreen / WebBetaNotice / webRoute)は
+      合成のベータ作品で仕組みを検査し続ける形にした。`WebBetaNotice` の要素は 2026-10-02 の 11 本と同じく
+      画面に残す(`channel` が無ければ何も描かない — `src/test/webBetaNoticeWiring.test.ts` 冒頭)
+- [x] README の収録表へ 20 本を移し、ストア掲載文(`apps/simple-games/store/listing.md`)を 65 本に更新した。
+      **Console / App Store Connect への反映は 1.7.0 の公開と同時で、人間の作業**。ガイドは 20 本とも無いので
+      `PUBLISHED_GAME_IDS` は変えない(「詳しく見る」は出さない)
+- [ ] landing(`pixapps-landing`)の `tests/ui.test.js` で 20 本を `WEB_BETA_GAME_IDS` から `LANDING_GAME_IDS` へ
+      移し、`public/simple-games/index.html` にカードを足す。landing の PR で対応する(マージまでチェックしない)。
+      練習セット([PUZZLE_PRACTICE_SET.md](PUZZLE_PRACTICE_SET.md))の 5 本は含まないので、practice ページは対象外
+- [ ] 各ルール文書が「正式収録の前に」と書いていた確認と、製品オーナーの確認待ちの暫定は、**未了のまま収録した**
+      (各文書の冒頭の注記。製品オーナーの判断で収録 — 上の指示)。主なもの:
+      - 題の商標データベースと両ストアの検索 — **9 本**: Unblock Puzzle(「Unblock」は既存作と共有する語 —
+        冒頭「題の確認」)/ Gem Swap / Pipe Link / Bounce Up / Echo Pads / Overtake / Make the Target / Tangram /
+        Invaders(名称・商標の確認)。**題の確認はストアに名前を書く前の事項なので、掲載文を Console / App Store
+        Connect に反映する前に製品オーナーの判断が要る**
+      - 規則・比較対象の出典の確認: Make the Target(§14 — 出典と閲覧日、ストア掲載の前)、Gem Swap(特殊宝石・
+        レベルマップ・時間制のモードの記述)
+      - スキーマ凍結の前にそろえるはずだった数え方: Pipe Link の `pn.stats` でデイリーを `medium` に混ぜない規則
+        (§8、暫定)と、Tangram のデイリーを Medium の行に数えるか(§12 のまとめ 3)。**凍結したので、
+        変えるなら移行になる**
+      - Tangram の確認待ち(§12 のまとめ): 影絵の名前(v1 は番号だけ)・結果カードの第一ボタン・伝統図形・
+        木目の改訂で残った問い。Echo Pads の「直前と同じ列を避けるか」。Unblock Puzzle の木目の見た目の選択
+      - Overtake と Tangram の Phase 0(実機試作)、Bounce Up と Overtake の横向きの実機での見直し、Gem Swap の
+        360×524 の窓での実測と実機の 1 局
+      - [GAME_LIFECYCLE.md](GAME_LIFECYCLE.md) の暫定の例外(製品オーナーの確認待ち): Bridges / Loop Puzzle /
+        Unblock Puzzle の読み込み時の再証明と、Overtake のループの中の `planLane`(30 Hz)
+- [x] iOS の `MARKETING_VERSION` 1.7.0 / `CURRENT_PROJECT_VERSION` 10700。Android の versionName / versionCode は
+      タグ `v1.7.0` から決まる(10700)
+- [x] 2026-10-29、このブランチの debug APK(versionName 1.7.0-debug / versionCode 10700)を Android 17 エミュレータ
+      (Pixel 7、日本語)に入れ、20 本それぞれをホーム画面ショートカットと同じ Intent(`?game=<id>`)で cold start した。
+      20 本ともコレクションに戻されず、そのゲームの画面が開いた(Quick Rules が 19 本、Snake はホーム)。Quick Rules を
+      進めて盤面まで確かめたのは 10 本。logcat の JS エラー(Uncaught / TypeError / ChunkLoadError / 動的 import の失敗)は
+      0 件。画面は巡回とは別のエージェントがスクリーンショットで独立に確認した。BETA 表示が出ないことは Snake のホームと
+      コード(`WebBetaNotice` は native かつ `channel` 無しで何も描かない)で確認しただけで、19 本のホーム画面では見ていない。
+      **実機・iOS・低スペック端末・終局までのプレイは未確認**
+- [x] その巡回で見つかった崩れを直した: 57〜66 の組(Color Flood / Light Grid / Invaders / Hanoi Towers / Maze Escape、
+      Falling Blocks も同じ)の Quick Rules は主ボタンが幅いっぱい(`btn-big`)で、「戻る」が 1 文字ずつ縦に折れ、主ボタンと
+      接していた(Web 版でも同じ)。`ui/styles.css` の `.tutorial-actions > .btn-big` だけを変え(残りの幅を取る・左に 12px)、
+      Web ビルドの 320 / 390 / 412px × ja / de / id / vi / th で「戻る」が 1 行・はみ出し無し、`btn-big` を使わない
+      ゲーム(Sudoku で計測)は寸法が変わらないことを確かめた。修正後のエミュレータでの再確認はしていない
+- [x] アプリのバナー枠と重ならないこと(ADS_POLICY「ゲーム盤・操作ボタンに重ねない」)。同じ debug APK で 20 本の
+      プレイ画面を 2 サイズ(Pixel 7 の 411×914 と、`wm size` で作った 360×640)で測ると、盤の高さを画面の高さから
+      計算する 4 本が Web の広告予約(116px)しか引いておらずアプリのバナー枠に潜っていた — Overtake の ▼(360×640 で
+      全体が枠の下、Pixel 7 でも 7px)、Bounce Up の ◀ ▶(44px)、Snake の下ボタン(16px)、Color Flood の戻す(39px)。
+      うち 3 本は盤が上のヘッダーのアイコンにも重なっていた。Three Peaks はゲーム画面に `BannerSlot` が無かった
+      (アプリで広告枠が出ない)。各ルール文書が「正式収録のときに式へ足す」と先送りしていた作業。**直した**:
+      `BannerSlot` が確保中だけルートに `data-sg-app-banner` を立て、`ui/styles.css` がそのとき
+      `--sg-app-banner-reserve`(最悪ケース 90px + 下端のセーフエリア — Web の 116px と同じ考え方で、広告の読み込みで
+      盤の大きさが変わらない)を出す。4 本の式がそれを引き、Three Peaks に `BannerSlot` を足した。再測定で 20 本 × 2 サイズとも
+      重なり 0・ヘッダーへの重なり無し。Web ビルドは 360 / 390 幅の各高さで公開ビルドと寸法が同じ。実際の広告(90px まで
+      伸びる場合)は描かれていないので、伸びた状態は計算でしか確かめていない。**残り(この版では変えない)**: Hanoi Towers /
+      Invaders / Light Grid / Maze Escape / Paddle Rally は `BannerSlot` がスクロールする `.game-content` の中にある
+      (測った 2 サイズでは収まった)。2026-10-25 以前に収録したゲームの一部は 64px の枠を定数に含めており、広告が 90px まで
+      伸びると最大 26px 足りない可能性がある(未測定)。中央寄せの列は枠が伸びると最大 13px 上へ動く(全ゲーム共通の既存の挙動)
+- [ ] 20 本の実機(Android / iPhone)と低スペック端末(§4)での 1 局、アーケード 5 本(Snake / Bounce Up / Overtake /
+      Invaders / Paddle Rally)のネイティブ WebView での操作感。確かめるまで「実機で確認済み」と書かない
+- [ ] タグ `v1.7.0`・AAB / IPA の作成・内部テスト / TestFlight・本番審査への提出(人間の明示的な承認が要る)
+
 ## 2026-10-28: Android リリースビルドの R8 最適化(次の版)
 
 Play Console の推奨(1.6.0 の「R8 の最適化が有効になっていない」「最適化されたリソース削除が
@@ -179,6 +266,9 @@ Web 版で先行公開(ベータ)していたゲームをこのリリースで�
       生成・探索の待ち、§4 の低スペック端末での 1 局を、この 11 本を含めて通すまで
       「アプリで確認済み」と書かない
 
+> **2026-10-29 追記: 以下の候補は、2026-10-25 に収録した Chess / Nested Tic-Tac-Toe / Scopa と合わせて、
+> 残る全タイトルを正式収録した(Falling Blocks は取り下げ)。記録は冒頭の「2026-10-29: 1.7.0」の節。以下は当時の記録。**
+>
 > **次の候補(記録のみ — まだどの項目にも着手していない。チェックは入れない)。** Web 先行公開の
 > 5 本(Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire、No. 42〜46。2026-10-17 に
 > このリポジトリで実装)。**2026-10-19 に Web 版で配信を始めた**(pixapps-landing #201 —

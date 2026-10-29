@@ -30,14 +30,17 @@
 > 試用の言葉は書かない(Basic は未提供で、Trial の枠は運用で変わる)。**v1.5.0 の公開と同時に**、
 > 人間の承認の後で Console に反映する。v1.4.2 / v1.4.3 はテスト版なので掲載文は変えていない。
 
-> 掲載は収録ゲーム 45 本(Sudoku / Solitaire / Spider Solitaire / FreeCell /
+> 掲載は収録ゲーム 65 本(Sudoku / Solitaire / Spider Solitaire / FreeCell /
 > Mahjong Solitaire / Hearts / Gin Rummy / Minesweeper / Ludo / 2048 /
 > Block Puzzle / Checkers / Reversi / Connect Four / Gomoku / Bubble Pop /
 > Brick Breaker / Nonogram / Takuzu / Futoshiki /
 > Kakuro / Number Match / Quick Math / Schulte Table / Number Recall /
 > Water Sort / Sliding Puzzle / Memory Match / Sky Fighter / Bunny Hop /
 > Crown Grid / Number Path / Shape Regions / Yacht / Mancala / Dominoes /
-> Hit & Blow / Dots and Boxes / Binary Balance / Sudoku 6×6 / Box Regions / Chess / Nested Tic-Tac-Toe / Scopa / Nim)の
+> Hit & Blow / Dots and Boxes / Binary Balance / Sudoku 6×6 / Box Regions / Chess / Nested Tic-Tac-Toe / Scopa / Nim /
+> Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire / Gem Swap / Pipe Link / Bounce Up /
+> Echo Pads / Overtake / Make the Target / Tangram / Light Grid / Color Flood / Three Peaks /
+> Knight’s Tour / Invaders / Paddle Rally / Hanoi Towers / Maze Escape)の
 > 状態で書いてある。`src/app/registry.ts` の収録数と食い違ったらこちらが古い。
 >
 > **ドリル 3 本(Quick Math / Schulte Table / Number Recall)の掲載文では、
@@ -71,6 +74,14 @@
 > **2026-10-25:** オーナーの正式収録判断に従いChess / Nested Tic-Tac-Toe / Scopa / Nimを追加し45本に更新。
 > これは次の収録版向けの掲載ドラフトであり、Console反映・ストア公開はまだ行っていない。
 
+> **2026-10-29 / 1.7.0:** オーナーの指示(「ベータを外して、次バージョンでリリース」)で、Web 先行公開(ベータ)の
+> 20 本を正式収録し 65 本に更新した(収録リスト・キーワード優先順位・INCLUDED GAMES)。リポジトリの中だけの更新で、
+> **Console / App Store Connect への反映は 1.7.0 の公開と同時に、人間の承認の後で行う**。ただし 9 本(Unblock Puzzle / Gem Swap /
+> Pipe Link / Bounce Up / Echo Pads / Overtake / Make the Target / Tangram / Invaders)は、各ルール文書が
+> 正式収録の前に求めていた題の商標・両ストアの検索が未了のまま収録した(docs/RELEASE_CHECKLIST.md の
+> 2026-10-29 の節)。**ストアに名前を書く前に、題をこのまま使うかを製品オーナーが判断する。** 新しい 20 本は
+> 一般名の併記をしない(下の「一般名の併記は 3 つだけ」)。
+
 > **2026-10-26 / 1.6.0:** オーナーが本番公開を依頼。Nearby Play の13本・host承認・任意チャット・端末内履歴を追加し、通常プレイのオフライン説明と区別した。App Store Connect の新1.6.0下書きは14言語で保存・GET一致を確認。Google Play反映・審査提出は別に記録する。
 
 ## タイトル候補(優先順)
@@ -89,7 +100,10 @@ Cross Sums > Futoshiki > Sudoku 6×6 > Puzzle >
 Number Match > Quick Math > Schulte Table > Number Recall > Water Sort >
 Sliding Puzzle > Memory Match > Binary Puzzle > Takuzu > Binary Balance >
 Crown Grid > Number Path > Shape Regions > Box Regions > Sky Fighter >
-Bunny Hop > Simple Games > PixApps
+Bunny Hop > Snake > Tangram > Peg Solitaire > Three Peaks > Hanoi Towers >
+Knight’s Tour > Bridges > Maze Escape > Unblock Puzzle > Loop Puzzle > Pipe Link >
+Gem Swap > Color Flood > Light Grid > Make the Target > Echo Pads > Invaders >
+Paddle Rally > Bounce Up > Overtake > Simple Games > PixApps
 (ゲーム名は検索流入の中核。収録済みの名前だけを、検索需要の大きい順に置く。
 **Checkers は英連邦圏では Draughts、Gomoku は英語圏では Five in a Row、
 Kakuro は Cross Sums、Takuzu は Binary Puzzle とも呼ばれる**ので、掲載文の本文に
@@ -110,6 +124,10 @@ Crown Grid / Number Path / Shape Regions / Box Regions は独自名で、名前�
 それ以外の 8 本は併記しない — 他社の商品名や商標を別名として置かないための線引きで、
 Yacht にも商標のある派生ゲームの名前を併記しない
 ([YACHT_RULES.md](../../../docs/YACHT_RULES.md) §11)。
+**2026-10-29 に加えた 20 本の置き場所**(暫定 — 検索需要は測っていない): 既存のゲーム名の後ろ、
+Simple Games の前に置いた。先頭は一般名そのものが題の古典(Snake / Tangram / Peg Solitaire / Three Peaks /
+Hanoi Towers / Knight’s Tour / Bridges / Maze Escape)、続いて仕組みを名前にした独自名、最後に、同名作があると各ルール
+文書に書かれた Bounce Up / Overtake。並べ替えは製品オーナーの判断で構わない。
 日本語の掲載文でも Kakuro の併記に「カックロ」は使わない — ニコリの商標であり、
 Sudoku の併記を「数独」でなく「ナンプレ」にしたのと同じ理由。一般名の
 「クロスサム」を使う)
@@ -204,6 +222,26 @@ INCLUDED GAMES
 • Nested Tic-Tac-Toe
 • Scopa
 • Nim
+• Unblock Puzzle
+• Snake
+• Loop Puzzle
+• Bridges
+• Peg Solitaire
+• Gem Swap
+• Pipe Link
+• Bounce Up
+• Echo Pads
+• Overtake
+• Make the Target
+• Tangram
+• Light Grid
+• Color Flood
+• Three Peaks
+• Knight’s Tour
+• Invaders
+• Paddle Rally
+• Hanoi Towers
+• Maze Escape
 
 No game feature is locked behind a payment, and there is no subscription. Hints and undo are free wherever a game has them — no limit on how often you use them, and never an ad to watch first.
 
