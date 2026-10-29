@@ -176,6 +176,17 @@ export const en = {
   webAppPromptTitle: 'A quieter way to play, offline from the first launch.',
   webAppPromptBody: 'The app opens from your home screen and keeps your progress on your device.',
 
+  // PixApps' other apps, at the very end of the collection home (issue #276,
+  // ui/components/MoreFromPixApps.tsx). The body is what keeps the list from
+  // reading as if these apps shared Simple Games' promises: they are separate
+  // apps with their own features and prices. The two lines are each app's own
+  // line from its PixApps page, not new claims (docs/BRAND.md「PixApps の
+  // ほかのアプリの書き方」). App names are proper nouns and are not translated.
+  moreFromPixAppsTitle: 'More from PixApps',
+  moreFromPixAppsBody: 'Separate apps from the same developer. Features and pricing differ by app.',
+  pixMealTagline: 'Log meals instantly. Correct mistakes in seconds.',
+  pixWorkTagline: 'Scan a card. Keep a contact you can trust.',
+
   // The optional share on a result screen (issue #86). The message and the
   // picture card carry the facts the result screen showed — the game passes
   // them in as already-formatted strings (services/share/message.ts

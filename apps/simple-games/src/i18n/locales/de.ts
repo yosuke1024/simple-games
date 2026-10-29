@@ -146,6 +146,13 @@ export const de: Messages = {
   webAppPromptBody:
     'Du startest die App direkt vom Startbildschirm, und dein Fortschritt bleibt auf deinem Gerät.',
 
+  // PixApps' other apps, at the end of the collection home (issue #276)
+  moreFromPixAppsTitle: 'Weitere Apps von PixApps',
+  moreFromPixAppsBody:
+    'Eigenständige Apps desselben Entwicklers. Funktionen und Preise unterscheiden sich je nach App.',
+  pixMealTagline: 'Mahlzeiten sofort erfassen. Fehler in Sekunden korrigieren.',
+  pixWorkTagline: 'Visitenkarte scannen. Einen verlässlichen Kontakt behalten.',
+
   // The optional share on a result screen. {game} is the registry title, a
   // proper noun that is not translated; `cleared` is only used for a real win.
   shareAction: 'Teilen',

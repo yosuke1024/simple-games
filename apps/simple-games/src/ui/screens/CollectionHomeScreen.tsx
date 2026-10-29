@@ -73,6 +73,7 @@ import { GameTile } from '../components/GameTile';
 import { FindOpponentButton } from '../components/FindOpponentButton';
 import { IconBack, IconChevronRight, IconGear, IconSearch } from '../components/icons';
 import { GameBetaBadge } from '../components/GameBetaBadge';
+import { MoreFromPixApps } from '../components/MoreFromPixApps';
 import { WebAdSlot } from '../components/WebAdSlot';
 import { WebAppStoreCard } from '../components/WebAppStoreCard';
 import { WebChromeSlot } from '../components/WebChromeSlot';
@@ -809,6 +810,14 @@ export function CollectionHomeScreen({
               );
             })}
           </nav>
+
+          {/* PixApps' other apps (issue #276): after the last shelf, so a
+              player meets them only after every game, and inside this branch,
+              so a search never shows them. A section and not a nav: it is not
+              a way around this screen, so the navigation landmarks stay the
+              three game lists. It renders nothing offline
+              (MoreFromPixApps.tsx). */}
+          <MoreFromPixApps />
         </>
       )}
 

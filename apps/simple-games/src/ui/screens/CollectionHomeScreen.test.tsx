@@ -1568,3 +1568,62 @@ describe('the Club House slot', () => {
     expect(screen.getByRole('button', { name: /Club House/ })).toBeInTheDocument();
   });
 });
+
+/**
+ * PixApps' other apps (issue #276): after every game, never in a search, and
+ * never counted as a game. What the section says, where a tap goes and the
+ * offline rule are the component's own (MoreFromPixApps.test.tsx). These pin
+ * where it sits on the home.
+ */
+describe("PixApps' other apps", () => {
+  const section = () => screen.queryByRole('region', { name: en.moreFromPixAppsTitle });
+
+  it('comes after the last category, outside the games list, on both builds', () => {
+    for (const native of [false, true]) {
+      capacitorMock.native = native;
+      renderHome();
+      const games = screen.getByRole('navigation', { name: 'Games' });
+      const apps = section();
+      expect(apps).not.toBeNull();
+      expect(games.contains(apps)).toBe(false);
+      expect(games.compareDocumentPosition(apps!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      cleanup();
+    }
+  });
+
+  it('is not a game: the game list, the count and the landmarks are what they were', () => {
+    renderHome();
+    expect(titlesOnScreen()).toEqual(
+      GAME_CATEGORIES.flatMap((category) =>
+        shown.filter((game) => game.category === category.id).map((game) => game.title),
+      ),
+    );
+    expect(screen.getAllByRole('navigation').map((nav) => nav.getAttribute('aria-label'))).toEqual([
+      'Games',
+    ]);
+    // Two rows, each named by its app, and neither wears a game tile.
+    const apps = section()!;
+    expect(
+      within(apps)
+        .getAllByRole('button')
+        .map((button) => button.textContent),
+    ).toEqual([`PixMeal${en.pixMealTagline}`, `PixWork${en.pixWorkTagline}`]);
+    expect(apps.querySelector('.game-tile, .game-cell')).toBeNull();
+  });
+
+  it('is absent while searching, matches no search, and is back when the search closes', async () => {
+    const user = userEvent.setup();
+    renderHome();
+
+    await openSearch(user);
+    expect(section()).toBeNull();
+    await user.type(searchField(), 'PixMeal');
+    expect(screen.getByRole('status')).toHaveTextContent(en.searchNoResults);
+    expect(section()).toBeNull();
+
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(
+      await screen.findByRole('region', { name: en.moreFromPixAppsTitle }),
+    ).toBeInTheDocument();
+  });
+});

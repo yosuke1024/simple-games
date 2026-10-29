@@ -144,6 +144,13 @@ export const tr: Messages = {
   webAppPromptTitle: 'Daha sakin bir oyun, ilk açılıştan itibaren tamamen çevrimdışı.',
   webAppPromptBody: 'Uygulama ana ekranınızdan açılır ve ilerlemenizi cihazınızda saklar.',
 
+  // PixApps' other apps, at the end of the collection home (issue #276)
+  moreFromPixAppsTitle: 'PixApps’in diğer uygulamaları',
+  moreFromPixAppsBody:
+    'Aynı geliştiricinin ayrı uygulamaları. Özellikler ve fiyatlar uygulamaya göre değişir.',
+  pixMealTagline: 'Öğünlerini anında kaydet. Hataları saniyeler içinde düzelt.',
+  pixWorkTagline: 'Kartvizitini tara. Güvenilir bir kişi kaydı tut.',
+
   // The optional share on a result screen. {game} is the registry title, a
   // proper noun that is not translated; `cleared` is only used for a real win.
   shareAction: 'Paylaş',

@@ -70,6 +70,17 @@ export const HIGH_RISK_KEYS: readonly MessageKey[] = [
   'webAppPromptTitle',
   'webAppPromptBody',
 
+  // PixApps のほかのアプリ(コレクションホームの末尾、issue #276、2026-10-29 にオーナー判断で
+  // 門に入れた)— 宣伝の文言はアプリ送客カードと同じく両方向に壊れる。本文の「別のアプリで、
+  // 料金や機能はアプリごとに違う」を落とした訳は、Simple Games の約束(サブスクなし・
+  // アカウントなし)がそのアプリにもあると読ませる。2 本の 1 行は各アプリのページの文言で、
+  // 盛った訳は無い機能を宣伝する(docs/BRAND.md「未実装の機能を公開文面に書かない」)。
+  // 見出しを「ゲーム」と読ませる訳は、ゲームでないものをゲームの一覧に並べる。
+  'moreFromPixAppsTitle',
+  'moreFromPixAppsBody',
+  'pixMealTagline',
+  'pixWorkTagline',
+
   // Club House(docs/architecture/club.md §8-5, §11) — 切断は端末だけの操作で、
   // サーバは動き続け課金も続く。「止まる」と読める誤訳は費用の約束の反故になる。
   // 費用を止める手順の 1 文(HostingNote)は自分で建てた Club の Owner にだけ出す。

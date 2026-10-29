@@ -144,6 +144,13 @@ export const ptBR: Messages = {
   webAppPromptTitle: 'Um jeito mais tranquilo de jogar, offline desde o primeiro uso.',
   webAppPromptBody: 'O app abre direto da tela inicial e guarda seu progresso no seu dispositivo.',
 
+  // PixApps' other apps, at the end of the collection home (issue #276)
+  moreFromPixAppsTitle: 'Mais apps da PixApps',
+  moreFromPixAppsBody:
+    'Apps separados do mesmo desenvolvedor. Os recursos e os preços variam de app para app.',
+  pixMealTagline: 'Registre refeições na hora. Corrija erros em segundos.',
+  pixWorkTagline: 'Escaneie um cartão de visita. Guarde um contato confiável.',
+
   // The optional share on a result screen. {game} is the registry title, a
   // proper noun that is not translated; `cleared` is only used for a real win.
   shareAction: 'Compartilhar',
