@@ -1,3 +1,84 @@
+/* Hanoi Towers — all of this game's styling, imported by HanoiTowersRoot.
+   Built from the series tokens in src/ui/styles.css (--ink, --line, --accent,
+   --accent-soft, …), so the chrome follows the theme without knowing about it.
+   Class names are prefixed `ht-`.
+
+   The tray, the pegs and the disks are the one exception docs/architecture/
+   css-split.md allows: they are physical wood, so their colours are game content
+   (docs/HANOI_TOWERS_RULES.md "Visual presentation"). Every such colour is
+   declared once, in the two blocks below, light and dark, and nowhere else;
+   ui/contrast.test.ts measures the pairs that carry meaning from them and fails
+   on any colour literal outside the blocks. The dark block keeps the disks, the
+   pegs and the base exactly as they are in the light one: only the tray, the
+   peg numbers and the cast shadow change with the theme (the rules doc records
+   why). Light comes from above everywhere: a lit line on the top edge of the
+   tray, the pegs and the disks, a shade line on the opposite side, and a cast
+   shadow darker than the wood it falls on in both themes. A custom property
+   ending in a hex pair (8 digits) carries its own alpha. */
+
+:root {
+  --ht-tray-top: #f2e8d7;
+  --ht-tray-bottom: #e9ddc8;
+  --ht-tray-edge: #c2af91;
+  /* Opaque on purpose: the plank's front is what makes its thickness read on paper. */
+  --ht-tray-face: #c8b490;
+  --ht-tray-lit: #fff9ed;
+  --ht-tray-shade: #765b3817;
+  /* Two faint grain layers (9px and 23px periods) share this one tint. */
+  --ht-grain: #765b380c;
+  --ht-peg-ink: #574632;
+  --ht-peg: #7d5f3f;
+  --ht-peg-lit: #e6d5b8;
+  --ht-peg-shade: #5a412880;
+  --ht-base: #b49368;
+  --ht-base-edge: #7a5d3d;
+  --ht-cast: #6b4d30;
+  --ht-cast-alpha: 0.18;
+  /* A lifted disk's shadow is farther away, so fainter. */
+  --ht-cast-lifted-alpha: 0.12;
+  --ht-disk-0: #f0dfbf;
+  --ht-disk-1: #e9d2aa;
+  --ht-disk-2: #dfc398;
+  --ht-disk-3: #d5b587;
+  --ht-disk-4: #cbaa7c;
+  --ht-disk-edge: #71573c;
+  --ht-disk-lit: #fff9e9;
+  --ht-disk-shade: #71573c33;
+  --ht-disk-ink: #3f3021;
+  --ht-valid: #fffdf766;
+}
+
+:root[data-theme='dark'] {
+  --ht-tray-top: #39332c;
+  --ht-tray-bottom: #302a24;
+  --ht-tray-edge: #695943;
+  --ht-tray-face: #241f1a;
+  --ht-tray-lit: #514739;
+  --ht-tray-shade: #00000026;
+  --ht-grain: #fff0d70a;
+  --ht-peg-ink: #e4d4ba;
+  --ht-peg: #b89d77;
+  --ht-peg-lit: #e6d5b8;
+  --ht-peg-shade: #5a412880;
+  --ht-base: #b49368;
+  --ht-base-edge: #7a5d3d;
+  /* Black, so the shadow falls darker than the tray (the light-theme brown
+     would shine on it). */
+  --ht-cast: #000000;
+  --ht-cast-alpha: 0.32;
+  --ht-cast-lifted-alpha: 0.21;
+  --ht-disk-0: #f0dfbf;
+  --ht-disk-1: #e9d2aa;
+  --ht-disk-2: #dfc398;
+  --ht-disk-3: #d5b587;
+  --ht-disk-4: #cbaa7c;
+  --ht-disk-edge: #71573c;
+  --ht-disk-lit: #fff9e9;
+  --ht-disk-shade: #71573c33;
+  --ht-disk-ink: #3f3021;
+  --ht-valid: #fff6e30a;
+}
+
 .ht-screen .game-content {
   overflow-y: auto;
 }
@@ -11,18 +92,6 @@
 }
 .ht-home-content {
   display: contents;
-}
-.ht-logo svg {
-  width: 44px;
-  height: 44px;
-  fill: var(--accent);
-  filter: drop-shadow(0 2px 0 rgb(55 37 26 / 12%));
-}
-.ht-logo-stand {
-  fill: none;
-  stroke: var(--ink-soft);
-  stroke-width: 3;
-  stroke-linecap: round;
 }
 .ht-choose {
   text-align: center;
@@ -73,19 +142,33 @@
   background: var(--surface);
   font-size: 0.74rem;
 }
+/* The tray (and the tutorial's small one) is a plank seen from above: the
+   wood gradient with two faint grain layers on top of it — periods of 9px and
+   23px, slightly off the horizontal and off each other so no repeat shows
+   across a ~340px tray — a lit line on the top edge, a shade at the bottom, an
+   opaque front for the thickness, then the collection's ambient glow. The
+   lift comes first among the outer shadows, as in the collection's board
+   frame; the paper and line rings are left out because the plank carries its
+   own edge. */
+.ht-board,
+.ht-mini-tray {
+  background:
+    repeating-linear-gradient(178deg, transparent 0 8px, var(--ht-grain) 8px 9px),
+    repeating-linear-gradient(181deg, transparent 0 21px, var(--ht-grain) 21px 23px),
+    linear-gradient(180deg, var(--ht-tray-top), var(--ht-tray-bottom));
+  border: 1px solid var(--ht-tray-edge);
+  box-shadow:
+    inset 0 1px 0 var(--ht-tray-lit),
+    inset 0 -4px 0 var(--ht-tray-shade),
+    0 5px 0 var(--ht-tray-face),
+    0 8px 18px var(--accent-ring-soft);
+}
 .ht-board {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   padding: 12px 7px 8px;
-  background: linear-gradient(180deg, #f2e8d7, #e9ddc8);
   border-radius: 16px;
-  border: 1px solid #c2af91;
-  box-shadow:
-    inset 0 1px 0 #fff9ed,
-    inset 0 -4px 0 rgb(118 91 56 / 9%),
-    0 5px 0 rgb(118 91 56 / 12%),
-    0 12px 26px rgb(61 43 25 / 9%);
 }
 .ht-peg {
   display: flex;
@@ -95,7 +178,7 @@
   padding: 5px 0 0;
   border: 1px solid transparent;
   border-radius: 10px;
-  color: #5f4d39;
+  color: var(--ht-peg-ink);
   background: transparent;
   cursor: pointer;
   touch-action: manipulation;
@@ -123,59 +206,103 @@
   width: 100%;
   height: auto;
 }
+/* Turned wood: a lit line on the left of the peg and the base, a shade line on
+   the right of the peg and the lower edge of the base and of every disk. */
 .ht-wood {
   fill: none;
-  stroke: #8c6c49;
+  stroke: var(--ht-peg);
   stroke-width: 6;
   stroke-linecap: round;
 }
 .ht-wood-light {
   fill: none;
-  stroke: #e6d5b8;
+  stroke: var(--ht-peg-lit);
   stroke-width: 1.3;
   stroke-linecap: round;
 }
+.ht-wood-shade {
+  fill: none;
+  stroke: var(--ht-peg-shade);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
 .ht-base {
-  fill: #b49368;
-  stroke: #8d6f4e;
+  fill: var(--ht-base);
+  stroke: var(--ht-base-edge);
   stroke-width: 0.8;
 }
 .ht-base-shadow,
 .ht-disk-shadow {
-  fill: #6b4d30;
-  opacity: 0.18;
+  fill: var(--ht-cast);
+  opacity: var(--ht-cast-alpha);
 }
 .ht-disk {
-  stroke: #71573c;
+  stroke: var(--ht-disk-edge);
   stroke-width: 1;
 }
 .ht-disk-0 {
-  fill: #f0dfbf;
+  fill: var(--ht-disk-0);
 }
 .ht-disk-1 {
-  fill: #e9d2aa;
+  fill: var(--ht-disk-1);
 }
 .ht-disk-2 {
-  fill: #dfc398;
+  fill: var(--ht-disk-2);
 }
 .ht-disk-3 {
-  fill: #d5b587;
+  fill: var(--ht-disk-3);
 }
 .ht-disk-4 {
-  fill: #cbaa7c;
+  fill: var(--ht-disk-4);
 }
 .ht-disk-light {
   fill: none;
-  stroke: #fff9e9;
+  stroke: var(--ht-disk-lit);
   stroke-width: 1;
   stroke-linecap: round;
   opacity: 0.75;
+}
+.ht-disk-shade,
+.ht-base-shade {
+  fill: none;
+  stroke: var(--ht-disk-shade);
+  stroke-width: 2.4;
+  stroke-linecap: round;
 }
 .ht-tower text {
   text-anchor: middle;
   font-size: 11px;
   font-weight: 800;
-  fill: #3f3021;
+  fill: var(--ht-disk-ink);
+}
+/* Lifting and placing a disk is one 140ms transform, never a loop, and nothing
+   else is transitioned. The lift is a translate (the same 12 user units the
+   disk used to be drawn higher by); the disk's shadow is offset back down
+   inside the group, so it stays nearer the tray and the gap opens. The shadow
+   is also fainter while the disk is lifted, and that tint switches at once
+   rather than easing: inside 140ms the step is not noticed, and it keeps the
+   transition to transform alone. A disk that arrives on a peg (a move or an
+   Undo) settles from the same height. Reduced Motion turns both off at the end
+   of this file. */
+.ht-disk-group,
+.ht-lifted-disk,
+.ht-disk-shadow {
+  transition: transform 0.14s ease-out;
+}
+.ht-lifted-disk {
+  transform: translateY(-12px);
+}
+.ht-lifted-disk .ht-disk-shadow {
+  transform: translateY(5px);
+  opacity: var(--ht-cast-lifted-alpha);
+}
+.ht-arrived {
+  animation: ht-settle 0.14s ease-out;
+}
+@keyframes ht-settle {
+  from {
+    transform: translateY(-12px);
+  }
 }
 .ht-lifted-disk .ht-disk {
   fill: var(--accent);
@@ -184,15 +311,17 @@
 .ht-lifted-disk text {
   fill: var(--accent-ink);
 }
+/* The selected column is a wash of the accent over the wood, not an opaque
+   sheet on top of it, so the grain keeps showing through. */
 .ht-selected {
   border-color: var(--accent);
-  background: var(--accent-soft);
+  background: var(--accent-ring-soft);
   box-shadow: inset 0 0 0 1px var(--accent-ring-soft);
 }
 .ht-valid {
   border-color: var(--accent);
   border-style: dashed;
-  background: rgb(255 253 247 / 40%);
+  background: var(--ht-valid);
 }
 .ht-destination {
   height: 26px;
@@ -216,38 +345,20 @@
   justify-content: center;
   padding-top: 0;
 }
-.ht-figure {
+/* The tutorial's small tray. Not `.ht-figure`: Hearts' Quick Rules figure owns
+   that class name (both stylesheets can be loaded at once), and the plank above
+   would otherwise be painted behind its cards. */
+.ht-mini-tray {
   display: flex;
   width: 270px;
   max-width: 100%;
   margin: auto;
-  background: #eee3d0;
-  border: 1px solid #c2af91;
   border-radius: 10px;
   padding: 8px;
   box-sizing: border-box;
 }
-.ht-figure .ht-tower {
+.ht-mini-tray .ht-tower {
   width: 33.333%;
-}
-:root[data-theme='dark'] .ht-board,
-:root[data-theme='dark'] .ht-figure {
-  background: linear-gradient(180deg, #39332c, #302a24);
-  border-color: #695943;
-  box-shadow:
-    inset 0 1px 0 #514739,
-    inset 0 -4px 0 rgb(0 0 0 / 15%),
-    0 5px 0 rgb(0 0 0 / 15%),
-    0 12px 26px rgb(0 0 0 / 12%);
-}
-:root[data-theme='dark'] .ht-peg {
-  color: #e4d4ba;
-}
-:root[data-theme='dark'] .ht-wood {
-  stroke: #b89d77;
-}
-:root[data-theme='dark'] .ht-valid {
-  background: rgb(255 246 227 / 4%);
 }
 @media (max-height: 680px) {
   .ht-body {
@@ -275,4 +386,25 @@
   .ht-board {
     gap: 4px;
   }
+}
+/* The shared Reduced Motion rules shorten every transition and animation to
+   0.01ms; the disk's lift and settle are removed outright here, so the disk
+   simply is where it is (OS setting and the in-app switch both). */
+@media (prefers-reduced-motion: reduce) {
+  .ht-disk-group,
+  .ht-lifted-disk,
+  .ht-disk-shadow {
+    transition: none;
+  }
+  .ht-arrived {
+    animation: none;
+  }
+}
+:root[data-reduced-motion='true'] .ht-disk-group,
+:root[data-reduced-motion='true'] .ht-lifted-disk,
+:root[data-reduced-motion='true'] .ht-disk-shadow {
+  transition: none;
+}
+:root[data-reduced-motion='true'] .ht-arrived {
+  animation: none;
 }
