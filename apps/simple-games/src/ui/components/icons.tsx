@@ -209,6 +209,38 @@ export function IconShare(props: SVGProps<SVGSVGElement>) {
 }
 
 /**
+ * Club House: two people, one behind the other — the people you play with,
+ * not a building (a house reads as "go home") and not a count of anyone.
+ */
+export function IconPeople(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
+      <path d="M15.5 4.8a3.5 3.5 0 0 1 0 6.4" />
+      <path d="M18 14.3a6.5 6.5 0 0 1 3.5 5.7" />
+    </Icon>
+  );
+}
+
+/**
+ * Find nearby opponents: a point sending out to either side — "someone close
+ * by", whichever radio carries it. Not the Bluetooth or Wi-Fi marks: the
+ * feature is either one, and both are somebody else's logos.
+ */
+export function IconNearby(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="1.75" />
+      <path d="M8.46 8.46a5 5 0 0 0 0 7.08" />
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.08" />
+      <path d="M5.64 5.64a9 9 0 0 0 0 12.72" />
+      <path d="M18.36 5.64a9 9 0 0 1 0 12.72" />
+    </Icon>
+  );
+}
+
+/**
  * Add to Home Screen (issue #110): a rounded tile standing in for an app
  * icon, with a plus inside it. Every launcher's own "add to home screen"
  * reaches for this exact picture, so it is the one glyph that reads as

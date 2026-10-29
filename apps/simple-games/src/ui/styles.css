@@ -1833,7 +1833,8 @@ button:disabled {
 /* The Club House's one slot on the home (docs/architecture/club.md §2-2,
    §2-3). Quieter than every shelf around it: no card, no tile, no accent —
    soft ink on the paper, the size of a caption. Joined, a heading over one
-   line of club names; not joined, a two-line text row. */
+   line of club names; not joined, a two-line text row. Either way the title
+   wears a line glyph in that same ink (.home-entry-title, below). */
 .home-club {
   width: 100%;
   max-width: 420px;
@@ -1882,6 +1883,28 @@ button:disabled {
 
 .home-play-together-title {
   font-weight: 700;
+}
+
+/* A line glyph in front of the Club House and Nearby titles, in the same soft
+   ink (club.md 判断 55): it tells the two doors apart from the shelf headings
+   at a glance without making them louder than a tile, and it says nothing
+   about state. What follows a title lines up with its text, not the glyph. */
+.home-entry-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.home-entry-icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
+.home-play-together-body,
+.home-club-open,
+.home-club-join {
+  padding-inline-start: 26px;
 }
 
 /* Favourites: the same grid as the category sections below, because it is the
