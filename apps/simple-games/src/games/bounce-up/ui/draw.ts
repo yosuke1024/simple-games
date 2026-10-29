@@ -12,10 +12,21 @@
  * - moving: a lighter cloud with a solid edge and an outward triangle beyond
  *   each end (the sign of its back and forth);
  * - vanishing: a dashed outline with nothing filled in.
+ * Static and moving clouds also stand on a paper foot — the same outline in
+ * the line colour, a few px lower, so they read as cut paper lifted off the
+ * board like every other raised thing in the collection. The foot sits under
+ * the cloud and below its top edge, so the landing line does not move; a
+ * vanishing cloud has none (nothing to carry weight). The foot is depth only:
+ * it is a light line on paper, below the 3:1 a mark that carries meaning
+ * needs, so the kinds stay told apart by the shapes above and never by
+ * whether a foot is there (§7).
  * The personal-best line is a dashed rule across the board with an inward
  * notch at each edge. The body is this game's own shape: a rounded drop with
- * two eyes and a sprout (§7, §9.4). There is no text on the board at all, and
- * no ruled-grid background (§9.4).
+ * two eyes and a sprout (§7, §9.4). It has weight: it flattens on a landing
+ * and settles back over `SETTLE_STEPS`, and stretches a little with its speed
+ * (`bodyScale`) — drawing only; the foot stays put and nothing here decides a
+ * landing (§2). There is no text on the board at all, and no ruled-grid
+ * background (§9.4).
  *
  * Every colour is a token read from computed style — none is written here but
  * the jsdom fallbacks (the light theme's values). Chromium 88 is the floor:
@@ -27,6 +38,7 @@ import {
   BODY_WIDTH,
   BOARD_HEIGHT_PX,
   BOARD_WIDTH_PX,
+  JUMP_SPEED,
   PLATFORM_THICKNESS,
   SUB,
 } from '../game/constants';
@@ -60,6 +72,53 @@ export function readPalette(): Palette {
 const BODY_W = BODY_WIDTH / SUB;
 const BODY_H = BODY_HEIGHT / SUB;
 const THICK = PLATFORM_THICKNESS / SUB;
+/**
+ * How far below its cloud a paper foot shows, logical px (§7). About 2 CSS px
+ * at the web board's 0.66 scale — the height of a shared key's `0 2px 0` lift.
+ */
+export const PLATFORM_LIFT = 3;
+
+/** Steps a landing's flattening takes to settle: 100 ms at 120 Hz (§7). */
+export const SETTLE_STEPS = 12;
+/** The body's height at the instant of a landing, as a fraction of its height (§7). */
+const SQUASH_DEPTH = 0.8;
+/** How much taller than at rest it is drawn at JUMP_SPEED or faster, up or down (§7). */
+const STRETCH = 0.08;
+
+/** The factors the body is drawn at, about its foot (§7). */
+export interface BodyScale {
+  readonly sx: number;
+  readonly sy: number;
+}
+
+/** The body at rest — and the only body under Reduced Motion and in the Quick Rules figures. */
+export const REST: BodyScale = { sx: 1, sy: 1 };
+
+/**
+ * The body's shape `since` steps after its last bounce, flying at `vy` (§7).
+ * It starts flat at the landing and eases back out, ending at the stretch the
+ * speed asks for: +8% tall at JUMP_SPEED or more (up or down), none at the top
+ * of the arc. The width follows as 1/√height, so the body keeps its volume as
+ * it would were it as deep as it is wide — 1.12 wide at the deepest, 0.96 at
+ * the fullest stretch. Pure and exact at its ends: since 0 at JUMP_SPEED is
+ * 0.8 tall; since ≥ SETTLE_STEPS at the top of the arc is REST.
+ */
+export function bodyScale(since: number, vy: number): BodyScale {
+  const flight = 1 + STRETCH * Math.min(1, Math.abs(vy) / JUMP_SPEED);
+  const u = Math.min(1, Math.max(0, since) / SETTLE_STEPS);
+  const ease = 1 - (1 - u) * (1 - u);
+  const sy = SQUASH_DEPTH + (flight - SQUASH_DEPTH) * ease;
+  return { sx: 1 / Math.sqrt(sy), sy };
+}
+
+/**
+ * The weight the board draws the body at: `REST` under Reduced Motion, else
+ * `bodyScale`. One place, so the flattening and the stretch — the two motions
+ * this view adds — are switched off together (§7).
+ */
+export function weightOf(reduced: boolean, since: number, vy: number): BodyScale {
+  return reduced ? REST : bodyScale(since, vy);
+}
 
 /** A height in units (camera at `cameraBottom`) as a y on the board, px from the top. */
 export function screenY(height: number, cameraBottom: number): number {
@@ -105,6 +164,13 @@ export function drawPlatform(
   top: number,
   width: number,
 ): void {
+  if (kind !== 'vanishing') {
+    // The paper foot: the same outline, lower, drawn first. Only its rim
+    // below the cloud shows; the top edge (the landing line) is untouched.
+    cloudPath(ctx, left, top + PLATFORM_LIFT, width, THICK);
+    ctx.fillStyle = palette.line;
+    ctx.fill();
+  }
   cloudPath(ctx, left, top, width, THICK);
   if (kind === 'static') {
     ctx.fillStyle = palette.accent;
@@ -142,18 +208,20 @@ export function drawPlatform(
 
 /**
  * The body (§7): a rounded drop, its foot at (cx, foot), with two eyes and a
- * sprout. `squash` flattens it for the few steps after a bounce — the one
- * motion here that is decoration, and off under Reduced Motion (§7).
+ * sprout. `scale` is its weight (`bodyScale`) — the flattening after a bounce
+ * and the stretch in flight, the one motion here that is decoration, and
+ * `REST` under Reduced Motion (§7). The foot stays at `foot`, so the shape
+ * changes above it and never moves where the body stands.
  */
 export function drawBody(
   ctx: CanvasRenderingContext2D,
   palette: Palette,
   cx: number,
   foot: number,
-  squash: boolean,
+  scale: BodyScale,
 ): void {
-  const w = squash ? BODY_W * 1.14 : BODY_W;
-  const h = squash ? BODY_H * 0.82 : BODY_H;
+  const w = BODY_W * scale.sx;
+  const h = BODY_H * scale.sy;
   const x = cx - w / 2;
   const y = foot - h;
   const r = w / 2.4;
@@ -188,8 +256,8 @@ export function drawBody(
   // The eyes: the surface showing through.
   ctx.fillStyle = palette.surface;
   const eyeY = y + h * 0.4;
-  ctx.fillRect(cx - 7, eyeY - 2.5, 4, 5);
-  ctx.fillRect(cx + 3, eyeY - 2.5, 4, 5);
+  ctx.fillRect(cx - 7 * scale.sx, eyeY - 2.5, 4, 5);
+  ctx.fillRect(cx + 3 * scale.sx, eyeY - 2.5, 4, 5);
 }
 
 /** The personal-best line (§4「スコアと高さ」): a dashed rule with an inward notch at each edge. */
@@ -235,8 +303,8 @@ export function wrappedCentres(x: number): number[] {
 export interface DrawOptions {
   /** This width's best when the run began, in points; 0 draws no line (§4). */
   readonly bestScore: number;
-  /** The few steps after a bounce, when not under Reduced Motion. */
-  readonly squash: boolean;
+  /** The body's weight right now (`bodyScale`); `REST` under Reduced Motion. */
+  readonly scale: BodyScale;
 }
 
 /** The whole board for one state. */
@@ -259,6 +327,6 @@ export function drawRun(
   }
   const foot = screenY(run.y, camera);
   for (const cx of wrappedCentres(run.x / SUB)) {
-    drawBody(ctx, palette, cx, foot, options.squash);
+    drawBody(ctx, palette, cx, foot, options.scale);
   }
 }

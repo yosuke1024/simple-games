@@ -4,11 +4,12 @@
  * every cloud, and inside the figure's window. The boxes are the pieces'
  * drawn extents as ui/draw.ts draws them: the body 28 × 28 px with its
  * sprout up to 10 px above the head, a cloud its width by its 10 px
- * thickness plus the puffs' 5 px under it.
+ * thickness plus the puffs' 5 px under it and the paper foot's 3 px
+ * (`PLATFORM_LIFT`).
  */
 import { describe, expect, it } from 'vitest';
 import { BOARD_WIDTH_PX, PLATFORM_WIDTH_PX } from '../../game';
-import { wrappedCentres } from '../draw';
+import { PLATFORM_LIFT, wrappedCentres } from '../draw';
 import {
   FIGURE_HEIGHT,
   ROUTE_WIDTH,
@@ -40,7 +41,13 @@ function boxesOf(scene: Scene): Box[] {
   }
   for (const [left, top] of scene.clouds) {
     const w = PLATFORM_WIDTH_PX.normal;
-    boxes.push({ what: `cloud at ${left},${top}`, x0: left, y0: top, x1: left + w, y1: top + 15 });
+    boxes.push({
+      what: `cloud at ${left},${top}`,
+      x0: left,
+      y0: top,
+      x1: left + w,
+      y1: top + 15 + PLATFORM_LIFT,
+    });
   }
   return boxes;
 }

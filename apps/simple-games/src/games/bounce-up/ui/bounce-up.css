@@ -46,7 +46,16 @@
   height: auto;
   aspect-ratio: 9 / 16;
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  /* The collection's board frame (§7「盤の大きさ」): a paper edge and a
+     shallow lift. Shadows paint first-listed on top, so the 3px lift leads
+     and shows over the paper ring's lower edge. All of it is outside the
+     box — it takes nothing from the size arithmetic above, and fits the
+     body's 8px / 12px padding. */
+  box-shadow:
+    0 3px 0 var(--line),
+    0 0 0 3px var(--paper),
+    0 0 0 4px var(--line),
+    0 8px 18px var(--accent-ring-soft);
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
@@ -134,7 +143,12 @@
   justify-content: center;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: var(--paper);
+  /* The shared key (.action-btn): a paper face, lit from the top, 2px up off
+     the board. Pressed, the lift goes and the face is filled (below). */
+  background: linear-gradient(var(--surface), var(--paper));
+  box-shadow:
+    inset 0 1px 0 var(--surface),
+    0 2px 0 var(--line);
   color: var(--ink);
   opacity: 0.85;
   touch-action: none;
@@ -154,6 +168,7 @@
 .bo-pad-btn:active {
   background: var(--accent);
   color: var(--accent-ink);
+  box-shadow: inset 0 1px 2px var(--line);
   opacity: 1;
 }
 

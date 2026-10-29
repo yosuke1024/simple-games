@@ -66,10 +66,7 @@ import {
   type RunState,
   type RunStatus,
 } from '../../game';
-import { drawRun, readPalette, type Palette } from '../draw';
-
-/** Steps after a bounce the body is drawn flattened (decoration — §7). */
-const SQUASH_STEPS = 8;
+import { drawRun, readPalette, weightOf, type Palette } from '../draw';
 
 export type HeldKey = 'left' | 'right';
 type PadButton = 'left' | 'right';
@@ -180,7 +177,7 @@ export const BounceStage = forwardRef<StageHandle, BounceStageProps>(function Bo
   const reducedMotion = useReducedMotion();
   const reducedRef = useRef(reducedMotion);
   reducedRef.current = reducedMotion;
-  /** The tick of the last bounce, for the squash (−∞ before any). */
+  /** The tick of the last bounce, for the body's weight (−∞ before any). */
   const bounceTickRef = useRef(Number.NEGATIVE_INFINITY);
   /** Draws the board once; set by the canvas effect, a no-op without a 2D context. */
   const drawRef = useRef<() => void>(() => undefined);
@@ -264,7 +261,9 @@ export const BounceStage = forwardRef<StageHandle, BounceStageProps>(function Bo
       const current = runRef.current!;
       drawRun(ctx, palette, current, {
         bestScore: bestAtStart,
-        squash: !reducedRef.current && current.tick - bounceTickRef.current < SQUASH_STEPS,
+        // The flattening after a bounce and the stretch in flight are
+        // decoration — REST, both off, under Reduced Motion (§7).
+        scale: weightOf(reducedRef.current, current.tick - bounceTickRef.current, current.vy),
       });
     };
     const repaint = () => {
@@ -383,6 +382,12 @@ export const BounceStage = forwardRef<StageHandle, BounceStageProps>(function Bo
     // The stage is keyed by run (GameScreen.tsx), so the best line never
     // changes under a mounted board; it is listed for honesty, not for reruns.
   }, [bestAtStart]);
+
+  // A change of the Reduced Motion preference repaints at once: a board that is
+  // not running would otherwise keep the weight it was last drawn with (§7).
+  useEffect(() => {
+    drawRef.current();
+  }, [reducedMotion]);
 
   // The loop: requestAnimationFrame only while the run is running (§7).
   const running = status === 'running';
