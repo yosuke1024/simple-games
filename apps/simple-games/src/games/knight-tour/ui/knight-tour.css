@@ -1,10 +1,46 @@
-/* Physical board colours; the knight keeps Chess's original ivory and ink. */
+/* Knight's Tour — all of this game's styling, imported by KnightTourRoot.
+
+   The board's colours are game content, not chrome (docs/KNIGHT_TOUR_RULES.md,
+   "Visual refinement"; docs/architecture/css-split.md): two squares, the ink
+   the marks are printed in, the knight's ivory and ink, three alpha-only
+   shades and the lip under the visit numbers. Every colour this file writes
+   sits in the two blocks directly below and nowhere else; ui/contrast.test.ts
+   reads them, measures each mark that carries meaning against both squares in
+   both themes, and fails on a colour literal anywhere else.
+
+   The knight keeps Chess's original ivory and ink in both themes, so it is the
+   same piece wherever it stands. Its ink edge carries it on the light theme's
+   squares (the ivory fill is only about 1.2:1 there); its ivory fill carries
+   it on the dark theme's (the edge is about 2:1 on the darker square). The
+   test pins which one carries it on each theme.
+
+   The light comes from the top, as everywhere on the shell. A visit number or
+   a move dot is a mark pressed into the board like letterpress: the lip below
+   it catches the light (--kt-lit) and, on a dot, the wall above it is in shade
+   (--kt-shade). The knight's base casts a short contact shadow on its square
+   (--kt-contact). The three are alpha-only and carry no meaning: a number or a
+   dot is the same mark without them. colour-mix() is not available on
+   Chromium 88 and an alias cannot carry an alpha, so they are written out
+   here. Light: the shell's surface (lit), the shell's ink (shade) and the
+   knight's ink (contact), each at an alpha. Dark: the board ink (lit) and
+   black (shade, contact), each at an alpha.
+
+   A visit number is small text held to 4.5:1, and in the dark theme a light
+   lip under a light figure would pull that down (3.4:1 against the lighter
+   square), so --kt-number-lip is the lip under a number alone: the same lip as
+   a dot's on the light theme, none on the dark one. */
 .kt-screen,
 .kt-home,
 .kt-tutorial {
   --kt-square-light: #e4dfd3;
   --kt-square-dark: #c5c0b1;
   --kt-board-ink: #36433b;
+  --kt-piece: #fbf7ee;
+  --kt-piece-edge: #2a241e;
+  --kt-lit: rgba(255, 253, 248, 0.55);
+  --kt-shade: rgba(35, 42, 51, 0.3);
+  --kt-contact: rgba(42, 36, 30, 0.32);
+  --kt-number-lip: var(--kt-lit);
 }
 :root[data-theme='dark'] .kt-screen,
 :root[data-theme='dark'] .kt-home,
@@ -12,6 +48,16 @@
   --kt-square-light: #677368;
   --kt-square-dark: #46564d;
   --kt-board-ink: #f8f7ee;
+  /* The piece is not swapped with the theme. */
+  --kt-piece: #fbf7ee;
+  --kt-piece-edge: #2a241e;
+  /* The marks are light on a dark board, so the lip is a faint light and the
+     shade stays below 0.19: any more takes the top row of a dot under 3:1
+     against the lighter square (ui/contrast.test.ts measures that row). */
+  --kt-lit: rgba(248, 247, 238, 0.16);
+  --kt-shade: rgba(0, 0, 0, 0.18);
+  --kt-contact: rgba(0, 0, 0, 0.45);
+  --kt-number-lip: transparent;
 }
 .kt-screen {
   --game-shell-max: 560px;
@@ -136,12 +182,20 @@
   font-size: clamp(12px, 3.2vw, 18px);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  /* Letterpress: a hairline of light under the figure, no blur, so the glyph
+     itself is not softened at 12px. The dark theme has none (see the top). */
+  text-shadow: 0 1px 0 var(--kt-number-lip);
 }
 .kt-move-dot {
   width: 16%;
   height: 16%;
   border-radius: 50%;
   background: var(--kt-board-ink);
+  /* The same press, as a dimple: the lip below catches the light, the wall
+     above is in shade. The shade is inset, so the dot's size is unchanged. */
+  box-shadow:
+    0 1px 0 var(--kt-lit),
+    inset 0 1px 1px var(--kt-shade);
 }
 .kt-cell:focus-visible {
   outline: 2px dotted var(--kt-board-ink);
@@ -156,8 +210,8 @@
 }
 .kt-piece path,
 .kt-piece circle {
-  fill: #fbf7ee;
-  stroke: #2a241e;
+  fill: var(--kt-piece);
+  stroke: var(--kt-piece-edge);
   stroke-width: 1.6;
   stroke-linejoin: round;
   stroke-linecap: round;
@@ -166,14 +220,73 @@
   fill: none;
 }
 .kt-piece .knight-eye {
-  fill: #2a241e;
+  fill: var(--kt-piece-edge);
   stroke: none;
 }
+/* The knight is a child of its square's button, so every move mounts a new
+   one and the landing below plays exactly once per move, with no script and
+   no timer; a re-render of the same square does not replay it. The tutorial's
+   figure is not a board cell and stays still. */
 .kt-cell > .kt-piece {
   position: absolute;
   inset: 2%;
   width: 96%;
   height: 96%;
+  animation: kt-settle 140ms ease-out;
+}
+/* The base's contact shadow, under the knight (::before paints before the
+   svg and the current-square frame). The svg fills 96% of the cell, so the
+   pedestal's lower edge, stroke included, is at about 88% of the cell's
+   height and its width spans about 23% to 77%; the ellipse is centred on that
+   edge and its radii are 33% across and 9% down, so what shows is its lower
+   half, a strip about 9% of the cell tall just under the base. On the 8x8
+   board (cells of about 33 to 39px) the current square's frame sits 2px inside
+   the cell and covers part of that strip, so the shadow is modest there; 9%
+   keeps the ellipse inside the cell (88% + 9% < 100%). */
+.kt-cell.kt-current::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 33% 9% at 50% 88%,
+    var(--kt-contact) 0,
+    var(--kt-contact) 40%,
+    transparent 100%
+  );
+  animation: kt-shadow-in 140ms ease-out;
+}
+/* One 140ms landing per move, never a loop: the knight drops about 4% of its
+   own height onto the square while the shadow comes up. Transform and opacity
+   only, on two small elements, once per move. */
+@keyframes kt-settle {
+  from {
+    transform: translateY(-4%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes kt-shadow-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+/* Reduced Motion (OS setting or the app's): the knight is simply where it
+   landed. src/ui/styles.css already collapses every animation, pseudo-elements
+   included; this says so for the two this board adds. */
+@media (prefers-reduced-motion: reduce) {
+  .kt-cell > .kt-piece,
+  .kt-cell.kt-current::before {
+    animation: none;
+  }
+}
+:root[data-reduced-motion='true'] .kt-cell > .kt-piece,
+:root[data-reduced-motion='true'] .kt-cell.kt-current::before {
+  animation: none;
 }
 .kt-status {
   width: var(--kt-size);

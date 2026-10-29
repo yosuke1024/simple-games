@@ -70,6 +70,32 @@ describe('Knight’s Tour UI', () => {
     await settle();
     expect((await loadSavedGame(view.kv))!.path).toEqual(initialPath);
   });
+  it('mounts the knight afresh on each move, so its one-shot landing plays once per move', async () => {
+    // The landing is a CSS animation on `.kt-cell > .kt-piece` and the contact
+    // shadow's fade on `.kt-current::before` (ui/knight-tour.css). Both play when
+    // the element appears, so the knight must be a new node in the new square
+    // after a move, and the very same node through a render that moves nothing.
+    const session = createSession(5, 7);
+    mount(store(session));
+    await settle();
+    const first = session.path[0]!,
+      next = routeFor(5, 7)[1]!;
+    const knight = cell(first).querySelector('.kt-piece');
+    expect(knight).not.toBeNull();
+    expect(cell(first)).toHaveClass('kt-current');
+    cell(next).focus();
+    await settle();
+    expect(cell(first).querySelector('.kt-piece')).toBe(knight);
+    fireEvent.click(cell(next));
+    await settle();
+    expect(document.querySelectorAll('.kt-piece')).toHaveLength(1);
+    expect(cell(first).querySelector('.kt-piece')).toBeNull();
+    expect(cell(first)).not.toHaveClass('kt-current');
+    const landed = cell(next).querySelector('.kt-piece');
+    expect(landed).not.toBeNull();
+    expect(landed).not.toBe(knight);
+    expect(cell(next)).toHaveClass('kt-current');
+  });
   it('completes a proven route, offers result sharing and permits unlimited terminal undo', async () => {
     const route = routeFor(5, 8),
       session = { ...createSession(5, 8), path: route.slice(0, -1) };
