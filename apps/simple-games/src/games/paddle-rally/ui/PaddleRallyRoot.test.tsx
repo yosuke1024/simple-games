@@ -130,3 +130,36 @@ it('does not count serve-waiting time and allows keyboard aiming before serving'
   const stats = await kv.get(PR_STORAGE_KEYS.stats);
   expect(stats === null ? 0 : JSON.parse(stats).totalPlaySeconds).toBe(0);
 });
+
+it('draws the keys with shell icons and the ball as a lit object at an unchanged radius', async () => {
+  mount();
+  await settle();
+  for (const name of ['Move left', 'Move right']) {
+    const key = screen.getByRole('button', { name });
+    // Text arrows differ per OS webview; the key carries an svg and no glyph.
+    expect(key.querySelector('svg')).not.toBeNull();
+    expect(key.textContent).toBe('');
+  }
+  expect(screen.getByRole('button', { name: 'Move right' }).querySelector('svg')).toHaveClass(
+    'pr-key-arrow-right',
+  );
+  expect(screen.getByRole('button', { name: 'Move left' }).querySelector('svg')).not.toHaveClass(
+    'pr-key-arrow-right',
+  );
+  const ball = document.querySelector('.pr-ball')!;
+  expect(ball.getAttribute('r')).toBe('6');
+  const [, x, y] = /^translate\(([-\d.]+) ([-\d.]+)\)$/.exec(
+    ball.parentElement!.getAttribute('transform') ?? '',
+  )!;
+  const shade = document.querySelector('.pr-ball-shade')!;
+  expect(Number(shade.getAttribute('cx'))).toBeCloseTo(Number(x) + 0.7, 5);
+  expect(Number(shade.getAttribute('cy'))).toBeCloseTo(Number(y) + 2, 5);
+  expect(ball.parentElement!.querySelector('.pr-ball-glint')).not.toBeNull();
+  // The shadow is drawn before both paddles, so a ball slipping past one goes under it.
+  const order = [...document.querySelectorAll('.pr-board > *')];
+  expect(order.indexOf(shade)).toBeLessThan(order.indexOf(document.querySelector('.pr-cpu')!));
+  expect(order.indexOf(shade)).toBeLessThan(order.indexOf(document.querySelector('.pr-player')!));
+  expect(order.indexOf(ball.parentElement!)).toBeGreaterThan(
+    order.indexOf(document.querySelector('.pr-player')!),
+  );
+});

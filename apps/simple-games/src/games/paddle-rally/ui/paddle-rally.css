@@ -50,9 +50,14 @@
   user-select: none;
   overflow: visible;
   border-radius: 13px;
+  /* The collection's board frame, in this order: the lift, the paper ring and
+     its hairline, then the title-tinted glow (docs/PADDLE_RALLY_RULES.md,
+     Visual presentation). */
   box-shadow:
     0 3px 0 var(--line),
-    0 8px 20px var(--accent-ring-soft);
+    0 0 0 3px var(--paper),
+    0 0 0 4px var(--line),
+    0 8px 18px var(--accent-ring-soft);
 }
 .pr-court {
   stroke: var(--line);
@@ -81,22 +86,61 @@
 .pr-center {
   fill: var(--line);
 }
+/* The opponent is drawn in the ink. In dark, --ink is the cream (12:1 on the
+   court) against the player's terracotta (4:1), so the rival would out-shout
+   the paddle being steered; --ink-soft brings the two to the same weight, as
+   the light theme already has them. Position and hue still tell them apart
+   (docs/PADDLE_RALLY_RULES.md, Visual presentation). The Quick Rules figure
+   carries the class so it follows. */
 .pr-cpu {
   fill: var(--ink);
+}
+:root[data-theme='dark'] .pr-cpu {
+  fill: var(--ink-soft);
 }
 .pr-player,
 .pr-ball {
   fill: var(--accent);
 }
+/* The light comes from above: on the light theme this line is the lit top edge
+   of the paddle. In dark, --surface is darker than the paddles, so the same
+   line would read as a groove cut into the top; there it moves down 4px (from
+   2px under the top to 2px above the bottom) and becomes the shade along the
+   lower edge instead. */
 .pr-paddle-edge {
   stroke: var(--surface);
   stroke-width: 1;
   stroke-linecap: round;
   opacity: 0.45;
 }
+:root[data-theme='dark'] .pr-paddle-edge {
+  stroke: var(--paper);
+  opacity: 0.7;
+  transform: translateY(4px);
+}
 .pr-ball {
   stroke: var(--accent);
   stroke-width: 1;
+}
+/* The ball as an object, lit from above like the rest of the board: a contact
+   shadow below-right and a short arc of top light inside. Plain fills and
+   strokes only; this element is redrawn every frame, so no filter. Neither
+   mark carries meaning, the ball is already the accent disc. */
+.pr-ball-shade {
+  fill: var(--accent-ring);
+}
+.pr-ball-glint {
+  fill: none;
+  stroke: var(--surface);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  stroke-opacity: 0.5;
+}
+:root[data-theme='dark'] .pr-ball-shade {
+  fill: var(--paper);
+}
+:root[data-theme='dark'] .pr-ball-glint {
+  stroke: var(--ink);
 }
 .pr-status {
   text-align: center;
@@ -130,21 +174,30 @@
   min-height: 44px;
   padding: 10px 8px;
   touch-action: none;
-  box-shadow:
-    0 2px 0 var(--line),
-    inset 0 1px 0 var(--surface);
 }
+/* The shared key recipe (.action-btn in styles.css): a lit top edge and a 2px
+   lip below, recessed while held, flat when disabled. The arrows are the
+   shell's IconBack, the right one turned half a turn, so every platform draws
+   the same stroke (text arrows differ per OS webview). */
 .pr-controls .btn-secondary {
   background: linear-gradient(var(--surface), var(--paper));
-  font-size: 21px;
+  box-shadow:
+    inset 0 1px 0 var(--surface),
+    0 2px 0 var(--line);
+  font-size: 24px;
   line-height: 1;
+}
+.pr-controls .btn-secondary:active:not(:disabled) {
+  box-shadow: inset 0 1px 2px var(--line);
+}
+.pr-controls .btn-secondary:disabled {
+  box-shadow: none;
 }
 .pr-controls .btn-primary {
   box-shadow: 0 2px 0 var(--accent-ring);
 }
-.pr-controls .btn-secondary:active:not(:disabled) {
-  box-shadow: inset 0 1px 3px var(--line);
-  background: var(--accent-soft);
+.pr-key-arrow-right {
+  transform: rotate(180deg);
 }
 .paddle-rally-screen .game-content {
   overflow-y: auto;
