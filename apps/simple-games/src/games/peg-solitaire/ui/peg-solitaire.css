@@ -1,11 +1,25 @@
 /* Peg Solitaire — all of this game's styling, imported by PegSolitaireRoot.
-   Everything is built from the series tokens in src/ui/styles.css (--surface,
-   --surface-recessed, --ink, --ink-soft, --line, --accent, --radius,
+   The chrome is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --ink-soft, --line, --accent, --accent-ring-soft, --radius,
    --font-display, …) and the accent the shell swaps in for this title
-   (葡萄色, `:root[data-game='peg-solitaire']`), so the game follows the theme
-   without knowing about it. No colour is written here — the one exception
-   being the system colours (Canvas, CanvasText, Highlight) a forced-colours
-   theme hands the board at the end of this file.
+   (葡萄色, `:root[data-game='peg-solitaire']`), so it follows the theme
+   without knowing about it.
+
+   The board itself is wood. That is game content rather than chrome — the
+   standing docs/architecture/css-split.md gives Reversi's felt and Chess's
+   squares — and it reverses the earlier rule that this file writes no colour
+   (docs/PEG_SOLITAIRE_RULES.md §13, §16: the product owner's decision of
+   2026-10-29). Every colour this file writes is in the two blocks directly
+   below and nowhere else: four wood tones the marks are measured against,
+   and six alpha-only shades and lights (shadow, lit lip, shine, edge falloff,
+   foot, cast) that give a hole its depth and a peg its body. They replace the
+   black and white rgba() shadows that were scattered through the rules and
+   that the old "no colour is written here" quietly forgot.
+   ui/contrast.test.ts reads these two blocks, measures every mark that carries
+   meaning against the plate and the floor of a hole in both themes, and fails
+   on a colour literal anywhere else. The one other place colour appears is
+   the system colours (Canvas, CanvasText, Highlight) a forced-colours theme
+   hands the board at the end of this file.
 
    Class names are prefixed `pg-` so this file can never collide with the
    shell or with another game.
@@ -13,9 +27,50 @@
    What each mark means is carried by its SHAPE, never by colour alone
    (docs/PEG_SOLITAIRE_RULES.md §5): the target is a ring around the hole, a
    hole the picked-up peg can land in has a dot inside it, the picked-up peg
-   wears a thick ring and is lifted. The ring, the pit's rim and the dot are
-   drawn in the ink tones, which clear 3:1 on --surface in both themes; the
-   pegs are the accent (ui/contrast.test.ts measures all three). */
+   wears a thick ring and is lifted. The ring and the hole's rim are cut in a
+   darker (light) or lighter (dark) wood, the dot and the picked-up ring are
+   the ink, the pegs are the accent; each clears 3:1 on the plate and on the
+   floor of a hole it can sit over, in both themes. */
+
+:root {
+  --pg-plate-face: #e4ceaa;
+  --pg-plate-edge: #a88a5c;
+  --pg-hole-floor: #b9985f;
+  /* The rim of a hole and the target ring — one tone, so the ring is the
+     same line as the holes it is drawn around. */
+  --pg-rim: #8c6c49;
+  /* Alpha only, no judgement carried: how deep a hole is cut, the lit lip
+     under it, a peg's shine, its edge falloff, its short foot and the
+     shadow of a peg that is lifted. A warm brown rather than black, because
+     the light board is wood. */
+  --pg-shade: rgba(58, 38, 16, 0.28);
+  --pg-lip: rgba(255, 246, 226, 0.6);
+  --pg-shine: rgba(255, 255, 255, 0.3);
+  --pg-body: rgba(26, 8, 24, 0.12);
+  --pg-foot: rgba(26, 8, 24, 0.4);
+  --pg-cast: rgba(58, 38, 16, 0.36);
+}
+
+:root[data-theme='dark'] {
+  /* The same wood in a dim room: the plate a step above the paper, its edge
+     lighter than its face so the thickness still shows where a black shadow
+     would vanish into the paper, the floor of a hole darker than the plate,
+     the rim lighter than the floor. */
+  --pg-plate-face: #4a3d2c;
+  --pg-plate-edge: #6e5a3e;
+  --pg-hole-floor: #2f2619;
+  --pg-rim: #b89d77;
+  --pg-shade: rgba(0, 0, 0, 0.5);
+  /* The lit lip is the wood's own lighter tone. */
+  --pg-lip: rgba(184, 157, 119, 0.3);
+  --pg-shine: rgba(255, 255, 255, 0.26);
+  /* Nothing: the dark peg is the accent at 3.25:1 on the plate, and any
+     falloff toward black takes its edge under the 3:1 floor
+     (ui/contrast.test.ts measures the edge with this token applied). */
+  --pg-body: rgba(0, 0, 0, 0);
+  --pg-foot: rgba(0, 0, 0, 0.55);
+  --pg-cast: rgba(0, 0, 0, 0.6);
+}
 
 /* ---------- game screen ---------- */
 
@@ -80,7 +135,10 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Positioned, so it paints above the board's soft shadow (a positioned
+   element, the plate, would otherwise be drawn over this unpositioned text). */
 .pg-status {
+  position: relative;
   margin: 0;
   min-height: 1.5em;
   font-size: 15px;
@@ -98,7 +156,17 @@
 
 /* The board's own shape behind the holes (components/BoardParts.tsx): a
    one-pitch stroke with round joins along the outer hole centres, its edge a
-   slightly wider stroke underneath. */
+   slightly wider stroke underneath. The shape is the stroke, so a colour is
+   set as fill AND stroke on both.
+
+   The lift is a filter rather than a box-shadow, because a box-shadow follows
+   the svg's rectangle and not the cross or the triangle. The hard 3px drop
+   comes first so it stays visible and is the board's thickness — the edge
+   wood, not a black shadow that would vanish into the dark paper — and the
+   soft accent wash under it is the series' board lift (the same `0 8px 18px
+   var(--accent-ring-soft)` as every other board's frame). The plate is
+   static: the pegs that move are other elements, so this is rasterised once
+   per resize and never per frame. */
 .pg-plate {
   position: absolute;
   inset: 0;
@@ -106,6 +174,7 @@
   height: 100%;
   overflow: visible;
   pointer-events: none;
+  filter: drop-shadow(0 3px 0 var(--pg-plate-edge)) drop-shadow(0 8px 18px var(--accent-ring-soft));
 }
 
 .pg-plate-edge,
@@ -115,14 +184,14 @@
 }
 
 .pg-plate-edge {
-  fill: var(--line);
-  stroke: var(--line);
+  fill: var(--pg-plate-edge);
+  stroke: var(--pg-plate-edge);
   stroke-width: 1.06;
 }
 
 .pg-plate-face {
-  fill: var(--surface);
-  stroke: var(--surface);
+  fill: var(--pg-plate-face);
+  stroke: var(--pg-plate-face);
   stroke-width: 1;
 }
 
@@ -161,24 +230,33 @@
   border-radius: 50%;
 }
 
-/* The target: a ring near the hole's edge, outside even a peg's disc. */
+/* The target: a ring near the hole's edge, outside even a peg's disc, cut
+   into the wood (a lit lip under it) — still a line, never a tint (§5). */
 .pg-ring::before {
   left: 5%;
   top: 5%;
   width: 90%;
   height: 90%;
   box-sizing: border-box;
-  border: 2.5px solid var(--ink-soft);
+  border: 2.5px solid var(--pg-rim);
+  box-shadow: 0 1px 0 var(--pg-lip);
 }
 
-/* The hole itself, rimmed so an empty hole reads without a peg beside it. */
+/* The hole itself, cut into the plate: rimmed so an empty hole reads without
+   a peg beside it, shaded at the top where the wall hides the light, and
+   catching it on the lower lip. It is wider than the peg (68% against 60%),
+   so a peg sits in it with a sliver of the dark floor all round. */
 .pg-pit::before {
-  left: 26%;
-  top: 26%;
-  width: 48%;
-  height: 48%;
-  background: var(--surface-recessed);
-  box-shadow: inset 0 0 0 1.5px var(--ink-soft);
+  left: 16%;
+  top: 16%;
+  width: 68%;
+  height: 68%;
+  background: var(--pg-hole-floor);
+  background-image: linear-gradient(180deg, var(--pg-shade), transparent 55%);
+  box-shadow:
+    inset 0 0 0 1.5px var(--pg-rim),
+    inset 0 2px 3px var(--pg-shade),
+    0 1px 0 var(--pg-lip);
 }
 
 /* A hole the picked-up peg can land in: a dot inside it (§5). */
@@ -190,19 +268,33 @@
   background: var(--ink);
 }
 
-/* The peg: the accent disc, lit from the top so it reads as standing. */
+/* The peg: the accent disc, lit from the top so it reads as standing. Its
+   body falls off toward the edge, a short foot under it is the side of the
+   cylinder, and the softer shade is where it touches the floor of the hole.
+   The body gradient is `closest-side` so its 100% stop is the rim of the disc:
+   the default (farthest-corner) would put the rim at about 70% and leave the
+   edge at 0.02 instead of the --pg-body alpha the contrast test measures. */
 .pg-peg::before {
-  left: 19%;
-  top: 19%;
-  width: 62%;
-  height: 62%;
+  left: 20%;
+  top: 20%;
+  width: 60%;
+  height: 60%;
   background: var(--accent);
-  background-image: radial-gradient(
-    circle at 35% 30%,
-    rgba(255, 255, 255, 0.32),
-    rgba(255, 255, 255, 0) 55%
-  );
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  background-image:
+    radial-gradient(circle at 35% 30%, var(--pg-shine), transparent 55%),
+    radial-gradient(circle closest-side at 50% 50%, transparent 64%, var(--pg-body) 100%);
+  box-shadow:
+    0 1px 0 var(--pg-foot),
+    0 2px 3px var(--pg-shade);
+}
+
+/* Picking a peg up and putting it back is a short rise, not a cut: only the
+   transform and the opacity move (§13). It is on the peg's own layer, never
+   on a pseudo-element (styles.css, the Reduced Motion note). */
+.pg-peg {
+  transition:
+    transform 120ms ease-out,
+    opacity 120ms ease-out;
 }
 
 /* Picked up: a thick ring and a lifted shadow — never colour alone (§5). */
@@ -214,7 +306,7 @@
   box-shadow:
     0 0 0 2px var(--surface),
     0 0 0 5px var(--ink),
-    0 6px 10px rgba(0, 0, 0, 0.28);
+    0 6px 10px var(--pg-cast);
 }
 
 /* While it is carried, the hole it came from keeps a faint copy of it. */
@@ -232,7 +324,10 @@
 }
 
 .pg-hole-hover .pg-pit::before {
-  box-shadow: inset 0 0 0 3px var(--accent);
+  box-shadow:
+    inset 0 0 0 3px var(--accent),
+    inset 0 2px 3px var(--pg-shade),
+    0 1px 0 var(--pg-lip);
 }
 
 /* The peg in the hand: drawn above the board, following the finger. It is
@@ -252,15 +347,17 @@
   box-shadow:
     0 0 0 2px var(--surface),
     0 0 0 5px var(--ink),
-    0 10px 16px rgba(0, 0, 0, 0.3);
+    0 10px 16px var(--pg-cast);
 }
 
 /* ---------- the jump (§13) ---------- */
 
-/* The jumper slides the two pitches from where it was; the jumped peg fades
-   where it stood. Nothing else moves — no particles, no shake. The screen
-   adds these classes only when motion is allowed (useReducedMotion), and the
-   shared reduced-motion rule would collapse them anyway. */
+/* The jumper is lifted, carried the two pitches and set down; the jumped peg
+   is picked up and goes. Nothing else moves — no particles, no shake — and
+   only the transform and the opacity do, so a low-spec WebView composites it.
+   The screen adds these classes only when motion is allowed
+   (useReducedMotion), and the rules at the end of this section end them under
+   both Reduced Motion switches as well. */
 /* The hole the jumper lands in sits above its neighbours for as long as
    the board its jump made is drawn (PegBoard), so the travelling peg passes
    over the pits and the fading peg it crosses whichever way it jumps — and
@@ -271,8 +368,17 @@
   z-index: 1;
 }
 
+/* The slide is the span's transform and the lift is its disc's, so the two
+   do not share one keyframe list — each interval of a keyframe list would
+   ease on its own and the speed would ripple. The lift is the same 1.12 as
+   the peg in the hand (.pg-peg-held): up fast, held while it travels, down at
+   the end; the disc's shadow scales with it. */
 .pg-peg-arrive {
-  animation: pg-arrive 160ms ease-out;
+  animation: pg-arrive 200ms cubic-bezier(0.25, 0.7, 0.3, 1);
+}
+
+.pg-peg-arrive::before {
+  animation: pg-lift 200ms ease-in-out;
 }
 
 @keyframes pg-arrive {
@@ -285,20 +391,73 @@
   }
 }
 
+@keyframes pg-lift {
+  0% {
+    transform: scale(1);
+  }
+
+  25%,
+  65% {
+    transform: scale(1.12);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* The jumped peg stays where it was for the first 50ms — the jumper is
+   passing over it — then is lifted away and fades, not shrunk into the hole.
+   No fill before the delay: until it starts the peg is drawn as it was. */
 .pg-peg-vanish {
-  animation: pg-vanish 200ms ease-out forwards;
+  animation: pg-vanish 200ms ease-in 50ms forwards;
 }
 
 @keyframes pg-vanish {
   from {
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0) scale(1);
   }
 
   to {
     opacity: 0;
-    transform: scale(0.6);
+    transform: translateY(-16%) scale(1.08);
   }
+}
+
+/* Both Reduced Motion switches, the OS's and the app's. The shared rule in
+   styles.css shortens every duration but not a delay, and the screen does not
+   add the classes at all; this is the third line of defence for the pegs'
+   own motion. A jumped peg that somehow carried its class would already be
+   gone, not left standing. */
+@media (prefers-reduced-motion: reduce) {
+  .pg-peg {
+    transition: none;
+  }
+
+  .pg-peg-arrive,
+  .pg-peg-arrive::before {
+    animation: none;
+  }
+
+  .pg-peg-vanish {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+:root[data-reduced-motion='true'] .pg-peg {
+  transition: none;
+}
+
+:root[data-reduced-motion='true'] .pg-peg-arrive,
+:root[data-reduced-motion='true'] .pg-peg-arrive::before {
+  animation: none;
+}
+
+:root[data-reduced-motion='true'] .pg-peg-vanish {
+  animation: none;
+  opacity: 0;
 }
 
 /* ---------- home ---------- */
@@ -398,6 +557,11 @@
     forced-color-adjust: none;
   }
 
+  /* The wood's lift is a colour of its own; a contrast theme wants none. */
+  .pg-plate {
+    filter: none;
+  }
+
   .pg-plate-edge {
     fill: CanvasText;
     stroke: CanvasText;
@@ -410,6 +574,7 @@
 
   .pg-ring::before {
     border-color: CanvasText;
+    box-shadow: none;
   }
 
   .pg-pit::before {
