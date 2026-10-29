@@ -1,3 +1,90 @@
+/* Light Grid — all of this game's styling, imported by LightGridRoot. Screens,
+   buttons, dialogs and the action bar come from the shared stylesheet
+   (ui/styles.css); the accent (a low-chroma rose) is the chrome's only, and
+   class names are prefixed `lg-` so this file never collides with another game.
+
+   The tray, the lamps and the hint's marks below are game content, not chrome:
+   a lit lamp is warm and an unlit one is a dark blue-grey whoever plays, which
+   is the standing docs/architecture/css-split.md gives Light Grid's two states
+   (docs/LIGHT_GRID_RULES.md「Visual design and actionable hints」, the values
+   and their measured ratios are recorded there). Every colour is a token in the
+   two blocks that follow, and nothing below them writes a colour literal;
+   ui/contrast.test.ts measures the pairs that carry meaning in both themes and
+   asserts that. The state is also carried by the mark, a sun on a lit lamp and
+   a ring on an unlit one, so no pair here is the only thing telling the two
+   apart.
+
+   Each cell is a lamp lens in a dark bezel. The light comes from above in both
+   states: a lit lens has a gloss on its upper half, a thicker lower edge and
+   a bezel warmed by it; an unlit lens is the same lens with the gloss nearly
+   gone and a shadow on its upper edge, so it sits recessed. The gloss is an
+   alias of a shared theme token (the lighter of --surface and --ink, as Gem
+   Swap's glint is) laid at an opacity, never a colour of its own. */
+
+:root {
+  --lg-tray: #1c282e;
+  --lg-tray-hi: #22323a;
+  --lg-tray-edge: #647279;
+  --lg-tray-rim: rgba(255, 255, 255, 0.09);
+  --lg-tray-shade: rgba(0, 0, 0, 0.28);
+  --lg-label: #c0cacc;
+  --lg-label-cut: rgba(0, 0, 0, 0.45);
+  --lg-socket: #121b20;
+  --lg-socket-lit: #3b3d31;
+  --lg-lit: #f0dfa6;
+  --lg-lit-edge: #f8edcd;
+  --lg-lit-ink: #544b30;
+  --lg-lit-spec: rgba(255, 255, 255, 0.55);
+  --lg-lit-thick: rgba(120, 92, 24, 0.14);
+  --lg-glow: rgba(240, 223, 166, 0.4);
+  --lg-glow-off: rgba(240, 223, 166, 0);
+  --lg-dark: #2c3c43;
+  --lg-dark-edge: #6a7f88;
+  --lg-dark-ink: #a6b6bc;
+  --lg-dark-recess: rgba(0, 0, 0, 0.3);
+  --lg-dark-lip: rgba(255, 255, 255, 0.06);
+  --lg-gloss: var(--surface);
+  --lg-gloss-on: 0.4;
+  --lg-gloss-off: 0.06;
+  --lg-hint: #86344d;
+  --lg-hint-ink: #ffffff;
+  --lg-focus: #ffffff;
+}
+
+:root[data-theme='dark'] {
+  /* The lit lamp a step down, so it does not glare in a dark room, and its glow
+     a step up, because the same light shows more there. The tray's edge is
+     lifted too: the tray is 1.19:1 to the dark paper, so the edge and the
+     collection's rings are what outline it. */
+  --lg-tray: #1c282e;
+  --lg-tray-hi: #22323a;
+  --lg-tray-edge: #76868d;
+  --lg-tray-rim: rgba(255, 255, 255, 0.12);
+  --lg-tray-shade: rgba(0, 0, 0, 0.36);
+  --lg-label: #c0cacc;
+  --lg-label-cut: rgba(0, 0, 0, 0.45);
+  --lg-socket: #0e1519;
+  --lg-socket-lit: #37392d;
+  --lg-lit: #e4d29a;
+  --lg-lit-edge: #f0e6c7;
+  --lg-lit-ink: #544b30;
+  --lg-lit-spec: rgba(255, 255, 255, 0.45);
+  --lg-lit-thick: rgba(120, 92, 24, 0.18);
+  --lg-glow: rgba(228, 210, 154, 0.52);
+  --lg-glow-off: rgba(228, 210, 154, 0);
+  --lg-dark: #2c3c43;
+  --lg-dark-edge: #6a7f88;
+  --lg-dark-ink: #a6b6bc;
+  --lg-dark-recess: rgba(0, 0, 0, 0.36);
+  --lg-dark-lip: rgba(255, 255, 255, 0.06);
+  --lg-gloss: var(--ink);
+  --lg-gloss-on: 0.4;
+  --lg-gloss-off: 0.06;
+  --lg-hint: #86344d;
+  --lg-hint-ink: #ffffff;
+  --lg-focus: #ffffff;
+}
+
 .lg-screen .game-content {
   overflow-y: auto;
 }
@@ -68,13 +155,17 @@
   box-sizing: border-box;
   margin: 0 auto;
   padding: 10px;
-  background: #1c282e;
-  border: 1px solid #647279;
+  background: linear-gradient(180deg, var(--lg-tray-hi), var(--lg-tray));
+  border: 1px solid var(--lg-tray-edge);
   border-radius: 10px;
 
-  /* A paper edge and shallow lift on the whole board; external rings remain
-     visible around flush child cells without changing board geometry. */
+  /* The tray has a thickness: a rim of light along its upper edge and a shade
+     along the lower one, inside. Then the collection's board frame, the lift
+     first: a paper edge and shallow lift on the whole board; external rings
+     remain visible around flush child cells without changing board geometry. */
   box-shadow:
+    inset 0 1px 0 var(--lg-tray-rim),
+    inset 0 -2px 0 var(--lg-tray-shade),
     0 3px 0 var(--line),
     0 0 0 3px var(--paper),
     0 0 0 4px var(--line),
@@ -84,7 +175,10 @@
 .lg-row-labels {
   display: grid;
   gap: 6px;
-  color: #c0cacc;
+  color: var(--lg-label);
+
+  /* Cut into the tray rather than printed on it. */
+  text-shadow: 0 -1px 0 var(--lg-label-cut);
   text-align: center;
   font-size: 10px;
   font-weight: 600;
@@ -121,27 +215,103 @@
   cursor: pointer;
   touch-action: manipulation;
 }
+/* A lens: a face, a gloss on its upper half, and a bezel (the 2px ring) in the
+   gap. The two states list the same four shadows in the same order, inset or
+   not, because a transition interpolates a shadow list only when the lists
+   match; the glow of an unlit lens is the lit glow at no opacity for the same
+   reason. The gloss lives on ::before because a gradient is not interpolated,
+   but an opacity is. It rides under the mark (.lg-light-symbol is positioned),
+   and the glow has faded out by the far side of the 6px gap, so it does not
+   reach a neighbour's mark. */
+.lg-cell::before,
+.lg-figure > span::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 5px;
+  background: linear-gradient(180deg, var(--lg-gloss), transparent 50%);
+  pointer-events: none;
+}
 .lg-lit {
-  color: #544b30;
-  background: #f0dfa6;
-  border-color: #f8edcd;
+  color: var(--lg-lit-ink);
+  background: var(--lg-lit);
+  border-color: var(--lg-lit-edge);
+  box-shadow:
+    inset 0 1px 0 var(--lg-lit-spec),
+    inset 0 -3px 0 var(--lg-lit-thick),
+    0 0 0 2px var(--lg-socket-lit),
+    0 0 6px 1px var(--lg-glow);
 }
 .lg-dark {
-  color: #a6b6bc;
-  background: #2c3c43;
-  border-color: #53656d;
+  color: var(--lg-dark-ink);
+  background: var(--lg-dark);
+  border-color: var(--lg-dark-edge);
+  box-shadow:
+    inset 0 2px 0 var(--lg-dark-recess),
+    inset 0 -1px 0 var(--lg-dark-lip),
+    0 0 0 2px var(--lg-socket),
+    0 0 6px 1px var(--lg-glow-off);
 }
+.lg-lit::before {
+  opacity: var(--lg-gloss-on);
+}
+.lg-dark::before {
+  opacity: var(--lg-gloss-off);
+}
+
+/* A lamp comes on quickly and cools more slowly (the filament's afterglow):
+   each transition runs to the state the cell is changing to, so the lit rules
+   set the fast times and the unlit ones the slow. One-shot CSS transitions, no
+   loop, no timer. Reduced Motion ends them: the shared rules in ui/styles.css
+   take every transition to 0.01ms and every pseudo-element's to none, under the
+   OS setting and under :root[data-reduced-motion='true'], so this game writes
+   no exception of its own (ui/contrast.test.ts pins that those rules exist). */
+.lg-lit,
+.lg-dark {
+  transition:
+    background-color 0.1s ease-out,
+    border-color 0.1s ease-out,
+    color 0.1s ease-out,
+    box-shadow 0.1s ease-out,
+    transform 0.06s ease-out;
+}
+.lg-dark {
+  transition:
+    background-color 0.22s ease-out,
+    border-color 0.22s ease-out,
+    color 0.22s ease-out,
+    box-shadow 0.22s ease-out,
+    transform 0.06s ease-out;
+}
+.lg-lit::before {
+  transition: opacity 0.1s ease-out;
+}
+.lg-dark::before {
+  transition: opacity 0.22s ease-out;
+}
+
+/* Pressing sinks the lens a pixel, the grammar of the shared action keys. */
+.lg-cell:active {
+  transform: translateY(1px);
+}
+
+/* The mark scales with the cell (3×3 cells are about 89px, 5×5 about 51px) so
+   a big lens is not left with a small thin mark: 40% of a lit lens, 33% of an
+   unlit one, never below the 24px / 20px of the 5×5 board nor above 40px / 34px.
+   The viewBox is square, so the height follows; the stroke is in viewBox units
+   and scales with it. */
 .lg-light-symbol {
-  width: 24px;
-  height: 24px;
+  position: relative;
+  width: clamp(24px, 40%, 40px);
+  height: auto;
+  aspect-ratio: 1;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.5;
   stroke-linecap: round;
 }
 .lg-dark .lg-light-symbol {
-  width: 20px;
-  height: 20px;
+  width: clamp(20px, 33%, 34px);
 }
 .lg-affected::after {
   content: '';
@@ -152,7 +322,7 @@
   pointer-events: none;
 }
 .lg-hinted {
-  outline: 2px solid #ffffff;
+  outline: 2px solid var(--lg-focus);
   outline-offset: 1px;
   z-index: 1;
 }
@@ -160,8 +330,8 @@
 .lg-hint-step {
   display: grid;
   place-items: center;
-  background: #86344d;
-  color: #ffffff;
+  background: var(--lg-hint);
+  color: var(--lg-hint-ink);
   font-weight: 800;
   font-size: 12px;
   line-height: 1;
@@ -173,10 +343,10 @@
   right: -5px;
   width: 21px;
   height: 21px;
-  border: 2px solid #ffffff;
+  border: 2px solid var(--lg-hint-ink);
 }
 .lg-cell:focus-visible {
-  outline: 2px solid #ffffff;
+  outline: 2px solid var(--lg-focus);
   outline-offset: 2px;
 }
 .lg-hinted:focus-visible {
@@ -217,9 +387,14 @@
   width: 168px;
   margin: 8px auto;
   padding: 8px;
-  background: #1c282e;
-  border: 1px solid #647279;
+  background: linear-gradient(180deg, var(--lg-tray-hi), var(--lg-tray));
+  border: 1px solid var(--lg-tray-edge);
   border-radius: 8px;
+
+  /* The same thickness as the board's tray. */
+  box-shadow:
+    inset 0 1px 0 var(--lg-tray-rim),
+    inset 0 -2px 0 var(--lg-tray-shade);
 }
 .lg-figure > span {
   position: relative;

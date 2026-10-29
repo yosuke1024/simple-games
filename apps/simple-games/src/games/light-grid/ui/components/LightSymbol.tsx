@@ -1,4 +1,4 @@
-/** Flat lamp marks shared by the board and the illustrated rules. */
+/** Line-drawn sun and ring marks shared by the board and the illustrated rules. */
 export function LightSymbol({ on }: { on: boolean }) {
   return (
     <svg className="lg-light-symbol" viewBox="0 0 24 24" aria-hidden="true">
