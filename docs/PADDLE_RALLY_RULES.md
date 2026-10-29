@@ -81,6 +81,14 @@ shell contracts. An interrupted match may resume from a shortcut. Results offer
 optional sharing using only the displayed score. No Club House, daily mode,
 network, paid features, or new dependency is added.
 
+App banner (2026-10-29): the reserved `BannerSlot` is now the last child of the
+`.screen`, after the scrolling `.game-content` (as in Color Flood), so on a short
+screen the play area scrolls above the native strip instead of the strip
+scrolling with it. Measured on the Android emulator, nothing sat under the strip before or
+after at 360×640 or 411×914 with a 64 px or 90 px slot, at all three
+difficulties, and nothing scrolls. The web build is
+unchanged (`BannerSlot` renders nothing there).
+
 Copy in English, Japanese and the other twelve locales is AI-authored; human
 language review and physical-device verification are not claimed. Automated and
 browser evidence will be recorded in the batch publication plan.

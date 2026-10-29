@@ -143,8 +143,10 @@ export function GameScreen() {
           </button>
         </div>
         <p className="iv-controls-note">{t('invadersControls')}</p>
-        <BannerSlot />
       </div>
+      {/* Outside .game-content, which scrolls on a short screen: the reserved
+          strip stays put under the play area instead of scrolling with it. */}
+      <BannerSlot />
       <ResultOverlay
         session={session}
         best={stats.bestScore}

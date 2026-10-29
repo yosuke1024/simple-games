@@ -182,7 +182,23 @@ not jump when Hint is pressed. The player's chosen 3×3, 4×4 or 5×5 size never
 changes to fit the screen. Game content scrolls within the viewport; the web ad
 reservation stays outside that scroll area so actions remain reachable above
 the fixed ad, including at 320×568 or with enlarged text. The standard header,
-action bar and ad slot remain in place. Layout is awaiting the parent browser
+action bar and ad slot remain in place.
+
+App banner (2026-10-29): in the app the reserved `BannerSlot` sat inside the
+scrolling `.game-content`, so on a short screen the strip scrolled with the
+content and the native banner covered the action bar until the player scrolled
+to the end — measured on the Android emulator at 360×640, the action bar ran
+3 px under a 64 px slot and 29 px under a 90 px one, in every board size. The
+slot is now the last child of the `.screen`, after `.game-content` (as in Color
+Flood), so the play area scrolls above the strip and never under it. The board
+keeps its size: as on the web, a short screen scrolls rather than shrinking the
+5×5 lenses below their touch size. Re-measured: nothing under the strip at
+360×640 or 411×914 with a 64 px or 90 px slot; at 360×640 the play area scrolls
+by 3 px (64 px slot) or 29 px (90 px slot), at 411×914 not at all. The web build
+is unchanged (`BannerSlot` renders nothing there). Emulator screenshots at both
+sizes show the top band of the tray, with the column numbers, painted over in
+the page colour, also before this change; hit-testing puts the tray on top, so
+it looks like a raster artefact, not a layout overlap — not checked on a device. Layout is awaiting the parent browser
 pass for this revision.
 
 Calculated sRGB contrasts, light / dark theme, printed by ui/contrast.test.ts

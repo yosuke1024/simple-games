@@ -87,6 +87,30 @@ Maze Escape(No. 62・64〜66)。Falling Blocks(No. 63)は 2026-10-29 に先行�
       Invaders / Light Grid / Maze Escape / Paddle Rally は `BannerSlot` がスクロールする `.game-content` の中にある
       (測った 2 サイズでは収まった)。2026-10-25 以前に収録したゲームの一部は 64px の枠を定数に含めており、広告が 90px まで
       伸びると最大 26px 足りない可能性がある(未測定)。中央寄せの列は枠が伸びると最大 13px 上へ動く(全ゲーム共通の既存の挙動)
+- [x] **2026-10-29 追記: 正式収録 65 本すべてを測った**(上の「残り」の 2 つ)。この版の debug APK を Android 17 エミュレータ
+      (Pixel 7、日本語)で、各ゲームのホームのモードのボタンを 1 つずつ押してプレイ画面を開き(「誰かと遊ぶ」は 2 台が要るので除く)、
+      411×914(ノッチ 52px)と `wm size` の 360×640(ノッチ 37px)で、枠を 64px と、手で伸ばした 90px の 2 通りにして WebView の
+      DOM を CDP で測った。見たのは (1) 枠の上端より下にある盤・ボタン・文字、(2) 上部バーの下端より上へ出た盤、(3) 上部バー・
+      盤の領域・操作バーのどれかから隣へはみ出した中身(スクロールする領域の中は除く)。**修正前**(全 65 本・2 サイズ):
+      枠の下に潜っていたのは Bubble Pop(411×914 でも 28 / 54px、360×640 で発射台ごと 88 / 114px)・Water Sort(360×640 の
+      チューブ 7 本以上で 43 / 56px、上部バーにも 101px)・Memory Match(360×640 で 2〜6 / 15〜19px)・Yacht(360×640 の 90px で
+      7px)・Light Grid(360×640 で 3 / 29px — 枠がスクロールする中身の中にあった)。上部バーに食い込んでいたのは Block Puzzle
+      (12 / 25px)・Gomoku(6 / 19px)・Dots and Boxes(0 / 13px)・Reversi(0 / 11px)・Unblock Puzzle(0 / 4px)、いずれも
+      360×640。Water Sort はチューブの幅の式が列間 10px で、実際の 12px より狭く見積もるため、幅の足りない棚が 3 段に折れていた
+      (Web 版でも同じ)。**直した**(どれも各ゲームの CSS、`:root[data-sg-app-banner]` の下だけ): 盤の上限にノッチと
+      `--sg-app-banner-reserve` を引く(Bubble Pop・Water Sort・Yacht・Reversi・Gomoku・Dots and Boxes)、64px の枠を数えていた
+      見積もりを 90px で数え直す(Memory Match・Block Puzzle・Unblock Puzzle)、Water Sort の列間を 12px で数える。`BannerSlot` は
+      スクロールする `.game-content` の外へ移した(Light Grid・Hanoi Towers・Invaders・Maze Escape・Paddle Rally — Color Flood と
+      同じ形。Light Grid は文書どおり盤を縮めず、90px の枠のときだけ最大 29px スクロールする)。**修正後の再計測**: 65 本・2 サイズ・
+      64 / 90px のすべてで、枠の下・上部バーの上・隣へのはみ出しが 0px。Web ビルドは触った 21 画面を 360×640 / 390×844 / 412×915 ×
+      広告予約あり / なしで変更前のビルドと突き合わせ、寸法が同じ(違いは乱数の盤のアイコンと文字幅だけ)。ゲームごとの表と方法は
+      [plans/2026-10-29-app-banner-strip-audit.md](plans/2026-10-29-app-banner-strip-audit.md)。**確かめていないこと**: 実際の広告(エミュレータは描かない — 90px は手で伸ばした枠)、実機・iOS・
+      他の画面サイズ・各ゲームの途中の局面(手札が増えた後など)、Nearby の画面。**Web 版に残る重なり**(この版では変えない): 公開版の
+      Bubble Pop は 360×640 で盤の下半分とトレイが、390×844 でもトレイが 116px の広告予約の下にあり、Water Sort は 360 / 390 幅で
+      デイリーの棚が 3 段に折れて戻す・ヒントが画面の外に出る
+- [ ] ADS_POLICY「盤面は決して動かない」と、枠が 64px より伸びたときに盤が上へ動くこと(上の計測で 411×914 の 65 本のうち 45 本が
+      13px、8 本が 26px — 下寄せの配置 —、1 本が 7px 上へ動く。動かないのは 11 本)のどちらを直すか。枠はゲーム画面に入るたびに 64px から
+      作り直され、プラグインが `resumeBanner` のたびに高さを知らせるので、広告が 64px より高い端末では入るたびに動く。製品オーナーの判断待ち
 - [ ] 20 本の実機(Android / iPhone)と低スペック端末(§4)での 1 局、アーケード 5 本(Snake / Bounce Up / Overtake /
       Invaders / Paddle Rally)のネイティブ WebView での操作感。確かめるまで「実機で確認済み」と書かない
 - [ ] タグ `v1.7.0`・AAB / IPA の作成・内部テスト / TestFlight・本番審査への提出(人間の明示的な承認が要る)

@@ -172,8 +172,10 @@ export function GameScreen() {
             {t('hint')}
           </button>
         </div>
-        <BannerSlot />
       </div>
+      {/* Outside .game-content, which scrolls on a short screen: the reserved
+          strip stays put under the play area instead of scrolling with it. */}
+      <BannerSlot />
       <ResultOverlay
         session={session}
         best={stats.boards[session.size].best}

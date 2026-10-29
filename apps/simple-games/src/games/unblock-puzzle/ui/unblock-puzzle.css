@@ -141,6 +141,15 @@
   --ub-chrome: 352px;
 }
 
+/* In the app the chrome's banner term is the native strip's worst case, 90px
+   (`--sg-app-banner-reserve`, ui/styles.css; the bottom inset is already in
+   --ub-safe-y), not the 64px the slot starts at: an ad that grows the slot
+   must not push the board up. Measured on the Android emulator at 360×640,
+   the board rose 4px over the top bar with a 90px slot (§14). */
+:root[data-sg-app-banner] .ub-board {
+  --ub-chrome: 326px;
+}
+
 .ub-grid {
   position: relative;
   display: grid;
@@ -747,6 +756,10 @@
 
   :root[data-sg-web-ads] .ub-board {
     --ub-chrome: 236px;
+  }
+
+  :root[data-sg-app-banner] .ub-board {
+    --ub-chrome: 146px;
   }
 
   .ub-figure {

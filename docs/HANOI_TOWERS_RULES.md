@@ -79,6 +79,14 @@ while retaining the readable physical disk colours. The home mark is a drawn
 stack of disks, matching the actual board. Compact-height layouts retain the
 existing board and control footprint and scrollable ad-safe content.
 
+App banner (2026-10-29): the reserved `BannerSlot` is now the last child of the
+`.screen`, after the scrolling `.game-content` (as in Color Flood), so on a short
+screen the play area scrolls above the native strip instead of the strip
+scrolling with it. Measured on the Android emulator, nothing sat under the strip before or
+after at 360×640 or 411×914 with a 64 px or 90 px slot; at 360×640 with a 90 px
+slot the play area now scrolls by 3 px. The web build is
+unchanged (`BannerSlot` renders nothing there).
+
 Lifting and placing is the one motion on the board. This is the owner's decision
 of 2026-10-29, and it reverses the 2026-10-23 sentence "Small shadows give the
 pieces depth without movement or extra animation". Selecting a peg lifts its top

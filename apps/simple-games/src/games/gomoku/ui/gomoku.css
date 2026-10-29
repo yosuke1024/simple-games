@@ -434,3 +434,42 @@
     --game-shell-max: 600px;
   }
 }
+
+/* ---------- the app's banner strip ----------
+
+   In the app the board's height term (52vh of the screen) does not see the
+   notch or the native banner strip. Measured on the Android emulator at
+   360×640 (37px notch), the board rose 6px at a 64px slot and 19px at a
+   90px one over the top bar and the column ran
+   into the action bar below. So under `:root[data-sg-app-banner]` the board is
+   also no wider than the height left: --gm-chrome is everything stacked
+   with it — the top bar 64, this body's padding 14, the gap 10, the two-line turn
+   line 36.4 and the action bar 77 — and --gm-edges is the notch (.screen's top
+   padding) and the strip's worst case (`--sg-app-banner-reserve`,
+   ui/styles.css: 90px and the bottom inset), so the board keeps its size when
+   an ad taller than the 64px slot arrives. Each tier keeps its own terms. The
+   web build keeps its board as published. */
+
+.gm-body {
+  --gm-chrome: 202px;
+  --gm-edges: calc(env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve, 0px));
+}
+
+:root[data-sg-app-banner] .gm-board {
+  width: min(100%, 420px, 52vh, calc(100vh - var(--gm-chrome) - var(--gm-edges)));
+  width: min(100%, 420px, 52vh, calc(100svh - var(--gm-chrome) - var(--gm-edges)));
+}
+
+@media (min-width: 600px) {
+  :root[data-sg-app-banner] .gm-board {
+    width: min(100%, 520px, 58vh, calc(100vh - var(--gm-chrome) - var(--gm-edges)));
+    width: min(100%, 520px, 58svh, calc(100svh - var(--gm-chrome) - var(--gm-edges)));
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  :root[data-sg-app-banner] .gm-board {
+    width: min(100%, 600px, calc(100vh - 290px - var(--gm-edges)));
+    width: min(100%, 600px, calc(100svh - 290px - var(--gm-edges)));
+  }
+}

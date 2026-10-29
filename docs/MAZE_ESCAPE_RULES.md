@@ -167,6 +167,14 @@ including with the Web ad reservation. In the regular mobile layout, the board,
 position/hint text and all controls fit above that reservation. Screenshots were
 visually inspected; these are simulated viewports, not physical-device tests.
 
+App banner (2026-10-29): the reserved `BannerSlot` is now the last child of the
+`.screen`, after the scrolling `.game-content` (as in Color Flood), so on a short
+screen the play area scrolls above the native strip instead of the strip
+scrolling with it. Measured on the Android emulator, nothing sat under the strip before or
+after at 360×640 or 411×914 with a 64 px or 90 px slot, in all three maze sizes,
+and nothing scrolls. The web build is
+unchanged (`BannerSlot` renders nothing there).
+
 Verification on 2026-10-29 (depth cues, token and direction keys): the Maze Escape
 suites, `ui/contrast.test.ts` included, and ESLint and the type check on the files
 touched passed. A static HTML rendering of the board in both themes (5×5, 9×9, the
