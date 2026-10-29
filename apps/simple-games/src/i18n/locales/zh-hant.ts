@@ -139,6 +139,12 @@ export const zhHant: Messages = {
   webAppPromptTitle: '更安靜地玩，從第一次啟動就完全離線。',
   webAppPromptBody: 'App 可以從主畫面直接開啟，並把你的進度儲存在這台裝置上。',
 
+  // PixApps' other apps, at the end of the collection home (issue #276)
+  moreFromPixAppsTitle: 'PixApps 的其他應用程式',
+  moreFromPixAppsBody: '同一開發者的獨立應用程式。功能與價格因應用程式而異。',
+  pixMealTagline: '即時記錄每一餐。幾秒鐘就能修正錯誤。',
+  pixWorkTagline: '掃描名片。留下值得信賴的聯絡人。',
+
   // The optional share on a result screen. {game} is the registry title, a
   // proper noun that is not translated; `cleared` is only used for a real win.
   shareAction: '分享',

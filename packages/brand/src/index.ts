@@ -107,6 +107,41 @@ export const PLAY_STORE_URL =
 export const APP_STORE_URL = 'https://apps.apple.com/app/id6802321137';
 
 /**
+ * PixApps' other apps: the two rows at the very end of the collection home
+ * (issue #276, apps/simple-games/src/ui/components/MoreFromPixApps.tsx;
+ * docs/PRODUCT_PRINCIPLES.md「PixApps の自社アプリの一覧は広告ではない」).
+ * Names and addresses only. What each app is for is on-screen wording and
+ * lives in the locale catalogs, like every other sentence (see the header).
+ *
+ * The store addresses are the ones the apps' own pages publish (sibling
+ * `pixapps-landing`, public/index.html), with the App Store links in the
+ * storefront-less form for the same reason as APP_STORE_URL above. On
+ * 2026-10-29 every one of them resolved, and each listing named the same
+ * developer as Simple Games' own. The landing page is for a browser that
+ * cannot be told apart (a desktop), which has no store to install from.
+ */
+export interface PixAppsApp {
+  readonly name: string;
+  readonly playStoreUrl: string;
+  readonly appStoreUrl: string;
+  readonly landingUrl: string;
+}
+
+export const PIXMEAL: PixAppsApp = {
+  name: 'PixMeal',
+  playStoreUrl: 'https://play.google.com/store/apps/details?id=com.miumiu.mealdiary',
+  appStoreUrl: 'https://apps.apple.com/app/id6766399104',
+  landingUrl: 'https://pixapps.ai/pixmeal/',
+};
+
+export const PIXWORK: PixAppsApp = {
+  name: 'PixWork',
+  playStoreUrl: 'https://play.google.com/store/apps/details?id=com.pixapps.pixwork',
+  appStoreUrl: 'https://apps.apple.com/app/id6779703689',
+  landingUrl: 'https://pixapps.ai/pixwork/',
+};
+
+/**
  * The series base: a warm, paper-like surface that stays readable for a long
  * sitting and calm in a dark cabin. Every Simple Games title shares these —
  * they are what makes two different games look like the same series.

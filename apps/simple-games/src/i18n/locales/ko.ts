@@ -142,6 +142,12 @@ export const ko: Messages = {
   webAppPromptTitle: '더 조용하게, 처음 실행할 때부터 완전히 오프라인으로.',
   webAppPromptBody: '앱은 홈 화면에서 바로 실행되고, 진행 상황은 기기에 저장됩니다.',
 
+  // PixApps' other apps, at the end of the collection home (issue #276)
+  moreFromPixAppsTitle: 'PixApps의 다른 앱',
+  moreFromPixAppsBody: '같은 개발자가 만든 별도의 앱입니다. 기능과 가격은 앱마다 다릅니다.',
+  pixMealTagline: '식사를 바로 기록하세요. 실수는 몇 초 만에 고칠 수 있어요.',
+  pixWorkTagline: '명함을 스캔하세요. 믿을 수 있는 연락처로 남겨 두세요.',
+
   // The optional share on a result screen. {game} is the registry title, a
   // proper noun that is not translated; `cleared` is only used for a real win.
   shareAction: '공유',

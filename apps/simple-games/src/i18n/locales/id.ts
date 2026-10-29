@@ -145,6 +145,13 @@ export const id: Messages = {
   webAppPromptBody:
     'Aplikasi bisa dibuka langsung dari layar beranda dan menyimpan progres kamu di perangkat.',
 
+  // PixApps' other apps, at the end of the collection home (issue #276)
+  moreFromPixAppsTitle: 'Aplikasi lain dari PixApps',
+  moreFromPixAppsBody:
+    'Aplikasi terpisah dari pengembang yang sama. Fitur dan harga berbeda di setiap aplikasi.',
+  pixMealTagline: 'Catat makanan seketika. Perbaiki kesalahan dalam hitungan detik.',
+  pixWorkTagline: 'Pindai kartu nama. Simpan kontak yang bisa diandalkan.',
+
   // The optional share on a result screen. {game} is the registry title, a
   // proper noun that is not translated; `cleared` is only used for a real win.
   shareAction: 'Bagikan',

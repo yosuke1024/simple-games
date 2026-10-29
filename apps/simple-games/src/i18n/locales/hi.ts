@@ -145,6 +145,12 @@ export const hi: Messages = {
   webAppPromptTitle: 'और भी शांति से खेलें — पहली बार खोलने से ही पूरी तरह ऑफ़लाइन।',
   webAppPromptBody: 'ऐप आपकी होम स्क्रीन से खुलता है और आपकी प्रगति आपके डिवाइस में सहेजता है।',
 
+  // PixApps' other apps, at the end of the collection home (issue #276)
+  moreFromPixAppsTitle: 'PixApps के और ऐप्स',
+  moreFromPixAppsBody: 'एक ही डेवलपर के अलग ऐप्स। सुविधाएँ और कीमतें हर ऐप में अलग हैं।',
+  pixMealTagline: 'भोजन तुरंत दर्ज करें। गलतियाँ पलों में ठीक करें।',
+  pixWorkTagline: 'विज़िटिंग कार्ड स्कैन करें। भरोसेमंद संपर्क सहेजें।',
+
   // The optional share on a result screen. {game} is the registry title, a
   // proper noun that is not translated; `cleared` is only used for a real win.
   shareAction: 'साझा करें',

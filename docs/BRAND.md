@@ -275,6 +275,37 @@ OSS を先頭に出さない。
 - 上の「表現ルール」はそのまま効く: Web に対して「初回から完全オフライン」と書かない、
   広告があるのに「広告なし」と書かない。
 
+## PixApps のほかのアプリの書き方
+
+2026-10-29(issue #276)決定。コレクションホームの最後尾に、同じ開発者の別アプリ
+(PixMeal / PixWork)を並べる「PixApps のほかのアプリ(More from PixApps)」がある
+(方針は [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「PixApps の自社アプリの一覧は広告ではない」)。
+その文言の規則。
+
+- **名前は各アプリの正式名を英字のまま。** PixMeal / PixWork / PixApps は固有名詞で、
+  14 言語とも訳さない(名前は `packages/brand` の定数、文言はカタログ)。ストアの掲載名に
+  付く副題(App Store の "PixMeal: AI Food Tracker" の "AI Food Tracker" の類)は一覧に
+  持ち込まない。
+- **別のアプリであることを必ず言う。** 見出しの下に「同じ開発者の別のアプリで、料金や機能は
+  アプリごとに異なる」の 1 文を置く。Simple Games のコンセプト語(サブスクなし・
+  ログインなし・広告は控えめ・完全オフライン)は、ほかのアプリについては言わない ——
+  各アプリのページによれば、PixMeal には Premium プランと XP・レベル・バッジ、PixWork には
+  サブスクリプションの Plus と Google ログインがあり(2026-10-29 確認)、どちらも App Store の
+  掲載名に「AI」を含む。「同じ開発者だから同じ約束」と読める言い方を作らない。
+- **説明はそのアプリ自身の公開ページの 1 行だけ。** 現在は pixapps.ai のトップの各アプリの
+  タグライン(PixMeal「食事を撮る。間違いは自分で直せる。」/ "Log meals instantly.
+  Correct mistakes in seconds."、PixWork「名刺を撮る。信頼できる連絡先にする。」/ "Scan a
+  card. Keep a contact you can trust.")。新しい主張を書き起こさない(上の「未実装の機能・
+  未検証の性能を公開文面に書かない」)。そのアプリのページの文言が変わったら、こちらを追従させる
+  —— PixWork の公開文言は `pixapps-landing` 側の `tests/pixwork-public-copy.test.js` が守るが、
+  アプリのカタログはその検査の外にある。
+- **煽らない。** "Install now" / "FREE!" / 「今すぐ」「無料」/ 感嘆符 / 特典・限定の類を使わない。
+  "Enjoying Simple Games?" のように遊んでいる人の気分を枕にした呼びかけもしない(この一覧は
+  それを知りたい人が自分で読むもの)。見出しは "More from PixApps" /「PixApps のほかのアプリ」で、
+  「ゲーム」「おすすめ」を名乗らない。
+- **上の「表現ルール」はそのまま効く。** 広告があるのに「広告なし」と書かない、無料の対象を
+  言わずに「無料」と書かない。
+
 ## GitHub リポジトリの公開 metadata
 
 このリポジトリの GitHub 上の Description / Website(API と `gh` では homepage)/
