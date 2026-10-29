@@ -129,6 +129,11 @@ Design philosophy:
 - 2026-10-23 に No. 62〜66 (Invaders / Falling Blocks / Paddle Rally / Hanoi Towers / Maze Escape) を追加。
   5本ともWeb先行公開で、正式収録41本とClub Houseは変更しない。規則は各ルール文書、
   検証・公開記録は `docs/plans/2026-10-23-five-games-62-66.md`。
+  **Falling Blocks(No. 63)は 2026-10-29 に Web 先行公開から取り下げた**(製品オーナーの判断。
+  registry は `channel: 'in-development'`)。テトロミノ + 井戸 + 次のピース + 着地点という
+  組み合わせが Tetris Holding v. Xio Interactive(2012)の論点に重なり、2026-08-07 の計画で
+  同じ理由からテトリス型を見送っていたため。経緯は `docs/FALLING_BLOCKS_RULES.md` 冒頭。
+  Web 版の同期(landing の一覧を `IN_DEVELOPMENT_GAME_IDS` へ移す)は別途。
 
 ### Platforms
 

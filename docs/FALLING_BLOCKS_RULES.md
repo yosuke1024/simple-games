@@ -3,6 +3,17 @@
 この文書が `apps/simple-games/src/games/falling-blocks/` の仕様の正本。
 ゲーム ID は `falling-blocks`、i18n 接頭辞は `fallingBlocks`、保存接頭辞は `fb.`。
 Web 先行公開として追加し、正式収録・Club House 対応は行わない。
+
+**2026-10-29、Web 先行公開から取り下げた(製品オーナーの判断)。** registry の `channel` を
+`'in-development'` に戻し、どのビルドの扉からも開けない(`app/gameChannel.ts`)。理由は権利で、
+7 種のテトロミノ・10 列の井戸・次のピース表示・着地点の輪郭という組み合わせは、
+Tetris Holding v. Xio Interactive(2012)が「表現」として保護を認めた要素の大半に重なる。
+[docs/plans/2026-08-07-checkers-and-gomoku.md](plans/2026-08-07-checkers-and-gomoku.md) は
+同じ理由でテトリス型を見送っており、2026-10-23 の追加はその判断を見直さずに行われていた。
+Web で公開していたのは 2026-10-24(JST)から取り下げの同期まで。この文書は、この組み合わせから
+離れた形に作り替えるか、落とすかが決まるまでの仕様として残す。遊び(落ちてくるブロックを
+並べて消す)自体は著作権の対象ではないが、要素の組み合わせとしての見た目が論点であり、
+1 色の駒や 18 行の井戸では足りないと考える(法的助言ではない)。
 ブランド原則は [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md) が上位にある。
 
 ## 1. 盤面と目的

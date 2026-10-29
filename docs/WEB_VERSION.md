@@ -329,6 +329,7 @@ ADS_POLICY.md 側の項目 3 にも 実施済み の印は付いていない。*
 ## 先行公開(ベータ)
 
 No. 62〜66 (Invaders / Falling Blocks / Paddle Rally / Hanoi Towers / Maze Escape) を2026-10-23に追加。
+Falling Blocks は 2026-10-29 に先行公開から取り下げた(製品オーナーの判断、権利上の理由 — `FALLING_BLOCKS_RULES.md` 冒頭)。
 Web先行公開25本と正式収録41本、合計66本。今回の実装と本番配信の証跡は
 [追加と公開の記録](plans/2026-10-23-five-games-62-66.md)に残す。
 
