@@ -103,9 +103,9 @@
   /* A paper edge and shallow lift on the whole board; external rings remain
      visible around flush child cells without changing board geometry. */
   box-shadow:
+    0 3px 0 var(--line),
     0 0 0 3px var(--paper),
     0 0 0 4px var(--line),
-    0 3px 0 var(--line),
     0 8px 18px var(--accent-ring-soft);
 }
 
