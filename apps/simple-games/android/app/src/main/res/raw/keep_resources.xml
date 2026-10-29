@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Resources the release shrinker cannot see referenced. Cordova's ConfigXmlParser
+     (inside Capacitor) looks up res/xml/config.xml by name, so R8's optimized resource
+     shrinking (gradle.properties) drops it and logs "config.xml is missing!".
+     The legacy shrinker kept it; keep it so the bridge reads the same file as before.
+     This file itself is not packaged. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@xml/config" />
