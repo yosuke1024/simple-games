@@ -4,15 +4,70 @@
    stamps. The board itself is a canvas (components/BrickBoard.tsx) that
    reads the same tokens. */
 
+/* The canvas is 9:16, so at its full width it asks for 16/9 of that in
+   height, and on a short screen the column has less: `max-height: 100%` then
+   cut the box short in height only and squashed the drawing. At 360×640 on
+   the Android emulator it was 336×435 in the app under the 64px slot, 336×409
+   under a 90px one and 336×523 in the app with ads removed; on the web build
+   (headless Chromium) 336×560 without ads, and with ads the page grew
+   instead, so the board kept its shape and its bottom 145px ran past the top
+   of the 116px anchor-ad reservation, the paddle with it (164px at 390×664, a
+   phone browser's height). So its width is also capped by the height left,
+   here and on the wide tiers below (factor 0.5625 = 360/640), and the box
+   keeps its 9:16 shape everywhere while the top bar keeps its height.
+   --bb-chrome is everything stacked with it (the top bar 64, the same in all
+   14 languages, and the body's padding 16) and 4px to spare; --bb-reserve is
+   what the bottom of the screen keeps free: on the web build with ads the
+   anchor-ad reservation and the inset (`:root[data-sg-web-ads] .screen`,
+   ui/styles.css), in the app the native strip's worst case
+   (`--sg-app-banner-reserve`: 90px and the inset), so the board keeps its
+   size when an ad grows the slot, and otherwise (the app with ads removed,
+   the web without ads) the bottom inset. With the notch it makes --bb-edges.
+   Only in that last case does nothing around the board hold the inset back
+   (there is no slot, and .screen has no bottom padding), so --bb-unheld gives
+   it to the canvas as a bottom margin: centred, the board would otherwise
+   reach into it (2px into a 24px gesture inset at 360×640, 14px into a 48px
+   three-button bar). `max-height` leaves room for that margin too: should the
+   top bar grow past the spare (larger system text), the box is cut short by
+   the excess, as it was before, rather than the centred margin box spilling
+   over the top bar. The canvas sits straight in the shell's .game-board-body
+   and nothing of this game wraps it, so it holds these properties itself. The
+   svh form sits under `@supports`: a var() makes a declaration parse, so on a
+   WebView without svh (Chromium 88) it would win over the vh form and then
+   compute to nothing. */
 .bb-canvas {
-  width: min(100%, 360px);
-  max-height: 100%;
+  --bb-chrome: 84px;
+  --bb-reserve: env(safe-area-inset-bottom, 0px);
+  --bb-edges: calc(env(safe-area-inset-top, 0px) + var(--bb-reserve));
+  --bb-unheld: env(safe-area-inset-bottom, 0px);
+}
+
+:root[data-sg-web-ads] .bb-canvas {
+  --bb-reserve: calc(116px + env(safe-area-inset-bottom, 0px));
+  --bb-unheld: 0px;
+}
+
+:root[data-sg-app-banner] .bb-canvas {
+  --bb-reserve: var(--sg-app-banner-reserve);
+  --bb-unheld: 0px;
+}
+
+.bb-canvas {
+  width: min(100%, 360px, calc((100vh - var(--bb-chrome) - var(--bb-edges)) * 0.5625));
+  max-height: calc(100% - var(--bb-unheld));
   height: auto;
+  margin-bottom: var(--bb-unheld);
   display: block;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   touch-action: none;
   cursor: pointer;
+}
+
+@supports (height: 100svh) {
+  .bb-canvas {
+    width: min(100%, 360px, calc((100svh - var(--bb-chrome) - var(--bb-edges)) * 0.5625));
+  }
 }
 
 /* Quick Rules figures (§11): little SVG scenes in the series tokens. */
@@ -22,71 +77,24 @@
   display: block;
 }
 
-/* Wide viewports (issue #93; tiers in ui/styles.css「wide viewports」).
-   The 9:16 board is tall, so on a PC the limit is nearly always the
-   height: width follows from the height that remains under the chrome
-   (factor 0.5625 = 360/640). The canvas backing store follows the
-   displayed size (BrickBoard.tsx), so growing here stays sharp. */
+/* Wide viewports (issue #93; tiers in ui/styles.css「wide viewports」). The
+   9:16 board is tall, so on a PC the limit is nearly always the height: width
+   follows from the height that remains under the chrome (factor 0.5625 =
+   360/640). The canvas backing store follows the displayed size
+   (BrickBoard.tsx), so growing here stays sharp. Each tier keeps its
+   published web ceiling (230px and 210px under the board, which already hold
+   the web's 116px reservation: 150px and 130px more than the 80px stack) and
+   adds the canvas rule's own budget as one more term. In the app that budget
+   counts the strip's worst case without taking it from those terms a second
+   time; on the web with ads it binds only once the safe-area insets add up to
+   more than 10px (30px below 900px or in portrait): with the flat terms
+   alone, an iPad in landscape (a 20px bottom inset) got a page 6px taller
+   than the screen, and its home-screen web app (a 24px notch as well) a board
+   ending 22px inside the reservation. The svh forms sit under `@supports` for
+   the reason above. */
 
 @media (min-width: 600px) {
   .bb-canvas {
-    width: min(100%, 420px, calc((100vh - 230px) * 0.5625));
-    width: min(100%, 420px, calc((100svh - 230px) * 0.5625));
-  }
-}
-
-@media (min-width: 900px) and (orientation: landscape) {
-  .bb-canvas {
-    width: min(100%, 480px, calc((100vh - 210px) * 0.5625));
-    width: min(100%, 480px, calc((100svh - 210px) * 0.5625));
-  }
-}
-
-/* ---------- the app's banner strip ----------
-
-   In the app the board also has to leave the native banner strip free. The
-   canvas is 9:16, so at its full 336px it asks for 597px of height, more than
-   a phone's column leaves, and `max-height: 100%` cut the box short instead,
-   in height only: measured on the Android emulator at 360×640, 336×435 under
-   the 64px slot and 336×409 under a 90px one, so the drawing was squashed by
-   27% and by 32% once an ad grew the slot. Everything else in the column is
-   80px at both (the top bar 64 and the body's padding 16). So under
-   `:root[data-sg-app-banner]` the width is also capped by the height left, as
-   the wide tiers above already do (factor 0.5625 = 360/640), and
-   `max-height` no longer binds: the box keeps its 9:16 shape. --bb-chrome is
-   that 80px and 4px more for longer text in other languages; --bb-edges is
-   the notch (.screen's top padding) and the strip's worst case
-   (`--sg-app-banner-reserve`, ui/styles.css: 90px and the bottom inset). The
-   board is then 228×405 at 360×640 with a 64px slot or a 90px one: it keeps
-   its size and its shape when an ad grows the slot, and only its position may
-   move (docs/ADS_POLICY.md). The wide tiers keep their flat caps and their
-   web height terms (230px and 210px) as ceilings and add the same app budget
-   as a term of their own: those terms already hold the web's anchor-ad
-   reservation (they are 150px and 130px more than the 80px stack), so taking
-   the strip from them as well would shrink the board by that much more than it
-   needs. The web build keeps its board as published. The svh forms sit under
-   `@supports`: a var() makes a declaration parse, so on a WebView without svh
-   (Chromium 88) it would win over the vh form and then compute to nothing.
-   The canvas sits straight in the shell's .game-board-body and nothing of
-   this game wraps it, so it holds the two properties itself. */
-
-.bb-canvas {
-  --bb-chrome: 84px;
-  --bb-edges: calc(env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve, 0px));
-}
-
-:root[data-sg-app-banner] .bb-canvas {
-  width: min(100%, 360px, calc((100vh - var(--bb-chrome) - var(--bb-edges)) * 0.5625));
-}
-
-@supports (height: 100svh) {
-  :root[data-sg-app-banner] .bb-canvas {
-    width: min(100%, 360px, calc((100svh - var(--bb-chrome) - var(--bb-edges)) * 0.5625));
-  }
-}
-
-@media (min-width: 600px) {
-  :root[data-sg-app-banner] .bb-canvas {
     width: min(
       100%,
       420px,
@@ -96,7 +104,7 @@
   }
 
   @supports (height: 100svh) {
-    :root[data-sg-app-banner] .bb-canvas {
+    .bb-canvas {
       width: min(
         100%,
         420px,
@@ -108,7 +116,7 @@
 }
 
 @media (min-width: 900px) and (orientation: landscape) {
-  :root[data-sg-app-banner] .bb-canvas {
+  .bb-canvas {
     width: min(
       100%,
       480px,
@@ -118,7 +126,7 @@
   }
 
   @supports (height: 100svh) {
-    :root[data-sg-app-banner] .bb-canvas {
+    .bb-canvas {
       width: min(
         100%,
         480px,

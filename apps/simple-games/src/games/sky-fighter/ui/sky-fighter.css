@@ -4,15 +4,74 @@
    title. The board itself is a canvas (components/SkyBoard.tsx) that reads
    the same accent tokens. */
 
+/* The canvas is 9:16, so at its full width it asks for 16/9 of that in
+   height, and on a short screen the column has less: `max-height: 100%` then
+   cut the box short in height only and squashed the drawing. At 360×640 on
+   the Android emulator it was 336×415 in the app under the 64px slot, 336×389
+   under a 90px one and 336×503 in the app with ads removed; on the web build
+   (headless Chromium) 336×540 without ads, and with ads the page grew
+   instead, so the board kept its shape and its bottom 165px ran past the top
+   of the 116px anchor-ad reservation, the ship's starting place with it, as
+   it did at 390×664, a phone browser's height (184px); at 390×844 only the
+   board's edge was in (4px). So its width is also capped by the height left,
+   here and on the wide tiers below (factor 0.5625 = 360/640), and the box
+   keeps its 9:16 shape everywhere while the top bar keeps its height.
+   --sf-chrome is everything stacked with it (the top bar 64, the weapon-build
+   line 20 and the body's padding 16) and 4px to spare. The top bar is 64 in
+   all 14 languages at the start of a run, but late in one, on a narrow
+   screen, a long score and extra life dots (§6) wrap its text (101px at 320px
+   wide in English with a 4-digit score and 6 lives). --sf-reserve is what the
+   bottom of the screen keeps free: on the web build with ads the anchor-ad
+   reservation and the inset (`:root[data-sg-web-ads] .screen`,
+   ui/styles.css), in the app the native strip's worst case
+   (`--sg-app-banner-reserve`: 90px and the inset), so the board keeps its
+   size when an ad grows the slot, and otherwise (the app with ads removed,
+   the web without ads) the bottom inset. With the notch it makes --sf-edges.
+   Only in that last case does nothing around the board hold the inset back
+   (there is no slot, and .screen has no bottom padding), so --sf-unheld gives
+   it to the canvas as a bottom margin: centred, the board would otherwise
+   reach into it (2px into a 24px gesture inset at 360×640, 14px into a 48px
+   three-button bar). `max-height` leaves room for that margin too, so when
+   the top bar outgrows the spare the box is cut short by the excess, as it
+   was before, rather than the centred margin box spilling over the weapon
+   line. The properties sit on .sf-board-wrap, the canvas's parent: it has no
+   box of its own (display: contents), but its children inherit from it all
+   the same. The svh form sits under `@supports`: a var() makes a declaration
+   parse, so on a WebView without svh (Chromium 88) it would win over the vh
+   form and then compute to nothing. */
+.sf-board-wrap {
+  --sf-chrome: 104px;
+  --sf-reserve: env(safe-area-inset-bottom, 0px);
+  --sf-edges: calc(env(safe-area-inset-top, 0px) + var(--sf-reserve));
+  --sf-unheld: env(safe-area-inset-bottom, 0px);
+}
+
+:root[data-sg-web-ads] .sf-board-wrap {
+  --sf-reserve: calc(116px + env(safe-area-inset-bottom, 0px));
+  --sf-unheld: 0px;
+}
+
+:root[data-sg-app-banner] .sf-board-wrap {
+  --sf-reserve: var(--sg-app-banner-reserve);
+  --sf-unheld: 0px;
+}
+
 .sf-canvas {
-  width: min(100%, 360px);
-  max-height: 100%;
+  width: min(100%, 360px, calc((100vh - var(--sf-chrome) - var(--sf-edges)) * 0.5625));
+  max-height: calc(100% - var(--sf-unheld));
   height: auto;
+  margin-bottom: var(--sf-unheld);
   display: block;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   touch-action: none;
   cursor: pointer;
+}
+
+@supports (height: 100svh) {
+  .sf-canvas {
+    width: min(100%, 360px, calc((100svh - var(--sf-chrome) - var(--sf-edges)) * 0.5625));
+  }
 }
 
 /* The run's score, glanceable mid-flight: display voice, steady digits. */
@@ -141,72 +200,25 @@
   font-weight: 500;
 }
 
-/* Wide viewports (issue #93; tiers in ui/styles.css「wide viewports」).
-   The 9:16 board is tall, so on a PC the limit is nearly always the
-   height: width follows from the height that remains under the chrome
-   (factor 0.5625 = 360/640). The canvas backing store follows the
-   displayed size (SkyBoard.tsx), so growing here stays sharp. */
+/* Wide viewports (issue #93; tiers in ui/styles.css「wide viewports」). The
+   9:16 board is tall, so on a PC the limit is nearly always the height: width
+   follows from the height that remains under the chrome (factor 0.5625 =
+   360/640). The canvas backing store follows the displayed size
+   (SkyBoard.tsx), so growing here stays sharp. Each tier keeps its published
+   web ceiling (230px and 210px under the board) and adds the canvas rule's
+   own budget as one more term. In the app that budget counts the strip's
+   worst case without taking it from those terms a second time. On the web it
+   binds whenever a flat term is short: 210px is 110px more than the 100px
+   stack, less than the 116px reservation, so from 900px in landscape with ads
+   the page was 6px taller than the screen (1280×720: the board 286.9×510, now
+   281.25×500) and more with a bottom inset (an iPad in landscape, a 20px
+   inset: the board ended 18px inside the reservation); the 230px term falls
+   short once the insets add up to more than 14px (an iPhone in landscape,
+   844×390 with a 21px inset: the page 7px taller). The svh forms sit under
+   `@supports` for the reason above. */
 
 @media (min-width: 600px) {
   .sf-canvas {
-    width: min(100%, 420px, calc((100vh - 230px) * 0.5625));
-    width: min(100%, 420px, calc((100svh - 230px) * 0.5625));
-  }
-}
-
-@media (min-width: 900px) and (orientation: landscape) {
-  .sf-canvas {
-    width: min(100%, 480px, calc((100vh - 210px) * 0.5625));
-    width: min(100%, 480px, calc((100svh - 210px) * 0.5625));
-  }
-}
-
-/* ---------- the app's banner strip ----------
-
-   In the app the board also has to leave the native banner strip free. The
-   canvas is 9:16, so at its full 336px it asks for 597px of height, more than
-   a phone's column leaves, and `max-height: 100%` cut the box short instead,
-   in height only: measured on the Android emulator at 360×640, 336×415 under
-   the 64px slot and 336×389 under a 90px one, so the drawing was squashed by
-   31% and by 35% once an ad grew the slot. Everything else in the column is
-   100px at both (the top bar 64, the weapon-build line 20 and the body's
-   padding 16). So under `:root[data-sg-app-banner]` the width is also capped
-   by the height left, as the wide tiers above already do (factor 0.5625 =
-   360/640), and `max-height` no longer binds: the box keeps its 9:16 shape.
-   --sf-chrome is that 100px and 4px more for longer text in other languages;
-   --sf-edges is the notch (.screen's top padding) and the strip's worst case
-   (`--sg-app-banner-reserve`, ui/styles.css: 90px and the bottom inset). The
-   board is then 217×385 at 360×640 with a 64px slot or a 90px one: it keeps
-   its size and its shape when an ad grows the slot, and only its position may
-   move (docs/ADS_POLICY.md). The wide tiers keep their flat caps and their
-   web height terms (230px and 210px) as ceilings and add the same app budget
-   as a term of their own: those terms are sized for the web, where an anchor
-   ad takes 116px (they are 130px and 110px more than the 100px stack), so
-   taking the strip from them as well would shrink the board by that much more
-   than it needs. The web build keeps its board as published. The svh forms
-   sit under `@supports`: a var() makes a declaration parse, so on a WebView
-   without svh (Chromium 88) it would win over the vh form and then compute to
-   nothing. The two properties sit on .sf-board-wrap, the canvas's parent: it
-   has no box of its own (display: contents), but its children inherit from it
-   all the same. */
-
-.sf-board-wrap {
-  --sf-chrome: 104px;
-  --sf-edges: calc(env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve, 0px));
-}
-
-:root[data-sg-app-banner] .sf-canvas {
-  width: min(100%, 360px, calc((100vh - var(--sf-chrome) - var(--sf-edges)) * 0.5625));
-}
-
-@supports (height: 100svh) {
-  :root[data-sg-app-banner] .sf-canvas {
-    width: min(100%, 360px, calc((100svh - var(--sf-chrome) - var(--sf-edges)) * 0.5625));
-  }
-}
-
-@media (min-width: 600px) {
-  :root[data-sg-app-banner] .sf-canvas {
     width: min(
       100%,
       420px,
@@ -216,7 +228,7 @@
   }
 
   @supports (height: 100svh) {
-    :root[data-sg-app-banner] .sf-canvas {
+    .sf-canvas {
       width: min(
         100%,
         420px,
@@ -228,7 +240,7 @@
 }
 
 @media (min-width: 900px) and (orientation: landscape) {
-  :root[data-sg-app-banner] .sf-canvas {
+  .sf-canvas {
     width: min(
       100%,
       480px,
@@ -238,7 +250,7 @@
   }
 
   @supports (height: 100svh) {
-    :root[data-sg-app-banner] .sf-canvas {
+    .sf-canvas {
       width: min(
         100%,
         480px,
