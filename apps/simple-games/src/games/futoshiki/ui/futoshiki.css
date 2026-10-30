@@ -12,18 +12,32 @@
 
 /* ---------- board ---------- */
 
-/* The board takes what is left and scrolls when a 7×7 will not fit; the pad
-   below it keeps its natural height. The 24px the cell arithmetic subtracts is
-   spent here once, by .futoshiki-body — this element adds none of its own, so
-   the two cannot drift apart into 48px. */
+/* The board takes what is left and scrolls when it will not fit: in the app
+   at 360×640 (a 37px notch, a 24px bottom inset) the 6×6 and the 7×7 are
+   336px tall over a box of 296px under the 64px banner strip and 270px under
+   a 90px one — the daily, free play's Medium and Hard, levels 46–100 — and
+   the 5×5's 286px does not fit either (docs/FUTOSHIKI_RULES.md §13). The pad
+   below it keeps its natural height. The 24px the cell arithmetic subtracts
+   is spent here once, by .futoshiki-body — this element adds none of its
+   own, so the two cannot drift apart into 48px.
+
+   The board is centred by auto margins rather than `align-items` /
+   `justify-content: center`: a centred board taller than the box overflows
+   up as much as down, and what is above the top is out of the scroll's reach
+   (22px at 360×640, 35px under a 90px strip — about half the top row). Auto
+   margins centre it the same way while it fits and fall to zero when it
+   does not, so it overflows only down, where the scroll reaches. `safe
+   center` says the same, but needs Chromium 115. */
 .futoshiki-board-scroll {
   flex: 1;
   min-height: 0;
   overflow: auto;
   display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 8px 0 12px;
+}
+
+.futoshiki-board-scroll > .futoshiki-board {
+  margin: auto;
 }
 
 /*
