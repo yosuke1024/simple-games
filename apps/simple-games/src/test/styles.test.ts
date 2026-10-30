@@ -123,9 +123,10 @@ describe('the reserved ad strips never yield their space (issue #120)', () => {
   });
 
   it('reserves .web-ad-slot at the same fixed height the comment promises', () => {
-    // The rule above this one in styles.css says outright that .web-ad-slot
-    // is "the .banner-slot rule, applied to the web" — a fixed height from
-    // mount so a loading, failing, or offline ad never moves the game list.
+    // The comment above this rule in styles.css promises .web-ad-slot a
+    // fixed height from mount (the .banner-slot idea applied to the web, and
+    // stricter: it never grows) so a loading, failing, or offline ad never
+    // moves the game list.
     const slot = ruleBody('.web-ad-slot');
     expect(slot).toMatch(/height:\s*100px/);
   });

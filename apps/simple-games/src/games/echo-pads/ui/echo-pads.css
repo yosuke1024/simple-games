@@ -523,3 +523,45 @@
   height: 100%;
   fill: currentColor;
 }
+
+/* ---------- the app's banner strip ----------
+
+   In the app the board also has to leave the native banner strip free. The
+   pads' rows take whatever height the column leaves (`.ep-board` above), so
+   an ad taller than the 64px slot used to shrink the board with it: measured
+   on the Android emulator at 360×640 (the notch is 37px, the bottom inset
+   24px), it was 328×256.6px with the 64px slot and 328×230.6px with a 90px
+   one (ADS_POLICY.md: the board keeps its size). Under
+   `:root[data-sg-app-banner]` it is also no taller than the height left at
+   the strip's worst case: --ep-chrome is everything else in the column — the
+   top bar 64, the length line 24, the status line's two lines 36.4, the Play
+   key and the pace group 98, the gaps 24 and the body's padding 12 — measured
+   258.4px at 360×640, so 262px for a longer line in another language;
+   --ep-edges is the notch (.screen's top padding) and the strip's worst case
+   (`--sg-app-banner-reserve`, ui/styles.css: 90px and the bottom inset). The
+   board is then 227px tall at 360×640 with a 64px slot or a 90px one while a
+   round is played — the same size and the same shape, its width being
+   untouched — and only its position moves (after a miss the panel takes
+   the column and the board gives way to it, as before; the slot only grows
+   right after the screen opens, so that rarely meets a growing slot): the area centres it, so it rises by half of what the slot
+   grows. The 400px ceiling stays the first term of the min(). The web build
+   keeps its board as published. The selector names the area because the
+   Quick Rules figure is an `.ep-board` too, outside `.ep-screen`, where these
+   two properties are not defined. The svh form sits under `@supports`: a
+   var() makes a declaration parse, so on a WebView without svh (Chromium 88)
+   it would win over the vh form and then compute to nothing. */
+
+.ep-screen {
+  --ep-chrome: 262px;
+  --ep-edges: calc(env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve, 0px));
+}
+
+:root[data-sg-app-banner] .ep-board-area .ep-board {
+  max-height: min(400px, calc(100vh - var(--ep-chrome) - var(--ep-edges)));
+}
+
+@supports (height: 100svh) {
+  :root[data-sg-app-banner] .ep-board-area .ep-board {
+    max-height: min(400px, calc(100svh - var(--ep-chrome) - var(--ep-edges)));
+  }
+}

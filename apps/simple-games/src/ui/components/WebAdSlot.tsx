@@ -6,9 +6,10 @@
  * `--mode web`, so the native artifact carries no web-ad code at all
  * (verified in CI by .github/scripts/check-dist-ads-separation.sh).
  *
- * Layout rule, same as BannerSlot: whether the slot exists is decided at
- * build/boot time and its height is fixed, so a loading, failing, or offline
- * ad never moves the game list.
+ * Layout rule, stricter than BannerSlot's: whether the slot exists is decided
+ * at build/boot time and its height is fixed for good (BannerSlot starts at
+ * 64px and may grow to the native ad's height), so a loading, failing, or
+ * offline ad never moves the game list.
  */
 import { Suspense, lazy } from 'react';
 import { webAdsSlotEnabled } from '../../services/ads/web/config';

@@ -1,9 +1,11 @@
 /**
- * Reserved banner area (docs/ADS_POLICY.md): on native platforms a
- * fixed-height slot is reserved from mount so the board and action buttons
- * never shift when an ad loads. The slot only grows (never shrinks) if the
- * actual ad is taller. Offline or on ad failure it stays as quiet empty
- * space. On the web (dev) no space is reserved, and on a launch that will
+ * Reserved banner area (docs/ADS_POLICY.md「バナー広告の仕様」): on native
+ * platforms a 64px slot is reserved from mount, so an ad loading into it
+ * never resizes the board and, while none arrives, nothing moves. The slot
+ * only grows (never shrinks) if the actual ad is taller; what sits right
+ * above it then rises by the growth (26px at most) and a centred board by
+ * half of it, which the policy accepts — the board keeps its size. Offline
+ * or on ad failure it stays as quiet empty space. On the web (dev) no space is reserved, and on a launch that will
  * never initialize the ad SDK — the ad-removal purchase is active, or the
  * entitlement could not be read (issue #96) — the slot disappears entirely.
  * It is the same condition `app/boot.ts` uses before initializing the SDK, so

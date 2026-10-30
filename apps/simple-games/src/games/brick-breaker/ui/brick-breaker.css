@@ -41,3 +41,90 @@
     width: min(100%, 480px, calc((100svh - 210px) * 0.5625));
   }
 }
+
+/* ---------- the app's banner strip ----------
+
+   In the app the board also has to leave the native banner strip free. The
+   canvas is 9:16, so at its full 336px it asks for 597px of height, more than
+   a phone's column leaves, and `max-height: 100%` cut the box short instead,
+   in height only: measured on the Android emulator at 360×640, 336×435 under
+   the 64px slot and 336×409 under a 90px one, so the drawing was squashed by
+   27% and by 32% once an ad grew the slot. Everything else in the column is
+   80px at both (the top bar 64 and the body's padding 16). So under
+   `:root[data-sg-app-banner]` the width is also capped by the height left, as
+   the wide tiers above already do (factor 0.5625 = 360/640), and
+   `max-height` no longer binds: the box keeps its 9:16 shape. --bb-chrome is
+   that 80px and 4px more for longer text in other languages; --bb-edges is
+   the notch (.screen's top padding) and the strip's worst case
+   (`--sg-app-banner-reserve`, ui/styles.css: 90px and the bottom inset). The
+   board is then 228×405 at 360×640 with a 64px slot or a 90px one: it keeps
+   its size and its shape when an ad grows the slot, and only its position may
+   move (docs/ADS_POLICY.md). The wide tiers keep their flat caps and their
+   web height terms (230px and 210px) as ceilings and add the same app budget
+   as a term of their own: those terms already hold the web's anchor-ad
+   reservation (they are 150px and 130px more than the 80px stack), so taking
+   the strip from them as well would shrink the board by that much more than it
+   needs. The web build keeps its board as published. The svh forms sit under
+   `@supports`: a var() makes a declaration parse, so on a WebView without svh
+   (Chromium 88) it would win over the vh form and then compute to nothing.
+   The canvas sits straight in the shell's .game-board-body and nothing of
+   this game wraps it, so it holds the two properties itself. */
+
+.bb-canvas {
+  --bb-chrome: 84px;
+  --bb-edges: calc(env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve, 0px));
+}
+
+:root[data-sg-app-banner] .bb-canvas {
+  width: min(100%, 360px, calc((100vh - var(--bb-chrome) - var(--bb-edges)) * 0.5625));
+}
+
+@supports (height: 100svh) {
+  :root[data-sg-app-banner] .bb-canvas {
+    width: min(100%, 360px, calc((100svh - var(--bb-chrome) - var(--bb-edges)) * 0.5625));
+  }
+}
+
+@media (min-width: 600px) {
+  :root[data-sg-app-banner] .bb-canvas {
+    width: min(
+      100%,
+      420px,
+      calc((100vh - 230px) * 0.5625),
+      calc((100vh - var(--bb-chrome) - var(--bb-edges)) * 0.5625)
+    );
+  }
+
+  @supports (height: 100svh) {
+    :root[data-sg-app-banner] .bb-canvas {
+      width: min(
+        100%,
+        420px,
+        calc((100svh - 230px) * 0.5625),
+        calc((100svh - var(--bb-chrome) - var(--bb-edges)) * 0.5625)
+      );
+    }
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  :root[data-sg-app-banner] .bb-canvas {
+    width: min(
+      100%,
+      480px,
+      calc((100vh - 210px) * 0.5625),
+      calc((100vh - var(--bb-chrome) - var(--bb-edges)) * 0.5625)
+    );
+  }
+
+  @supports (height: 100svh) {
+    :root[data-sg-app-banner] .bb-canvas {
+      width: min(
+        100%,
+        480px,
+        calc((100svh - 210px) * 0.5625),
+        calc((100svh - var(--bb-chrome) - var(--bb-edges)) * 0.5625)
+      );
+    }
+  }
+}

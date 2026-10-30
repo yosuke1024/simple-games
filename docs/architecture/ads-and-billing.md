@@ -5,7 +5,7 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 - 広告は `services/ads/` のバナーのみ(Anchored Adaptive Banner)。
   AdMob 初期化は起動後の fire-and-forget。UMP 同意はゲーム初期化と切り離す。
   オフライン時・広告削除が有効なときはリクエストしない。仕様は ADS_POLICY.md。
-- `ui/` の `BannerSlot` は高さ確保方式(盤面のレイアウトシフトなし)。
+- `ui/` の `BannerSlot` は高さ確保方式(広告が届いても盤面の大きさは変わらない。実広告が 64px より高くて枠が伸びたときの位置の動き — 最大 26px — は [ADS_POLICY.md](../ADS_POLICY.md)「バナー広告の仕様」)。
   広告が出うる起動でだけ枠を確保し、出ない起動ではスロットごと消す。
 - **広告側が問うのは「この起動で広告削除が効くか」**(`isAdRemovalActive()`)。
   購入済み、有効な Managed オーナー特典、または購入状態が読めなかった起動がこれに当たる(fail-closed、

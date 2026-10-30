@@ -141,6 +141,30 @@
   align-items: center;
   justify-content: center;
 }
+/* The app's banner strip. The field fills whatever height the column leaves,
+   so in the app an ad taller than the 64px slot used to shrink the board with
+   it — measured on the Android emulator at 411×914, 12px off its height when
+   the slot grew to 90px (ADS_POLICY.md: the board keeps its size). Under
+   `:root[data-sg-app-banner]` the field is also no taller than the height
+   left at the strip's worst case: --iv-chrome is everything else in the
+   column — the top bar 64, the metrics row 53, the state line, the gaps, the
+   play area's padding, the controls 64 and their note — measured 254px at
+   411×914 and 255px at 360×640, so 260px; --iv-edges is the notch (.screen's
+   top padding) and `--sg-app-banner-reserve` (ui/styles.css: 90px and the
+   bottom inset). The board then has the same size with a 64px or a 90px slot.
+   The web build keeps its field as published. */
+.iv-screen {
+  --iv-chrome: 260px;
+  --iv-edges: calc(env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve, 0px));
+}
+:root[data-sg-app-banner] .iv-field {
+  max-height: calc(100vh - var(--iv-chrome) - var(--iv-edges));
+}
+@supports (height: 100svh) {
+  :root[data-sg-app-banner] .iv-field {
+    max-height: calc(100svh - var(--iv-chrome) - var(--iv-edges));
+  }
+}
 /* The board's box is the viewBox's outline: width and height are auto and capped by the
    field, so the SVG keeps its 3:4 ratio and the box shrinks to fit instead of the drawing
    being letterboxed inside a larger one. That is what lets the collection's board frame

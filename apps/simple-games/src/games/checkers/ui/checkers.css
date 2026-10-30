@@ -430,3 +430,73 @@
     width: min(100%, 560px, calc(100svh - 300px));
   }
 }
+
+/* ---------- the app's banner strip ----------
+
+   In the app the board's height term (52vh of the screen) does not see the
+   notch or the native banner strip. Measured on the Android emulator at
+   360×640 (37px notch, 24px bottom inset: the column has 515px above a 64px
+   slot and 489px above a 90px one), the board is 332.8px wide and the column
+   squeezes its height — 313.6px at a 64px slot, 287.6px at a 90px one — so it
+   stops being square, and shrinks further when an ad grows the slot. So under
+   `:root[data-sg-app-banner]` the board is also no wider than the height
+   left: --ck-chrome is everything else stacked in the column with it — the
+   top bar 64, this body's padding 14, the gap 10, the turn line's reserved
+   36.4 and the action bar 77, 201.4px measured — so 204px, a few px over for
+   longer text in other languages; --ck-edges is the notch (.screen's top
+   padding) and the strip's worst case (`--sg-app-banner-reserve`,
+   ui/styles.css: 90px and the bottom inset). The board is then 285px square
+   at 360×640 with a 64px slot or a 90px one: it keeps its size and its shape
+   when an ad taller than the slot arrives. Each tier keeps its web terms as a
+   ceiling and adds that budget. The web build keeps its board as published.
+   The svh forms sit under `@supports`: a var() makes a declaration parse, so
+   on a WebView without svh (Chromium 88) it would win over the vh form and
+   then compute to nothing. */
+
+.ck-body {
+  --ck-chrome: 204px;
+  --ck-edges: calc(env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve, 0px));
+}
+
+:root[data-sg-app-banner] .ck-board {
+  width: min(100%, 420px, 52vh, calc(100vh - var(--ck-chrome) - var(--ck-edges)));
+}
+
+@supports (height: 100svh) {
+  :root[data-sg-app-banner] .ck-board {
+    width: min(100%, 420px, 52vh, calc(100svh - var(--ck-chrome) - var(--ck-edges)));
+  }
+}
+
+@media (min-width: 600px) {
+  :root[data-sg-app-banner] .ck-board {
+    width: min(100%, 500px, 56vh, calc(100vh - var(--ck-chrome) - var(--ck-edges)));
+  }
+
+  @supports (height: 100svh) {
+    :root[data-sg-app-banner] .ck-board {
+      width: min(100%, 500px, 56svh, calc(100svh - var(--ck-chrome) - var(--ck-edges)));
+    }
+  }
+}
+
+/* The wide tier's 300px term is already 96px more than the stack (still the
+   204px one) — most of the web's 116px reservation — so the strip is not
+   taken from it as well: it stays a ceiling, as 52vh and 56vh do in the tiers
+   above, and the app budget is a term of its own. */
+@media (min-width: 900px) and (orientation: landscape) {
+  :root[data-sg-app-banner] .ck-board {
+    width: min(100%, 560px, calc(100vh - 300px), calc(100vh - var(--ck-chrome) - var(--ck-edges)));
+  }
+
+  @supports (height: 100svh) {
+    :root[data-sg-app-banner] .ck-board {
+      width: min(
+        100%,
+        560px,
+        calc(100svh - 300px),
+        calc(100svh - var(--ck-chrome) - var(--ck-edges))
+      );
+    }
+  }
+}

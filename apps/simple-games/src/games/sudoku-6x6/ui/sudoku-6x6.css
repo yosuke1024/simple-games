@@ -21,7 +21,8 @@
 }
 
 /* Six cells a side, each larger than the 9×9's (§13): 40px on a 320px phone,
-   56px at most. */
+   56px at most. In the app a short screen can cap the grid below that (the
+   banner strip section at the end of this file). */
 .s6-grid {
   --s6-cell: clamp(40px, 13vw, 56px);
   display: grid;
@@ -308,5 +309,53 @@
 
   .s6-key-left {
     font-size: 11px;
+  }
+}
+
+/* ---------- the app's banner strip ----------
+
+   In the app the board (.s6-grid) is what the flex column squeezes. Its width
+   is fixed by its cell size, but .s6-body is a column of whatever height the
+   top bar, the action bar and the native banner strip leave, and the board
+   gets only what the pad, the body's padding and its gap leave of that: on a
+   short screen it loses height while its width stays, so it stops being a
+   square. Measured on the Android emulator at 360×640 (safe area 37px above,
+   24px below) the board was 280.8×280.8 under the 64px slot, which fits, and
+   280.8×268 under a 90px one, with 221px of everything else stacked in the
+   column around it: the top bar 64, the body's padding 14 and gap 14, the pad
+   52, the action bar 77. So under `:root[data-sg-app-banner]` the width is
+   also capped by the height left at the strip's worst case. --s6-chrome is
+   that stack, 221px, and 3px for a longer top bar or action label in another
+   language: 224px; --s6-edges is the notch (.screen's top padding) and the
+   strip's worst case (`--sg-app-banner-reserve`, ui/styles.css: 90px and the
+   bottom inset). The board is then 265×265 at 360×640 with a 64px slot or a
+   90px one: the same size and the same shape when an ad grows the slot. A
+   phone with room is untouched. The pad keeps its own width, so on a short
+   phone it is wider than the board above it. From 600px the stack is taller,
+   because the body's gap and padding and the keys are larger (237px), so the
+   constant is 240px there; that tier does not set the board's width, so the
+   rule above applies in it as it is. The web build keeps its board as
+   published. The svh form sits under `@supports`: a var() makes a declaration
+   parse, so on a WebView without svh (Chromium 88) it would win over the vh
+   form and then compute to nothing. */
+
+.s6-body {
+  --s6-chrome: 224px;
+  --s6-edges: calc(env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve, 0px));
+}
+
+:root[data-sg-app-banner] .s6-grid {
+  width: min(calc(6 * var(--s6-cell)), calc(100vh - var(--s6-chrome) - var(--s6-edges)));
+}
+
+@supports (height: 100svh) {
+  :root[data-sg-app-banner] .s6-grid {
+    width: min(calc(6 * var(--s6-cell)), calc(100svh - var(--s6-chrome) - var(--s6-edges)));
+  }
+}
+
+@media (min-width: 600px) {
+  .s6-body {
+    --s6-chrome: 240px;
   }
 }
