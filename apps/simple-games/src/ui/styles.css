@@ -1691,9 +1691,11 @@ button:disabled {
 /* Web-build display ad (docs/ADS_POLICY.md「Web 版」— WebAdSlot renders null
    on the native app). Fixed height from mount so a loading, failing, or
    offline ad never moves the game list — the .banner-slot idea applied to
-   the web, and stricter: this height never changes, where the native slot
-   starts at 64px and may grow to the ad's. Fits both fixed unit sizes
-   (320x100 / 728x90). */
+   the web. The height never grows (the native slot starts at 64px and may
+   grow to the ad's); when nothing can fill it, AdUnit takes the slot out of
+   the layout instead (setPlacementHidden), which moves only what comes after
+   it: the home's footer, or a result card, which re-centres. Fits both fixed
+   unit sizes (320x100 / 728x90). */
 .web-ad-slot {
   display: flex;
   align-items: center;

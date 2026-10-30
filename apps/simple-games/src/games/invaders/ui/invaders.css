@@ -152,17 +152,24 @@
    411×914 and 255px at 360×640, so 260px; --iv-edges is the notch (.screen's
    top padding) and `--sg-app-banner-reserve` (ui/styles.css: 90px and the
    bottom inset). The board then has the same size with a 64px or a 90px slot.
-   The web build keeps its field as published. */
+   The cap never goes below 160px, the field the play area's floor keeps on
+   a short screen (its 170px min-height under `max-height: 560px`, less the
+   10px padding): in a window shorter than a phone, such as Android
+   split-screen (411×430, 360×300), the cap alone fell to 80px and then to
+   nothing, and the board disappeared. With the floor the board is 120×160
+   there with a 64px or a 90px slot, and the column scrolls above the strip,
+   as it did before the cap. No phone from 320×568 up reaches the floor. The
+   web build keeps its field as published. */
 .iv-screen {
   --iv-chrome: 260px;
   --iv-edges: calc(env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve, 0px));
 }
 :root[data-sg-app-banner] .iv-field {
-  max-height: calc(100vh - var(--iv-chrome) - var(--iv-edges));
+  max-height: max(160px, calc(100vh - var(--iv-chrome) - var(--iv-edges)));
 }
 @supports (height: 100svh) {
   :root[data-sg-app-banner] .iv-field {
-    max-height: calc(100svh - var(--iv-chrome) - var(--iv-edges));
+    max-height: max(160px, calc(100svh - var(--iv-chrome) - var(--iv-edges)));
   }
 }
 /* The board's box is the viewBox's outline: width and height are auto and capped by the

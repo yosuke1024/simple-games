@@ -106,8 +106,9 @@ describe('the CSS-per-game list in docs/architecture/css-split.md', () => {
 });
 
 /**
- * Issue #120: the app's whole promise is a board that doesn't jump around
- * under the player mid-game. The strip reserved for a banner ad, and the
+ * Issue #120: the app's whole promise is a board that keeps its size under
+ * the player and moves only when a real ad taller than 64px grows the strip
+ * (docs/ADS_POLICY.md「バナー広告の仕様」). The strip reserved for a banner ad, and the
  * fallback that keeps a finished board inert-but-untouched on an old WebView,
  * both do their job through a couple of CSS declarations that a future pass
  * on styles.css could drop without anything in TypeScript noticing.

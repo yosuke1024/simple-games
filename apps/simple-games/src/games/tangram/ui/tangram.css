@@ -407,7 +407,14 @@
    the position moves, by half the growth, as the policy accepts. No media
    query sizes the play area, so there is no wide tier to follow: the cap is
    a ceiling, and on a tablet it sits within 3px of the height the column
-   leaves at the strip's worst case. The web build keeps its board as
+   leaves at the strip's worst case. The cap never goes below 246px, the
+   play area at which layout.ts's 160px board floor (BOARD_MIN_PX) is reached
+   with the whole tray still in (245.7px): in a window shorter than a phone,
+   such as Android split-screen (411×430, 360×300), the cap alone cut the
+   play area below what the column left, the board stayed at its 160px floor
+   and more of the tray went past the `overflow: hidden`. Below 246px the
+   play area is again what the column leaves, as before the cap. No phone
+   from 320×568 up reaches the floor. The web build keeps its board as
    published. The svh form sits under `@supports`: a var() makes a
    declaration parse, so on a WebView without svh (Chromium 88) it would win
    over the vh form and then compute to nothing. */
@@ -418,12 +425,12 @@
 }
 
 :root[data-sg-app-banner] .tn-play {
-  max-height: calc(100vh - var(--tn-chrome) - var(--tn-edges));
+  max-height: max(246px, calc(100vh - var(--tn-chrome) - var(--tn-edges)));
   margin-block: auto;
 }
 
 @supports (height: 100svh) {
   :root[data-sg-app-banner] .tn-play {
-    max-height: calc(100svh - var(--tn-chrome) - var(--tn-edges));
+    max-height: max(246px, calc(100svh - var(--tn-chrome) - var(--tn-edges)));
   }
 }

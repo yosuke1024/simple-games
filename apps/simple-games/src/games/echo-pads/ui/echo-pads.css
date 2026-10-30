@@ -544,12 +544,18 @@
    untouched — and only its position moves (after a miss the panel takes
    the column and the board gives way to it, as before; the slot only grows
    right after the screen opens, so that rarely meets a growing slot): the area centres it, so it rises by half of what the slot
-   grows. The 400px ceiling stays the first term of the min(). The web build
-   keeps its board as published. The selector names the area because the
-   Quick Rules figure is an `.ep-board` too, outside `.ep-screen`, where these
-   two properties are not defined. The svh form sits under `@supports`: a
-   var() makes a declaration parse, so on a WebView without svh (Chromium 88)
-   it would win over the vh form and then compute to nothing. */
+   grows. The 400px ceiling stays the first term of the min(). The height
+   term never goes below 112px, what the area's 112px floor kept the board at
+   before the cap (two 48px rows of pads and their 10px gap fit in it): in a
+   window shorter than a phone, such as Android split-screen (411×430,
+   360×300), the term alone fell to 78px and then to nothing, and the pads
+   spilled out of the board. No phone from 320×568 up reaches the floor. The
+   web build keeps its board as published. The selector names the area
+   because the Quick Rules figure is an `.ep-board` too, outside `.ep-screen`,
+   where these two properties are not defined. The svh form sits under
+   `@supports`: a var() makes a declaration parse, so on a WebView without
+   svh (Chromium 88) it would win over the vh form and then compute to
+   nothing. */
 
 .ep-screen {
   --ep-chrome: 262px;
@@ -557,11 +563,11 @@
 }
 
 :root[data-sg-app-banner] .ep-board-area .ep-board {
-  max-height: min(400px, calc(100vh - var(--ep-chrome) - var(--ep-edges)));
+  max-height: min(400px, max(112px, calc(100vh - var(--ep-chrome) - var(--ep-edges))));
 }
 
 @supports (height: 100svh) {
   :root[data-sg-app-banner] .ep-board-area .ep-board {
-    max-height: min(400px, calc(100svh - var(--ep-chrome) - var(--ep-edges)));
+    max-height: min(400px, max(112px, calc(100svh - var(--ep-chrome) - var(--ep-edges))));
   }
 }
