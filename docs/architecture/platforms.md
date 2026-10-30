@@ -30,3 +30,12 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
   Capacitor 側にも既知の相互作用: ionic-team/capacitor-plugins#2418)。全ゲームの
   ナビゲーションがこのイベントに依存しているため、外すとハードウェア戻るが
   アプリ全体で無反応になる。予測型戻るのプレビューアニメーションと引き換えの選択。
+- 文字の倍率: `MainActivity` は WebView の文字の倍率を `min(端末の倍率 × 100, 100)` にする
+  (`TEXT_ZOOM_CAP_PERCENT`。2026-10-31、PRODUCT_PRINCIPLES.md「Android の文字の倍率」)。
+  WebView は、アプリが決めない限り、作られたときの端末の `fontScale × 100` で文字だけを大きくする
+  (Chromium の `AwSettings`)。盤の高さの見積もりは文字 100% の px なので、外すと文字を大きくした
+  端末で盤がバナーの下へ出る。フォントサイズを変えるとアクティビティが作り直される(manifest の
+  `configChanges` に `fontScale` が無い)ので `onCreate` で当て、`fontScale` が `configChanges` に
+  入った場合に備えて `onConfigurationChanged` でも当て直す。値とこのファイルの形、ほかに倍率を決める
+  経路が無いことは `check-principles.sh` §9 が固定する。iOS 側には同じ設定を持たない(WKWebView は
+  「さらに大きな文字」で px の文字を大きくしない。WebKit の挙動で、端末では未確認)。

@@ -4,6 +4,21 @@ Google Play への公開前に、この順で確認する。
 **チェックが通らない項目を「たぶん大丈夫」で飛ばさない。**
 実施していない検証を成功扱いにしないこと([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))。
 
+## 2026-10-31: Android の文字の倍率の上限(入れる版は未定)
+
+2026-10-31 のオーナー判断。`MainActivity` が WebView の文字の倍率を `min(端末の倍率 × 100, 100)` にする
+([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Android の文字の倍率」。計測は
+[plans/2026-10-30-android-os-text-size.md](plans/2026-10-30-android-os-text-size.md))。ネイティブの変更なので、
+1.7.0 の候補に足すなら、その候補でここを確かめ直す。
+
+- [x] `assembleDebug`(JDK 21)が通る。`check-principles.sh` §9 が緑。
+- [ ] エミュレータの debug ビルドで、フォントサイズ 100%・130%・200% のとき
+      `getComputedStyle(document.documentElement).fontSize` が 16px(倍率込みの値。計測では 130% で 20.8px だった)、
+      85% のとき 13.6px。
+- [ ] アプリを開いたままフォントサイズを変えても上の値になる(アクティビティが作り直される)。
+- [ ] 130% の 360×640 で、Sudoku の 9 行が見え、FreeCell の Q が O に見えない(計測で崩れた例)。
+- [ ] 実機(Pixel と Samsung)のいちばん大きいフォントサイズで、上と同じ。
+
 ## 2026-10-29: 1.7.0／10700 — Web 先行公開 20 本の正式収録
 
 製品オーナーの指示(2026-10-29):「Web版のベータのゲームも十分検証取れました。ベータを外して、次バージョンで
@@ -586,7 +601,9 @@ bash .github/scripts/check-principles.sh
       動かないなら配信しない)
 - [ ] ホームボタン / 戻るボタンでゲームが失われない
 - [ ] ダークモードで全画面を確認
-- [ ] フォント倍率を最大にして主要画面が崩れない
+- [ ] フォントサイズを最大にしても、アプリの文字が 100% の大きさのまま(上限。
+      [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Android の文字の倍率」)。アプリを開いたまま
+      変えても同じ。最小にすると小さくなる
 
 ## 4.5 R8 スモークテスト(リリースビルドの実機確認)
 
@@ -653,6 +670,9 @@ bash .github/scripts/check-principles.sh
       「ワイド画面のレイアウト」)
 - [ ] iOS 実機でゲーム起動・全ゲームプレイが可能/初回起動からオフラインで
       ゲーム可能/機内モードで広告・consent の通信リトライが発生しない
+- [ ] 「さらに大きな文字」を最大にしても、アプリの文字が大きくならない(WKWebView は px の文字を
+      大きくしない前提で、端末では未確認 —— [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)
+      「Android の文字の倍率」の境界 2。大きくなるなら、iOS にも同じ判断が要る)
 
 広告(AdMob iOS):
 

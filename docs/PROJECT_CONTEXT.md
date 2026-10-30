@@ -411,6 +411,7 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 - club house(`src/club/`、Public / Private、対応ゲームの `challenge/`): `PRODUCT_PRINCIPLES.md`「Club House」+ `architecture/club.md`
 - ads / purchase: `ADS_POLICY.md`
 - Android acquisition measurement (Meta, `android/app/src/metaOn` / `metaOff`, `.github/scripts/check-principles.sh` §8): `PRODUCT_PRINCIPLES.md`「Android の獲得計測(Meta)」+ `META_ANDROID_ACQUISITION.md`
+- Android の文字の倍率(`MainActivity` の `TEXT_ZOOM_CAP_PERCENT`、`.github/scripts/check-principles.sh` §9)と、盤を画面の高さから決めるゲームの上部バー・操作バーの見積もり(`--*-chrome` など): `PRODUCT_PRINCIPLES.md`「Android の文字の倍率」+ `ARCHITECTURE.md`「広告と課金」
 - web only: `WEB_VERSION.md`
 - 練習セットの 5 本(Crown Grid / Number Path / Binary Balance / Sudoku 6×6 / Box Regions)や専用入口: `PUZZLE_PRACTICE_SET.md` + `BRAND.md`「自社タイトルと比較対象の名前」
 - public copy: `BRAND.md`
