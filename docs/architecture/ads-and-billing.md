@@ -7,6 +7,11 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
   オフライン時・広告削除が有効なときはリクエストしない。仕様は ADS_POLICY.md。
 - `ui/` の `BannerSlot` は高さ確保方式(広告が届いても盤面の大きさは変わらない。実広告が 64px より高くて枠が伸びたときの位置の動き — 最大 26px — は [ADS_POLICY.md](../ADS_POLICY.md)「バナー広告の仕様」)。
   広告が出うる起動でだけ枠を確保し、出ない起動ではスロットごと消す。
+  消したときは、枠の下の余白が空けていた画面下端の safe area を、プレイ画面
+  (`.game-screen`)が自分の下の余白として空ける(2026-10-31。`ui/styles.css` の
+  `:root:not([data-sg-app-banner]):not([data-sg-web-ads]) .game-screen` — 予約のない
+  Web 版も同じ)。画面の高さから盤を決めるゲームで盤の上下に余裕のないものは、その高さも予算から引く
+  ([../ARCHITECTURE.md](../ARCHITECTURE.md)「広告と課金」の「枠も予約もないプレイ画面」)。
 - **広告側が問うのは「この起動で広告削除が効くか」**(`isAdRemovalActive()`)。
   購入済み、有効な Managed オーナー特典、または購入状態が読めなかった起動がこれに当たる(fail-closed、
   issue #96 — 読めなかったを未購入と読むと、購入者にバナーが出る)。SDK の初期化

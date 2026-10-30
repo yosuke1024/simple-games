@@ -197,7 +197,7 @@ Spider Solitaire・FreeCell・Hearts・Gin Rummy —・Minesweeper・Mahjong Sol
 全文脈に広げ、画面の下が確保する高さ(`--bb-reserve` / `--sf-reserve`)だけを文脈で替えた: アプリは `--sg-app-banner-reserve`、
 Web 版の広告ありは `116px` + 下端の safe area(`:root[data-sg-web-ads] .screen` の予約と同じ)、それ以外は下端の safe area。
 最後の場合は枠も `.screen` の下の余白もなく、盤の周りの何も safe area を空けないので、canvas が同じ高さを下の余白
-(`--bb-unheld` / `--sf-unheld`)として持つ(持たないと中央に置いた盤が safe area にかかる)。`max-height` もその余白のぶんを引くので、上部バーが定数より高く
+(`--bb-unheld` / `--sf-unheld`)として持つ(持たないと中央に置いた盤が safe area にかかる。2026-10-31 にプレイ画面の下の余白へ移した — 最後の節)。`max-height` もその余白のぶんを引くので、上部バーが定数より高く
 なったときは、盤が上へはみ出さず超えたぶん縦に縮む。幅 600px 以上の段も、Web の高さの
 項(230px / 210px)を上限に残して同じ予算を 1 項足した(アプリは前から同じ形)。アプリの寸法は上の修正のまま。差分レビュー
 (2 体)の指摘で、ソースに入れてはいけない語(`check-principles.sh` §6)をコメントから外し、safe area の余白と幅の広い段を足した。最終レビュー(3 体)の
@@ -257,3 +257,136 @@ Web 版の広告ありは `116px` + 下端の safe area(`:root[data-sg-web-ads] 
 枠が伸びるとさらに縮む — Sky Fighter の 320×640・上部バー 101px で 367px → 341px)。Web 版の広告ありではページが伸びて盤が予約に
 かかる(同じ状態で 25px。公開版は 203px)。上部バーは 14 言語とも、ランの始めと Brick Breaker の 100 面目の表示では 64px で、
 これが起きるのは狭い画面の終盤(Sky Fighter)と大きい文字だけ。
+
+## 2026-10-31: 広告を削除した画面の下端(枠も予約もない状態)
+
+2026-10-30 の OS の文字サイズの計測([2026-10-30-android-os-text-size.md](2026-10-30-android-os-text-size.md))の
+「計測で見えた別件」: 広告を削除した状態のプレイ画面で、182 モードの
+うち 148(411×914)・152(360×640)で、ボタンが下端の safe area(エミュレータのジェスチャー領域 24px)に入っていた。
+ほとんどは操作バーの `.action-btn` が 14px。原因は 3 つの規則の組み合わせ — `.screen` は上と左右しか空けない、
+`.game-screen .action-bar` は下の余白を 10px にして下端を枠の `margin-bottom` に任せる、広告を削除すると `BannerSlot` は
+何も描かずルートにも印を立てない。予約のない Web 版(広告を出さないビルド・オーナー特典・空振りで予約を解放した後)も、
+ルートに `data-sg-app-banner` も `data-sg-web-ads` も無い同じ状態になる。
+
+**直したもの**(PR #297 のブランチに e4d8d84e の次のコミットとして入れた。下の数字の大半は、その前の先頭 f4b55052 の上で取った
+— 下の「PR #298 を取り込んだ土台で」。そのあいだに入った文字の倍率の上限は CSS に触れず、Sudoku の行をそろえた e4d8d84e は
+その 2 本を測り直した):
+
+| 場所 | 変更 |
+|---|---|
+| `ui/styles.css` | `:root:not([data-sg-app-banner]):not([data-sg-web-ads]) .game-screen` に `padding-bottom: env(safe-area-inset-bottom)`。枠のある状態と予約のある状態にはセレクタが当たらない(`src/test/styles.test.ts`) |
+| Brick Breaker・Sky Fighter | 枠も予約もない状態で canvas が持っていた同じ高さの下の余白(`--bb-unheld` / `--sf-unheld`)を外した。画面が空けるので、残すと二重になる |
+| Bounce Up・Overtake | 盤の予算の `--bo-reserve` / `--ot-reserve` が枠も予約もない状態で 0 だった(360×640 で Bounce Up の盤が下端に 16px・◀ ▶ が 6px、Overtake の ▼ が 12px 入っていた)。その状態では下端の safe area にした(枠のある状態は `:root[data-sg-app-banner]` で 0、予約は 116px のまま) |
+
+Bubble Pop(360×640 で発射台とトレイが画面の外)と Water Sort(360×640 のデイリー・フリープレイで棚が 3 段に折れる)は
+claude/musing-gould-8e0a64 の 35fe2ba6・eb272811 が直すので、ここでは触っていない(下の「別のブランチと合わせたとき」)。
+
+**方法**: 上の「方法」と同じ巡回(65 本・ホームの全モード 182、「誰かと遊ぶ」を除く)と物差しを、4 つの状態で測った: 枠
+64px・枠 90px・枠も予約もない(ルートの `data-sg-app-banner` を外して枠を隠す — 広告削除で `BannerSlot` がすることと同じで、
+予約のない Web 版と同じ CSS の状態)・Web の予約(`data-sg-web-ads` を付けて枠の属性を外し、枠を隠す — アプリの WebView の中で
+模した)。枠も予約もない状態の「下端に入った量」は、画面の下端 − 下端の safe area より下に出た盤・ボタン・文字・枠線や背景の
+ある要素の量。あわせて各状態で、画面の子・`.game-content` の子と孫・操作バーの子の箱を記録し、変更前後で突き合わせた。
+
+**エミュレータでは全部を測れなかった**: 2026-10-31 は 16GB のホストで他のセッションの vitest・ヘッドレス Chromium・iOS
+シミュレータが動いていて(load 300〜580、スワップ 16GB がほぼ満杯)、エミュレータのメモリがスワップに出て DevTools の
+評価が 20 秒を超え、06:10 にエミュレータ自身のハング検出で qemu が落ちた(2026-10-30 21:11 と同じ)。そのため下の数字は
+**ヘッドレス Chromium**(Chrome for Testing 149)で取った: debug APK から取り出したネイティブの web バンドル(変更前 =
+f4b55052、変更後 = このブランチ)を 127.0.0.1 で配り、`window.CapacitorCustomPlatform = { name: 'android', plugins: {} }`
+でアプリとして開く(`BannerSlot` が枠を確保して `data-sg-app-banner` を立てる)。411×914(dpr 2.625)・360×640(dpr 3)、
+タッチあり、safe area は CDP(`Emulation.setSafeAreaInsetsOverride`)でエミュレータと同じ上 52 / 37・下 24px、日本語、
+`Math.random` と `crypto.getRandomValues` は頁ごとに同じ種(同じ盤を配る)。エミュレータとの違いは字形(macOS の
+system-ui と Android の Roboto / Noto)と Chromium の版で、文字の行の高さが数 px 違いうる。変更前のボタンの数がエミュレータの
+148 / 152 と少し違う(147 / 153)のはそのため。エミュレータでの巡回は、変更前の 411×914 の Sudoku・Solitaire・Spider
+Solitaire の 9 モード(どれも 24 / 14px で、Chromium と同じ)を測ったところで止まった。ホストが空いた 08:3x に、変更後の
+ビルドで 6 本(Sudoku・Ludo・Bounce Up・Brick Breaker・Quick Math・Scopa)× 2 サイズの短い確認だけをした: 各サイズ 12 モード、
+枠も予約もない状態で下端に入る量はどれも 0、枠 64 / 90px でも 0。変更前は、2026-10-30 の同じエミュレータの記録で Sudoku 24 /
+14px、Quick Math 12 / 12px、Scopa 24 / 0px、360×640 の Ludo 24 / 24px・Bounce Up 16 / 16px(Chromium の変更前と同じ値)。
+
+**結果(枠も予約もない状態、変更前 → 変更後)**。各欄は「下端に入った量 / そのうち押せる要素の量」の全モードの最大 px:
+
+| ゲーム | 411×914 | 360×640 |
+|---|---|---|
+| 下に操作バーのある 43 本(Sudoku・Solitaire・Spider Solitaire・FreeCell・Hearts・Gin Rummy・Minesweeper・Mahjong Solitaire・2048・Block Puzzle・Checkers・Reversi・Connect Four・Gomoku・Nonogram・Takuzu・Futoshiki・Kakuro・Number Match・Sliding Puzzle・Crown Grid・Number Path・Shape Regions・Mancala・Dominoes・Dots and Boxes・Binary Balance・Sudoku 6×6・Box Regions・Unblock Puzzle・Loop Puzzle・Bridges・Peg Solitaire・Chess・Gem Swap・Pipe Link・Make the Target・Nested Tic-Tac-Toe・Tangram・Light Grid・Color Flood・Hanoi Towers・Maze Escape) | 24 / 14 → 0 / 0 | 24 / 14 → 0 / 0 |
+| Hit and Blow(入力の行) | 24 / 12 → 0 / 0 | 24 / 12 → 0 / 0 |
+| Scopa(プリミエラの行) | 24 / 0 → 0 / 0 | 24 / 0 → 0 / 0 |
+| Bunny Hop(ジャンプ) | 16 / 16 → 0 / 0 | 16 / 16 → 0 / 0 |
+| Invaders(操作の注記) | 14 / 0 → 0 / 0 | 14 / 0 → 0 / 0 |
+| Quick Math(キー) | 12 / 12 → 0 / 0 | 12 / 12 → 0 / 0 |
+| Echo Pads(速さの行) | 12 / 11 → 0 / 0 | 12 / 11 → 0 / 0 |
+| Ludo(ダイスの欄) | 0 → 0 | 24 / 24 → 0 / 0 |
+| Bounce Up(盤 16px・◀ ▶ 6px) | 0 → 0 | 16 / 16 → 0 / 0 |
+| Overtake(▼) | 0 → 0 | 12 / 12 → 0 / 0 |
+| Water Sort | 24 / 14 → 0 / 0 | 24 / 23 → 11 / 11(デイリー・フリープレイの 3 段の棚。eb272811 が直す) |
+| Bubble Pop | 0 → 0 | 24 / 24 → 24 / 24(発射台とトレイが画面の外。35fe2ba6 が直す) |
+| 11 本(Brick Breaker・Sky Fighter・Memory Match・Snake・Yacht・Number Recall・Schulte Table・Knight's Tour・Nim・Three Peaks・Paddle Rally) | 0 → 0 | 0 → 0 |
+
+下端に何かが入るモードは 411×914 で 152 → 0、360×640 で 158 → 3(Bubble Pop 1・Water Sort 2)。押せる要素では 147 → 0、
+153 → 3。上部バーの上・隣へのはみ出し・画面の外に押し出された要素は、どのモードでも増えていない(Bubble Pop と Water Sort の
+変更前からの崩れを除く)。
+
+**盤の動き(枠も予約もない状態)**: 下端が 24px 空いたぶん、操作バーは 24px 上がる。上下の中央に置いた盤は大きさを保ったまま
+12px、下に寄せた盤(Quick Math のキー・Hit and Blow の入力・Gem Swap の盤・Dominoes の列)は 24px 上がり、上に寄せた盤(カードの
+卓など)は動かない。スクロールする遊ぶ領域は見える高さが 24px 縮む(360×640 の Hearts の手札は 31 → 55px、Ludo 47 → 71px、
+Minesweeper の むずかしい 43 → 67px、Mahjong Solitaire のデイリー 331 → 355px のスクロール)。残りの高さに合わせて広がる盤は
+縮む: 360×640 の Echo Pads は盤の領域が 344.6 → 320.6px(パッドの縦が約 165 → 150px。枠のある状態の盤は 328×227 で、パッドの
+縦横比はもとから状態で変わる)、Tangram は遊ぶ領域が約 15px 細く(正方形のまま)、Bounce Up・Overtake は 9:16 のまま幅が
+13.4px 細く高さが 24px 低い。Brick Breaker・Sky Fighter は位置も大きさも変わらない(下の余白を持った箱を中央に置くのと、
+その高さだけ低い領域の中央に置くのは同じ)。盤の下に別に下寄せの行があるもの(Futoshiki・Kakuro の数字パッド、Unblock
+Puzzle の操作、Scopa の手札とプリミエラの行、Bunny Hop のジャンプ、411×914 の Echo Pads の操作)は、盤が 12px、その行が
+24px 上がる。
+
+**枠のある状態と Web の予約の状態は変わらない**:
+
+- 変更前後のビルドの突き合わせ(182 モード × 2 サイズ × 枠 64px・枠 90px・Web の予約): 箱はすべて同じ。違ったのは 2 回の起動で
+  盤の中身が違った行だけ(360×640 で 8、411×914 で 7: Gin Rummy の操作バーのボタンの有無、Dominoes の列、Bridges のパズル、
+  Make the Target の数字、Scopa の上の帯の文。どれも 3 つの状態に同じ差が出ていて、枠の下・上部バーの上・はみ出しの数は同じ)。
+- 同じ頁での A/B(変更前のビルドで測ったあと、変更を後から足す CSS として加えて同じ盤をもう一度測る): 上の 5 本・変更した
+  4 本(Brick Breaker・Sky Fighter・Bounce Up・Overtake)・巡回の最初の 9 本(Sudoku〜2048)の 17 本、各サイズ 41 モード。
+  3 つの状態の箱はすべて同じ — 411×914 の Dominoes の 1 モードだけ、2 回の計測のあいだに CPU が牌を置いて列が変わった。
+- 新しい規則は 2 つの属性のどちらかがあるとセレクタが当たらず、4 本のゲームの変更もその 2 つの状態では前と同じ値になる
+  (`--bb-unheld` / `--sf-unheld` はその状態で 0 だった。`--bo-reserve` / `--ot-reserve` は枠のある状態で 0、予約で 116px)。
+
+**別のブランチと合わせたとき**(このブランチの変更後のバンドルに、claude/musing-gould-8e0a64 の CSS を後から足して、枠も
+予約もない状態を測った):
+
+- Water Sort に e4b6521b の water-sort.css(eb272811 の、列の間を 12px で数える幅の式を含む)を足すと、3 モードとも
+  360×640・411×914 で下端に入る量 0、上部バーの上・はみ出し 0。
+- Bubble Pop に 35fe2ba6 の bubble-pop.css を足すと、下端に入る量 0。ただし 35fe2ba6 は同じ状態の `.bu-board-wrap` に
+  `padding-bottom: env(safe-area-inset-bottom)` を置いていて、この変更と二重になる: 残すと盤は同じ大きさのまま 9px(360×640)/
+  12px(411×914)上がり、トレイの下に 24px 余分に空く。その規則を外すと、盤は 35fe2ba6 だけのときと同じ位置と大きさ
+  (360×640 で幅 195.2px、411×914 で 320px)。2 つのブランチを合わせるときは、その規則を外す。
+
+**3 ボタンのナビゲーション相当(下端 48px)**: 同じ Chromium の巡回を、safe area の下端だけ 48px にして変更前後で測った
+(エミュレータのナビゲーションの設定は変えていない)。下端に何かが入るモードは 411×914 で 155 → 0、360×640 で 162 → 3(同じ
+Bubble Pop・Water Sort)。枠 64 / 90px と Web の予約の箱は、24px のときと同じ 5 本の中身の違いを除いて同じ。360×640 では次の 2 つが
+24px のときと違う:
+
+- **Sudoku**: 盤が 336×334 と 2px 縦につぶれる(24px では 336×336)。盤の高さの上限(2026-10-30 の大きさの修正)は
+  `:root[data-sg-app-banner]` の下だけにあるので、枠も予約もない状態には効かない。行の高さをそろえた e4d8d84e の後も
+  同じ(9 行が 334px を等分する)。ここでは直していない: 上限を枠も予約もない状態に広げると、Web 版(広告なし)の背の
+  低い窓でも盤が変わり、2026-10-30 の「上限は枠のある状態だけに置く」判断を越えるため。
+- **Futoshiki・Kakuro**: 盤の領域が足りなくなり、領域がスクロールする(24px では収まる)。f4b55052 の上では盤が上下の中央に
+  置かれていたので、上へはみ出したぶんにはスクロールで届かない形だった。PR #298(af363f3a)は盤を auto margin で中央に置き、
+  はみ出しを下だけにするので、取り込んだ土台では最上段から始まり、下へ 20px スクロールすれば全部に届く(下の節)。
+
+スクロールする遊ぶ領域は 48px ぶん長くなる(360×640 の Hearts 31 → 79px、Ludo 47 → 95px、Color Flood は 0 → 10px で
+操作バーが遊ぶ領域の中にあるので、その 10px のスクロールで届く)。Bounce Up・Overtake は 9:16 のまま幅が 27px 細くなる。
+
+**PR #298 を取り込んだ土台で**: 測っているあいだに PR #298(Kakuro・Futoshiki・Peg Solitaire・Minesweeper の盤を 360×640 で
+届くようにした変更)が PR #297 のブランチに入ったので、この変更を af363f3a の上に載せ直した。触るファイルは重ならない。その
+4 本だけを、af363f3a のビルドと載せ直したビルドで、同じ Chromium の巡回で測り直した(12 モード × 411×914・360×640 × 下端 24px・
+48px): 枠も予約もない状態で下端に入る量は、24px で 24 / 14px → 0、48px で 48 / 38px → 0。枠 64 / 90px と Web の予約の箱は
+4 通りとも変更前と同じ。48px の 360×640 では Futoshiki・Kakuro のデイリーとフリープレイの盤が領域より 20px 高くなるが、
+auto margin で最上段が領域の上端に来て、スクロールで全部に届く。Peg Solitaire の新しい高さの上限は枠のある状態だけにあり、
+広告なしでは盤が同じ大きさのまま 12px(48px では 24px)上がる。Minesweeper のむずかしいは遊ぶ領域のスクロールが 43 → 67px
+(48px で 91px)に伸びる(最初の注記は箱の下端に貼り付く作り)。ほかの 61 本は、f4b55052 と af363f3a のあいだで変わって
+いないので、上の数字のまま。Sudoku・Sudoku 6×6 は、行の高さをそろえた e4d8d84e のビルドとこの変更を載せたビルドでも同じように
+測り直した(7 モード × 2 サイズ × 24px・48px): 下端に入る量は 0、枠と予約の状態は同じ、24px では盤の大きさも同じ。
+
+**確かめていないこと**:
+
+- 実際の端末・iOS(ホームインジケータ)。iOS でも `env(safe-area-inset-bottom)` で同じ規則が効く見込みだが、動かしていない。
+- エミュレータの 3 ボタンのナビゲーション(上の 48px は Chromium の safe area の上書き)。
+- 枠も予約もない状態の、2 サイズ以外の画面(タブレット・横向き・電話より低い窓)、日本語以外、各ゲームの途中の局面。
+- Nearby(`.nearby-screen`)・Club・チュートリアル・ゲームのホームなど、プレイ画面以外の画面(どれも `.game-screen` では
+  なく、下端は自分の余白で空けている)。ダイアログ(`.overlay`)の下端。

@@ -27,40 +27,36 @@
    (`--sg-app-banner-reserve`: 90px and the inset), so the board keeps its
    size when an ad grows the slot, and otherwise (the app with ads removed,
    the web without ads) the bottom inset. With the notch it makes --sf-edges.
-   Only in that last case does nothing around the board hold the inset back
-   (there is no slot, and .screen has no bottom padding), so --sf-unheld gives
-   it to the canvas as a bottom margin: centred, the board would otherwise
-   reach into it (2px into a 24px gesture inset at 360×640, 14px into a 48px
-   three-button bar). `max-height` leaves room for that margin too, so when
-   the top bar outgrows the spare the box is cut short by the excess, as it
-   was before, rather than the centred margin box spilling over the weapon
-   line. The properties sit on .sf-board-wrap, the canvas's parent: it has no
-   box of its own (display: contents), but its children inherit from it all
-   the same. The svh form sits under `@supports`: a var() makes a declaration
-   parse, so on a WebView without svh (Chromium 88) it would win over the vh
-   form and then compute to nothing. */
+   In each case something under the board holds that height back — the slot
+   and its margin, the reservation's padding, or, with neither, the play
+   screen's own bottom padding (ui/styles.css, since 2026-10-31; before it the
+   canvas held the inset as a bottom margin) — so the canvas, centred in what
+   is left, ends above it. When the top bar outgrows the spare, `max-height`
+   cuts the box short by the excess, as it was before, rather than letting it
+   spill over the weapon line. The properties sit on .sf-board-wrap, the
+   canvas's parent: it has no box of its own (display: contents), but its
+   children inherit from it all the same. The svh form sits under
+   `@supports`: a var() makes a declaration parse, so on a WebView without
+   svh (Chromium 88) it would win over the vh form and then compute to
+   nothing. */
 .sf-board-wrap {
   --sf-chrome: 104px;
   --sf-reserve: env(safe-area-inset-bottom, 0px);
   --sf-edges: calc(env(safe-area-inset-top, 0px) + var(--sf-reserve));
-  --sf-unheld: env(safe-area-inset-bottom, 0px);
 }
 
 :root[data-sg-web-ads] .sf-board-wrap {
   --sf-reserve: calc(116px + env(safe-area-inset-bottom, 0px));
-  --sf-unheld: 0px;
 }
 
 :root[data-sg-app-banner] .sf-board-wrap {
   --sf-reserve: var(--sg-app-banner-reserve);
-  --sf-unheld: 0px;
 }
 
 .sf-canvas {
   width: min(100%, 360px, calc((100vh - var(--sf-chrome) - var(--sf-edges)) * 0.5625));
-  max-height: calc(100% - var(--sf-unheld));
+  max-height: 100%;
   height: auto;
-  margin-bottom: var(--sf-unheld);
   display: block;
   border-radius: var(--radius);
   box-shadow: var(--shadow);

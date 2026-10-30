@@ -1786,6 +1786,23 @@ button:disabled {
   --sg-app-banner-reserve: calc(90px + env(safe-area-inset-bottom));
 }
 
+/* A play screen with neither of the two above — the app once ads are
+   removed (BannerSlot renders nothing and never marks the root) and the web
+   build without its reservation (no ads configured, the owner benefit, or an
+   anchor that came back empty) — keeps the bottom inset clear itself. Nothing
+   else holds it there: `.screen` pads only the top and the sides, the slot's
+   margin is gone with the slot, and `.game-screen .action-bar` leaves the
+   inset to that margin. Without this the action bar ran to the screen's
+   bottom edge, its buttons 14px into the Android emulator's 24px gesture
+   inset in 148 of the 182 modes at 411×914 (2026-10-30), and would sit
+   deeper under a 48px three-button bar or the iOS home indicator. Scoped to
+   this state, so the app with its banner and the web with its reservation
+   keep their layout. A board sized from the viewport's height counts the
+   inset in this state too (docs/ARCHITECTURE.md「広告と課金」). */
+:root:not([data-sg-app-banner]):not([data-sg-web-ads]) .game-screen {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 /* Dialogs need the clearance of their own: `.overlay` is fixed to the
    viewport, so it does NOT inherit the reservation above — measured on a
    375x450 viewport, the privacy dialog ran 11px under the anchor, and a

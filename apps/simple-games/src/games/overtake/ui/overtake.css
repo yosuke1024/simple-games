@@ -48,12 +48,15 @@
    height being the screen less everything stacked with it: the top bar (64),
    the race row (28), the gaps (24) and — when shown — the button row (56),
    the notch (.screen's top padding), on the web the 116px kept for the
-   anchor ad, and in the app the native banner's worst case
-   (`--sg-app-banner-reserve`, ui/styles.css). §11 records what was checked. */
+   anchor ad, in the app the native banner's worst case
+   (`--sg-app-banner-reserve`, ui/styles.css), and with neither (the app with
+   ads removed, the web without ads) the bottom inset, which the play screen
+   then keeps clear itself (ui/styles.css). §11 records what was checked. */
 
 .ot-screen {
   --ot-chrome: 116px;
-  --ot-reserve: 0px;
+  /* With neither the strip nor the reservation: the bottom inset. */
+  --ot-reserve: env(safe-area-inset-bottom, 0px);
   /* The notch and, in the app, the native banner's worst case. */
   --ot-edges: calc(env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve, 0px));
 }
@@ -66,6 +69,13 @@
   .ot-screen {
     --ot-chrome: 172px;
   }
+}
+
+/* The strip's worst case in --ot-edges already holds the inset under it.
+   Before the web's rule, so that one still wins should both attributes ever
+   be set together, as it did before this rule existed. */
+:root[data-sg-app-banner] .ot-screen {
+  --ot-reserve: 0px;
 }
 
 :root[data-sg-web-ads] .ot-screen {

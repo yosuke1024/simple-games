@@ -154,6 +154,62 @@ describe('the reserved ad strips never yield their space (issue #120)', () => {
 });
 
 /**
+ * With ads removed, BannerSlot renders nothing and never marks the root, and
+ * the web build without its reservation has neither root attribute either.
+ * Then nothing under a play screen's last row holds the bottom inset: the
+ * slot's margin is gone with the slot, and `.game-screen .action-bar` leaves
+ * the inset to that margin. So styles.css pads the play screen itself, in
+ * that state only (docs/ADS_POLICY.md「広告削除の買い切りとの関係」).
+ * Before it, the action bar's buttons ran 14px into the Android emulator's
+ * 24px gesture inset in most modes. With `css: false` in the test setup, only
+ * this notices the rule gone or widened to the states that already hold it.
+ * The rules are read with the comments taken out and split at their commas,
+ * so a rule commented out, or a selector added to its list, does not pass.
+ */
+describe('a play screen with no banner and no reservation keeps the bottom inset clear', () => {
+  const NEITHER = ':root:not([data-sg-app-banner]):not([data-sg-web-ads]) .game-screen';
+  const rules = [...css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(
+    (match) => ({
+      selectors: match[1]!.split(',').map((selector) => selector.trim()),
+      body: match[2]!,
+    }),
+  );
+  const bodyOf = (selector: string): string => {
+    const found = rules.find(
+      (rule) => rule.selectors.length === 1 && rule.selectors[0] === selector,
+    );
+    expect(found, `no rule for ${selector} on its own`).toBeDefined();
+    return found!.body;
+  };
+
+  it('pads the play screen by the inset in that state, and in no other rule', () => {
+    expect(bodyOf(NEITHER)).toMatch(/padding-bottom:\s*env\(safe-area-inset-bottom\)/);
+    // Every rule that pads the bottom of a screen as a whole: the play screen
+    // here, and every screen under the web's reservation. A third — or either
+    // of these with more selectors in its list — would pad a state that
+    // already holds the inset.
+    const padding = rules.filter(
+      (rule) =>
+        /padding(-bottom)?:/.test(rule.body) &&
+        rule.selectors.some((selector) => /(^|\s)\.(game-)?screen$/.test(selector)),
+    );
+    expect(padding.map((rule) => rule.selectors.join(', ')).sort()).toEqual(
+      [':root[data-sg-web-ads] .screen', NEITHER].sort(),
+    );
+  });
+
+  it('leaves the inset to the slot and to the reservation in their own states', () => {
+    // The two states this rule must not touch hold the inset already; padding
+    // the screen there too would lift every board and control by it.
+    expect(bodyOf('.banner-slot')).toMatch(/margin-bottom:\s*env\(safe-area-inset-bottom\)/);
+    expect(bodyOf('.game-screen .action-bar')).toMatch(/padding-bottom:\s*10px/);
+    expect(bodyOf(':root[data-sg-web-ads] .screen')).toMatch(
+      /padding-bottom:\s*calc\(116px \+ env\(safe-area-inset-bottom\)\)/,
+    );
+  });
+});
+
+/**
  * Reduced Motion is applied by styles.css for two routes — the OS preference
  * and the app's own setting. Many boards also branch on useReducedMotion, but
  * Crown Grid, Number Path, Shape Regions and Box Regions lean on these rules
