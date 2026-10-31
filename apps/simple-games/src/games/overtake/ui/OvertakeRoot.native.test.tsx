@@ -80,7 +80,7 @@ async function settle() {
 const fire = (name: string) => act(() => appMock.fire(name));
 
 const boardLabel = () =>
-  screen.getByRole('img', { name: /^Overtake, level/ }).getAttribute('aria-label') ?? '';
+  screen.getByRole('img', { name: /^Road Weave, level/ }).getAttribute('aria-label') ?? '';
 
 let restores: Array<() => void> = [];
 
@@ -145,7 +145,7 @@ describe('native background and Back (§2)', () => {
 
     fire('backButton');
     await settle();
-    expect(screen.queryByRole('img', { name: /^Overtake, level/ })).toBeNull();
+    expect(screen.queryByRole('img', { name: /^Road Weave, level/ })).toBeNull();
     expect(screen.getByRole('button', { name: 'Level 1' })).toBeInTheDocument();
     expect(onExit).not.toHaveBeenCalled();
 

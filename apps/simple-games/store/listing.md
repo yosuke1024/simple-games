@@ -39,8 +39,8 @@
 > Crown Grid / Number Path / Shape Regions / Yacht / Mancala / Dominoes /
 > Hit & Blow / Dots and Boxes / Binary Balance / Sudoku 6×6 / Box Regions / Chess / Nested Tic-Tac-Toe / Scopa / Nim /
 > Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire / Gem Swap / Pipe Link / Bounce Up /
-> Echo Pads / Overtake / Make the Target / Tangram / Light Grid / Color Flood / Three Peaks /
-> Knight’s Tour / Invaders / Paddle Rally / Hanoi Towers / Maze Escape)の
+> Echo Pads / Road Weave / Make the Target / Tangram / Light Grid / Color Flood / Three Peaks /
+> Knight’s Tour / Formation Fire / Paddle Rally / Hanoi Towers / Maze Escape)の
 > 状態で書いてある。`src/app/registry.ts` の収録数と食い違ったらこちらが古い。
 >
 > **ドリル 3 本(Quick Math / Schulte Table / Number Recall)の掲載文では、
@@ -81,6 +81,9 @@
 > 正式収録の前に求めていた題の商標・両ストアの検索が未了のまま収録した(docs/RELEASE_CHECKLIST.md の
 > 2026-10-29 の節)。**ストアに名前を書く前に、題をこのまま使うかを製品オーナーが判断する。** 新しい 20 本は
 > 一般名の併記をしない(下の「一般名の併記は 3 つだけ」)。
+> **2026-10-31 / 1.7.2:** 9 本の題を両ストアと商標で調べた結果、7 本はそのまま、Invaders は **Formation Fire**、Overtake は
+> **Road Weave** に改名した(製品オーナーの判断。根拠は docs/RELEASE_CHECKLIST.md の 2026-10-31 の節と各ルール文書の冒頭)。
+> この下の一覧はすでに新しい題。
 
 > **2026-10-26 / 1.6.0:** オーナーが本番公開を依頼。Nearby Play の13本・host承認・任意チャット・端末内履歴を追加し、通常プレイのオフライン説明と区別した。App Store Connect の新1.6.0下書きは14言語で保存・GET一致を確認。Google Play反映・審査提出は別に記録する。
 
@@ -102,8 +105,8 @@ Sliding Puzzle > Memory Match > Binary Puzzle > Takuzu > Binary Balance >
 Crown Grid > Number Path > Shape Regions > Box Regions > Sky Fighter >
 Bunny Hop > Snake > Tangram > Peg Solitaire > Three Peaks > Hanoi Towers >
 Knight’s Tour > Bridges > Maze Escape > Unblock Puzzle > Loop Puzzle > Pipe Link >
-Gem Swap > Color Flood > Light Grid > Make the Target > Echo Pads > Invaders >
-Paddle Rally > Bounce Up > Overtake > Simple Games > PixApps
+Gem Swap > Color Flood > Light Grid > Make the Target > Echo Pads > Formation Fire >
+Paddle Rally > Bounce Up > Road Weave > Simple Games > PixApps
 (ゲーム名は検索流入の中核。収録済みの名前だけを、検索需要の大きい順に置く。
 **Checkers は英連邦圏では Draughts、Gomoku は英語圏では Five in a Row、
 Kakuro は Cross Sums、Takuzu は Binary Puzzle とも呼ばれる**ので、掲載文の本文に
@@ -127,7 +130,7 @@ Yacht にも商標のある派生ゲームの名前を併記しない
 **2026-10-29 に加えた 20 本の置き場所**(暫定 — 検索需要は測っていない): 既存のゲーム名の後ろ、
 Simple Games の前に置いた。先頭は一般名そのものが題の古典(Snake / Tangram / Peg Solitaire / Three Peaks /
 Hanoi Towers / Knight’s Tour / Bridges / Maze Escape)、続いて仕組みを名前にした独自名、最後に、同名作があると各ルール
-文書に書かれた Bounce Up / Overtake。並べ替えは製品オーナーの判断で構わない。
+文書に書かれた Bounce Up / Road Weave(旧 Overtake)。並べ替えは製品オーナーの判断で構わない。
 日本語の掲載文でも Kakuro の併記に「カックロ」は使わない — ニコリの商標であり、
 Sudoku の併記を「数独」でなく「ナンプレ」にしたのと同じ理由。一般名の
 「クロスサム」を使う)
@@ -231,14 +234,14 @@ INCLUDED GAMES
 • Pipe Link
 • Bounce Up
 • Echo Pads
-• Overtake
+• Road Weave
 • Make the Target
 • Tangram
 • Light Grid
 • Color Flood
 • Three Peaks
 • Knight’s Tour
-• Invaders
+• Formation Fire
 • Paddle Rally
 • Hanoi Towers
 • Maze Escape

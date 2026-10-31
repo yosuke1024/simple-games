@@ -1,7 +1,7 @@
 // AI translation draft; no human or native review claimed.
 import type { InvadersMessages } from './en';
 export const ko: InvadersMessages = {
-  invadersName: 'Invaders',
+  invadersName: 'Formation Fire',
   invadersStage: '스테이지',
   invadersLives: '목숨',
   invadersLivesLeft: '남은 목숨 {count}개',

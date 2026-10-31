@@ -1324,7 +1324,7 @@ export const GAMES: readonly GameDefinition[] = [
     // same shape with one more dash, ┋. Not ⫼, ⇈, ⛐, ⛟ or ⚑ (the plan's reasons). Not yet seen on a
     // low-spec handset.
     id: 'overtake',
-    title: 'Overtake',
+    title: 'Road Weave',
     category: 'arcade',
     glyph: '┇',
     // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
@@ -1512,7 +1512,7 @@ export const GAMES: readonly GameDefinition[] = [
   // Blocks was withdrawn instead (below).
   {
     id: 'invaders',
-    title: 'Invaders',
+    title: 'Formation Fire',
     category: 'arcade',
     glyph: '⌁',
     // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).

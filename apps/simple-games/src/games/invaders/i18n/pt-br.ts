@@ -1,7 +1,7 @@
 // AI translation draft; no human or native review claimed.
 import type { InvadersMessages } from './en';
 export const ptBR: InvadersMessages = {
-  invadersName: 'Invaders',
+  invadersName: 'Formation Fire',
   invadersStage: 'Fase',
   invadersLives: 'Vidas',
   invadersLivesLeft: 'Restam {count} vidas',

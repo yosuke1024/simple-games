@@ -15,7 +15,7 @@
  * what is kept or deleted.
  */
 export const en = {
-  overtakeName: 'Overtake',
+  overtakeName: 'Road Weave',
 
   // Home
   overtakeControls: 'Controls',
@@ -28,7 +28,7 @@ export const en = {
   overtakeTouchToStart: 'Touch to start',
   overtakePaused: 'Paused',
   overtakePlaceNow: 'Place {place} of 4',
-  overtakeBoardLabel: 'Overtake, level {n}: {state}',
+  overtakeBoardLabel: 'Road Weave, level {n}: {state}',
   overtakeState_ready: 'ready',
   overtakeState_running: 'running',
   overtakeState_paused: 'paused',

@@ -4,6 +4,35 @@ Google Play への公開前に、この順で確認する。
 **チェックが通らない項目を「たぶん大丈夫」で飛ばさない。**
 実施していない検証を成功扱いにしないこと([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))。
 
+## 2026-10-31: 題名 2 本の改名とストア申請(1.7.1 → 1.7.2)
+
+製品オーナーが 1.7.1 の実機確認を終え、ストアへの申請を指示した(2026-10-31)。2026-10-29 の節に残っていた「題の商標・
+両ストアの検索 — 9 本」を、申請の前に調べた(オーナーの選択「先に Claude が検索」)。両ストアの検索(iTunes Search API の
+US・JP、Google Play)と商標(米国 USPTO、日本 J-PlatPat、WIPO。EUIPO / TMview はつながらなかった)で、Unblock Puzzle /
+Gem Swap / Pipe Link / Bounce Up / Echo Pads / Make the Target / Tangram の 7 本は低リスクでそのまま使う。2 本は高リスクだった:
+
+- **Invaders**(日本語「インベーダー」): タイトーの標準文字商標「ＩＮＶＡＤＥＲＳ」(登録 5059572、区分 9・28・41、2027-07-06 まで)を
+  J-PlatPat で直接確かめた
+- **Overtake**: Kwalee の同名・同ジャンルのレースゲーム「OverTake」(両ストア、Play 500 万以上)、IGS の米国登録(区分 9 のゲーム
+  ソフト、図案化)、EU・フランスのゲームを含む登録、日本の KADOKAWA「オーバーテイク！」(区分 9・28・41)
+
+どちらも別の検証役 2 体ずつに反証させ、事実は覆らなかった(法的な判断ではない)。製品オーナーの判断で 2 本とも改名し、候補を同じ方法で
+調べて **Formation Fire**(旧 Invaders)と **Road Weave**(旧 Overtake)に決めた。どちらも両ストア・USPTO・J-PlatPat・WIPO で
+同じ名前は見つからなかった。
+
+- [x] 変えたのはプレイヤーに見える題(14 言語の `invadersName` / `overtakeName`、registry の `title`)と、題を含む盤の読み上げラベル
+      (`overtakeBoardLabel` の 14 言語、`invadersBoard` の en・ja)だけ。ほかの 12 言語の `invadersBoard` はその言語の普通名詞
+      (「Angreifer」「invasores」など)なので変えていない。id・保存キー(`iv.*` / `ot.*`)・CSS の起点・ファイル名は変えていないので、
+      保存データは移行なしで読める。ルール文書の冒頭に改名の注記、README・BRAND・title-accent・storage-keys の表と掲載文の正本を新しい題にした
+- [x] iOS は 1.7.2 / 10702。1.7.1 の Bluetooth の修正と i18n の門はそのまま入っている
+- [ ] 1.7.2 の題が両 OS の実機のホーム・ゲームのホーム・結果画面・共有で新しい名前になっていること
+- [x] ストア: App Store の 1.7.2 に de / es-ES / fr-FR / id / pt-BR / tr / vi の iPhone 6.9"・6.5" のスクリーンショット各 8 枚
+      (pixapps_strategy `tools/simple-games-screenshots` のデッキ。en / ja はすでに同じデッキ)、14 ロケールの説明文・プロモーション文を
+      65 本と近くの対戦 14 本に、新機能を 1 行(「新しいゲームを20本追加し、全65本になりました。」の各言語)。Play は 17 言語の
+      説明文に 20 本を足して 65 本に(4000 字を超える言語は約束でない文を削った)、fr / id / pt-BR / pt-PT / tr / vi に電話の
+      スクリーンショット各 8 枚。英日以外の書き換えた行は、原文を見せない逆翻訳で数字と意味を確かめた
+- [ ] Play の掲載文とスクリーンショットの反映は、製品版 1.7.2 のリリースを審査に出すのと同時(先に出すと未公開の 20 本を書くことになる)
+
 ## 2026-10-31: Bluetooth の近くの対戦で落ちる(1.7.0 → 1.7.1)
 
 1.7.0(10700、タグ `v1.7.0` = e6297715)の内部テスト版で、製品オーナーが報告した: Android で「近くの対戦」の
@@ -121,7 +150,8 @@ Maze Escape(No. 62・64〜66)。Falling Blocks(No. 63)は 2026-10-29 に先行�
       練習セット([PUZZLE_PRACTICE_SET.md](PUZZLE_PRACTICE_SET.md))の 5 本は含まないので、practice ページは対象外
 - [ ] 各ルール文書が「正式収録の前に」と書いていた確認と、製品オーナーの確認待ちの暫定は、**未了のまま収録した**
       (各文書の冒頭の注記。製品オーナーの判断で収録 — 上の指示)。主なもの:
-      - 題の商標データベースと両ストアの検索 — **9 本**: Unblock Puzzle(「Unblock」は既存作と共有する語 —
+      - (2026-10-31 に実施。7 本はそのまま、Invaders と Overtake は改名 — 上の 2026-10-31 の「題名 2 本の改名」の節)
+        題の商標データベースと両ストアの検索 — **9 本**: Unblock Puzzle(「Unblock」は既存作と共有する語 —
         冒頭「題の確認」)/ Gem Swap / Pipe Link / Bounce Up / Echo Pads / Overtake / Make the Target / Tangram /
         Invaders(名称・商標の確認)。**題の確認はストアに名前を書く前の事項なので、掲載文を Console / App Store
         Connect に反映する前に製品オーナーの判断が要る**

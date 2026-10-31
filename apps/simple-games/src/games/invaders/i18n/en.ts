@@ -1,10 +1,10 @@
 // English source.
 export const en = {
-  invadersName: 'Invaders',
+  invadersName: 'Formation Fire',
   invadersStage: 'Stage',
   invadersLives: 'Lives',
   invadersLivesLeft: '{count} lives remaining',
-  invadersBoard: 'Invaders field: {count} invaders remaining',
+  invadersBoard: 'Field: {count} attackers remaining',
   invadersControls: 'Drag or use ← → / A D to move.',
   invadersStart: 'Start',
   invadersPause: 'Pause',

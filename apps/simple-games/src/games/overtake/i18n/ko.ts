@@ -15,7 +15,7 @@
 import type { OvertakeMessages } from './en';
 
 export const ko: OvertakeMessages = {
-  overtakeName: 'Overtake',
+  overtakeName: 'Road Weave',
 
   // Home
   overtakeControls: '조작',
@@ -28,7 +28,7 @@ export const ko: OvertakeMessages = {
   overtakeTouchToStart: '터치해서 출발',
   overtakePaused: '일시정지됨',
   overtakePlaceNow: '4대 중 {place}등',
-  overtakeBoardLabel: 'Overtake, 레벨 {n}: {state}',
+  overtakeBoardLabel: 'Road Weave, 레벨 {n}: {state}',
   overtakeState_ready: '출발 대기',
   overtakeState_running: '주행 중',
   overtakeState_paused: '일시정지됨',

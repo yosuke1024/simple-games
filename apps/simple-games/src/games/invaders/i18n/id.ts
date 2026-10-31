@@ -1,7 +1,7 @@
 // AI translation draft; no human or native review claimed.
 import type { InvadersMessages } from './en';
 export const id: InvadersMessages = {
-  invadersName: 'Invaders',
+  invadersName: 'Formation Fire',
   invadersStage: 'Tahap',
   invadersLives: 'Nyawa',
   invadersLivesLeft: 'Tersisa {count} nyawa',

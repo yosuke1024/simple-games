@@ -17,7 +17,7 @@
 import type { OvertakeMessages } from './en';
 
 export const de: OvertakeMessages = {
-  overtakeName: 'Overtake',
+  overtakeName: 'Road Weave',
 
   // Home
   overtakeControls: 'Steuerung',
@@ -30,7 +30,7 @@ export const de: OvertakeMessages = {
   overtakeTouchToStart: 'Tippen zum Starten',
   overtakePaused: 'Pausiert',
   overtakePlaceNow: 'Platz {place} von 4',
-  overtakeBoardLabel: 'Overtake, Level {n}: {state}',
+  overtakeBoardLabel: 'Road Weave, Level {n}: {state}',
   overtakeState_ready: 'bereit',
   overtakeState_running: 'unterwegs',
   overtakeState_paused: 'pausiert',

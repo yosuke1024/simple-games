@@ -127,7 +127,7 @@ Dots and Boxes / Chess / Nested Tic-Tac-Toe / Scopa / Nim。Web版は引き続�
 | Pipe Link                            | `pipe-link/`          | 難易度 3 種 + デイリー                   | Undo / Hint(盤面から証明できる 1 枚)               | [ルール](docs/PIPE_LINK_RULES.md)                                  |
 | Bounce Up                            | `bounce-up/`          | エンドレス(足場 Normal / Wide)           | なし(即時リトライ・Wide)                           | [ルール](docs/BOUNCE_UP_RULES.md)                                  |
 | Echo Pads                            | `echo-pads/`          | Levels 22 + デイリー                     | 聞き直し / Pace 3 段(Hint なし)                    | [ルール](docs/ECHO_PADS_RULES.md)                                  |
-| Overtake                             | `overtake/`           | Levels 100(1 位でクリア)                 | なし(同一コースの即時再走)                         | [ルール](docs/OVERTAKE_RULES.md)                                   |
+| Road Weave                           | `overtake/`           | Levels 100(1 位でクリア)                 | なし(同一コースの即時再走)                         | [ルール](docs/OVERTAKE_RULES.md)                                   |
 | Make the Target                      | `make-the-target/`    | 難易度 3 種 + デイリー                   | Undo / Restart(Hint なし)                          | [ルール](docs/MAKE_THE_TARGET_RULES.md)                            |
 | Nested Tic-Tac-Toe                   | `nested-tic-tac-toe/` | CPU 3段階・先後選択 / 近隣対戦           | CPU戦Undo・打てる小盤表示                          | [ルール](docs/NESTED_TIC_TAC_TOE_RULES.md)                         |
 | Scopa                                | `scopa/`              | 11点先取・CPU / 近隣対戦                 | 取れる札の表示                                     | [ルール](docs/SCOPA_RULES.md)                                      |
@@ -137,7 +137,7 @@ Dots and Boxes / Chess / Nested Tic-Tac-Toe / Scopa / Nim。Web版は引き続�
 | Three Peaks                          | `three-peaks/`        | フリー配札(デイリーなし)                 | Undo / 同じ配札に再挑戦                            | [ルール](docs/THREE_PEAKS_RULES.md)                                |
 | Nim                                  | `nim/`                | CPU 3段階 / 近隣対戦                     | CPU戦Undo                                          | [ルール](docs/NIM_RULES.md)                                        |
 | Knight’s Tour                        | `knight-tour/`        | 盤 3 サイズ(5×5 / 6×6 / 8×8)             | 合法手表示 / Undo / 再挑戦                         | [ルール](docs/KNIGHT_TOUR_RULES.md)                                |
-| Invaders                             | `invaders/`           | 20 ステージ                              | なし(同じ開始条件での即時リトライ)                 | [ルール](docs/INVADERS_RULES.md)                                   |
+| Formation Fire                       | `invaders/`           | 20 ステージ                              | なし(同じ開始条件での即時リトライ)                 | [ルール](docs/INVADERS_RULES.md)                                   |
 | Paddle Rally                         | `paddle-rally/`       | CPU 対戦・難易度 3 種                    | なし(即時の再戦)                                   | [ルール](docs/PADDLE_RALLY_RULES.md)                               |
 | Hanoi Towers                         | `hanoi-towers/`       | 円盤 3 / 4 / 5 枚                        | Undo(Hint なし)                                    | [ルール](docs/HANOI_TOWERS_RULES.md)                               |
 | Maze Escape                          | `maze-escape/`        | 迷路 3 サイズ                            | Undo / Hint(次の 1 歩)                             | [ルール](docs/MAZE_ESCAPE_RULES.md)                                |

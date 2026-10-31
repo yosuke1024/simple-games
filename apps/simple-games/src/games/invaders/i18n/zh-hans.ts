@@ -1,7 +1,7 @@
 // AI translation draft; no human or native review claimed.
 import type { InvadersMessages } from './en';
 export const zhHans: InvadersMessages = {
-  invadersName: 'Invaders',
+  invadersName: 'Formation Fire',
   invadersStage: '关卡',
   invadersLives: '生命',
   invadersLivesLeft: '剩余 {count} 条生命',

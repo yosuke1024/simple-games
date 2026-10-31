@@ -105,7 +105,7 @@ async function openRace(level = 1) {
 }
 
 const boardLabel = () =>
-  screen.getByRole('img', { name: /^Overtake, level/ }).getAttribute('aria-label') ?? '';
+  screen.getByRole('img', { name: /^Road Weave, level/ }).getAttribute('aria-label') ?? '';
 const topButton = (name: RegExp | string) => screen.getByRole('button', { name });
 const pad = (name: string) =>
   within(screen.getByRole('group', { name: 'Driving buttons' })).getByRole('button', { name });
@@ -167,7 +167,7 @@ describe('first run: Quick Rules (§10)', () => {
     await settle();
 
     expect(stored(OT_STORAGE_KEYS.flags)).toEqual({ schemaVersion: 1, tutorialCompleted: true });
-    expect(boardLabel()).toBe('Overtake, level 1: ready');
+    expect(boardLabel()).toBe('Road Weave, level 1: ready');
     expect(raceRow()).toContain('Touch to start');
     // Opening a level is not a race yet (§9).
     expect(stored(OT_STORAGE_KEYS.stats)).toBeNull();
@@ -206,7 +206,7 @@ describe('the home (§7, §11)', () => {
     await launch();
     expect(screen.getByRole('button', { name: /Levels\s*36\/100/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Level 37' }));
-    expect(boardLabel()).toBe('Overtake, level 37: ready');
+    expect(boardLabel()).toBe('Road Weave, level 37: ready');
   });
 
   it('once all hundred are won, Play stays on Level 100 and the chip says 100/100', async () => {
@@ -232,7 +232,7 @@ describe('the home (§7, §11)', () => {
     fireEvent.click(screen.getByRole('button', { name: /Levels/ }));
     expect(screen.getByRole('button', { name: 'Level 5, locked' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Level 2' }));
-    expect(boardLabel()).toBe('Overtake, level 2: ready');
+    expect(boardLabel()).toBe('Road Weave, level 2: ready');
   });
 
   it('Drag is chosen without asking; Buttons is kept in ot.prefs and brings ◀ ▼ ▶', async () => {
@@ -290,7 +290,7 @@ describe('ready, and the start (§2)', () => {
     await openRace();
     fireEvent.pointerDown(canvasEl(), { pointerId: 1, clientX: 180, clientY: 400, button: 0 });
     await settle();
-    expect(boardLabel()).toBe('Overtake, level 1: running');
+    expect(boardLabel()).toBe('Road Weave, level 1: running');
     expect(raceState().player.w).toBe(ROLLING_START_SPEED);
     expect(raceState().rivals.map((r) => r.car.w)).toEqual([240, 240, 240]);
     expect(stored<Stats>(OT_STORAGE_KEYS.stats)?.played).toBe(1);
@@ -859,7 +859,7 @@ describe('Retry, Next, Levels (§2, §8)', () => {
     fireEvent.click(topButton('Retry same board'));
     expect(screen.queryByRole('alertdialog')).toBeNull();
     expect(screen.queryByRole('dialog')).toBeNull();
-    expect(boardLabel()).toBe('Overtake, level 1: ready');
+    expect(boardLabel()).toBe('Road Weave, level 1: ready');
     expect(raceState().step).toBe(0);
     expect(raceState().player.r).toBe(-90 * SUB);
     // The retried race counts when it moves, not before.
@@ -902,7 +902,7 @@ describe('Retry, Next, Levels (§2, §8)', () => {
     expect(raceState().status).toBe('finished');
 
     fireEvent.click(within(card).getByRole('button', { name: 'Next Level' }));
-    expect(boardLabel()).toBe('Overtake, level 2: ready');
+    expect(boardLabel()).toBe('Road Weave, level 2: ready');
   });
 
   it('second to fourth: Retry leads, no Next, the frontier stays, no review count', async () => {

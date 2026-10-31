@@ -21,7 +21,7 @@ import type { Locale } from '@/i18n';
 import { catalogs } from './index';
 import { en, type OvertakeMessages } from './en';
 
-const TITLE = 'Overtake';
+const TITLE = 'Road Weave';
 
 /** Values that are the English word in that language too. */
 const SAME_AS_EN: Partial<Record<Locale, readonly (keyof OvertakeMessages)[]>> = {
