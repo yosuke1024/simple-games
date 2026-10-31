@@ -70,10 +70,14 @@
 }
 
 /* The button is the tap target; the glass inside is the drawing. The lift on
-   selection is a position cue, not just a repaint (§12). */
+   selection is a position cue, not just a repaint (§12). The width takes out
+   the rack's real column gap (12px, above): the 10px it once took out left a
+   width-limited rack (four or more columns on a phone) a few pixels short,
+   and its last tube wrapped to a row WaterBoard never asked for
+   (waterSortCss.test.ts keeps the two equal). */
 .ws-tube {
   flex: 0 0 auto;
-  width: calc((100% - (var(--ws-cols) - 1) * 10px) / var(--ws-cols));
+  width: calc((100% - (var(--ws-cols) - 1) * 12px) / var(--ws-cols));
   max-width: 86px;
   padding: 0;
   border: none;
@@ -424,34 +428,26 @@
 /* ---------- the app's banner strip ----------
 
    In the app the rack also has to leave the native banner strip free, and
-   the web's height cap above (68% of the screen, less 56px, per row) is a
+   the height cap above (68% of the screen, less 56px, per row) is a
    fraction rather than a budget, so it does not see the strip, the notch or
    the action bar. Measured on the Android emulator at 360×640, a two-row
    rack of fat tubes was 405px tall in a 360px body, and a rack of seven or
    more tubes wrapped to a third row (621px): the tubes ran 43px under the
    64px slot (56px under a 90px one) and 101px up over the top bar (§12).
+   The third row came from the tube width's 10px gap, which .ws-tube now
+   takes out as 12px on every screen.
 
-   Two corrections, both only under `:root[data-sg-app-banner]` (the web
-   build keeps its rack as published):
-   - The tube width counts the rack's real 12px column gap. The 10px it
-     subtracted left a width-limited rack (four or more columns on a phone)
-     a few pixels short, so its last tube wrapped to a row WaterBoard never
-     asked for.
-   - Each glass is also no taller than its share of the height left: the
-     screen less --ws-chrome (the top bar 64, the body's padding 14, the
-     action bar 77 and the 10px a selected tube lifts by), the row gaps
-     (26px each) and --ws-edges — the notch (.screen's top padding) and the
-     strip's worst case (`--sg-app-banner-reserve`, ui/styles.css: 90px and
-     the bottom inset), so the rack keeps its size when an ad taller than the
-     64px slot arrives. */
+   So under `:root[data-sg-app-banner]` each glass is also no taller than
+   its share of the height left: the screen less --ws-chrome (the top bar
+   64, the body's padding 14, the action bar 77 and the 10px a selected
+   tube lifts by), the row gaps (26px each) and --ws-edges — the notch
+   (.screen's top padding) and the strip's worst case
+   (`--sg-app-banner-reserve`, ui/styles.css: 90px and the bottom inset), so
+   the rack keeps its size when an ad taller than the 64px slot arrives. */
 
 .ws-rack {
   --ws-chrome: 165px;
   --ws-edges: calc(env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve, 0px));
-}
-
-:root[data-sg-app-banner] .ws-tube {
-  width: calc((100% - (var(--ws-cols) - 1) * 12px) / var(--ws-cols));
 }
 
 :root[data-sg-app-banner] .ws-tube-glass {
