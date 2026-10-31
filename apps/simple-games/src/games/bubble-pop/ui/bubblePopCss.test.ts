@@ -66,6 +66,36 @@ describe('the board fits the screen (§14)', () => {
     expect(padded.map((m) => m[1]!.trim())).toEqual([]);
   });
 
+  it('declares on the column what every width rule reads, with svh only under @supports', () => {
+    // An undeclared property makes the width invalid where it is used: the
+    // canvas then takes its backing-store width, which follows the displayed
+    // width, and grows without end. A column sized by its content holds the
+    // board at 300px on a ratio-1 screen (§14).
+    const wrap = rules('.bu-board-wrap').join('\n');
+    expect(wrap).toContain('width: 100%;');
+    expect(wrap).toContain('--bu-vh: 100vh;');
+    expect(wrap).toContain('--bu-chrome: 138px;');
+    expect(code).toMatch(
+      /@media \(max-width: 272\.98px\) \{\s*\.bu-board-wrap \{\s*--bu-chrome: 186px;\s*\}/,
+    );
+    expect(code).toMatch(
+      /@supports \(height: 100svh\) \{\s*\.bu-board-wrap \{\s*--bu-vh: 100svh;\s*\}/,
+    );
+    const names = (bodies: string[], pattern: RegExp) =>
+      new Set(bodies.flatMap((body) => [...body.matchAll(pattern)].map((m) => m[1]!)));
+    const declared = names(rules('.bu-board-wrap'), /(--bu-[\w-]+):/g);
+    const webDeclared = names(rules(':root[data-sg-web-ads] .bu-board-wrap'), /(--bu-[\w-]+):/g);
+    for (const name of names(rules('.bu-canvas'), /var\((--bu-[\w-]+)/g)) {
+      expect(declared, `${name} is read by .bu-canvas but not declared`).toContain(name);
+    }
+    for (const name of names(rules(':root[data-sg-web-ads] .bu-canvas'), /var\((--bu-[\w-]+)/g)) {
+      expect(
+        declared.has(name) || webDeclared.has(name),
+        `${name} is read on the web but not declared`,
+      ).toBe(true);
+    }
+  });
+
   it('gives the web board a floor and the reservation its 116px', () => {
     const web = rules(':root[data-sg-web-ads] .bu-board-wrap').join('\n');
     expect(web).toContain(

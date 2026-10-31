@@ -198,8 +198,9 @@
    label beside the shot dots is one line from 308px and at most two at
    273-307px, 48px, the buttons' height exactly. Below 273px it wraps
    further — two-digit levels in Japanese and Chinese at 265-272px (an 88px
-   bar), single-digit levels below that and Korean from 260px, Japanese up
-   to 112px — so the chrome there is 186px, with the edge written 272.98px
+   bar), single-digit levels too from 264px in Japanese and 262px in
+   Chinese, Korean from 260px, Japanese up to 112px — so the chrome there is
+   186px, with the edge written 272.98px
    so that a fractional width just above 272 (a 2.625 device pixel ratio,
    page zoom) takes it too. Before 1.7.0 a line of text under the level
    spelled the shots left out ("8 shots until the ceiling drops", which §3

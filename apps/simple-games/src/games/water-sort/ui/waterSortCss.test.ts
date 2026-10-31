@@ -58,4 +58,26 @@ describe('the rack (§12)', () => {
     // the vh cap and its svh twin both read the floor
     expect(code.match(/var\(--ws-floor\)/g)).toHaveLength(2);
   });
+
+  it('caps the glass beside the banner strip and under the web reservation alike, vh and svh', () => {
+    // The variables above do nothing unless the cap is selected in both
+    // states and reads them: without the web selector the racks sat 16-97px
+    // under the reservation (§12). Whitespace is dropped so a reflow passes.
+    const caps = [...code.matchAll(/([^{};@]+)\{([^{}]*max-height[^{}]*)\}/g)].filter((m) =>
+      m[1]!.includes('.ws-tube-glass'),
+    );
+    const selectors = (m: RegExpMatchArray) => m[1]!.split(',').map((s) => s.trim());
+    const both = caps.filter(
+      (m) =>
+        selectors(m).includes(':root[data-sg-app-banner] .ws-tube-glass') &&
+        selectors(m).includes(':root[data-sg-web-ads] .ws-tube-glass'),
+    );
+    expect(both, 'the strip and the reservation no longer share the glass cap').toHaveLength(2);
+    const bodies = both.map((m) => m[2]!.replace(/\s+/g, ''));
+    for (const unit of ['vh', 'svh']) {
+      expect(bodies).toContainEqual(
+        `max-height:min(calc((68vh-56px)/var(--ws-rows)),max(var(--ws-floor),calc((100${unit}-var(--ws-chrome)-var(--ws-edges)-(var(--ws-rows)-1)*26px)/var(--ws-rows))));`,
+      );
+    }
+  });
 });
