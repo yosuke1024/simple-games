@@ -16,9 +16,9 @@
 
 **2026-10-31 決定: A(上限つきの形で、上限 100%)。** 方針は [PRODUCT_PRINCIPLES.md](../PRODUCT_PRINCIPLES.md)
 「Android の文字の倍率」に書いた。下の本文は決定前の記録のまま。上限つきの debug ビルドは同じ日にエミュレータで
-確かめた(Sudoku・FreeCell・Number Match の 360×640 と、起動中のフォントサイズの変更。結果は
-[RELEASE_CHECKLIST.md](../RELEASE_CHECKLIST.md) の 2026-10-31 の節)。「確かめていないこと」の先頭の項目は、この
-範囲では古い。
+確かめ(Sudoku・FreeCell・Number Match の 360×640 と、起動中のフォントサイズの変更。結果は
+[RELEASE_CHECKLIST.md](../RELEASE_CHECKLIST.md) の 2026-10-31 の節)、1.7.0 に入れることになった(同日のオーナー
+判断)。「確かめていないこと」の先頭の項目は、この範囲では古い。
 
 ## 要点
 
