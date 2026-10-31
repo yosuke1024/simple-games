@@ -515,7 +515,8 @@ Scopa 65 / Tangram 45)。`src/i18n/unreadCatalogs.test.ts` の一覧にはスキ
 - [ ] CJK(日中韓)で行間・折り返しが破綻しない
 - [ ] デーヴァナーガリー・タイ文字の上下に伸びる字形が切れない
 - [ ] OS のフォントサイズ拡大(font scaling)で崩れない(Android アプリは文字の倍率を 100% で
-      止めているので、確かめるのは Web 版と iOS。Android も上限を上げるときはここに戻る ——
+      止めているので、確かめるのは Web 版と iOS。上限が端末で効くことは、出す版ごとに
+      [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §4 で確かめる。Android も上限を上げるときはここに戻る ——
       [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Android の文字の倍率」)
 - [ ] テキストは折り返しを許容するレイアウトにする(固定幅で切り捨てない)
 - [ ] 盤面のサイズ・配置は言語によって変わらない
