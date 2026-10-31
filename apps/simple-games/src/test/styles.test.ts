@@ -488,3 +488,24 @@ describe('the Sudoku grids give every row the same height', () => {
     expect(body).toContain(`grid-template-rows: repeat(${rows}, minmax(0, 1fr))`);
   });
 });
+
+describe('the arcade status dots in forced colours', () => {
+  // A forced palette (Windows contrast themes, on the web) repaints backgrounds
+  // as Canvas and drops box-shadows, which is all a .game-life-dot is drawn
+  // with. The dots are the only on-screen count of Brick Breaker's and Sky
+  // Fighter's lives and of Bubble Pop's shots left (docs/BUBBLE_POP_RULES.md
+  // §3), so they opt out and keep their marks in CanvasText. jsdom computes no
+  // style, so the rules are pinned as text.
+  it('fills a dot left and rings a spent one in CanvasText', () => {
+    const media = '@media (forced-colors: active) {\n  .game-life-dot {';
+    const open = css.indexOf(media);
+    expect(open, 'the forced-colours block for .game-life-dot is missing').toBeGreaterThan(-1);
+    const block = css.slice(open, css.indexOf('\n}\n', open)).replace(/\s+/g, ' ');
+    expect(block).toContain(
+      '.game-life-dot { forced-color-adjust: none; background: CanvasText; }',
+    );
+    expect(block).toContain(
+      '.game-life-dot-spent { background: transparent; box-shadow: inset 0 0 0 1.5px CanvasText; }',
+    );
+  });
+});

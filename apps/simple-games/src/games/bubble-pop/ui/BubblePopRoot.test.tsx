@@ -100,9 +100,12 @@ describe('playing', () => {
     await user.click(await screen.findByRole('button', { name: 'Level 1' }));
     expect(screen.getByRole('img', { name: 'Bubble Pop board' })).toBeInTheDocument();
     // Level 1's descent cadence is 8 shots (game/levels.ts's levelSpec(1)),
-    // shown as a dot row, not a countdown number — the text label backs the
-    // dots' aria-label, not a digits-only readout.
-    expect(screen.getByText('8 shots until the ceiling drops')).toBeInTheDocument();
+    // shown as a row of 8 dots, not a countdown number: the count is the
+    // dots' accessible name only, and the top bar's text is the level alone.
+    const dots = screen.getByRole('img', { name: '8 shots until the ceiling drops' });
+    expect(dots.querySelectorAll('.game-life-dot')).toHaveLength(8);
+    expect(screen.getByRole('banner')).toHaveTextContent(/^Level 1$/);
+    expect(screen.queryByText(/shots until the ceiling drops/)).not.toBeInTheDocument();
     expect(screen.queryByText(/\d+:\d\d/)).not.toBeInTheDocument();
   });
 
@@ -121,13 +124,17 @@ describe('playing', () => {
     renderGame(tutorialDone);
 
     await user.click(await screen.findByRole('button', { name: 'Level 1' }));
-    expect(screen.getByText('8 shots until the ceiling drops')).toBeInTheDocument();
+    expect(
+      screen.getByRole('img', { name: '8 shots until the ceiling drops' }),
+    ).toBeInTheDocument();
 
     // No ArrowLeft/ArrowRight here — Space must fire the aim it already has
     // (straight up) on its own, not only after a drag or an arrow key has
     // set draggingRef.
     fireEvent.keyDown(window, { key: ' ' });
 
-    expect(await screen.findByText('7 shots until the ceiling drops')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('img', { name: '7 shots until the ceiling drops' }),
+    ).toBeInTheDocument();
   });
 });
