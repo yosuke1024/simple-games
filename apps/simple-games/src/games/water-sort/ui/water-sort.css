@@ -454,7 +454,11 @@
    sideways or a short window the share alone left 12-54px glasses (no water
    to see at 568×320), so below about 435px of height the page scrolls
    instead, as it did before this cap — as the Chess, Knight Tour and Bubble
-   Pop boards do. The app is portrait-only and has no such floor (0px).
+   Pop boards do. The app has no such floor (0px): its play screen does not
+   scroll, so a floor would push Undo and Hint off it. Phones hold it upright,
+   but a short app window (Android split-screen) still shrinks the glass —
+   12px at 360×300 beside a 90px strip (docs/RELEASE_CHECKLIST.md, short
+   windows).
 
    The share is written twice: with `100vh`, and again with `100svh` under
    `@supports (height: 100svh)` right after it (src/test/styles.test.ts), so

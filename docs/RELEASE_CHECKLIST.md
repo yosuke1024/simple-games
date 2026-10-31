@@ -291,8 +291,16 @@ Maze Escape(No. 62・64〜66)。Falling Blocks(No. 63)は 2026-10-29 に先行�
       トレイ・戻す・ヒントが枠や下端にかからないこと、Bubble Pop の上部バーに残り発数の文が無いこと)。
 - [ ] **電話より低い窓(Android の画面分割)での盤**: Sudoku・Sudoku 6×6・Checkers は列がスクロールしないので、窓が低いと盤が
       使えないほど小さくなる(360×300 で Sudoku 4×4px、Checkers 10×10px。上限を足す前は幅いっぱいのまま縦に潰れていた — 336×15px
-      など)。Echo Pads・Tangram も 360×300 では盤や操作の一部が枠の下に入る(上限を足す前と同じ)。直すなら列をスクロールさせる
+      など)。Echo Pads・Tangram も 360×300 では盤や操作の一部が枠の下に入る(上限を足す前と同じ)。Bubble Pop と Water Sort も
+      窓が低いと盤が小さくなる(2026-10-31、ヘッドレス Chromium: 枠 90px の 360×300 で Bubble Pop の盤 34 × 72px、Water Sort の
+      1 本 12px で水が見えない。どちらも直す前と同じか少し大きい)。枠も予約も無い Water Sort の 360×300 と、予約のない Web 版の
+      横向き 568×320・640×360 では、棚が上部バーに 1〜11px かかる(直す前から)。直すなら列をスクロールさせる
       レイアウトの変更で、この版では変えていない。製品オーナーの判断待ち
+- [ ] Web 版の Bubble Pop と Water Sort を、実際のアンカー広告で iOS Safari と Android の Chrome で開く(360×640・390×844 の
+      縦と、横向き。遊んでいる途中で予約が外れたときも)。トレイ・戻す・ヒントがアンカーにかからないこと。ここまでの計測は
+      ヘッドレス Chromium の 116px の置き換えだけ
+- [ ] Windows のハイコントラストテーマ(強制カラー)で、Bubble Pop・Brick Breaker・Sky Fighter の上部バーの点が見えること
+      (残りが塗り、使った分が輪)。強制カラーはヘッドレス Chromium で模しただけ
 - [ ] 20 本の実機(Android / iPhone)と低スペック端末(§4)での 1 局、アーケード 5 本(Snake / Bounce Up / Overtake /
       Invaders / Paddle Rally)のネイティブ WebView での操作感。確かめるまで「実機で確認済み」と書かない
 - [ ] タグ `v1.7.0`・AAB / IPA の作成・内部テスト / TestFlight・本番審査への提出(人間の明示的な承認が要る)
