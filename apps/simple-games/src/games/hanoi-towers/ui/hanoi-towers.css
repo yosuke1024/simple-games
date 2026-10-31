@@ -1,7 +1,7 @@
 /* Hanoi Towers — all of this game's styling, imported by HanoiTowersRoot.
    Built from the series tokens in src/ui/styles.css (--ink, --line, --accent,
    --accent-soft, …), so the chrome follows the theme without knowing about it.
-   Class names are prefixed `ht-`.
+   Class names are prefixed `hn-`.
 
    The tray, the pegs and the disks are the one exception docs/architecture/
    css-split.md allows: they are physical wood, so their colours are game content
@@ -17,100 +17,100 @@
    ending in a hex pair (8 digits) carries its own alpha. */
 
 :root {
-  --ht-tray-top: #f2e8d7;
-  --ht-tray-bottom: #e9ddc8;
-  --ht-tray-edge: #c2af91;
+  --hn-tray-top: #f2e8d7;
+  --hn-tray-bottom: #e9ddc8;
+  --hn-tray-edge: #c2af91;
   /* Opaque on purpose: the plank's front is what makes its thickness read on paper. */
-  --ht-tray-face: #c8b490;
-  --ht-tray-lit: #fff9ed;
-  --ht-tray-shade: #765b3817;
+  --hn-tray-face: #c8b490;
+  --hn-tray-lit: #fff9ed;
+  --hn-tray-shade: #765b3817;
   /* Two faint grain layers (9px and 23px periods) share this one tint. */
-  --ht-grain: #765b380c;
-  --ht-peg-ink: #574632;
-  --ht-peg: #7d5f3f;
-  --ht-peg-lit: #e6d5b8;
-  --ht-peg-shade: #5a412880;
-  --ht-base: #b49368;
-  --ht-base-edge: #7a5d3d;
-  --ht-cast: #6b4d30;
-  --ht-cast-alpha: 0.18;
+  --hn-grain: #765b380c;
+  --hn-peg-ink: #574632;
+  --hn-peg: #7d5f3f;
+  --hn-peg-lit: #e6d5b8;
+  --hn-peg-shade: #5a412880;
+  --hn-base: #b49368;
+  --hn-base-edge: #7a5d3d;
+  --hn-cast: #6b4d30;
+  --hn-cast-alpha: 0.18;
   /* A lifted disk's shadow is farther away, so fainter. */
-  --ht-cast-lifted-alpha: 0.12;
-  --ht-disk-0: #f0dfbf;
-  --ht-disk-1: #e9d2aa;
-  --ht-disk-2: #dfc398;
-  --ht-disk-3: #d5b587;
-  --ht-disk-4: #cbaa7c;
-  --ht-disk-edge: #71573c;
-  --ht-disk-lit: #fff9e9;
-  --ht-disk-shade: #71573c33;
-  --ht-disk-ink: #3f3021;
-  --ht-valid: #fffdf766;
+  --hn-cast-lifted-alpha: 0.12;
+  --hn-disk-0: #f0dfbf;
+  --hn-disk-1: #e9d2aa;
+  --hn-disk-2: #dfc398;
+  --hn-disk-3: #d5b587;
+  --hn-disk-4: #cbaa7c;
+  --hn-disk-edge: #71573c;
+  --hn-disk-lit: #fff9e9;
+  --hn-disk-shade: #71573c33;
+  --hn-disk-ink: #3f3021;
+  --hn-valid: #fffdf766;
 }
 
 :root[data-theme='dark'] {
-  --ht-tray-top: #39332c;
-  --ht-tray-bottom: #302a24;
-  --ht-tray-edge: #695943;
-  --ht-tray-face: #241f1a;
-  --ht-tray-lit: #514739;
-  --ht-tray-shade: #00000026;
-  --ht-grain: #fff0d70a;
-  --ht-peg-ink: #e4d4ba;
-  --ht-peg: #b89d77;
-  --ht-peg-lit: #e6d5b8;
-  --ht-peg-shade: #5a412880;
-  --ht-base: #b49368;
-  --ht-base-edge: #7a5d3d;
+  --hn-tray-top: #39332c;
+  --hn-tray-bottom: #302a24;
+  --hn-tray-edge: #695943;
+  --hn-tray-face: #241f1a;
+  --hn-tray-lit: #514739;
+  --hn-tray-shade: #00000026;
+  --hn-grain: #fff0d70a;
+  --hn-peg-ink: #e4d4ba;
+  --hn-peg: #b89d77;
+  --hn-peg-lit: #e6d5b8;
+  --hn-peg-shade: #5a412880;
+  --hn-base: #b49368;
+  --hn-base-edge: #7a5d3d;
   /* Black, so the shadow falls darker than the tray (the light-theme brown
      would shine on it). */
-  --ht-cast: #000000;
-  --ht-cast-alpha: 0.32;
-  --ht-cast-lifted-alpha: 0.21;
-  --ht-disk-0: #f0dfbf;
-  --ht-disk-1: #e9d2aa;
-  --ht-disk-2: #dfc398;
-  --ht-disk-3: #d5b587;
-  --ht-disk-4: #cbaa7c;
-  --ht-disk-edge: #71573c;
-  --ht-disk-lit: #fff9e9;
-  --ht-disk-shade: #71573c33;
-  --ht-disk-ink: #3f3021;
-  --ht-valid: #fff6e30a;
+  --hn-cast: #000000;
+  --hn-cast-alpha: 0.32;
+  --hn-cast-lifted-alpha: 0.21;
+  --hn-disk-0: #f0dfbf;
+  --hn-disk-1: #e9d2aa;
+  --hn-disk-2: #dfc398;
+  --hn-disk-3: #d5b587;
+  --hn-disk-4: #cbaa7c;
+  --hn-disk-edge: #71573c;
+  --hn-disk-lit: #fff9e9;
+  --hn-disk-shade: #71573c33;
+  --hn-disk-ink: #3f3021;
+  --hn-valid: #fff6e30a;
 }
 
-.ht-screen .game-content {
+.hn-screen .game-content {
   overflow-y: auto;
 }
-:root[data-sg-web-ads] .ht-screen {
+:root[data-sg-web-ads] .hn-screen {
   height: 100%;
 }
-.ht-screen .game-topbar,
-.ht-body,
-.ht-actions {
+.hn-screen .game-topbar,
+.hn-body,
+.hn-actions {
   flex-shrink: 0;
 }
-.ht-home-content {
+.hn-home-content {
   display: contents;
 }
-.ht-choose {
+.hn-choose {
   text-align: center;
   color: var(--ink-soft);
   margin: 0 0 4px;
 }
-.ht-choice {
+.hn-choice {
   display: flex;
   flex-direction: column;
   gap: 3px;
 }
-.ht-body {
+.hn-body {
   width: 100%;
   max-width: 480px;
   margin: auto;
   padding: 18px 14px 0;
   box-sizing: border-box;
 }
-.ht-metrics {
+.hn-metrics {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -120,22 +120,22 @@
   font-size: 0.8rem;
   margin-bottom: 18px;
 }
-.ht-move-count {
+.hn-move-count {
   display: flex;
   align-items: baseline;
   gap: 10px;
 }
-.ht-move-count > span {
+.hn-move-count > span {
   font-weight: 600;
 }
-.ht-metrics strong {
+.hn-metrics strong {
   color: var(--accent);
   font-size: 1.7rem;
   line-height: 1;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-.ht-reference {
+.hn-reference {
   padding: 6px 10px;
   border: 1px solid var(--line);
   border-radius: 20px;
@@ -150,27 +150,27 @@
    lift comes first among the outer shadows, as in the collection's board
    frame; the paper and line rings are left out because the plank carries its
    own edge. */
-.ht-board,
-.ht-mini-tray {
+.hn-board,
+.hn-mini-tray {
   background:
-    repeating-linear-gradient(178deg, transparent 0 8px, var(--ht-grain) 8px 9px),
-    repeating-linear-gradient(181deg, transparent 0 21px, var(--ht-grain) 21px 23px),
-    linear-gradient(180deg, var(--ht-tray-top), var(--ht-tray-bottom));
-  border: 1px solid var(--ht-tray-edge);
+    repeating-linear-gradient(178deg, transparent 0 8px, var(--hn-grain) 8px 9px),
+    repeating-linear-gradient(181deg, transparent 0 21px, var(--hn-grain) 21px 23px),
+    linear-gradient(180deg, var(--hn-tray-top), var(--hn-tray-bottom));
+  border: 1px solid var(--hn-tray-edge);
   box-shadow:
-    inset 0 1px 0 var(--ht-tray-lit),
-    inset 0 -4px 0 var(--ht-tray-shade),
-    0 5px 0 var(--ht-tray-face),
+    inset 0 1px 0 var(--hn-tray-lit),
+    inset 0 -4px 0 var(--hn-tray-shade),
+    0 5px 0 var(--hn-tray-face),
     0 8px 18px var(--accent-ring-soft);
 }
-.ht-board {
+.hn-board {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   padding: 12px 7px 8px;
   border-radius: 16px;
 }
-.ht-peg {
+.hn-peg {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -178,12 +178,12 @@
   padding: 5px 0 0;
   border: 1px solid transparent;
   border-radius: 10px;
-  color: var(--ht-peg-ink);
+  color: var(--hn-peg-ink);
   background: transparent;
   cursor: pointer;
   touch-action: manipulation;
 }
-.ht-peg-number {
+.hn-peg-number {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -192,7 +192,7 @@
   font-weight: 700;
   min-height: 22px;
 }
-.ht-goal-mark {
+.hn-goal-mark {
   width: 15px;
   height: 15px;
   fill: none;
@@ -201,79 +201,79 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-.ht-tower {
+.hn-tower {
   display: block;
   width: 100%;
   height: auto;
 }
 /* Turned wood: a lit line on the left of the peg and the base, a shade line on
    the right of the peg and the lower edge of the base and of every disk. */
-.ht-wood {
+.hn-wood {
   fill: none;
-  stroke: var(--ht-peg);
+  stroke: var(--hn-peg);
   stroke-width: 6;
   stroke-linecap: round;
 }
-.ht-wood-light {
+.hn-wood-light {
   fill: none;
-  stroke: var(--ht-peg-lit);
+  stroke: var(--hn-peg-lit);
   stroke-width: 1.3;
   stroke-linecap: round;
 }
-.ht-wood-shade {
+.hn-wood-shade {
   fill: none;
-  stroke: var(--ht-peg-shade);
+  stroke: var(--hn-peg-shade);
   stroke-width: 1.4;
   stroke-linecap: round;
 }
-.ht-base {
-  fill: var(--ht-base);
-  stroke: var(--ht-base-edge);
+.hn-base {
+  fill: var(--hn-base);
+  stroke: var(--hn-base-edge);
   stroke-width: 0.8;
 }
-.ht-base-shadow,
-.ht-disk-shadow {
-  fill: var(--ht-cast);
-  opacity: var(--ht-cast-alpha);
+.hn-base-shadow,
+.hn-disk-shadow {
+  fill: var(--hn-cast);
+  opacity: var(--hn-cast-alpha);
 }
-.ht-disk {
-  stroke: var(--ht-disk-edge);
+.hn-disk {
+  stroke: var(--hn-disk-edge);
   stroke-width: 1;
 }
-.ht-disk-0 {
-  fill: var(--ht-disk-0);
+.hn-disk-0 {
+  fill: var(--hn-disk-0);
 }
-.ht-disk-1 {
-  fill: var(--ht-disk-1);
+.hn-disk-1 {
+  fill: var(--hn-disk-1);
 }
-.ht-disk-2 {
-  fill: var(--ht-disk-2);
+.hn-disk-2 {
+  fill: var(--hn-disk-2);
 }
-.ht-disk-3 {
-  fill: var(--ht-disk-3);
+.hn-disk-3 {
+  fill: var(--hn-disk-3);
 }
-.ht-disk-4 {
-  fill: var(--ht-disk-4);
+.hn-disk-4 {
+  fill: var(--hn-disk-4);
 }
-.ht-disk-light {
+.hn-disk-light {
   fill: none;
-  stroke: var(--ht-disk-lit);
+  stroke: var(--hn-disk-lit);
   stroke-width: 1;
   stroke-linecap: round;
   opacity: 0.75;
 }
-.ht-disk-shade,
-.ht-base-shade {
+.hn-disk-shade,
+.hn-base-shade {
   fill: none;
-  stroke: var(--ht-disk-shade);
+  stroke: var(--hn-disk-shade);
   stroke-width: 2.4;
   stroke-linecap: round;
 }
-.ht-tower text {
+.hn-tower text {
   text-anchor: middle;
   font-size: 11px;
   font-weight: 800;
-  fill: var(--ht-disk-ink);
+  fill: var(--hn-disk-ink);
 }
 /* Lifting and placing a disk is one 140ms transform, never a loop, and nothing
    else is transitioned. The lift is a translate (the same 12 user units the
@@ -284,56 +284,56 @@
    transition to transform alone. A disk that arrives on a peg (a move or an
    Undo) settles from the same height. Reduced Motion turns both off at the end
    of this file. */
-.ht-disk-group,
-.ht-lifted-disk,
-.ht-disk-shadow {
+.hn-disk-group,
+.hn-lifted-disk,
+.hn-disk-shadow {
   transition: transform 0.14s ease-out;
 }
-.ht-lifted-disk {
+.hn-lifted-disk {
   transform: translateY(-12px);
 }
-.ht-lifted-disk .ht-disk-shadow {
+.hn-lifted-disk .hn-disk-shadow {
   transform: translateY(5px);
-  opacity: var(--ht-cast-lifted-alpha);
+  opacity: var(--hn-cast-lifted-alpha);
 }
-.ht-arrived {
-  animation: ht-settle 0.14s ease-out;
+.hn-arrived {
+  animation: hn-settle 0.14s ease-out;
 }
-@keyframes ht-settle {
+@keyframes hn-settle {
   from {
     transform: translateY(-12px);
   }
 }
-.ht-lifted-disk .ht-disk {
+.hn-lifted-disk .hn-disk {
   fill: var(--accent);
   stroke: var(--accent);
 }
-.ht-lifted-disk text {
+.hn-lifted-disk text {
   fill: var(--accent-ink);
 }
 /* The selected column is a wash of the accent over the wood, not an opaque
    sheet on top of it, so the grain keeps showing through. */
-.ht-selected {
+.hn-selected {
   border-color: var(--accent);
   background: var(--accent-ring-soft);
   box-shadow: inset 0 0 0 1px var(--accent-ring-soft);
 }
-.ht-valid {
+.hn-valid {
   border-color: var(--accent);
   border-style: dashed;
-  background: var(--ht-valid);
+  background: var(--hn-valid);
 }
-.ht-destination {
+.hn-destination {
   height: 26px;
   font-size: 21px;
   line-height: 22px;
   color: var(--accent);
 }
-.ht-peg:focus-visible {
+.hn-peg:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 2px;
 }
-.ht-instruction {
+.hn-instruction {
   min-height: 70px;
   padding: 10px 2px;
   margin: 0;
@@ -341,14 +341,15 @@
   line-height: 1.55;
   color: var(--ink-soft);
 }
-.ht-actions {
+.hn-actions {
   justify-content: center;
   padding-top: 0;
 }
-/* The tutorial's small tray. Not `.ht-figure`: Hearts' Quick Rules figure owns
-   that class name (both stylesheets can be loaded at once), and the plank above
-   would otherwise be painted behind its cards. */
-.ht-mini-tray {
+/* The tutorial's small tray. It got a class of its own while this game still
+   shared Hearts' `ht-` prefix: Hearts' Quick Rules figure owns `.ht-figure`
+   (both stylesheets can be loaded at once), and the plank above would have
+   been painted behind its cards. The prefix is `hn-` since 2026-10-30. */
+.hn-mini-tray {
   display: flex;
   width: 270px;
   max-width: 100%;
@@ -357,33 +358,33 @@
   padding: 8px;
   box-sizing: border-box;
 }
-.ht-mini-tray .ht-tower {
+.hn-mini-tray .hn-tower {
   width: 33.333%;
 }
 @media (max-height: 680px) {
-  .ht-body {
+  .hn-body {
     max-width: 390px;
     padding-top: 4px;
   }
-  .ht-metrics {
+  .hn-metrics {
     margin-bottom: 10px;
   }
-  .ht-metrics strong {
+  .hn-metrics strong {
     font-size: 1.4rem;
   }
-  .ht-board {
+  .hn-board {
     max-width: 320px;
     margin: auto;
   }
-  .ht-instruction {
+  .hn-instruction {
     min-height: 60px;
   }
 }
 @media (max-width: 340px) {
-  .ht-body {
+  .hn-body {
     padding-inline: 10px;
   }
-  .ht-board {
+  .hn-board {
     gap: 4px;
   }
 }
@@ -391,20 +392,20 @@
    0.01ms; the disk's lift and settle are removed outright here, so the disk
    simply is where it is (OS setting and the in-app switch both). */
 @media (prefers-reduced-motion: reduce) {
-  .ht-disk-group,
-  .ht-lifted-disk,
-  .ht-disk-shadow {
+  .hn-disk-group,
+  .hn-lifted-disk,
+  .hn-disk-shadow {
     transition: none;
   }
-  .ht-arrived {
+  .hn-arrived {
     animation: none;
   }
 }
-:root[data-reduced-motion='true'] .ht-disk-group,
-:root[data-reduced-motion='true'] .ht-lifted-disk,
-:root[data-reduced-motion='true'] .ht-disk-shadow {
+:root[data-reduced-motion='true'] .hn-disk-group,
+:root[data-reduced-motion='true'] .hn-lifted-disk,
+:root[data-reduced-motion='true'] .hn-disk-shadow {
   transition: none;
 }
-:root[data-reduced-motion='true'] .ht-arrived {
+:root[data-reduced-motion='true'] .hn-arrived {
   animation: none;
 }

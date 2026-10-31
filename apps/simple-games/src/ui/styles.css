@@ -1690,8 +1690,12 @@ button:disabled {
 
 /* Web-build display ad (docs/ADS_POLICY.md「Web 版」— WebAdSlot renders null
    on the native app). Fixed height from mount so a loading, failing, or
-   offline ad never moves the game list — the .banner-slot rule, applied to
-   the web. Fits both fixed unit sizes (320x100 / 728x90). */
+   offline ad never moves the game list — the .banner-slot idea applied to
+   the web. The height never grows (the native slot starts at 64px and may
+   grow to the ad's); when nothing can fill it, AdUnit takes the slot out of
+   the layout instead (setPlacementHidden), which moves only what comes after
+   it: the home's footer, or a result card, which re-centres. Fits both fixed
+   unit sizes (320x100 / 728x90). */
 .web-ad-slot {
   display: flex;
   align-items: center;
@@ -1760,6 +1764,45 @@ button:disabled {
   height: auto;
   min-height: 100%;
   padding-bottom: calc(116px + env(safe-area-inset-bottom));
+}
+
+/* The app's own banner strip, for the games that size their board from the
+   viewport's height (100svh less fixed rows) and so cannot see the
+   .banner-slot under them. BannerSlot marks the root with
+   `data-sg-app-banner` while a reserved slot is mounted (never on the web,
+   never once ads are removed). 90px is the tallest anchored adaptive banner
+   on a phone (Google: at most 90dp or 15% of the screen height, at least
+   50dp); the slot starts at 64 and only grows to the ad's height, so a board
+   sized against this worst case never changes size when an ad loads
+   (docs/ADS_POLICY.md「バナー広告の仕様」). Its position can still move, as
+   that policy accepts: a column centred above the slot rises by half the
+   growth (13px at most), a bottom-aligned one, such as the controls right
+   above the slot, by all of it (26px), in any game, read or not. The
+   bottom inset is in it because the slot's margin takes it. Games read
+   `var(--sg-app-banner-reserve, 0px)` — Brick Breaker, Sky Fighter and
+   Bubble Pop, whose budgets count what holds the bottom on every screen,
+   take the bottom inset instead when there is no slot — and nothing changes
+   for a game that does not. A declaration that reads it together with svh
+   belongs under `@supports (height: 100svh)` (src/test/styles.test.ts). */
+:root[data-sg-app-banner] {
+  --sg-app-banner-reserve: calc(90px + env(safe-area-inset-bottom));
+}
+
+/* A play screen with neither of the two above — the app once ads are
+   removed (BannerSlot renders nothing and never marks the root) and the web
+   build without its reservation (no ads configured, the owner benefit, or an
+   anchor that came back empty) — keeps the bottom inset clear itself. Nothing
+   else holds it there: `.screen` pads only the top and the sides, the slot's
+   margin is gone with the slot, and `.game-screen .action-bar` leaves the
+   inset to that margin. Without this the action bar ran to the screen's
+   bottom edge, its buttons 14px into the Android emulator's 24px gesture
+   inset in 148 of the 182 modes at 411×914 (2026-10-30), and would sit
+   deeper under a 48px three-button bar or the iOS home indicator. Scoped to
+   this state, so the app with its banner and the web with its reservation
+   keep their layout. A board sized from the viewport's height counts the
+   inset in this state too (docs/ARCHITECTURE.md「広告と課金」). */
+:root:not([data-sg-app-banner]):not([data-sg-web-ads]) .game-screen {
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Dialogs need the clearance of their own: `.overlay` is fixed to the
@@ -2825,6 +2868,18 @@ button:disabled {
   min-width: 180px;
 }
 
+/* A full-width primary (btn-big — Hanoi Towers, Invaders and their batch)
+   takes the room Back leaves instead of squeezing Back to one character per
+   line ("戻/る" on a 412dp phone) and pressing against it. */
+.tutorial-actions > .btn-big {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.tutorial-actions > * + .btn-big {
+  margin-left: 12px;
+}
+
 /* ---------- settings ---------- */
 
 .settings-screen,
@@ -3199,6 +3254,24 @@ button:disabled {
 .game-life-dot-spent {
   background: transparent;
   box-shadow: inset 0 0 0 1.5px var(--line);
+}
+
+/* A forced palette (Windows contrast themes, on the web) repaints backgrounds
+   as Canvas and drops box-shadows, which is all a dot is drawn with, and the
+   dots are the only on-screen count of lives and of Bubble Pop's shots left
+   (docs/BUBBLE_POP_RULES.md §3). So they opt out and keep the same marks in
+   CanvasText: a dot left filled, a spent one a ring — as Gem Swap's bar of
+   swaps left does. */
+@media (forced-colors: active) {
+  .game-life-dot {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+
+  .game-life-dot-spent {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px CanvasText;
+  }
 }
 
 .game-board-body {

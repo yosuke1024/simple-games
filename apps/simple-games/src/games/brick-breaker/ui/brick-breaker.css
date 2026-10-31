@@ -4,8 +4,52 @@
    stamps. The board itself is a canvas (components/BrickBoard.tsx) that
    reads the same tokens. */
 
+/* The canvas is 9:16, so at its full width it asks for 16/9 of that in
+   height, and on a short screen the column has less: `max-height: 100%` then
+   cut the box short in height only and squashed the drawing. At 360×640 on
+   the Android emulator it was 336×435 in the app under the 64px slot, 336×409
+   under a 90px one and 336×523 in the app with ads removed; on the web build
+   (headless Chromium) 336×560 without ads, and with ads the page grew
+   instead, so the board kept its shape and its bottom 145px ran past the top
+   of the 116px anchor-ad reservation, the paddle with it (164px at 390×664, a
+   phone browser's height). So its width is also capped by the height left,
+   here and on the wide tiers below (factor 0.5625 = 360/640), and the box
+   keeps its 9:16 shape everywhere while the top bar keeps its height.
+   --bb-chrome is everything stacked with it (the top bar 64, the same in all
+   14 languages, and the body's padding 16) and 4px to spare; --bb-reserve is
+   what the bottom of the screen keeps free: on the web build with ads the
+   anchor-ad reservation and the inset (`:root[data-sg-web-ads] .screen`,
+   ui/styles.css), in the app the native strip's worst case
+   (`--sg-app-banner-reserve`: 90px and the inset), so the board keeps its
+   size when an ad grows the slot, and otherwise (the app with ads removed,
+   the web without ads) the bottom inset. With the notch it makes --bb-edges.
+   In each case something under the board holds that height back — the slot
+   and its margin, the reservation's padding, or, with neither, the play
+   screen's own bottom padding (ui/styles.css, since 2026-10-31; before it the
+   canvas held the inset as a bottom margin) — so the canvas, centred in what
+   is left, ends above it. Should the top bar grow past the spare (larger
+   system text), `max-height` cuts the box short by the excess, as it was
+   before, rather than letting it spill over the top bar. The canvas sits
+   straight in the shell's .game-board-body and nothing of this game wraps it,
+   so it holds these properties itself. The svh form sits under `@supports`:
+   a var() makes a declaration parse, so on a WebView without svh (Chromium
+   88) it would win over the vh form and then compute to nothing. */
 .bb-canvas {
-  width: min(100%, 360px);
+  --bb-chrome: 84px;
+  --bb-reserve: env(safe-area-inset-bottom, 0px);
+  --bb-edges: calc(env(safe-area-inset-top, 0px) + var(--bb-reserve));
+}
+
+:root[data-sg-web-ads] .bb-canvas {
+  --bb-reserve: calc(116px + env(safe-area-inset-bottom, 0px));
+}
+
+:root[data-sg-app-banner] .bb-canvas {
+  --bb-reserve: var(--sg-app-banner-reserve);
+}
+
+.bb-canvas {
+  width: min(100%, 360px, calc((100vh - var(--bb-chrome) - var(--bb-edges)) * 0.5625));
   max-height: 100%;
   height: auto;
   display: block;
@@ -15,6 +59,12 @@
   cursor: pointer;
 }
 
+@supports (height: 100svh) {
+  .bb-canvas {
+    width: min(100%, 360px, calc((100svh - var(--bb-chrome) - var(--bb-edges)) * 0.5625));
+  }
+}
+
 /* Quick Rules figures (§11): little SVG scenes in the series tokens. */
 .bb-figure {
   width: min(70vw, 220px);
@@ -22,22 +72,62 @@
   display: block;
 }
 
-/* Wide viewports (issue #93; tiers in ui/styles.css「wide viewports」).
-   The 9:16 board is tall, so on a PC the limit is nearly always the
-   height: width follows from the height that remains under the chrome
-   (factor 0.5625 = 360/640). The canvas backing store follows the
-   displayed size (BrickBoard.tsx), so growing here stays sharp. */
+/* Wide viewports (issue #93; tiers in ui/styles.css「wide viewports」). The
+   9:16 board is tall, so on a PC the limit is nearly always the height: width
+   follows from the height that remains under the chrome (factor 0.5625 =
+   360/640). The canvas backing store follows the displayed size
+   (BrickBoard.tsx), so growing here stays sharp. Each tier keeps its
+   published web ceiling (230px and 210px under the board, which already hold
+   the web's 116px reservation: 150px and 130px more than the 80px stack) and
+   adds the canvas rule's own budget as one more term. In the app that budget
+   counts the strip's worst case without taking it from those terms a second
+   time; on the web with ads it binds only once the safe-area insets add up to
+   more than 10px (30px below 900px or in portrait): with the flat terms
+   alone, an iPad in landscape (a 20px bottom inset) got a page 6px taller
+   than the screen, and its home-screen web app (a 24px notch as well) a board
+   ending 22px inside the reservation. The svh forms sit under `@supports` for
+   the reason above. */
 
 @media (min-width: 600px) {
   .bb-canvas {
-    width: min(100%, 420px, calc((100vh - 230px) * 0.5625));
-    width: min(100%, 420px, calc((100svh - 230px) * 0.5625));
+    width: min(
+      100%,
+      420px,
+      calc((100vh - 230px) * 0.5625),
+      calc((100vh - var(--bb-chrome) - var(--bb-edges)) * 0.5625)
+    );
+  }
+
+  @supports (height: 100svh) {
+    .bb-canvas {
+      width: min(
+        100%,
+        420px,
+        calc((100svh - 230px) * 0.5625),
+        calc((100svh - var(--bb-chrome) - var(--bb-edges)) * 0.5625)
+      );
+    }
   }
 }
 
 @media (min-width: 900px) and (orientation: landscape) {
   .bb-canvas {
-    width: min(100%, 480px, calc((100vh - 210px) * 0.5625));
-    width: min(100%, 480px, calc((100svh - 210px) * 0.5625));
+    width: min(
+      100%,
+      480px,
+      calc((100vh - 210px) * 0.5625),
+      calc((100vh - var(--bb-chrome) - var(--bb-edges)) * 0.5625)
+    );
+  }
+
+  @supports (height: 100svh) {
+    .bb-canvas {
+      width: min(
+        100%,
+        480px,
+        calc((100svh - 210px) * 0.5625),
+        calc((100svh - var(--bb-chrome) - var(--bb-edges)) * 0.5625)
+      );
+    }
   }
 }

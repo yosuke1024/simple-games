@@ -544,9 +544,9 @@ describe('failure paths never touch the game (issue #120)', () => {
 });
 
 /**
- * BannerSlot reserves layout height up front so the board/action row never
- * jumps once an ad loads — but only if it actually learns the height the SDK
- * settled on. onBannerSize is that wire: the SizeChanged plugin event carries
+ * BannerSlot reserves layout height up front so an ad loading in never
+ * resizes the board and moves the action row by no more than the growth past
+ * 64px — but only if it actually learns the height the SDK settled on. onBannerSize is that wire: the SizeChanged plugin event carries
  * the banner's real height, and every subscriber (the reserved slot is one)
  * must see exactly that number, no more and no fewer times than it fired
  * (issue #120).

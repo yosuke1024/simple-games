@@ -11,12 +11,26 @@
    The board is as wide as min(100%, 540px, usable height × 9/16): 540px is
    1.5× the logical 360 (§7). The usable height is the screen less what is
    stacked with it: the top bar (64), the state line (24) and the body's
-   padding (16) — 104 — and on the web the 116px kept for the anchor ad.
-   ◀ ▶ sit over the board's lower corners, so they take no height of their
-   own. Not measured on a device: §7 records what was checked. */
+   padding (16) — 104 — the notch (.screen's top padding), on the web the
+   116px kept for the anchor ad, in the app the native banner's worst case
+   (`--sg-app-banner-reserve`, ui/styles.css), and with neither (the app with
+   ads removed, the web without ads) the bottom inset, which the play screen
+   then keeps clear itself (ui/styles.css). ◀ ▶ sit over the board's lower
+   corners, so they take no height of their own. §7 records what was
+   checked. */
 
 .bo-screen {
   --bo-chrome: 104px;
+  /* With neither the strip nor the reservation: the bottom inset. */
+  --bo-reserve: env(safe-area-inset-bottom, 0px);
+  /* The notch and, in the app, the native banner's worst case. */
+  --bo-edges: calc(env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve, 0px));
+}
+
+/* The strip's worst case in --bo-edges already holds the inset under it.
+   Before the web's rule, so that one still wins should both attributes ever
+   be set together, as it did before this rule existed. */
+:root[data-sg-app-banner] .bo-screen {
   --bo-reserve: 0px;
 }
 
@@ -35,9 +49,22 @@
 
 .bo-stage {
   position: relative;
-  width: min(100%, 540px, calc((100vh - var(--bo-chrome) - var(--bo-reserve)) * 0.5625));
-  width: min(100%, 540px, calc((100svh - var(--bo-chrome) - var(--bo-reserve)) * 0.5625));
+  width: min(
+    100%,
+    540px,
+    calc((100vh - var(--bo-chrome) - var(--bo-reserve) - var(--bo-edges)) * 0.5625)
+  );
   line-height: 0;
+}
+
+@supports (height: 100svh) {
+  .bo-stage {
+    width: min(
+      100%,
+      540px,
+      calc((100svh - var(--bo-chrome) - var(--bo-reserve) - var(--bo-edges)) * 0.5625)
+    );
+  }
 }
 
 .bo-canvas {

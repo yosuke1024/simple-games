@@ -1,7 +1,7 @@
 // AI translation draft; no human or native review claimed.
 import type { InvadersMessages } from './en';
 export const de: InvadersMessages = {
-  invadersName: 'Invaders',
+  invadersName: 'Formation Fire',
   invadersStage: 'Stufe',
   invadersLives: 'Leben',
   invadersLivesLeft: 'Noch {count} Leben',

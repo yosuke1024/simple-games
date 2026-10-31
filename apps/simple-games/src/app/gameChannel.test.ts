@@ -17,45 +17,23 @@ import { GAMES, type GameDefinition } from './registry';
 
 /**
  * The titles in early release today (docs/WEB_VERSION.md「先行公開」), in
- * registry order: the five new genres of
+ * registry order — none since 2026-10-29. That day the product owner
+ * graduated all twenty that were on the channel into the app (v1.7.0;
+ * docs/RELEASE_CHECKLIST.md §0): the five of
  * docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md (Nos. 42–46, on the
- * web since 2026-10-19); the five of
- * docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md
- * (Nos. 47–51), on this channel since 2026-10-22, the day they became
- * playable, and not yet on the web — they reach it with the next landing
- * sync; and the five of
+ * web since 2026-10-19), Gem Swap / Pipe Link / Bounce Up / Echo Pads of
+ * docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md (on
+ * the web since 2026-10-23), Overtake / Make the Target / Tangram of
  * docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md
- * (Nos. 52–56): Nos. 53, 54 and 56 on this channel since 2026-10-21, Overtake
- * and Scopa since 2026-10-22 by the product owner's decision
- * (docs/OVERTAKE_RULES.md §3 with `DRAG_MAPPING` `'B'`; docs/SCOPA_RULES.md
- * §4.2 on its provisional reading), all five on the web since 2026-10-22. The
- * eleven before them — three of issue #194, five of issue #197, three of
- * issue #210 — all graduated into the app on 2026-10-02. Putting a title on
- * the channel, or promoting one off it, edits this list on purpose.
+ * (since 2026-10-22), Light Grid / Color Flood / Three Peaks / Knight's Tour
+ * (Nos. 57–61) and Invaders / Paddle Rally / Hanoi Towers / Maze Escape
+ * (Nos. 62–66), the last eight since 2026-10-23. Chess, Nested Tic-Tac-Toe,
+ * Scopa and Nim had graduated on 2026-10-25, and the eleven of issues #194,
+ * #197 and #210 on 2026-10-02. The synthetic beta entry below keeps the guard
+ * tested while this list is empty. Putting a title on the channel, or
+ * promoting one off it, edits this list on purpose.
  */
-// Chess, Nested Tic-Tac-Toe, Scopa and Nim graduated by owner decision on 2026-10-25.
-const WEB_BETA_IDS = [
-  'unblock-puzzle',
-  'snake',
-  'loop-puzzle',
-  'bridges',
-  'peg-solitaire',
-  'gem-swap',
-  'pipe-link',
-  'bounce-up',
-  'echo-pads',
-  'overtake',
-  'make-the-target',
-  'tangram',
-  'light-grid',
-  'color-flood',
-  'three-peaks',
-  'knight-tour',
-  'invaders',
-  'paddle-rally',
-  'hanoi-towers',
-  'maze-escape',
-];
+const WEB_BETA_IDS: string[] = [];
 
 /**
  * The titles in development today, in registry order: Falling Blocks (No. 63),
@@ -141,9 +119,10 @@ describe('the channels', () => {
   it('hold exactly the titles this file says they do', () => {
     const beta = GAMES.filter((game) => game.channel === 'web-beta').map((game) => game.id);
     expect(beta).toEqual(WEB_BETA_IDS);
-    // 20 since 2026-10-29: Falling Blocks withdrawn to 'in-development' (see above).
-    expect(beta).toHaveLength(20);
-    expect(GAMES.filter((game) => game.channel === undefined)).toHaveLength(45);
+    // None since 2026-10-29: twenty graduated and Falling Blocks was withdrawn
+    // to 'in-development' (see above).
+    expect(beta).toHaveLength(0);
+    expect(GAMES.filter((game) => game.channel === undefined)).toHaveLength(65);
     const building = GAMES.filter((game) => game.channel === 'in-development').map(
       (game) => game.id,
     );

@@ -46,8 +46,9 @@ interface AdSize {
 
 /**
  * Standard sizes, largest first. Fixed sizes — not responsive — so the slot's
- * height is known before the ad loads and the layout never shifts (the same
- * rule BannerSlot enforces for the native banner). AdMax carries frames for
+ * height is known before the ad loads and the layout never shifts
+ * (BannerSlot reserves the native banner's strip up front too, but starts at
+ * 64px and may grow to the ad's height). AdMax carries frames for
  * the first two; 234×60 is AdSense-only.
  */
 const SIZES = [

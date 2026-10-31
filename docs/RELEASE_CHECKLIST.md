@@ -4,6 +4,374 @@ Google Play への公開前に、この順で確認する。
 **チェックが通らない項目を「たぶん大丈夫」で飛ばさない。**
 実施していない検証を成功扱いにしないこと([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))。
 
+## 2026-10-31: 題名 2 本の改名とストア申請(1.7.1 → 1.7.2)
+
+製品オーナーが 1.7.1 の実機確認を終え、ストアへの申請を指示した(2026-10-31)。2026-10-29 の節に残っていた「題の商標・
+両ストアの検索 — 9 本」を、申請の前に調べた(オーナーの選択「先に Claude が検索」)。両ストアの検索(iTunes Search API の
+US・JP、Google Play)と商標(米国 USPTO、日本 J-PlatPat、WIPO。EUIPO / TMview はつながらなかった)で、Unblock Puzzle /
+Gem Swap / Pipe Link / Bounce Up / Echo Pads / Make the Target / Tangram の 7 本は低リスクでそのまま使う。2 本は高リスクだった:
+
+- **Invaders**(日本語「インベーダー」): タイトーの標準文字商標「ＩＮＶＡＤＥＲＳ」(登録 5059572、区分 9・28・41、2027-07-06 まで)を
+  J-PlatPat で直接確かめた
+- **Overtake**: Kwalee の同名・同ジャンルのレースゲーム「OverTake」(両ストア、Play 500 万以上)、IGS の米国登録(区分 9 のゲーム
+  ソフト、図案化)、EU・フランスのゲームを含む登録、日本の KADOKAWA「オーバーテイク！」(区分 9・28・41)
+
+どちらも別の検証役 2 体ずつに反証させ、事実は覆らなかった(法的な判断ではない)。製品オーナーの判断で 2 本とも改名し、候補を同じ方法で
+調べて **Formation Fire**(旧 Invaders)と **Road Weave**(旧 Overtake)に決めた。どちらも両ストア・USPTO・J-PlatPat・WIPO で
+同じ名前は見つからなかった。
+
+- [x] 変えたのはプレイヤーに見える題(14 言語の `invadersName` / `overtakeName`、registry の `title`)と、題を含む盤の読み上げラベル
+      (`overtakeBoardLabel` の 14 言語、`invadersBoard` の en・ja)だけ。ほかの 12 言語の `invadersBoard` はその言語の普通名詞
+      (「Angreifer」「invasores」など)なので変えていない。id・保存キー(`iv.*` / `ot.*`)・CSS の起点・ファイル名は変えていないので、
+      保存データは移行なしで読める。ルール文書の冒頭に改名の注記、README・BRAND・title-accent・storage-keys の表と掲載文の正本を新しい題にした
+- [x] iOS は 1.7.2 / 10702。1.7.1 の Bluetooth の修正と i18n の門はそのまま入っている
+- [ ] 1.7.2 の題が両 OS の実機のホーム・ゲームのホーム・結果画面・共有で新しい名前になっていること
+- [x] ストア: App Store の 1.7.2 に de / es-ES / fr-FR / id / pt-BR / tr / vi の iPhone 6.9"・6.5" のスクリーンショット各 8 枚
+      (pixapps_strategy `tools/simple-games-screenshots` のデッキ。en / ja はすでに同じデッキ)、14 ロケールの説明文・プロモーション文を
+      65 本と近くの対戦 14 本に、新機能を 1 行(「新しいゲームを20本追加し、全65本になりました。」の各言語)。Play は 17 言語の
+      説明文に 20 本を足して 65 本に(4000 字を超える言語は約束でない文を削った)、fr / id / pt-BR / pt-PT / tr / vi に電話の
+      スクリーンショット各 8 枚。英日以外の書き換えた行は、原文を見せない逆翻訳で数字と意味を確かめた
+- [ ] Play の掲載文とスクリーンショットの反映は、製品版 1.7.2 のリリースを審査に出すのと同時(先に出すと未公開の 20 本を書くことになる)
+
+## 2026-10-31: Bluetooth の近くの対戦で落ちる(1.7.0 → 1.7.1)
+
+1.7.0(10700、タグ `v1.7.0` = e6297715)の内部テスト版で、製品オーナーが報告した: Android で「近くの対戦」の
+接続方法を Bluetooth にすると、募集しても集まりを探してもアプリが落ちる。同じ Wi-Fi なら両方動く。iOS は両方動く。
+原因は #292 で入れた R8 の最適化(`proguard-android-optimize.txt`)。Capacitor の consumer rules は注釈の付いた
+クラスとメンバーを残すが、注釈の型そのものは残さない。最適化は、注釈の型の実体がプログラムのどこにも作られない
+(実行時にリフレクションで作られる)ので、その型の値を常に null とみなし、`Bridge.getPermissionStates` の中の
+`annotation.permissions()` を `throw null` にした。権限を確かめる処理はすべて落ちる。Bluetooth は
+BLUETOOTH_SCAN / ADVERTISE / CONNECT を確かめるので落ち、Wi-Fi は権限を確かめないので落ちなかった。
+1.6.x は `-dontoptimize` だったので起きていない。1.7.0 のバイナリではアプリが使う経路のうち Bluetooth だけが
+該当する(JS から `checkPermissions` / `requestPermissions` は呼ばない。Filesystem は Cache ディレクトリでは権限を確かめない)。
+
+- [x] 再現: CI の 1.7.0 の release APK を Android 17 エミュレータ(Pixel 7、Bluetooth / BLE あり)に入れ、
+      「近くの対戦相手を探す」で Bluetooth のまま「集まりを探す」を押すと `NullPointerException` で落ちた。
+      AAB に入っている mapping で `com.getcapacitor.Plugin.getPermissionStates` の 19 行目 = `Bridge.java:1223`
+      (`for (Permission perm : annotation.permissions())`)。dexdump で、出荷した dex のこのメソッドが
+      `getPluginHandle()` のあと `const/4 v0, 0; throw v0` だけになっていることを確かめた
+- [x] 修正: `android/app/proguard-rules.pro` で Capacitor の注釈の型 6 つ(`CapacitorPlugin` / `Permission` /
+      `PermissionCallback` / `ActivityCallback` / `PluginMethod` / `NativePlugin`)を `-keep @interface` で残す。
+      `.github/scripts/check-android-artifact.sh` が R8 の mapping でその 6 つが名前を変えられていないことを見る
+      (1.7.0 の mapping では `CapacitorPlugin -> n3.b` などに変わっていて、この検査は落ちる)
+- [x] 修正後のビルド(手元の `assembleRelease`、R8 最適化あり、debug 鍵で署名。APK の sha256 `35227846…`)を
+      同じエミュレータに入れた。dex の `getPermissionStates` は元の処理(166 命令。`permissions()` / `strings()` /
+      `alias()` を呼ぶ)に戻った。Bluetooth で「集まりを探す」を押すと「付近のデバイス」の許可ダイアログが出て、
+      許可すると探索が始まった(`@PermissionCallback` の経路も動く)。Gin Rummy の「誰かと遊ぶ」から Bluetooth で
+      募集すると「参加申請を待っています…」になった。どちらも落ちず、crash バッファは空。成果物検査
+      (`check-android-artifact.sh off`)も通った
+- [ ] 2 台での Bluetooth の接続と対局(エミュレータ 1 台では相手がいない)。実機(Pixel・Samsung)で、
+      内部テストに出す 1.7.1 の署名済みビルドを使う
+- [ ] Android 11 以前(BLE に位置情報の権限を使う経路、`legacyLocation`)。同じ `getPermissionStates` を通るので
+      直っているはずだが、端末では見ていない
+- [x] 1.7.1(10701)を出す(製品オーナーの指示「記録して1.7.1へ」、2026-10-31)。1.7.0 との差は、この修正・
+      [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md) のオーナーキーの記述・高リスクキーの門の 48 件(§5.18)だけ。
+      10700 は Play の内部テストに上がったので同じ versionCode は使えない。iOS はコードの変更が無いが、タグと
+      同じ版にするため 1.7.1 / 10701 にした(`ios-version.mjs check --tag v1.7.1`)。1.7.0 の各節の未了の項目は、
+      1.7.1 の候補で確かめる
+
+## 2026-10-31: Android の文字の倍率の上限(1.7.0)
+
+2026-10-31 のオーナー判断。`MainActivity` が WebView の文字の倍率を `min(端末の倍率 × 100, 100)` にする
+([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Android の文字の倍率」。計測は
+[plans/2026-10-30-android-os-text-size.md](plans/2026-10-30-android-os-text-size.md))。同じ日のオーナー判断で
+1.7.0 に入れる。ネイティブの変更なので、1.7.0 の候補でここを確かめ直す。
+
+下の `[x]` は 2026-10-31 に、debug ビルドを Pixel_7 のエミュレータ 1 台(Android 17・WebView 148・日本語)に入れ、
+フォントサイズを `adb shell settings put system font_scale` で変えて確かめた結果。ビルドは 2 つで、同じ手順を
+流して同じ結果だった: 上限を入れた最初のビルド(PR #297 に統合する前の別ブランチ。APK の sha256 `988837bf…`)と、
+PR #297 に統合した 379ec29e のビルド(`e99ee465…`)。release ビルド(R8 で縮小)・実機・設定アプリからの操作・
+WebView の下限(Chromium 88)では見ていない。端末での確認は、出す版ごとに §4 で行う。生データと写真は
+リポジトリに入れていない。
+
+- [x] `assembleDebug`(JDK 21)が通る。`check-principles.sh` §9 が緑。
+- [x] エミュレータの debug ビルドで、フォントサイズ 100%・130%・200% のとき
+      `getComputedStyle(document.documentElement).fontSize` が 16px(倍率込みの値。上限のない 10/30 の計測では
+      130% で 20.8px だった)、85% のとき 13.6px。起動し直した 4 回(100%・130%・200%・85%)、開いたまま変えた
+      4 回(130%・200%・85%・100%)、ホームに出て 200% にして戻った 1 回の計 9 回(ビルドごと)で、100% 以上の 7 回は 16px、
+      85% の 2 回は 13.6px。最初の 100% と比べて、100% 以上のほかの 6 回は、測った 99 項目(うち文字の倍率で
+      変わりうるのは 61)が時刻を除いて同じ
+- [x] アプリを開いたままフォントサイズを変えても上の値になる(アクティビティが作り直される)。開いたまま変えた 4 回と
+      ホームに出て変えた 1 回は、どれも同じ pid のまま新しいページが読み込まれていた(作り直しは pid とページから
+      読んだもので、dumpsys や logcat は見ていない)。130% のまま画面の大きさを 360×640 に変えたときは、同じページの
+      まま 16px だった。これは倍率が元に戻らないことを示すだけで、`onConfigurationChanged` での当て直しが効くことは
+      示さない(この変更で fontScale は変わらないので、呼ばれなくても同じ結果になる)
+- [x] 130% の 360×640 で、Sudoku の 9 行が見え、FreeCell の Q が O に見えない(計測で崩れた例)。Sudoku・FreeCell・
+      Number Match のホームにあるモードのボタン 9 つ(各 3 つ)のプレイ画面を、100%・130%・200% で撮って測った。
+      画面写真は、ステータスバー(y < 111px。時刻とアイコンが端末のフォントサイズで変わる)より下が、7 モードで
+      ピクセル単位まで 100% と同じ。残る FreeCell の 2 モードは回ごとに配り直した札の並びだけが違い、同じ配りどうし
+      (前の回の「新しい配札」と次の回の「続きから」)はピクセル単位まで同じ。重なり・はみ出し・上部バーの高さなどの
+      計測値も 100% と同じ(盤の中の切れは見ない値なので、決め手は写真)。統合後のビルドでは Sudoku の盤が正方形
+      (0ade02e2)で、130%・200% とも 9 行が見える。上限のない 10/30 の 130% では、Sudoku の
+      8・9 行目が見えず(8 行目は上端がわずかに出るだけ)、重なった札の Q が O に見えていた。ただし 10/30 は別の
+      APK(`bc4ca653`)で、同じビルドから上限だけ外した対照は取っていない。ほかの 62 本(130% で崩れた 14 本のうち
+      11 本を含む)と、411×914 のゲーム画面は撮っていない
+- [ ] 実機(Pixel と Samsung)のいちばん大きいフォントサイズで、上と同じ。設定アプリから変えたときも見る。
+- [ ] 1.7.0 の候補(署名済みの release ビルド、R8 で縮小)で、上の 3 項目を確かめ直す。
+
+## 2026-10-29: 1.7.0／10700 — Web 先行公開 20 本の正式収録
+
+製品オーナーの指示(2026-10-29):「Web版のベータのゲームも十分検証取れました。ベータを外して、次バージョンで
+リリースしましょう。1.7.0です。」 対象は registry で `channel: 'web-beta'` だった 20 本すべて —
+Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire(No. 42〜46)、Gem Swap / Pipe Link /
+Bounce Up / Echo Pads(No. 48〜51)、Overtake / Make the Target / Tangram(No. 52・53・56)、Light Grid /
+Color Flood / Three Peaks / Knight's Tour(No. 57〜59・61)、Invaders / Paddle Rally / Hanoi Towers /
+Maze Escape(No. 62・64〜66)。Falling Blocks(No. 63)は 2026-10-29 に先行公開から取り下げており
+(`'in-development'`)、対象外。registry は正式収録 65 本・先行公開 0 本・実装中 1 本になる。
+1.7.0 には main の #291(4 席 Ludo)・#292(R8)・#293(ホームのアイコン)・#294(More from PixApps)・
+#295・#296 も入る。2026-10-28 に本番版として予定した 1.6.3 は採番されていない(`v1.6.3` のタグは無い)ので、
+これらは 1.7.0 が最初の本番版になる(各節の未了項目はそのまま)。2026-10-31 のオーナー判断で、Android の
+文字の倍率の上限(上の 2026-10-31 の節)も 1.7.0 に入る。
+
+- [ ] 基準 1(直近 2 週間の安定稼働)。**未達 — 製品オーナーが明示的に免除した**(上の指示)。Web 版での
+      配信開始は 42〜46 が 2026-10-19、Make the Target / Tangram / Overtake が 2026-10-22、47〜51 の 4 本と
+      57〜66 の 8 本が 2026-10-23 で、2026-10-29 時点の経過は 10 / 7 / 6 日([WEB_VERSION.md](WEB_VERSION.md)
+      「先行公開」)。基準そのものは変えない
+- [ ] 基準 2(滞在時間)。**確認した記録は無い。** 収録の根拠は上のオーナーの判断
+- [x] スキーマ凍結。20 本の `games/<id>/storage/releasedRecords.test.ts` を作成した(121 テスト)。payload は、公開中の
+      Web ビルド(pixapps-landing `dcb9a887` の `public/simple-games/play` — このリポジトリの `1fb236b` のビルド)を
+      127.0.0.1 で配信し、外部への通信をすべて止めたヘッドレス Chromium で**実際の入力だけ**(クリック・キー・ポインタ)で遊んで
+      保存されたもの。ストレージへの書き込み・時計の差し替え・アプリ内部の呼び出しは無い。各ファイルの冒頭に操作の手順と、
+      採れたキー・採れなかった状態(例: Snake の盤面全消し、Invaders の 20 面クリア、Overtake の 4 面以降)を書いた。
+      20 本とも今の読み込み経路は公開版の保存を 1 件も拒まなかった。作成とは別のエージェントが、(1) リテラルが採取した値と
+      バイト単位で一致すること、(2) 採取スクリプトに書き込みや内部呼び出しが無いこと、(3) payload を 1 か所壊すとテストが
+      落ちること(計 200 件以上の突然変異。落ちなかった Snake の 2 件は値の検査を足して塞いだ)を確かめた。
+      `ls apps/simple-games/src/games/*/storage/releasedRecords.test.ts` は 39 本
+- [x] registry の 20 本から `channel: 'web-beta'` を外した。`app/gameChannel.test.ts` の golden は
+      先行公開 0 本・正式収録 65 本。`gameKeys.test.ts` は注釈だけを「凍結」に直し、キーの値は変えていない。
+      実在のベータ作品を前提にしていたテスト 3 件(CollectionHomeScreen / WebBetaNotice / webRoute)は
+      合成のベータ作品で仕組みを検査し続ける形にした。`WebBetaNotice` の要素は 2026-10-02 の 11 本と同じく
+      画面に残す(`channel` が無ければ何も描かない — `src/test/webBetaNoticeWiring.test.ts` 冒頭)
+- [x] README の収録表へ 20 本を移し、ストア掲載文(`apps/simple-games/store/listing.md`)を 65 本に更新した。
+      **Console / App Store Connect への反映は 1.7.0 の公開と同時で、人間の作業**。ガイドは 20 本とも無いので
+      `PUBLISHED_GAME_IDS` は変えない(「詳しく見る」は出さない)
+- [ ] landing(`pixapps-landing`)の `tests/ui.test.js` で 20 本を `WEB_BETA_GAME_IDS` から `LANDING_GAME_IDS` へ
+      移し、`public/simple-games/index.html` にカードを足す。landing の PR で対応する(マージまでチェックしない)。
+      練習セット([PUZZLE_PRACTICE_SET.md](PUZZLE_PRACTICE_SET.md))の 5 本は含まないので、practice ページは対象外
+- [ ] 各ルール文書が「正式収録の前に」と書いていた確認と、製品オーナーの確認待ちの暫定は、**未了のまま収録した**
+      (各文書の冒頭の注記。製品オーナーの判断で収録 — 上の指示)。主なもの:
+      - (2026-10-31 に実施。7 本はそのまま、Invaders と Overtake は改名 — 上の 2026-10-31 の「題名 2 本の改名」の節)
+        題の商標データベースと両ストアの検索 — **9 本**: Unblock Puzzle(「Unblock」は既存作と共有する語 —
+        冒頭「題の確認」)/ Gem Swap / Pipe Link / Bounce Up / Echo Pads / Overtake / Make the Target / Tangram /
+        Invaders(名称・商標の確認)。**題の確認はストアに名前を書く前の事項なので、掲載文を Console / App Store
+        Connect に反映する前に製品オーナーの判断が要る**
+      - 規則・比較対象の出典の確認: Make the Target(§14 — 出典と閲覧日、ストア掲載の前)、Gem Swap(特殊宝石・
+        レベルマップ・時間制のモードの記述)
+      - スキーマ凍結の前にそろえるはずだった数え方: Pipe Link の `pn.stats` でデイリーを `medium` に混ぜない規則
+        (§8、暫定)と、Tangram のデイリーを Medium の行に数えるか(§12 のまとめ 3)。**凍結したので、
+        変えるなら移行になる**
+      - Tangram の確認待ち(§12 のまとめ): 影絵の名前(v1 は番号だけ)・結果カードの第一ボタン・伝統図形・
+        木目の改訂で残った問い。Echo Pads の「直前と同じ列を避けるか」。Unblock Puzzle の木目の見た目の選択
+      - Overtake と Tangram の Phase 0(実機試作)、Bounce Up と Overtake の横向きの実機での見直し、Gem Swap の
+        360×524 の窓での実測と実機の 1 局
+      - [GAME_LIFECYCLE.md](GAME_LIFECYCLE.md) の暫定の例外(製品オーナーの確認待ち): Bridges / Loop Puzzle /
+        Unblock Puzzle の読み込み時の再証明と、Overtake のループの中の `planLane`(30 Hz)
+- [x] iOS の `MARKETING_VERSION` 1.7.0 / `CURRENT_PROJECT_VERSION` 10700。Android の versionName / versionCode は
+      タグ `v1.7.0` から決まる(10700)
+- [x] 2026-10-29、このブランチの debug APK(versionName 1.7.0-debug / versionCode 10700)を Android 17 エミュレータ
+      (Pixel 7、日本語)に入れ、20 本それぞれをホーム画面ショートカットと同じ Intent(`?game=<id>`)で cold start した。
+      20 本ともコレクションに戻されず、そのゲームの画面が開いた(Quick Rules が 19 本、Snake はホーム)。Quick Rules を
+      進めて盤面まで確かめたのは 10 本。logcat の JS エラー(Uncaught / TypeError / ChunkLoadError / 動的 import の失敗)は
+      0 件。画面は巡回とは別のエージェントがスクリーンショットで独立に確認した。BETA 表示が出ないことは Snake のホームと
+      コード(`WebBetaNotice` は native かつ `channel` 無しで何も描かない)で確認しただけで、19 本のホーム画面では見ていない。
+      **実機・iOS・低スペック端末・終局までのプレイは未確認**
+- [x] その巡回で見つかった崩れを直した: 57〜66 の組(Color Flood / Light Grid / Invaders / Hanoi Towers / Maze Escape、
+      Falling Blocks も同じ)の Quick Rules は主ボタンが幅いっぱい(`btn-big`)で、「戻る」が 1 文字ずつ縦に折れ、主ボタンと
+      接していた(Web 版でも同じ)。`ui/styles.css` の `.tutorial-actions > .btn-big` だけを変え(残りの幅を取る・左に 12px)、
+      Web ビルドの 320 / 390 / 412px × ja / de / id / vi / th で「戻る」が 1 行・はみ出し無し、`btn-big` を使わない
+      ゲーム(Sudoku で計測)は寸法が変わらないことを確かめた。修正後のエミュレータでの再確認はしていない
+- [x] アプリのバナー枠と重ならないこと(ADS_POLICY「ゲーム盤・操作ボタンに重ねない」)。同じ debug APK で 20 本の
+      プレイ画面を 2 サイズ(Pixel 7 の 411×914 と、`wm size` で作った 360×640)で測ると、盤の高さを画面の高さから
+      計算する 4 本が Web の広告予約(116px)しか引いておらずアプリのバナー枠に潜っていた — Overtake の ▼(360×640 で
+      全体が枠の下、Pixel 7 でも 7px)、Bounce Up の ◀ ▶(44px)、Snake の下ボタン(16px)、Color Flood の戻す(39px)。
+      うち 3 本は盤が上のヘッダーのアイコンにも重なっていた。Three Peaks はゲーム画面に `BannerSlot` が無かった
+      (アプリで広告枠が出ない)。各ルール文書が「正式収録のときに式へ足す」と先送りしていた作業。**直した**:
+      `BannerSlot` が確保中だけルートに `data-sg-app-banner` を立て、`ui/styles.css` がそのとき
+      `--sg-app-banner-reserve`(最悪ケース 90px + 下端のセーフエリア — Web の 116px と同じ考え方で、広告の読み込みで
+      盤の大きさが変わらない)を出す。4 本の式がそれを引き、Three Peaks に `BannerSlot` を足した。再測定で 20 本 × 2 サイズとも
+      重なり 0・ヘッダーへの重なり無し。Web ビルドは 360 / 390 幅の各高さで公開ビルドと寸法が同じ。実際の広告(90px まで
+      伸びる場合)は描かれていないので、伸びた状態は計算でしか確かめていない。**残り(この版では変えない)**: Hanoi Towers /
+      Invaders / Light Grid / Maze Escape / Paddle Rally は `BannerSlot` がスクロールする `.game-content` の中にある
+      (測った 2 サイズでは収まった)。2026-10-25 以前に収録したゲームの一部は 64px の枠を定数に含めており、広告が 90px まで
+      伸びると最大 26px 足りない可能性がある(未測定)。中央寄せの列は枠が伸びると最大 13px 上へ動く(全ゲーム共通の既存の挙動)
+- [x] **2026-10-29 追記: 正式収録 65 本すべてを測った**(上の「残り」の 2 つ)。この版の debug APK を Android 17 エミュレータ
+      (Pixel 7、日本語)で、各ゲームのホームのモードのボタンを 1 つずつ押してプレイ画面を開き(「誰かと遊ぶ」は 2 台が要るので除く)、
+      411×914(ノッチ 52px)と `wm size` の 360×640(ノッチ 37px)で、枠を 64px と、手で伸ばした 90px の 2 通りにして WebView の
+      DOM を CDP で測った。見たのは (1) 枠の上端より下にある盤・ボタン・文字、(2) 上部バーの下端より上へ出た盤、(3) 上部バー・
+      盤の領域・操作バーのどれかから隣へはみ出した中身(スクロールする領域の中は除く)。**修正前**(全 65 本・2 サイズ):
+      枠の下に潜っていたのは Bubble Pop(411×914 でも 28 / 54px、360×640 で発射台ごと 88 / 114px)・Water Sort(360×640 の
+      チューブ 7 本以上で 43 / 56px、上部バーにも 101px)・Memory Match(360×640 で 2〜6 / 15〜19px)・Yacht(360×640 の 90px で
+      7px)・Light Grid(360×640 で 3 / 29px — 枠がスクロールする中身の中にあった)。上部バーに食い込んでいたのは Block Puzzle
+      (12 / 25px)・Gomoku(6 / 19px)・Dots and Boxes(0 / 13px)・Reversi(0 / 11px)・Unblock Puzzle(0 / 4px)、いずれも
+      360×640。Water Sort はチューブの幅の式が列間 10px で、実際の 12px より狭く見積もるため、幅の足りない棚が 3 段に折れていた
+      (Web 版でも同じ)。**直した**(どれも各ゲームの CSS、`:root[data-sg-app-banner]` の下だけ): 盤の上限にノッチと
+      `--sg-app-banner-reserve` を引く(Bubble Pop・Water Sort・Yacht・Reversi・Gomoku・Dots and Boxes)、64px の枠を数えていた
+      見積もりを 90px で数え直す(Memory Match・Block Puzzle・Unblock Puzzle)、Water Sort の列間を 12px で数える。`BannerSlot` は
+      スクロールする `.game-content` の外へ移した(Light Grid・Hanoi Towers・Invaders・Maze Escape・Paddle Rally — Color Flood と
+      同じ形。Light Grid は文書どおり盤を縮めず、360×640 では遊ぶ領域が 64px の枠で 3px、90px の枠で 29px スクロールする)。**修正後の再計測**: 65 本・2 サイズ・
+      64 / 90px のすべてで、枠の下・上部バーの上・隣へのはみ出しが 0px。Web ビルドは触った 21 画面を 360×640 / 390×844 / 412×915 ×
+      広告予約あり / なしで変更前のビルドと突き合わせ、寸法が同じ(違いは乱数の盤のアイコンと文字幅だけ)。ゲームごとの表と方法は
+      [plans/2026-10-29-app-banner-strip-audit.md](plans/2026-10-29-app-banner-strip-audit.md)。**確かめていないこと**: 実際の広告(エミュレータは描かない — 90px は手で伸ばした枠)、実機・iOS・
+      他の画面サイズ・各ゲームの途中の局面(手札が増えた後など)、Nearby の画面。**Web 版に残る重なり**(この時点では変えなかった): 公開版の
+      Bubble Pop は 360×640 で盤の下半分とトレイが、390×844 でもトレイが 116px の広告予約の下にあり、Water Sort は 360 / 390 幅で
+      デイリーの棚が 3 段に折れて戻す・ヒントが画面の外に出る。→ 2026-10-31 のオーナー判断で 1.7.0 に入れて直した(下の
+      2026-10-31 の「Bubble Pop と Water Sort」の項)
+- [x] ADS_POLICY「盤面は決して動かない」と、枠が 64px より伸びたときに盤が上へ動くこと。**製品オーナーの判断(2026-10-30): 文言を
+      直す。** 枠はゲーム画面に入るたびに 64px から作り直され、プラグインが `resumeBanner` のたびに高さを知らせるので、広告が 64px より
+      高い端末では入るたびに動く。盤そのもの(触れる要素の範囲)で測り直すと、下の大きさの修正の後の 411×914 で、65 本・全モードとも枠が
+      64 → 90px に伸びると 51 本が 13px、4 本(Quick Math・Hit and Blow・Gem Swap・Dominoes)が 26px 上がり、9 本は動かず、Scopa は
+      場が動かずに手札が 26px 上がる(最初の測り方 — 操作バーを盤と数えたもの — では 45 本が 13px、8 本が 26px、1 本が 7px 上がり、
+      11 本が動かなかった。Hanoi Towers は全本を 1 つの
+      起動で回した計測では Hearts の CSS が混ざって動かなかったが、下の項の改名の後は Hearts を先に開いても 13px 上がる)。ADS_POLICY を「盤面の大きさと形は変わらない。
+      位置は、実広告が 64px より高くて枠が伸びたときだけ動く(枠のすぐ上の操作ボタンと下寄せの盤は最大 26px、中央の盤は最大 13px、
+      上寄せの盤は動かない)」に改め、ARCHITECTURE・`BannerSlot` とそのテストの名前・コメントの「決して動かない」も同じに直した。
+      **大きさが変わる盤が 13 本あったので、文言を確定する前に直した**(オーナーの判断「先に直す」): 411×914 で Invaders(枠が伸びると
+      盤が 12px 縮む)、360×640 で 12 本 — Brick Breaker・Sky Fighter は 64px の枠でも canvas が縦に約 27%・31% つぶれて描かれ(336×435・
+      336×415、9:16 なら 336×597)、Sudoku はマスが 37×32 の長方形、Checkers・Gem Swap・Echo Pads も 64px の枠から縦に縮み、Sudoku 6×6・
+      Crown Grid・Number Path・Shape Regions・Box Regions(大きい盤)・Tangram は枠が 90px のとき縮む。どれもアプリだけの上限で、
+      盤を枠の最悪値の高さから決めた(各ゲームの CSS 末尾と各ルール文書の 2026-10-30 の項。Brick Breaker・Sky Fighter は同じ日に
+      全文脈へ広げ、式は canvas の規則に移した — 下の項)。直した後、13 本 × 全モードで、360×640・
+      411×914・411×700 のどれでも枠 64px と 90px で盤の大きさと形が同じ。枠の下・上部バーの上・隣へのはみ出しは 360×640 と 411×914 で
+      0。Web ビルドは 13 本 × 3 サイズ × 広告予約あり / なしで公開版と同じ箱(この時点。Brick Breaker・Sky Fighter の Web 版は下の項で変えた)。代わりに小さい画面では盤が小さくなる(360×640 で Sudoku
+      336×294 → 265×265、Brick Breaker 336×435 → 228×405。Invaders は 411×914 でも 379×506 → 366×488)。上限は枠のある
+      アプリだけなので、広告を削除したアプリと Web 版の Brick Breaker・Sky Fighter は高さの足りない画面で縦に潰れたまま残った
+      (360×640 の広告なしを模して 336×523・336×503)— 同じ日に直した(下の「Brick Breaker・Sky Fighter の盤」の項)。確かめていないこと: 実際の広告、実機・iOS、他の言語、Echo Pads のミスの
+      後の画面(パネルに場所を譲る盤は、その間に枠が伸びれば従来どおり縮む)
+- [x] **2026-10-30 追記: 上の計測の修正をレビューして直した**(Codex レビューと独立レビュー)。(1) **`svh` の式が Chromium 88 で
+      `vh` に戻らなかった**: `var()` / `env()` を含む宣言は単位を知らない WebView でも構文解析を通るので、`vh` の行を上書きしたうえで
+      計算時に無効になり、盤の幅が `auto`(Water Sort は `max-height: none`、Yacht は行の高さなし)に落ちる。上の修正の 14 か所に加え、
+      以前からの 14 か所(Overtake・Snake・Bounce Up・Peg Solitaire・Color Flood — 1.7.0 で初めてアプリに入る —、Block Puzzle と
+      Memory Match の幅の広い段、収録していない Falling Blocks)も同じ形だった。28 か所すべてを `@supports (height: 100svh)` の中へ
+      移し(`svh` を知る環境では同じ宣言が同じ順で効く)、`src/test/styles.test.ts` に全スタイルシートの検査を足した。挙動は
+      ヘッドレス Chromium で、知らない単位に置き換えて確かめた(`var()` 入りは `auto` に落ち、`@supports` の中なら `vh` の値)。
+      (2) **幅の広い段(600px 以上・900px 以上の横向き)は計算だけで変えていて、誤っていた**: Reversi・Gomoku・Dots and Boxes の
+      900px 以上と Bubble Pop の 600px 以上・900px 以上は、Web の定数(300 / 290 / 230 / 210px — 盤と縦に並ぶ列より 72〜114px
+      大きく、Web の予約のぶんを含む)からさらに枠を引いていた(1280×800 の Reversi で 500 → 410px、収まるのは 524px)。Web の式を上限に残し、アプリの予算を
+      別の項で足す形に直した(小さい段と同じ)。Unblock Puzzle の 900px 以上の横向きは逆に、枠を数えていない 120px に 26px しか
+      足していなかった(146px → 210px)。Yacht は幅が広くて低い窓(600px 以上かつ高さ 680px 以下)で大きい賽の 8px が抜けていた
+      (246px → 254px)。**計測**: ネイティブ向けのビルドをヘッドレス Chromium で Android として開き(`BannerSlot` が枠を確保し
+      `data-sg-app-banner` が立つ)、Reversi・Gomoku・Dots and Boxes・Bubble Pop・Unblock Puzzle・Yacht・Block Puzzle・Memory Match・
+      Water Sort の最初のモードを 360×640 / 411×914 / 600×960 / 800×1280 / 1024×600 / 1280×800 / 1366×768、枠 64 / 90px、
+      セーフエリア 0 で、この修正の前後のビルドで測った。修正後はすべてで枠の下・上部バーの上が 0px。修正前は Unblock Puzzle の
+      1024×600 が枠の下に 5 / 18px、Yacht の 1024×600 が 90px の枠で上部バーに 2px かかっていた。広い段の盤は Reversi の 1280×800 で
+      410 → 500px(Web と同じ)など 26〜90px 戻った。スマホの 2 サイズの寸法は修正前と同じ。**タブレットの幅はエミュレータでも実機
+      でも、ノッチや下端の帯のある画面でも測っていない**
+- [x] **Hearts と Hanoi Towers のクラス名の衝突**(2026-10-30 に計測の記録から判明・同日修正): どちらも接頭辞 `ht-` を使い、
+      `.ht-body` と `.ht-actions` を両方のスタイルシートが定義していた。ゲームの CSS は遅延チャンクで、一度開くとアプリを閉じるまで残るので、
+      Hearts を開いた後の Hanoi Towers は Hearts の `.ht-body`(`flex: 1; overflow-y: auto` など)を受け、360×640 の 90px の枠で
+      遊ぶ領域が `.ht-body` の中で 17px スクロールした(Hanoi だけなら 3px)。Hanoi Towers は 1.7.0 で初めてアプリに入り、Web 版では
+      先行公開のあいだから同じだった。Hanoi Towers のクラス・カスタムプロパティ・`@keyframes` を保存キーと同じ `hn-` に改め(Hearts は
+      変えない)、`src/test/styles.test.ts` に門を足した: あるゲームがセレクタの起点(シェルが定義しないクラスのうち最初のもの)に
+      するクラスがほかのゲームのスタイルシートに出てこないこと、`@keyframes` の名前が重ならないこと(改名前の Hanoi の CSS に戻すと
+      `ht-actions` / `ht-body` を名指しして落ち、Hearts に `.hn-body` を起点とする規則を 1 行足しても落ちる)。走査で見つかった
+      ゲームをまたぐ衝突はこの組だけ(Knight Tour と Nim の `.game-title` は各自の画面のクラスの下にあり、衝突しない)。**確かめたこと**:
+      ネイティブ向けのビルドをヘッドレス Chromium で Android として開き(360×640)、同じページの中で Hearts → Hanoi Towers と開くと、
+      改名前は Hanoi の本体が Hearts の規則を受けて `overflow-y: auto`・`flex: 1 0 0%`・`justify-content: flex-start` になり、改名後は
+      Hanoi だけを開いたときと同じ(`visible`・`0 0 auto`・`normal`)。逆の順でも、改名前は Hanoi の規則が Hearts に漏れて Hearts の
+      本体のスクロール量が 84 → 74px に変わり、改名後は 84px のまま。エミュレータ・実機では確かめていない
+- [x] **Brick Breaker・Sky Fighter の盤を、広告を削除したアプリと Web 版でも 9:16 に保つ**(2026-10-30、オーナーの判断
+      「直す」): 上の大きさの修正はアプリで枠を確保しているあいだだけ効くので、この 2 本は広告を削除したアプリと Web 版の高さの
+      足りない画面で、canvas の箱が高さだけ切り詰められて描画が縦につぶれたまま残っていた。測り直すと、公開中の Web 版は広告の予約が
+      あるとページが伸びて盤が全高になり、盤の下が 116px の予約の上端より下に出ていた — 360×640 で 145px / 165px(Brick Breaker /
+      Sky Fighter)、スマホのブラウザのようにバーのぶん縦が短い大きさでは背の高い端末でも(390×664 で 164px / 184px、412×780 で
+      48px / 68px。Sky Fighter は 390×844 でも盤の縁が 4px)。パドルは盤の下から 36/640、自機の出発点は 62/640 の位置にある。予約が
+      ないと箱が切り詰められてつぶれる(390×664 で 360×584 / 360×564)。2 本とも、盤の幅を「(画面の高さ − 盤以外の縦の並び − ノッチ −
+      画面の下が確保する高さ)× 0.5625」で抑える式を全文脈に広げ、画面の下が確保する高さだけを文脈で替えた(アプリは枠の最悪値、Web 版
+      の広告ありは予約 116px、どちらも下端の safe area を足す。広告を削除したアプリと予約のない Web 版は下端の safe area だけで、そこでは
+      盤の周りの何も safe area を空けないので canvas が同じ高さの下の余白を持ち(2026-10-31 にプレイ画面の下の余白へ移した — 下の項)、`max-height` もそのぶんを引く — 上部バーが定数より
+      高くなったとき、盤は上へはみ出さず、従来どおり超えたぶん縦に縮む)。アプリの寸法は上の修正のまま。幅 600px 以上の段も
+      Web の高さの項を上限に残して同じ予算を 1 項足し、Web の既存の不足を 3 つ塞いだ: Sky Fighter の 900px 以上の横向きで広告ありの
+      ページが画面より 6px 長かった(210px の項が予約に 6px 足りない)こと、下端の safe area がある iPad の横向き(Brick Breaker は
+      ページが 6px 長く、ホーム画面の Web アプリでは盤が予約に 22px。Sky Fighter は 18px / 42px)、Sky Fighter の iPhone の横向き
+      (下端 21px でページが 7px 長い)。
+      **計測**: エミュレータの 360×640・411×914・411×700 で、アプリ(枠 64 / 90px)の盤は 2 本とも上の修正と同じ大きさ、広告を削除した
+      アプリ(属性を外し枠を隠して模した)は 360×640 で 278.4×495 / 267.2×475、盤の下端は下端の safe area の 10px 上(直す前の
+      336×523 / 336×503 は 16px かかっていた — 寸法からの計算で、ヘッドレス Chromium で再現)。Web ビルドはヘッドレス Chromium で、スマホ 7 大きさ・iPhone のホーム画面(safe area
+      47/34)と横向き(下端 21)・幅 600px 以上 11 大きさ・iPad(safe area あり)7 大きさ × 予約あり / なしを公開版(pixapps-landing `dcb9a887`)と比べ、
+      新しいビルドはどれも 9:16 で予約(なければ下端の safe area)の 10px 以上上に収まり、ページはスクロールしない。公開版と変わるのは、
+      盤が切り詰められていたか予約に入っていたかページが長かった大きさと、safe area のある予約なしの画面(大きさは同じで、盤が safe
+      area の半分上がる)だけで、背の低い画面では盤が小さくなる(390×664 の予約ありで 360×640 → 261×464 / 249.8×444、375×553 の予約
+      ありで 351×624 → 198.6×353 / 187.3×333)。表は [plans/2026-10-29-app-banner-strip-audit.md](plans/2026-10-29-app-banner-strip-audit.md)
+      の最後の節。最終レビュー(3 体)の指摘で `max-height` を足し、記述の誤りを直した(足した後もエミュレータと Web の 108 通りの
+      寸法は変わらない)。**限界**: 上部バーが定数より高くなると(Sky Fighter は幅 320〜360px の終盤に点数の桁と残機が増えると折り
+      返して 77〜101px。両方とも OS の大きい文字)、アプリと予約のない画面では盤が超えたぶん縦に縮み(アプリでは枠が伸びるとさらに)、
+      Web 版の広告ありではページが伸びて盤が予約にかかる(Sky Fighter の 320×640・上部バー 101px で 25px、公開版は 203px)。
+      上部バーはランの始めには 14 言語とも 64px。**確かめていないこと**: 実機のブラウザ(バーの高さは端末とブラウザで違う)、iOS、
+      実際の広告、実機での他の言語と OS の文字サイズ、svh を持たない古いブラウザ(`vh` がバーを含む高さになるので、予約ありで盤が
+      予約にかかりうる — 公開版よりは小さい)
+- [x] **2026-10-30 追記: 上の 2 つ(盤の大きさの修正と Brick Breaker・Sky Fighter)を PR に入れる前にレビューして直した**(Codex
+      レビューと独立レビュー 5 方向・反証つき)。(1) **電話より低い窓で盤が消えていた**: 盤の上限に下限が無く、Android の画面分割
+      (411×430・360×300 など)では Invaders の盤が 60×80px から 0 に、Echo Pads の盤が 78px から 0 になり(パッドが盤の外へはみ出す)、
+      Tangram はトレイが前より多く切れていた。上限を足す前は、Invaders は遊ぶ領域の下限で盤を保って列が枠の上でスクロールし、
+      Echo Pads は盤の領域の下限 112px を保っていた。3 本の上限に下限を足した(Invaders 160px — 低い画面の遊ぶ領域の下限 170px が保つ
+      高さ —、Echo Pads 112px、Tangram 246px — 盤が `ui/layout.ts` の下限 160px に届いてもトレイが入る遊ぶ領域)。ヘッドレス
+      Chromium(アプリとして起動し、枠 64 / 90px)で、低い窓 5 つ(411×430・411×380・360×350・360×300・600×400)では 3 本とも
+      上限を足す前と同じ盤に戻り(Invaders は 120×160px で、列が枠の上でスクロールする)、それより高い 360×480・600×560・1024×500 では
+      Echo Pads・Tangram は下限に届かず上限どおり、Invaders は枠 64 / 90px のどちらでも 120×160px(上限を足す前は枠で大きさが
+      変わっていた)。縦長の電話 7 つ(320×568〜411×914)の箱は下限を足す前と同じ。Web 版は変えていない(規則は `:root[data-sg-app-banner]` の下だけ)。
+      Sudoku・Sudoku 6×6・Checkers・Brick Breaker・Sky Fighter・Gem Swap とマスの 4 本は、下限を足すと上限を足す前の縦の潰れに戻る
+      ので足していない(列がスクロールしないため。下の未決の項)。(2) **文書**: ADS_POLICY が Echo Pads の失敗のパネルと Brick
+      Breaker・Sky Fighter の上部バーの例外を書いていなかったので書き、「盤の大きさを画面の高さから決めるゲームは 90px を引く」を
+      直した 13 本に限った(ほかのゲームは見積もりのまま — 次の項)。Web の広告枠のコメント(`ui/styles.css`・`WebAdSlot.tsx`)が
+      「高さは決して変わらない」と書いていたが、埋まらない枠は AdUnit がレイアウトから外すので、そう直した。消えた数字を指す
+      「上の『45 本 / 8 本』」には数字を書いた
+- [x] **2026-10-31 追記: 広告を削除した画面で、操作を下端の safe area の上に保つ**(ブランチ `claude/great-neumann-88a86c`、
+      2026-10-31 のオーナー判断で 1.7.0 に入れた。この節のブランチの e4d8d84e の次): 枠を取り除くと下端の safe area を空けるものが
+      無くなり、操作バーが画面の下端まで来ていた(`.game-screen .action-bar` は下の余白を 10px にして下端を枠の `margin-bottom` に
+      任せ、`.screen` は下を空けない)。2026-10-30 の文字サイズの計測で見つかった別件で、エミュレータでは 182 モードのうち
+      148(411×914)・152(360×640)でボタンが 24px のジェスチャー領域に入っていた。`ui/styles.css` に、枠も Web の予約も
+      ないときだけ `.game-screen` の下に下端の safe area の余白を置く規則を足し(予約のない Web 版も同じ)、Brick Breaker・
+      Sky Fighter は canvas が持っていた同じ高さの下の余白を外し、その状態の盤の予算が下端を数えていなかった Bounce Up・
+      Overtake を直した。**計測**(ヘッドレス Chromium でネイティブのバンドルを Android として開き、safe area をエミュレータと
+      同じにした — エミュレータはホストの負荷で落ちた。[plans/2026-10-29-app-banner-strip-audit.md](plans/2026-10-29-app-banner-strip-audit.md)
+      の 2026-10-31 の節): 下端に入るモードは 411×914 で 152 → 0、360×640 で 158 → 3(残りは Bubble Pop と Water Sort で、
+      次の項で直した — 直した後は 0)。枠 64 / 90px と Web の予約の配置は、
+      2 サイズ × 182 モードで変更前と同じ(違いは 2 回の起動で盤の中身が違った行だけで、同じ頁の A/B では同じ)。Bubble Pop の
+      盤の列は、この規則と別に下端の余白を持たない(持つと二重になり、411×914 で盤が 12px 上がる。BUBBLE_POP_RULES.md §14)。下端 48px(3 ボタンのナビゲーション相当)でも同じ結果で、360×640 の Sudoku だけ
+      盤が 2px 縦につぶれる(上限が枠のある状態だけにあるため。上限を広げると Web 版の背の低い窓も変わるので、直していない)。Futoshiki・Kakuro の盤は領域を超えてスクロール
+      するが、PR #298 の auto margin で最上段から届く。エミュレータでは変更後のビルドを 6 本 ×
+      2 サイズで短く確かめ、下端に入る量はどれも 0。**確かめていないこと**: 実機・iOS のホームインジケータ・エミュレータでの
+      全件と 3 ボタン
+- [x] **2026-10-31 追記: Bubble Pop と Water Sort を、枠・Web の予約・広告なしのどれでも画面に収める**(2026-10-31 の
+      オーナー判断で 1.7.0 に入れた。この節のブランチの 1a69b967 の次の、4 つのコードのコミットと文書のコミット。別の
+      ローカルブランチにあった Bubble Pop・Water Sort の直しは、合わせずに PR の上で作り直した — そのブランチの `svh` の
+      書き換えは 78e93974 が置き換えたので入れていない): 1a69b967 の実ビルドをヘッドレス Chromium で開き(CDP の safe area、アプリは
+      本物の `.banner-slot` 64 / 90px)、2 本が次の状態で崩れていた。**Bubble Pop**(電話 4 サイズ × 4 状態 × 英語・インドネシア語の
+      32 例のうち 17 例): 盤の上限が枠のある状態にしかなく、広告を削除したアプリでは 320 × 672px の盤の下を `.game-screen` の
+      `overflow: hidden` が切っていた(360×640・320×568 では発射台が画面の外、390×844 でトレイが 52px 切れる)。Web 版で予約が
+      あるあいだは、トレイが予約の下に 79〜370px 入っていた。枠 90px でも、上部バーのレベルの下の残り発数の行が折れる
+      320×568・360×640 で、トレイが枠に 5〜23px かかっていた。**Water Sort**(Web と広告なしの 24 例のうち 19 例): 列の間を
+      12px で数える幅の式が枠のある状態にしかなく、8 本の棚は幅 404px 未満で 3 段に折れていた(広告を削除したアプリの
+      360×640 でデイリーの棚が上部バーに 94px、戻す・ヒントに 88px かかる)。Web 版で予約があるあいだは 2 段の棚でも戻す・
+      ヒントが予約の下に入っていた。**直したこと**: Water Sort の幅の式はどの画面でも 12px(WATER_SORT_RULES.md §12)。
+      Bubble Pop の残り発数を点の列だけにした(BUBBLE_POP_RULES.md §3 と 2026-10-30 のオーナー判断。強制カラーで点が
+      消えないよう CanvasText で描く — Brick Breaker・Sky Fighter のライフも同じ)。Bubble Pop の盤はどの画面でも残りの高さで
+      抑え、下に確保するものを状態で替える(枠の最悪値・予約・下端の safe area。§14)。Water Sort の 1 本の高さの上限を Web の
+      予約のあいだにも置いた(§12)。Web 版には盤の下限がある(Bubble Pop 126px・Water Sort 1 本 64px — 横向きや低い窓では
+      ページがスクロールする)。**直した後**: 同じ 32 例・24 例とも 0。枠のある状態の Water Sort の箱は変わらず、Bubble Pop の盤は
+      上部バーの見積もりが 156px から 138px になったぶん 8px ほど広い。Web 版では背の低い画面の盤が小さくなる(safe area の
+      無いブラウザの 360×640 で、Bubble Pop の盤が幅 184px、Water Sort の 1 本が 190 → 167px。上 37・下 24px の safe area が
+      あれば 155px・136px)。この節の上の「**Web 版に残る重なり**」と、2026-10-31 の safe area の
+      項の「残りは Bubble Pop と Water Sort」は、これで直った。**確かめていないこと**: エミュレータ・実機・iOS・Chromium 88(svh を
+      未知の単位にした模擬だけ)・実際の広告・端末の文字サイズ。
+- [ ] 1.7.0 の候補で、Bubble Pop と Water Sort(デイリー)を枠 64 / 90px と広告削除の状態で 1 局ずつ(360×640 と 411×914。
+      トレイ・戻す・ヒントが枠や下端にかからないこと、Bubble Pop の上部バーに残り発数の文が無いこと)。
+- [ ] **電話より低い窓(Android の画面分割)での盤**: Sudoku・Sudoku 6×6・Checkers は列がスクロールしないので、窓が低いと盤が
+      使えないほど小さくなる(360×300 で Sudoku 4×4px、Checkers 10×10px。上限を足す前は幅いっぱいのまま縦に潰れていた — 336×15px
+      など)。Echo Pads・Tangram も 360×300 では盤や操作の一部が枠の下に入る(上限を足す前と同じ)。Bubble Pop と Water Sort も
+      窓が低いと盤が小さくなる(2026-10-31、ヘッドレス Chromium: 枠 90px の 360×300 で Bubble Pop の盤 34 × 72px、Water Sort の
+      1 本 12px で水が見えない。どちらも直す前と同じか少し大きい)。枠も予約も無い Water Sort の 360×300 と、予約のない Web 版の
+      横向き 568×320・640×360 では、棚が上部バーに 1〜11px かかる(直す前から)。直すなら列をスクロールさせる
+      レイアウトの変更で、この版では変えていない。製品オーナーの判断待ち
+- [ ] Web 版の Bubble Pop と Water Sort を、実際のアンカー広告で iOS Safari と Android の Chrome で開く(360×640・390×844 の
+      縦と、横向き。遊んでいる途中で予約が外れたときも)。トレイ・戻す・ヒントがアンカーにかからないこと。ここまでの計測は
+      ヘッドレス Chromium の 116px の置き換えだけ
+- [ ] Windows のハイコントラストテーマ(強制カラー)で、Bubble Pop・Brick Breaker・Sky Fighter の上部バーの点が見えること
+      (残りが塗り、使った分が輪)。強制カラーはヘッドレス Chromium で模しただけ
+- [ ] 20 本の実機(Android / iPhone)と低スペック端末(§4)での 1 局、アーケード 5 本(Snake / Bounce Up / Overtake /
+      Invaders / Paddle Rally)のネイティブ WebView での操作感。確かめるまで「実機で確認済み」と書かない
+- [ ] タグ `v1.7.0`・AAB / IPA の作成・内部テスト / TestFlight・本番審査への提出(人間の明示的な承認が要る)
+
 ## 2026-10-28: Android リリースビルドの R8 最適化(次の版)
 
 Play Console の推奨(1.6.0 の「R8 の最適化が有効になっていない」「最適化されたリソース削除が
@@ -179,6 +547,9 @@ Web 版で先行公開(ベータ)していたゲームをこのリリースで�
       生成・探索の待ち、§4 の低スペック端末での 1 局を、この 11 本を含めて通すまで
       「アプリで確認済み」と書かない
 
+> **2026-10-29 追記: 以下の候補は、2026-10-25 に収録した Chess / Nested Tic-Tac-Toe / Scopa と合わせて、
+> 残る全タイトルを正式収録した(Falling Blocks は取り下げ)。記録は冒頭の「2026-10-29: 1.7.0」の節。以下は当時の記録。**
+>
 > **次の候補(記録のみ — まだどの項目にも着手していない。チェックは入れない)。** Web 先行公開の
 > 5 本(Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire、No. 42〜46。2026-10-17 に
 > このリポジトリで実装)。**2026-10-19 に Web 版で配信を始めた**(pixapps-landing #201 —
@@ -372,7 +743,9 @@ bash .github/scripts/check-principles.sh
       動かないなら配信しない)
 - [ ] ホームボタン / 戻るボタンでゲームが失われない
 - [ ] ダークモードで全画面を確認
-- [ ] フォント倍率を最大にして主要画面が崩れない
+- [ ] フォントサイズを最大にしても、アプリの文字が 100% の大きさのまま(上限。
+      [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Android の文字の倍率」)。アプリを開いたまま
+      変えても同じ。最小にすると小さくなる
 
 ## 4.5 R8 スモークテスト(リリースビルドの実機確認)
 
@@ -407,6 +780,9 @@ bash .github/scripts/check-principles.sh
       (課金は Play 配布ビルドでしか動かない。サイドロード APK では
       `isBillingSupported` が false になり購入 UI が出ない — それは正常)
 - [ ] 購入 → バナーが消える → アプリ再起動後も消えたまま
+- [ ] 購入後のプレイ画面で、操作バーと盤の下端が画面下端の OS の領域(ジェスチャーのバー・3 ボタンの
+      ナビゲーションバー・iPhone のホームインジケータ)に入っていない(枠が消えた画面はプレイ画面自身が
+      下端の safe area を空ける — [ADS_POLICY.md](ADS_POLICY.md)「広告削除の買い切りとの関係」、2026-10-31)
 - [ ] 購入キャンセル → 何も変わらない・エラー表示が出ない
 - [ ] 別端末で「購入を復元」が機能する
 - [ ] 購入前の画面で購入を繰り返し促していない
@@ -439,6 +815,9 @@ bash .github/scripts/check-principles.sh
       「ワイド画面のレイアウト」)
 - [ ] iOS 実機でゲーム起動・全ゲームプレイが可能/初回起動からオフラインで
       ゲーム可能/機内モードで広告・consent の通信リトライが発生しない
+- [ ] 「さらに大きな文字」を最大にしても、アプリの文字が大きくならない(WKWebView は px の文字を
+      大きくしない前提で、端末では未確認 —— [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)
+      「Android の文字の倍率」の境界 2。大きくなるなら、iOS にも同じ判断が要る)
 
 広告(AdMob iOS):
 
@@ -1009,8 +1388,10 @@ Network Inspector が使えなかったとき、通信の宛先を特定でき�
 - [ ] 14 言語 × 狭い画面(320 / 360px)× ライト / ダークで崩れず、横スクロールが出ないこと。
       カテゴリの棚・Web の広告枠と見間違えないこと
 - [ ] Web 版で、行の当たり判定と広告ユニットの間が 16px 以上あること
-- [ ] **高リスクキーの門**(§3)に `moreFromPixAppsTitle` / `moreFromPixAppsBody` /
-      `pixMealTagline` / `pixWorkTagline` の 12 言語 × 4 キー = 48 件が入っていること
+- [x] **高リスクキーの門**(§3)に `moreFromPixAppsTitle` / `moreFromPixAppsBody` /
+      `pixMealTagline` / `pixWorkTagline` の 12 言語 × 4 キー = 48 件が入っていること。
+      2026-10-31 に 48 件とも門を通した(`i18n:gate status` は「Gate complete」、`i18n:gate:check` が緑。
+      手順は [I18N_POLICY.md](I18N_POLICY.md)「リリース前の門」)
 
 ## 6. ストア掲載
 

@@ -1,5 +1,7 @@
 # Light Grid — canonical rules
 
+**2026-10-29 更新(正式収録、v1.7.0):** 製品オーナーの判断で Web 先行公開(ベータ)から正式収録した(registry の `channel` を外した — アプリのホーム・検索・ショートカットにも出る)。保存スキーマはこの収録で凍結し、以後は移行だけで変える — 公開中の Web ビルドが実際に書いた保存を `storage/releasedRecords.test.ts` が今の読み込み経路へ通す([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §0 と 2026-10-29 の節)。以下の「正式収録まで凍結しない」「アプリには出ない」などのベータ段階の記述は当時の記録である。収録は 2 週間の安定稼働・滞在時間の確認・実機での確認を満たしたという意味ではない。
+
 2026-10-23. New Web beta title. No native release or Club House registration.
 
 ## Rules and boards
@@ -182,6 +184,22 @@ reservation stays outside that scroll area so actions remain reachable above
 the fixed ad, including at 320×568 or with enlarged text. The standard header,
 action bar and ad slot remain in place. Layout is awaiting the parent browser
 pass for this revision.
+
+App banner (2026-10-29): in the app the reserved `BannerSlot` sat inside the
+scrolling `.game-content`, so on a short screen the strip scrolled with the
+content and the native banner covered the action bar until the player scrolled
+to the end — measured on the Android emulator at 360×640, the action bar ran
+3 px under a 64 px slot and 29 px under a 90 px one, in every board size. The
+slot is now the last child of the `.screen`, after `.game-content` (as in Color
+Flood), so the play area scrolls above the strip and never under it. The board
+keeps its size: as on the web, a short screen scrolls rather than shrinking the
+5×5 lenses below their touch size. Re-measured: nothing under the strip at
+360×640 or 411×914 with a 64 px or 90 px slot; at 360×640 the play area scrolls
+by 3 px (64 px slot) or 29 px (90 px slot), at 411×914 not at all. The web build
+is unchanged (`BannerSlot` renders nothing there). Emulator screenshots at both
+sizes show the top band of the tray, with the column numbers, painted over in
+the page colour, also before this change; hit-testing puts the tray on top, so
+it looks like a raster artefact, not a layout overlap — not checked on a device.
 
 Calculated sRGB contrasts, light / dark theme, printed by ui/contrast.test.ts
 (2026-10-29; the gate is 4.5:1 for marks and 3:1 for frames): the sun on a lit

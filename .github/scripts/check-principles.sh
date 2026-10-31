@@ -608,6 +608,94 @@ else
   ok "Meta 計測のアダプタは未導入(JS からの口なし、自己検査 ${#probe_meta_bad[@]} 本)"
 fi
 
+# 9. Android の文字の倍率の上限 ------------------------------------------------
+# 2026-10-31 のオーナー判断で、Android アプリの WebView の文字の倍率に上限 100% を置いた
+# (docs/PRODUCT_PRINCIPLES.md「Android の文字の倍率」)。WebView は、アプリが倍率を
+# 決めない限り端末のフォントサイズの倍率で文字だけを大きくする。盤を画面の高さから決める
+# ゲームは上部バーや操作バーの高さを文字 100% の px で見積もっているので、130% で 14 本が
+# 崩れ、200% では盤がバナーの枠の下へ出た(docs/plans/2026-10-30-android-os-text-size.md)。
+# 上限は MainActivity の 1 か所にしかなく、Capacitor の更新やリファクタで黙って消えると、
+# 盤と操作に枠を重ねない約束(ADS_POLICY)が端末の設定しだいに戻る。grep で判定できる範囲で
+# MainActivity の形を固定する(コメントの行は読まない。コメントに残した古い値や外した呼び出しで
+# 緑にしない):
+#
+# (a) 上限の定数は 1 つで、値は 100。端末の倍率との小さい方を percent に取る行のすぐ次で、
+#     それを setTextZoom に渡す。setTextZoom の呼び出しは MainActivity にその 1 か所だけ。
+#     onCreate の中で、super.onCreate の後に端末の設定へ当てる(bridge は super.onCreate の中で
+#     作られるので、その前に呼ぶと何もしない)。上限を上げるのは原則の節が挙げる計測を済ませて
+#     からで、原則の節とこの値を同じ PR で変える。
+# (b) 倍率を決める経路はそこだけ。アプリのネイティブのコードに倍率を決めるほかの書き方
+#     (Java の setTextZoom・Kotlin の textZoom への代入・古い WebSettings.TextSize)が無く、
+#     依存の宣言(package.json と Capacitor が生成するプラグインの Gradle 一覧)に text-zoom の
+#     プラグインが無い —— 入れると上限を JS が上書きできる。依存するライブラリの中身までは見ない。
+main_activity='apps/simple-games/android/app/src/main/java/com/pixapps/simplegames/MainActivity.java'
+comment_line='^[[:space:]]*(//|\*|/\*)'
+zoom_native='setTextZoom\(|\.textZoom[[:space:]]*=|WebSettings\.TextSize'
+zoom_plugin='text-?zoom'
+plugin_lists=(apps/simple-games/android/capacitor.settings.gradle apps/simple-games/android/app/capacitor.build.gradle)
+missing=""
+ma_code="$(grep -vE "$comment_line" "$main_activity" 2>/dev/null || true)"
+[ -n "$ma_code" ] || missing="${missing}${main_activity} がありません"$'\n'
+cap_defs="$(printf '%s\n' "$ma_code" | grep -E 'TEXT_ZOOM_CAP_PERCENT[[:space:]]*=' || true)"
+[ "$(printf '%s\n' "$cap_defs" | grep -c .)" = "1" ] \
+  && printf '%s\n' "$cap_defs" | grep -qE '^[[:space:]]*static final int TEXT_ZOOM_CAP_PERCENT = 100;$' \
+  || missing="${missing}上限の定数が 1 つで値が 100(static final int TEXT_ZOOM_CAP_PERCENT = 100;)になっていません"$'\n'
+min_at="$(printf '%s\n' "$ma_code" | grep -nE '^[[:space:]]*int percent = Math\.min\(Math\.round\([a-zA-Z]+\.fontScale \* 100\), TEXT_ZOOM_CAP_PERCENT\);$' | cut -d: -f1)"
+set_at="$(printf '%s\n' "$ma_code" | grep -nE '^[[:space:]]*bridge\.getWebView\(\)\.getSettings\(\)\.setTextZoom\(percent\);$' | cut -d: -f1)"
+{ [ "$(printf '%s\n' "$min_at" | grep -c .)" = "1" ] && [ "$(printf '%s\n' "$set_at" | grep -c .)" = "1" ] \
+    && [ "$set_at" -eq "$((min_at + 1))" ]; } \
+  || missing="${missing}端末の倍率と上限の小さい方(percent)を、取った次の行で setTextZoom に渡していません"$'\n'
+[ "$(printf '%s\n' "$ma_code" | grep -cE 'setTextZoom\(')" = "1" ] \
+  || missing="${missing}MainActivity の setTextZoom の呼び出しが 1 か所ではありません"$'\n'
+on_create="$(sed -n '/^    protected void onCreate(Bundle savedInstanceState)/,/^    }$/p' "$main_activity" 2>/dev/null \
+  | grep -vE "$comment_line" || true)"
+super_at="$(printf '%s\n' "$on_create" | grep -nE '^[[:space:]]*super\.onCreate\(savedInstanceState\);$' | head -1 | cut -d: -f1)"
+cap_at="$(printf '%s\n' "$on_create" | grep -nE '^[[:space:]]*capTextZoom\(getResources\(\)\.getConfiguration\(\)\);$' | head -1 | cut -d: -f1)"
+{ [ -n "$super_at" ] && [ -n "$cap_at" ] && [ "$cap_at" -gt "$super_at" ]; } \
+  || missing="${missing}onCreate が super.onCreate の後で端末の設定に上限を当てていません"$'\n'
+[ -n "$missing" ] && report "Android の文字の倍率の上限が MainActivity の形になっていません(§9 a。変える・外すなら PRODUCT_PRINCIPLES「Android の文字の倍率」を先に改め、この節と同じ PR で)" "$missing"
+
+# (b) MainActivity の許された 1 行(percent を渡す行)だけを除き、コメントでない行を拾う。
+# 探す場所が外れていれば、その許された 1 行も見つからないので赤にする(no-op にしない)。
+native_hits="$(grep -rnE "$zoom_native" apps/simple-games/android/app/src 2>/dev/null \
+  | grep -vE '^[^:]+:[0-9]+:[[:space:]]*(//|\*|/\*)' || true)"
+allowed="$(printf '%s\n' "$native_hits" \
+  | grep -E "^${main_activity}:[0-9]+:[[:space:]]*bridge\.getWebView\(\)\.getSettings\(\)\.setTextZoom\(percent\);$" || true)"
+hits="$(printf '%s\n' "$native_hits" | grep -vxF "$allowed" | grep -v '^$' || true)"
+[ -z "$allowed" ] && hits="${hits}${hits:+$'\n'}android/app/src の中に MainActivity の setTextZoom(percent) が見つかりません(探す場所が外れています)"
+plugin_hits="$(grep -niE "\"[^\"]*${zoom_plugin}[^\"]*\"[[:space:]]*:" "${pkg_jsons[@]}" 2>/dev/null || true)"
+plugin_hits="${plugin_hits}${plugin_hits:+$'\n'}$(grep -niE "$zoom_plugin" "${plugin_lists[@]}" 2>/dev/null || true)"
+plugin_hits="$(printf '%s\n' "$plugin_hits" | grep -v '^$' || true)"
+hits="${hits}${hits:+${plugin_hits:+$'\n'}}${plugin_hits}"
+[ -n "$hits" ] && report "MainActivity のほかに文字の倍率を決める経路があります(§9 b)" "$hits"
+
+# 自己検査(§1・§8 と同じ理由): 不在を見るパターンは、既知の違反行を拾い、拾ってはいけない行を
+# 拾わないことを確かめる。
+probe_zoom_bad=(
+  '        webView.getSettings().setTextZoom(130);'
+  '        settings.textZoom = 130'
+  '        settings.setTextSize(WebSettings.TextSize.LARGER);'
+)
+probe_plugin_bad=(
+  '    "@capacitor/text-zoom": "^8.0.0",'
+  '    "capacitor-textzoom": "1.0.0",'
+  "include ':capacitor-text-zoom'"
+)
+dead=""
+for probe in "${probe_zoom_bad[@]}"; do
+  printf '%s\n' "$probe" | grep -qE "$zoom_native" || dead="${dead}検出できません: ${probe}"$'\n'
+done
+for probe in "${probe_plugin_bad[@]}"; do
+  printf '%s\n' "$probe" | grep -qiE "$zoom_plugin" || dead="${dead}検出できません: ${probe}"$'\n'
+done
+printf '%s\n' '        label.setTextSize(14);' | grep -qE "$zoom_native" \
+  && dead="${dead}TextView の文字の大きさを誤って拾っています: label.setTextSize(14)"$'\n'
+printf '%s\n' '        // capTextZoom(getResources().getConfiguration());' | grep -qvE "$comment_line" \
+  && dead="${dead}コメントの行を落とせていません"$'\n'
+[ -n "$dead" ] && report "§9 の検査パターンが壊れています(ガードが no-op です)" "$dead"
+[ -z "$missing" ] && [ -z "$hits" ] && [ -z "$dead" ] \
+  && ok "Android の文字の倍率の上限(MainActivity の形・上限 100%・ほかに倍率を決める経路なし、自己検査 $(( ${#probe_zoom_bad[@]} + ${#probe_plugin_bad[@]} + 2 )) 本)"
+
 if [ "$fail" -ne 0 ]; then
   printf '\n原則ガードが失敗しました。実装を直すか、約束そのものを変えるなら docs/ の該当\n'
   printf 'ポリシーとこのスクリプトを同じ PR で意図的に更新してください。\n'

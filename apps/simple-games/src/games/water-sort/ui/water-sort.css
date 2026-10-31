@@ -70,10 +70,14 @@
 }
 
 /* The button is the tap target; the glass inside is the drawing. The lift on
-   selection is a position cue, not just a repaint (§12). */
+   selection is a position cue, not just a repaint (§12). The width takes out
+   the rack's real column gap (12px, above): the 10px it once took out left a
+   width-limited rack (four or more columns on a phone) a few pixels short,
+   and its last tube wrapped to a row WaterBoard never asked for
+   (waterSortCss.test.ts keeps the two equal). */
 .ws-tube {
   flex: 0 0 auto;
-  width: calc((100% - (var(--ws-cols) - 1) * 10px) / var(--ws-cols));
+  width: calc((100% - (var(--ws-cols) - 1) * 12px) / var(--ws-cols));
   max-width: 86px;
   padding: 0;
   border: none;
@@ -418,5 +422,85 @@
 
   .ws-tube {
     max-width: 100px;
+  }
+}
+
+/* ---------- the app's banner strip and the web's ad reservation ----------
+
+   The rack also has to leave the bottom of the screen free: in the app the
+   native banner strip, in the web build the room every screen keeps clear
+   for the anchor ad (116px and the bottom inset, ui/styles.css
+   `:root[data-sg-web-ads] .screen`). The height cap above (68% of the
+   screen, less 56px, per row) is a fraction rather than a budget, so it sees
+   neither, nor the notch or the action bar. Measured on the Android emulator
+   at 360×640, a two-row rack of fat tubes was 405px tall in a 360px body, and
+   a rack of seven or more tubes wrapped to a third row (621px): the tubes
+   ran 43px under the 64px slot (56px under a 90px one) and 101px up over the
+   top bar. In Chromium the two-row rack put Undo and Hint 36px under the
+   web's reservation at 360×640 and 59px at 320×568 (§12). The third row came
+   from the tube width's 10px gap, which .ws-tube now takes out as 12px on
+   every screen.
+
+   So while either is there, each glass is also no taller than its share of
+   the height left: the screen less --ws-chrome (the top bar 64, the body's
+   padding 14, the action bar 77 and the 10px a selected tube lifts by), the
+   row gaps (26px each) and --ws-edges — the notch (.screen's top padding)
+   and, in the app, the strip's worst case (`--sg-app-banner-reserve`,
+   ui/styles.css: 90px and the bottom inset), so the rack keeps its size when
+   an ad taller than the 64px slot arrives; on the web, the reservation.
+
+   On the web the share never goes below --ws-floor, 64px a glass (a 13px
+   band of each colour). The web has no orientation lock: on a phone held
+   sideways or a short window the share alone left 12-54px glasses (no water
+   to see at 568×320), so below about 435px of height the page scrolls
+   instead, as it did before this cap — as the Chess, Knight Tour and Bubble
+   Pop boards do. The app has no such floor (0px): its play screen does not
+   scroll, so a floor would push Undo and Hint off it. Phones hold it upright,
+   but a short app window (Android split-screen) still shrinks the glass —
+   12px at 360×300 beside a 90px strip (docs/RELEASE_CHECKLIST.md, short
+   windows).
+
+   The share is written twice: with `100vh`, and again with `100svh` under
+   `@supports (height: 100svh)` right after it (src/test/styles.test.ts), so
+   the Chromium 88 floor, which has no svh, keeps the vh cap instead of a
+   declaration that parses, wins, and then computes to nothing. */
+
+.ws-rack {
+  --ws-chrome: 165px;
+  --ws-edges: calc(env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve, 0px));
+  --ws-floor: 0px;
+}
+
+:root[data-sg-web-ads] .ws-rack {
+  --ws-edges: calc(env(safe-area-inset-top, 0px) + 116px + env(safe-area-inset-bottom, 0px));
+  --ws-floor: 64px;
+}
+
+:root[data-sg-app-banner] .ws-tube-glass,
+:root[data-sg-web-ads] .ws-tube-glass {
+  max-height: min(
+    calc((68vh - 56px) / var(--ws-rows)),
+    max(
+      var(--ws-floor),
+      calc(
+        (100vh - var(--ws-chrome) - var(--ws-edges) - (var(--ws-rows) - 1) * 26px) / var(--ws-rows)
+      )
+    )
+  );
+}
+
+@supports (height: 100svh) {
+  :root[data-sg-app-banner] .ws-tube-glass,
+  :root[data-sg-web-ads] .ws-tube-glass {
+    max-height: min(
+      calc((68vh - 56px) / var(--ws-rows)),
+      max(
+        var(--ws-floor),
+        calc(
+          (100svh - var(--ws-chrome) - var(--ws-edges) - (var(--ws-rows) - 1) * 26px) /
+            var(--ws-rows)
+        )
+      )
+    );
   }
 }

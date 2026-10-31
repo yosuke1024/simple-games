@@ -896,7 +896,8 @@ describe('the home (§7)', () => {
     // English is the first offer on a fresh install.
     expect(screen.getByRole('button', { name: /English/ })).toHaveClass('btn-primary');
     expect(screen.getByRole('button', { name: /Triangle/ })).toHaveClass('btn-secondary');
-    expect(screen.getByText(/Early release/)).toBeInTheDocument();
+    // No early-release notice since it joined the app (2026-10-29, v1.7.0).
+    expect(screen.queryByText(/Early release/)).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Triangle/ }));
     expect(board()).toHaveAccessibleName('Triangle board, 15 holes');

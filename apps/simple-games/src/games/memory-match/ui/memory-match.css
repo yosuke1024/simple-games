@@ -79,24 +79,33 @@
    reserved banner (64, ADS_POLICY) are the only things competing for it, and
    naming them is what keeps the cards as large as they can honestly be.
    Guessing low costs tap target — at 360×640 a hard-board card comes out
-   ~54×75, where a too-cautious budget had it down at 42 wide.
+   ~54×75, where a too-cautious budget had it down at 42 wide. In the app the
+   banner term is the native strip's worst case instead
+   (`--sg-app-banner-reserve`, ui/styles.css: 90px and the bottom inset —
+   an ad taller than the 64px slot must not push the last row under it), and
+   the notch (.screen's top padding) is counted too: measured on the Android
+   emulator at 360×640, the last row ran 6px under the 64px slot and 19px
+   under a 90px one (§12). The web build keeps its budget as it was.
 
    The 7/5 in the height term is the card itself: a card is taller than it is
    wide, so a board of them needs that much more height than a board of
    squares would. */
 .mm-board {
+  --mm-chrome: calc(142px + env(safe-area-inset-bottom, 0px));
   display: grid;
   grid-template-columns: repeat(var(--mm-cols), 1fr);
   gap: 7px;
   width: min(
     100%,
     420px,
-    calc(
-      (100vh - 142px - env(safe-area-inset-bottom, 0px)) * var(--mm-cols) / var(--mm-rows) * 5 / 7
-    ),
+    calc((100vh - var(--mm-chrome)) * var(--mm-cols) / var(--mm-rows) * 5 / 7),
     calc(var(--mm-cols) * var(--mm-card-max) + (var(--mm-cols) - 1) * 7px)
   );
   touch-action: manipulation;
+}
+
+:root[data-sg-app-banner] .mm-board {
+  --mm-chrome: calc(78px + env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve));
 }
 
 /* A card is a fixed cell holding a turnable inner face: cards never move,
@@ -422,9 +431,10 @@
    Tiers are defined in src/ui/styles.css「wide viewports」. .mm-board's width
    is already the tightest of four limits (see the comment above it); only
    the flat cap — the "wallpaper" ceiling — is raised per tier. Every other
-   term, including the env() safe-area term and --mm-card-max, is copied
-   verbatim, so the height budget and the per-card ceiling stay exactly what
-   they are in Compact and every term stays non-decreasing across tiers. */
+   term, including the height budget (--mm-chrome, the app's included) and
+   --mm-card-max, is copied verbatim, so the height budget and the per-card
+   ceiling stay exactly what they are in Compact and every term stays
+   non-decreasing across tiers. */
 
 @media (min-width: 600px) {
   /* The per-card ceiling is the binding limit on the easy and medium boards,
@@ -438,19 +448,20 @@
     width: min(
       100%,
       500px,
-      calc(
-        (100vh - 142px - env(safe-area-inset-bottom, 0px)) * var(--mm-cols) / var(--mm-rows) * 5 / 7
-      ),
+      calc((100vh - var(--mm-chrome)) * var(--mm-cols) / var(--mm-rows) * 5 / 7),
       calc(var(--mm-cols) * var(--mm-card-max) + (var(--mm-cols) - 1) * 7px)
     );
-    width: min(
-      100%,
-      500px,
-      calc(
-        (100svh - 142px - env(safe-area-inset-bottom, 0px)) * var(--mm-cols) / var(--mm-rows) * 5 / 7
-      ),
-      calc(var(--mm-cols) * var(--mm-card-max) + (var(--mm-cols) - 1) * 7px)
-    );
+  }
+
+  @supports (height: 100svh) {
+    .mm-board {
+      width: min(
+        100%,
+        500px,
+        calc((100svh - var(--mm-chrome)) * var(--mm-cols) / var(--mm-rows) * 5 / 7),
+        calc(var(--mm-cols) * var(--mm-card-max) + (var(--mm-cols) - 1) * 7px)
+      );
+    }
   }
 }
 
@@ -463,18 +474,19 @@
     width: min(
       100%,
       560px,
-      calc(
-        (100vh - 142px - env(safe-area-inset-bottom, 0px)) * var(--mm-cols) / var(--mm-rows) * 5 / 7
-      ),
+      calc((100vh - var(--mm-chrome)) * var(--mm-cols) / var(--mm-rows) * 5 / 7),
       calc(var(--mm-cols) * var(--mm-card-max) + (var(--mm-cols) - 1) * 7px)
     );
-    width: min(
-      100%,
-      560px,
-      calc(
-        (100svh - 142px - env(safe-area-inset-bottom, 0px)) * var(--mm-cols) / var(--mm-rows) * 5 / 7
-      ),
-      calc(var(--mm-cols) * var(--mm-card-max) + (var(--mm-cols) - 1) * 7px)
-    );
+  }
+
+  @supports (height: 100svh) {
+    .mm-board {
+      width: min(
+        100%,
+        560px,
+        calc((100svh - var(--mm-chrome)) * var(--mm-cols) / var(--mm-rows) * 5 / 7),
+        calc(var(--mm-cols) * var(--mm-card-max) + (var(--mm-cols) - 1) * 7px)
+      );
+    }
   }
 }

@@ -1,5 +1,7 @@
 # Paddle Rally
 
+**2026-10-29 更新(正式収録、v1.7.0):** 製品オーナーの判断で Web 先行公開(ベータ)から正式収録した(registry の `channel` を外した — アプリのホーム・検索・ショートカットにも出る)。保存スキーマはこの収録で凍結し、以後は移行だけで変える — 公開中の Web ビルドが実際に書いた保存を `storage/releasedRecords.test.ts` が今の読み込み経路へ通す([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §0 と 2026-10-29 の節)。以下の「正式収録まで凍結しない」「アプリには出ない」などのベータ段階の記述は当時の記録である。収録は 2 週間の安定稼働・滞在時間の確認・実機での確認を満たしたという意味ではない。
+
 2026-10-23. Canonical rules for the Web beta.
 
 A single-player paddle match against a local CPU. The player controls the lower
@@ -78,6 +80,14 @@ Home, three illustrated Quick Rules, game, result and statistics use existing
 shell contracts. An interrupted match may resume from a shortcut. Results offer
 optional sharing using only the displayed score. No Club House, daily mode,
 network, paid features, or new dependency is added.
+
+App banner (2026-10-29): the reserved `BannerSlot` is now the last child of the
+`.screen`, after the scrolling `.game-content` (as in Color Flood), so on a short
+screen the play area scrolls above the native strip instead of the strip
+scrolling with it. Measured on the Android emulator, nothing sat under the strip before or
+after at 360×640 or 411×914 with a 64 px or 90 px slot, at all three
+difficulties, and nothing scrolls. The web build is
+unchanged (`BannerSlot` renders nothing there).
 
 Copy in English, Japanese and the other twelve locales is AI-authored; human
 language review and physical-device verification are not claimed. Automated and

@@ -150,7 +150,8 @@ describe('a web-beta title in the address', () => {
   });
 
   it('opens in the browser like any other — every real beta title', () => {
-    expect(realBeta.length).toBeGreaterThan(0);
+    // None since 2026-10-29 (all twenty graduated, v1.7.0); the synthetic
+    // entry below keeps the mechanism tested.
     for (const game of realBeta) expect(gameIdFromHref(`${PLAY}?game=${game.id}`)).toBe(game.id);
   });
 

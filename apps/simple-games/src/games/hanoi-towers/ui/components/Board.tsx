@@ -27,14 +27,14 @@ export function Tower({
   const disks = board.flatMap((location, disk) => (location === peg ? [disk] : [])).reverse();
   const topmost = disks[disks.length - 1];
   return (
-    <svg viewBox="0 0 100 190" aria-hidden="true" className="ht-tower">
-      <ellipse cx="50" cy="176" rx="43" ry="5" className="ht-base-shadow" />
-      <rect x="7" y="168" width="86" height="8" rx="4" className="ht-base" />
-      <path d="M12 169h76" className="ht-wood-light" />
-      <path d="M12 174h76" className="ht-base-shade" />
-      <path d="M50 40v126" className="ht-wood" />
-      <path d="M48.5 42v123" className="ht-wood-light" />
-      <path d="M51.7 42v123" className="ht-wood-shade" />
+    <svg viewBox="0 0 100 190" aria-hidden="true" className="hn-tower">
+      <ellipse cx="50" cy="176" rx="43" ry="5" className="hn-base-shadow" />
+      <rect x="7" y="168" width="86" height="8" rx="4" className="hn-base" />
+      <path d="M12 169h76" className="hn-wood-light" />
+      <path d="M12 174h76" className="hn-base-shade" />
+      <path d="M50 40v126" className="hn-wood" />
+      <path d="M48.5 42v123" className="hn-wood-light" />
+      <path d="M51.7 42v123" className="hn-wood-shade" />
       {disks.map((disk, level) => {
         const width = 34 + disk * 12;
         const y = 148 - level * 22;
@@ -46,10 +46,10 @@ export function Tower({
             key={disk}
             className={
               lifted
-                ? 'ht-lifted-disk'
+                ? 'hn-lifted-disk'
                 : arrived === disk
-                  ? 'ht-disk-group ht-arrived'
-                  : 'ht-disk-group'
+                  ? 'hn-disk-group hn-arrived'
+                  : 'hn-disk-group'
             }
           >
             <rect
@@ -58,7 +58,7 @@ export function Tower({
               width={width}
               height="19"
               rx="5"
-              className="ht-disk-shadow"
+              className="hn-disk-shadow"
             />
             <rect
               x={(100 - width) / 2}
@@ -66,15 +66,15 @@ export function Tower({
               width={width}
               height="19"
               rx="5"
-              className={`ht-disk ht-disk-${disk}`}
+              className={`hn-disk hn-disk-${disk}`}
             />
             <path
               d={`M${(100 - width) / 2 + 5} ${y + 3}h${width - 10}`}
-              className="ht-disk-light"
+              className="hn-disk-light"
             />
             <path
               d={`M${(100 - width) / 2 + 5} ${y + 16}h${width - 10}`}
-              className="ht-disk-shade"
+              className="hn-disk-shade"
             />
             <text x="50" y={y + 13}>
               {disk + 1}
@@ -111,7 +111,7 @@ export function Board({
     setArrived(null);
   }
   return (
-    <div className="ht-board" role="group" aria-label={t('hanoiTowersBoard')}>
+    <div className="hn-board" role="group" aria-label={t('hanoiTowersBoard')}>
       {[0, 1, 2].map((peg) => {
         const top = topDisk(session.board, peg);
         const valid =
@@ -123,7 +123,7 @@ export function Board({
               refs.current[peg] = node;
             }}
             type="button"
-            className={`ht-peg ${selected === peg ? 'ht-selected' : ''} ${valid ? 'ht-valid' : ''}`}
+            className={`hn-peg ${selected === peg ? 'hn-selected' : ''} ${valid ? 'hn-valid' : ''}`}
             aria-pressed={selected === peg}
             aria-label={
               top < 0
@@ -143,16 +143,16 @@ export function Board({
               }
             }}
           >
-            <span className="ht-peg-number" aria-hidden="true">
+            <span className="hn-peg-number" aria-hidden="true">
               {peg + 1}
               {peg === 2 ? (
-                <svg viewBox="0 0 16 16" className="ht-goal-mark">
+                <svg viewBox="0 0 16 16" className="hn-goal-mark">
                   <path d="M4 14V2h8l-2 3 2 3H4" />
                 </svg>
               ) : null}
             </span>
             <Tower board={session.board} peg={peg} selected={selected === peg} arrived={arrived} />
-            <span className="ht-destination" aria-hidden="true">
+            <span className="hn-destination" aria-hidden="true">
               {valid ? '↓' : selected === peg ? '↑' : '·'}
             </span>
           </button>

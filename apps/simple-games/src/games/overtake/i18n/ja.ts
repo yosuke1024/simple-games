@@ -16,7 +16,7 @@
 import type { OvertakeMessages } from './en';
 
 export const ja: OvertakeMessages = {
-  overtakeName: 'Overtake',
+  overtakeName: 'Road Weave',
 
   // Home
   overtakeControls: '操作',
@@ -29,7 +29,7 @@ export const ja: OvertakeMessages = {
   overtakeTouchToStart: 'タッチで出発',
   overtakePaused: '一時停止中',
   overtakePlaceNow: '4 台中 {place} 位',
-  overtakeBoardLabel: 'Overtake のコース、レベル {n}：{state}',
+  overtakeBoardLabel: 'Road Weave のコース、レベル {n}：{state}',
   overtakeState_ready: 'スタート待ち',
   overtakeState_running: '走行中',
   overtakeState_paused: '一時停止中',

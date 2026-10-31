@@ -57,7 +57,7 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 | Pipe Link          | 琥珀(Web 先行公開)       | `#a5672c` | `#dba775` |
 | Bounce Up          | 菖蒲色(Web 先行公開)     | `#9e4892` | `#cf7dc2` |
 | Echo Pads          | 瑠璃色(Web 先行公開)     | `#306cb6` | `#709abd` |
-| Overtake           | 蘇芳(Web 先行公開)       | `#922643` | `#cd748a` |
+| Road Weave(旧 Overtake) | 蘇芳(Web 先行公開)       | `#922643` | `#cd748a` |
 | Make the Target    | 紺桔梗(Web 先行公開)     | `#393f93` | `#8785c1` |
 | Nested Tic-Tac-Toe | 海老茶(Web 先行公開)     | `#633b36` | `#c3a59d` |
 | Scopa              | 紅紫(Web 先行公開)       | `#b53192` | `#da71c0` |

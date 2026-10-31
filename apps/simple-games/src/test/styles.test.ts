@@ -106,8 +106,9 @@ describe('the CSS-per-game list in docs/architecture/css-split.md', () => {
 });
 
 /**
- * Issue #120: the app's whole promise is a board that doesn't jump around
- * under the player mid-game. The strip reserved for a banner ad, and the
+ * Issue #120: the app's whole promise is a board that keeps its size under
+ * the player and moves only when a real ad taller than 64px grows the strip
+ * (docs/ADS_POLICY.md「バナー広告の仕様」). The strip reserved for a banner ad, and the
  * fallback that keeps a finished board inert-but-untouched on an old WebView,
  * both do their job through a couple of CSS declarations that a future pass
  * on styles.css could drop without anything in TypeScript noticing.
@@ -123,9 +124,10 @@ describe('the reserved ad strips never yield their space (issue #120)', () => {
   });
 
   it('reserves .web-ad-slot at the same fixed height the comment promises', () => {
-    // The rule above this one in styles.css says outright that .web-ad-slot
-    // is "the .banner-slot rule, applied to the web" — a fixed height from
-    // mount so a loading, failing, or offline ad never moves the game list.
+    // The comment above this rule in styles.css promises .web-ad-slot a
+    // fixed height from mount (the .banner-slot idea applied to the web, and
+    // stricter: it never grows) so a loading, failing, or offline ad never
+    // moves the game list.
     const slot = ruleBody('.web-ad-slot');
     expect(slot).toMatch(/height:\s*100px/);
   });
@@ -148,6 +150,62 @@ describe('the reserved ad strips never yield their space (issue #120)', () => {
     const nonogramCss = readFileSync(resolve('src/games/nonogram/ui/nonogram.css'), 'utf8');
     const cells = ruleBody('.nono-cells', nonogramCss);
     expect(cells).toMatch(/touch-action:\s*none/);
+  });
+});
+
+/**
+ * With ads removed, BannerSlot renders nothing and never marks the root, and
+ * the web build without its reservation has neither root attribute either.
+ * Then nothing under a play screen's last row holds the bottom inset: the
+ * slot's margin is gone with the slot, and `.game-screen .action-bar` leaves
+ * the inset to that margin. So styles.css pads the play screen itself, in
+ * that state only (docs/ADS_POLICY.md「広告削除の買い切りとの関係」).
+ * Before it, the action bar's buttons ran 14px into the Android emulator's
+ * 24px gesture inset in most modes. With `css: false` in the test setup, only
+ * this notices the rule gone or widened to the states that already hold it.
+ * The rules are read with the comments taken out and split at their commas,
+ * so a rule commented out, or a selector added to its list, does not pass.
+ */
+describe('a play screen with no banner and no reservation keeps the bottom inset clear', () => {
+  const NEITHER = ':root:not([data-sg-app-banner]):not([data-sg-web-ads]) .game-screen';
+  const rules = [...css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(
+    (match) => ({
+      selectors: match[1]!.split(',').map((selector) => selector.trim()),
+      body: match[2]!,
+    }),
+  );
+  const bodyOf = (selector: string): string => {
+    const found = rules.find(
+      (rule) => rule.selectors.length === 1 && rule.selectors[0] === selector,
+    );
+    expect(found, `no rule for ${selector} on its own`).toBeDefined();
+    return found!.body;
+  };
+
+  it('pads the play screen by the inset in that state, and in no other rule', () => {
+    expect(bodyOf(NEITHER)).toMatch(/padding-bottom:\s*env\(safe-area-inset-bottom\)/);
+    // Every rule that pads the bottom of a screen as a whole: the play screen
+    // here, and every screen under the web's reservation. A third — or either
+    // of these with more selectors in its list — would pad a state that
+    // already holds the inset.
+    const padding = rules.filter(
+      (rule) =>
+        /padding(-bottom)?:/.test(rule.body) &&
+        rule.selectors.some((selector) => /(^|\s)\.(game-)?screen$/.test(selector)),
+    );
+    expect(padding.map((rule) => rule.selectors.join(', ')).sort()).toEqual(
+      [':root[data-sg-web-ads] .screen', NEITHER].sort(),
+    );
+  });
+
+  it('leaves the inset to the slot and to the reservation in their own states', () => {
+    // The two states this rule must not touch hold the inset already; padding
+    // the screen there too would lift every board and control by it.
+    expect(bodyOf('.banner-slot')).toMatch(/margin-bottom:\s*env\(safe-area-inset-bottom\)/);
+    expect(bodyOf('.game-screen .action-bar')).toMatch(/padding-bottom:\s*10px/);
+    expect(bodyOf(':root[data-sg-web-ads] .screen')).toMatch(
+      /padding-bottom:\s*calc\(116px \+ env\(safe-area-inset-bottom\)\)/,
+    );
   });
 });
 
@@ -212,5 +270,242 @@ describe('Reduced Motion reaches pseudo-elements', () => {
 
   it('covers ::before and ::after under the app setting', () => {
     expectRoute(rulesIn(source), ":root[data-reduced-motion='true'] ");
+  });
+});
+
+/** Every stylesheet under `dir`, at any depth. */
+function stylesheets(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = resolve(dir, entry.name);
+    if (entry.isDirectory()) return stylesheets(path);
+    return entry.name.endsWith('.css') ? [path] : [];
+  });
+}
+
+/**
+ * The low-spec floor is Chromium 88 (docs/ARCHITECTURE.md), which has no
+ * `svh`. The usual fallback is a `vh` declaration followed by the same one in
+ * `svh`: an engine that does not know the unit drops the second when it
+ * parses the sheet. That stops working once the second holds a var() or an
+ * env(). Such a declaration parses whatever it holds, wins the cascade, and
+ * only fails at computed-value time, when the property falls to its initial
+ * value (`width: auto`, `max-height: none`) instead of the vh line above it.
+ * A custom property holding `svh` fails the same way, since it parses
+ * anything. On 2026-10-30, 28 declarations in 14 game stylesheets had that
+ * shape — the boards of Reversi, Bubble Pop, Snake and Overtake among them —
+ * and with `css: false` in the test setup nothing rendered can see it. They
+ * belong under `@supports (height: 100svh)`, as Bridges and Unblock Puzzle
+ * already wrote theirs (docs/BRIDGES_RULES.md「大きさ」).
+ */
+describe('svh behind var(), env() or a custom property sits under @supports (Chromium 88)', () => {
+  const VIEWPORT_UNIT = /\d(?:svh|dvh|lvh|svw|dvw|lvw|svmin|svmax|dvmin|dvmax)\b/;
+  const DEFERRED = /\b(?:var|env)\(/;
+
+  /** Each declaration that needs the guard, as guarded or `file:line declaration`. */
+  function scan(file: string): { guarded: number; unguarded: string[] } {
+    // Comments are blanked rather than removed, so line numbers stay true.
+    const text = readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, (comment) =>
+      comment.replace(/[^\n]/g, ' '),
+    );
+    const guards: boolean[] = [];
+    const unguarded: string[] = [];
+    let guarded = 0;
+    let start = 0;
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      if (char !== '{' && char !== '}' && char !== ';') continue;
+      const raw = text.slice(start, i);
+      const chunk = raw.trim();
+      if (char === '{') {
+        // `not` inverts the test and `or` lets another condition pass it on
+        // Chromium 88, so neither guards anything.
+        guards.push(
+          chunk.startsWith('@supports') &&
+            VIEWPORT_UNIT.test(chunk) &&
+            !/\b(?:not|or)\b/.test(chunk),
+        );
+      } else {
+        const custom = chunk.startsWith('--');
+        const declaration = custom || /^[a-z-]+\s*:/.test(chunk);
+        if (declaration && VIEWPORT_UNIT.test(chunk) && (custom || DEFERRED.test(chunk))) {
+          if (guards.includes(true)) {
+            guarded++;
+          } else {
+            const line = text.slice(0, start + raw.length - raw.trimStart().length).split('\n');
+            const where = `${file.slice(resolve('src').length + 1)}:${line.length}`;
+            unguarded.push(`${where} ${chunk.replace(/\s+/g, ' ')}`);
+          }
+        }
+        if (char === '}') guards.pop();
+      }
+      start = i + 1;
+    }
+    return { guarded, unguarded };
+  }
+
+  const results = stylesheets(resolve('src')).map(scan);
+
+  it('finds none outside the guard', () => {
+    expect(results.flatMap((result) => result.unguarded)).toEqual([]);
+  });
+
+  it('reads every stylesheet and the guarded ones — a broken scan would pass the test above vacuously', () => {
+    expect(results.length).toBeGreaterThan(60);
+    expect(results.reduce((sum, result) => sum + result.guarded, 0)).toBeGreaterThan(28);
+  });
+});
+
+/**
+ * A game's stylesheet is a lazy chunk, and once the game has been opened its
+ * rules stay loaded until the app closes. A rule that one game anchors on a
+ * class therefore also styles any other game's element with that class.
+ * Hearts and Hanoi Towers both wrote `.ht-body` and `.ht-actions`. After
+ * Hearts had been opened, Hanoi's play area became a scroller of its own:
+ * 17px at 360×640 with a 90px banner slot, against 3px alone. Hanoi's rules
+ * also reached Hearts the other way. Hanoi moved to `hn-` on 2026-10-30.
+ *
+ * A selector's anchor is its first class that the shell does not define. A
+ * shell class is one that starts a selector in a stylesheet outside
+ * src/games: `.segment` counts, but the Yacht classes that nearby.css restyles
+ * under `.nearby-board` do not. A class one game anchors on must not appear in
+ * any other game's stylesheet. Two games may each keep a class under their own
+ * anchor: `.kt-screen .game-title` and `.nim-screen .game-title` cannot reach
+ * each other. This test cannot see a class that another game uses only in its
+ * markup and never in its stylesheet. `@keyframes` names are global in the same
+ * way. With `css: false` in the test setup, nothing rendered can see either
+ * collision (docs/architecture/css-split.md).
+ */
+describe('a class one game anchors on appears in no other game, and no @keyframes name repeats', () => {
+  const games = resolve('src/games');
+  const CLASS = /\.(-?[A-Za-z_][\w-]*)/g;
+
+  type Selector = { classes: string[]; lead: string[] };
+
+  /** Each selector's classes and those of its first compound, and each @keyframes name. */
+  function read(file: string): { selectors: Selector[]; keyframes: string[] } {
+    // Comments and strings go first: a data: URL or a content value may hold
+    // braces, dots or semicolons that are not selectors.
+    const text = readFileSync(file, 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'/g, '""');
+    const selectors: Selector[] = [];
+    const keyframes: string[] = [];
+    for (const match of text.matchAll(/([^{};]*)\{/g)) {
+      const prelude = match[1]!.trim();
+      const frames = /^@(?:-webkit-)?keyframes\s+([\w-]+)/.exec(prelude);
+      if (frames) keyframes.push(frames[1]!);
+      if (!prelude || prelude.startsWith('@') || /^(?:from|to|[\d.]+%)/.test(prelude)) continue;
+      // Attribute values and the arguments of :not() / :is() / :nth-child()
+      // are not where a selector is anchored.
+      let flat = prelude.replace(/\[[^\]]*\]/g, '');
+      while (/\([^()]*\)/.test(flat)) flat = flat.replace(/\([^()]*\)/g, '');
+      for (const selector of flat.split(',')) {
+        const lead = selector.trim().split(/\s*[\s>+~]\s*/)[0] ?? '';
+        selectors.push({
+          classes: [...selector.matchAll(CLASS)].map((m) => m[1]!),
+          lead: [...lead.matchAll(CLASS)].map((m) => m[1]!),
+        });
+      }
+    }
+    return { selectors, keyframes };
+  }
+
+  const shell = new Set<string>();
+  /** Class → the games that anchor a selector on it. */
+  const anchors = new Map<string, Set<string>>();
+  /** Class (not the shell's) → the games whose stylesheets name it anywhere. */
+  const mentions = new Map<string, Set<string>>();
+  /** @keyframes name → the stylesheets' owners, the shell counting as one. */
+  const keyframes = new Map<string, Set<string>>();
+  const add = (map: Map<string, Set<string>>, name: string, owner: string) => {
+    map.set(name, (map.get(name) ?? new Set()).add(owner));
+  };
+  for (const file of stylesheets(resolve('src')).filter((path) => !path.startsWith(`${games}/`))) {
+    const sheet = read(file);
+    sheet.selectors.forEach((selector) => selector.lead.forEach((name) => shell.add(name)));
+    sheet.keyframes.forEach((name) => add(keyframes, name, '(shell)'));
+  }
+  for (const game of readdirSync(games, { withFileTypes: true }).filter((e) => e.isDirectory())) {
+    for (const file of stylesheets(resolve(games, game.name))) {
+      const sheet = read(file);
+      for (const selector of sheet.selectors) {
+        const own = selector.classes.filter((name) => !shell.has(name));
+        if (own[0]) add(anchors, own[0], game.name);
+        own.forEach((name) => add(mentions, name, game.name));
+      }
+      sheet.keyframes.forEach((name) => add(keyframes, name, game.name));
+    }
+  }
+
+  it("finds no class one game anchors on in another game's stylesheet", () => {
+    const clashes = [...anchors.keys()]
+      .map((name) => [name, [...(mentions.get(name) ?? [])].sort()] as const)
+      .filter(([, by]) => by.length > 1)
+      .map(([name, by]) => `${name}: ${by.join(', ')}`)
+      .sort();
+    expect(clashes).toEqual([]);
+  });
+
+  it('finds no @keyframes name defined twice', () => {
+    const clashes = [...keyframes]
+      .filter(([, by]) => by.size > 1)
+      .map(([name, by]) => `${name}: ${[...by].sort().join(', ')}`)
+      .sort();
+    expect(clashes).toEqual([]);
+  });
+
+  it('reads every game, the shell and the keyframes — a broken scan would pass the tests above vacuously', () => {
+    const gamesWithAnchors = new Set([...anchors.values()].flatMap((by) => [...by]));
+    expect(gamesWithAnchors.size).toBeGreaterThan(60);
+    expect(anchors.size).toBeGreaterThan(1000);
+    expect(anchors.get('kt-screen')).toEqual(new Set(['knight-tour']));
+    expect(shell.has('game-content')).toBe(true);
+    expect(shell.has('segment')).toBe(true);
+    expect(shell.has('yt-sheet-foot')).toBe(false);
+    expect(keyframes.size).toBeGreaterThan(50);
+    expect(keyframes.get('hn-settle')).toEqual(new Set(['hanoi-towers']));
+  });
+});
+
+/**
+ * Sudoku and Sudoku 6×6 size their grid rows from the board, not from what the
+ * cells hold (docs/SUDOKU_RULES.md §1, docs/SUDOKU_6X6_RULES.md §13). With the
+ * rows left to their content, a row with no digit shrank to a third of the
+ * others or less, and a larger system text size pushed the last rows under the
+ * frame.
+ * As with the nonogram rule above, `css: false` means nothing rendered in a
+ * test can see these declarations go missing.
+ */
+describe('the Sudoku grids give every row the same height', () => {
+  it.each([
+    ['src/games/sudoku/ui/sudoku.css', '.sudoku-grid', 9],
+    ['src/games/sudoku-6x6/ui/sudoku-6x6.css', '.s6-grid', 6],
+    ['src/games/sudoku-6x6/ui/sudoku-6x6.css', '.s6-figure', 6],
+  ])('%s %s', (file, selector, rows) => {
+    const body = ruleBody(selector, readFileSync(resolve(file), 'utf8')).replace(/\s+/g, ' ');
+    // minmax(0, …) rather than 1fr, whose minimum is the content: a digit or a
+    // notes block taller than its share would stretch its row again.
+    expect(body).toContain(`grid-template-rows: repeat(${rows}, minmax(0, 1fr))`);
+  });
+});
+
+describe('the arcade status dots in forced colours', () => {
+  // A forced palette (Windows contrast themes, on the web) repaints backgrounds
+  // as Canvas and drops box-shadows, which is all a .game-life-dot is drawn
+  // with. The dots are the only on-screen count of Brick Breaker's and Sky
+  // Fighter's lives and of Bubble Pop's shots left (docs/BUBBLE_POP_RULES.md
+  // §3), so they opt out and keep their marks in CanvasText. jsdom computes no
+  // style, so the rules are pinned as text.
+  it('fills a dot left and rings a spent one in CanvasText', () => {
+    const media = '@media (forced-colors: active) {\n  .game-life-dot {';
+    const open = css.indexOf(media);
+    expect(open, 'the forced-colours block for .game-life-dot is missing').toBeGreaterThan(-1);
+    const block = css.slice(open, css.indexOf('\n}\n', open)).replace(/\s+/g, ' ');
+    expect(block).toContain(
+      '.game-life-dot { forced-color-adjust: none; background: CanvasText; }',
+    );
+    expect(block).toContain(
+      '.game-life-dot-spent { background: transparent; box-shadow: inset 0 0 0 1.5px CanvasText; }',
+    );
   });
 });

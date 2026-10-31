@@ -15,7 +15,7 @@
 import type { OvertakeMessages } from './en';
 
 export const vi: OvertakeMessages = {
-  overtakeName: 'Overtake',
+  overtakeName: 'Road Weave',
 
   // Home
   overtakeControls: 'Điều khiển',
@@ -28,7 +28,7 @@ export const vi: OvertakeMessages = {
   overtakeTouchToStart: 'Chạm để xuất phát',
   overtakePaused: 'Đang tạm dừng',
   overtakePlaceNow: 'Vị trí {place} trên 4',
-  overtakeBoardLabel: 'Overtake, cấp {n}: {state}',
+  overtakeBoardLabel: 'Road Weave, cấp {n}: {state}',
   overtakeState_ready: 'sẵn sàng',
   overtakeState_running: 'đang chạy',
   overtakeState_paused: 'đang tạm dừng',

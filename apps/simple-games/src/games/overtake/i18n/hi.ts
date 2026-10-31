@@ -15,7 +15,7 @@
 import type { OvertakeMessages } from './en';
 
 export const hi: OvertakeMessages = {
-  overtakeName: 'Overtake',
+  overtakeName: 'Road Weave',
 
   // Home
   overtakeControls: 'नियंत्रण',
@@ -28,7 +28,7 @@ export const hi: OvertakeMessages = {
   overtakeTouchToStart: 'शुरू करने के लिए छुएँ',
   overtakePaused: 'रुका हुआ',
   overtakePlaceNow: '4 में से स्थान {place}',
-  overtakeBoardLabel: 'Overtake, लेवल {n}: {state}',
+  overtakeBoardLabel: 'Road Weave, लेवल {n}: {state}',
   overtakeState_ready: 'तैयार',
   overtakeState_running: 'दौड़ जारी',
   overtakeState_paused: 'रुका हुआ',

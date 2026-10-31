@@ -28,7 +28,7 @@ export function HomeScreen() {
   };
   return (
     <div className="screen home-screen illustrated-game-home">
-      <div className="ht-home-content" inert={pending !== null}>
+      <div className="hn-home-content" inert={pending !== null}>
         <GameHomeHeader gameId="hanoi-towers" onBack={exitToCollection} />
         <div className="home-hero">
           <span className="game-home-artwork" aria-hidden="true">
@@ -39,12 +39,12 @@ export function HomeScreen() {
           <WebBetaNotice gameId="hanoi-towers" />
         </div>
         <div className="home-actions">
-          <p className="ht-choose">{t('hanoiTowersChoose')}</p>
+          <p className="hn-choose">{t('hanoiTowersChoose')}</p>
           {SIZES.map((size) => (
             <button
               key={size}
               type="button"
-              className={`btn ${size === (current ?? preferredSize) ? 'btn-primary' : 'btn-secondary'} btn-big ht-choice`}
+              className={`btn ${size === (current ?? preferredSize) ? 'btn-primary' : 'btn-secondary'} btn-big hn-choice`}
               onClick={() => choose(size)}
             >
               <span>{t('hanoiTowersDisks', { count: size })}</span>

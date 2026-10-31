@@ -504,3 +504,84 @@
     padding: 6px 16px;
   }
 }
+
+/* The app's banner strip. In the app the column has less height than the web
+   build's 116px reservation leaves it: the notch, the bottom inset and the
+   native strip at its worst case (`--sg-app-banner-reserve`, ui/styles.css:
+   90px and the bottom inset) cost 151px on the Android emulator at 360×640,
+   and there the total row ran 7px under a 90px strip (§10). So under
+   `:root[data-sg-app-banner]` the six rows share the height that is left,
+   between this sheet's 36px floor and its usual height: --yt-chrome is
+   everything else in the column — the top bar (64) and 205px of dice, Roll,
+   header row, total row, gaps and padding (measured at 360×640), 182px with
+   the tighter gaps below, and 8px more for the wide tier's larger dice — and
+   --yt-edges is the notch (.screen's top padding) and the strip's worst case.
+   Below 680px of height the app also takes the short-phone gaps, so the rows
+   keep what the gaps give up. The web build keeps its sheet as published. */
+
+.yt-body {
+  --yt-chrome: 269px;
+  --yt-row-max: 42px;
+  --yt-edges: calc(env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve, 0px));
+}
+
+@media (min-width: 600px) {
+  .yt-body {
+    --yt-chrome: 277px;
+    --yt-row-max: 50px;
+  }
+}
+
+:root[data-sg-app-banner] .yt-sheet {
+  grid-template-rows: repeat(
+    6,
+    clamp(36px, calc((100vh - var(--yt-chrome) - var(--yt-edges)) / 6), var(--yt-row-max))
+  );
+}
+
+@supports (height: 100svh) {
+  :root[data-sg-app-banner] .yt-sheet {
+    grid-template-rows: repeat(
+      6,
+      clamp(36px, calc((100svh - var(--yt-chrome) - var(--yt-edges)) / 6), var(--yt-row-max))
+    );
+  }
+}
+
+@media (max-height: 680px) {
+  .yt-body {
+    --yt-chrome: 246px;
+  }
+
+  :root[data-sg-app-banner] .yt-body {
+    gap: 5px;
+    padding-bottom: 6px;
+  }
+
+  :root[data-sg-app-banner] .yt-sheet-head {
+    padding-bottom: 0;
+  }
+
+  :root[data-sg-app-banner] .yt-sheet {
+    row-gap: 4px;
+  }
+
+  :root[data-sg-app-banner] .yt-sheet-foot {
+    height: 18px;
+    padding-top: 0;
+  }
+
+  :root[data-sg-app-banner] .btn.yt-roll {
+    min-height: 44px;
+    padding: 6px 16px;
+  }
+}
+
+/* A window both wide and short (a tablet held sideways, a split window)
+   takes both blocks above — the short one's tighter gaps and the wide one's
+   64px dice — so its budget is the short one's plus the larger dice's 8px. */
+@media (min-width: 600px) and (max-height: 680px) {
+  .yt-body {
+    --yt-chrome: 254px;
+  }
+}

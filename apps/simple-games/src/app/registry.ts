@@ -999,10 +999,12 @@ export const GAMES: readonly GameDefinition[] = [
     loadStorageSchemas: () => import('../games/box-regions/storage/schemas'),
   },
   // The five new genres of docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md
-  // (Nos. 42–46), in the plan's order, all in the browser's early release
-  // (docs/WEB_VERSION.md「先行公開」) and not in the app until a person decides
-  // they graduate (docs/RELEASE_CHECKLIST.md §0). None is a Club House
-  // challenge (no `challenge`) while its saves and results may still change.
+  // (Nos. 42–46), in the plan's order. In the browser's early release
+  // (docs/WEB_VERSION.md「先行公開」) from 2026-10-19, they graduated into the app
+  // on 2026-10-29 by the product owner's decision (v1.7.0;
+  // docs/RELEASE_CHECKLIST.md §0), and their schemas froze with it
+  // (storage/releasedRecords.test.ts). None is a Club House challenge (no
+  // `challenge`).
   //
   // The glyphs were checked rather than hoped at, as Futoshiki's was: the
   // bundled Nunito subset (latin-700/800, 230 code points) carries none of
@@ -1032,7 +1034,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Unblock Puzzle',
     category: 'puzzle',
     glyph: '⇥',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(UB_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/unblock-puzzle/ui/UnblockPuzzleRoot').then((m) => ({
@@ -1054,7 +1056,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Snake',
     category: 'arcade',
     glyph: '∿',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(SN_STORAGE_KEYS),
     loadRoot: () => import('../games/snake/ui/SnakeRoot').then((m) => ({ default: m.SnakeRoot })),
     loadStorageSchemas: () => import('../games/snake/storage/schemas'),
@@ -1085,7 +1087,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Loop Puzzle',
     category: 'logic',
     glyph: '⬚',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(LP_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/loop-puzzle/ui/LoopPuzzleRoot').then((m) => ({ default: m.LoopPuzzleRoot })),
@@ -1106,7 +1108,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Bridges',
     category: 'logic',
     glyph: '⊶',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(BG_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/bridges/ui/BridgesRoot').then((m) => ({ default: m.BridgesRoot })),
@@ -1131,7 +1133,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Peg Solitaire',
     category: 'puzzle',
     glyph: '⁜',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(PG_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/peg-solitaire/ui/PegSolitaireRoot').then((m) => ({
@@ -1149,8 +1151,8 @@ export const GAMES: readonly GameDefinition[] = [
   // landing's publish of main `7b95a94`, approved by the owner, after landing
   // #206 moved them to beta; WEB_VERSION.md「landing 側のガード」). Builds
   // before that carried their chunks as `'in-development'`, on no door.
-  // None is in the app until a person decides it graduates
-  // (docs/RELEASE_CHECKLIST.md §0). Chess (No. 47) came in a commit of its
+  // Chess graduated into the app on 2026-10-25, the other four on 2026-10-29,
+  // each by the product owner's decision (docs/RELEASE_CHECKLIST.md §0). Chess (No. 47) came in a commit of its
   // own; the plan's decision 4 (Chess in a PR of its own, so the other four
   // never wait on it) is met because all five finished together, so the five
   // shipped in one PR (#253) and none waited. None has been tried on a real
@@ -1198,7 +1200,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Gem Swap',
     category: 'puzzle',
     glyph: '❖',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(GS_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/gem-swap/ui/GemSwapRoot').then((m) => ({ default: m.GemSwapRoot })),
@@ -1218,7 +1220,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Pipe Link',
     category: 'logic',
     glyph: '┣',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(PN_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/pipe-link/ui/PipeLinkRoot').then((m) => ({ default: m.PipeLinkRoot })),
@@ -1240,7 +1242,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Bounce Up',
     category: 'arcade',
     glyph: '⇡',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(BO_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/bounce-up/ui/BounceUpRoot').then((m) => ({ default: m.BounceUpRoot })),
@@ -1261,7 +1263,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Echo Pads',
     category: 'drills',
     glyph: '♫',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(EP_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/echo-pads/ui/EchoPadsRoot').then((m) => ({ default: m.EchoPadsRoot })),
@@ -1286,8 +1288,9 @@ export const GAMES: readonly GameDefinition[] = [
   // and its §14 checks (rule sources, trademark and store search) move to
   // before it graduates. The browser version has carried them since
   // 2026-10-22 02:32 UTC (the landing's publish of main `3ed2b16`, after
-  // landing #205 moved them to beta). None is in the app until a person
-  // decides it graduates (docs/RELEASE_CHECKLIST.md §0). Nos. 47–51 above
+  // landing #205 moved them to beta). Nested Tic-Tac-Toe and Scopa graduated
+  // into the app on 2026-10-25, the other three on 2026-10-29, each by the
+  // product owner's decision (docs/RELEASE_CHECKLIST.md §0). Nos. 47–51 above
   // followed them onto the channel on 2026-10-22. None is a Club House
   // challenge (no `challenge`) while its saves and results may still change.
   //
@@ -1321,10 +1324,10 @@ export const GAMES: readonly GameDefinition[] = [
     // same shape with one more dash, ┋. Not ⫼, ⇈, ⛐, ⛟ or ⚑ (the plan's reasons). Not yet seen on a
     // low-spec handset.
     id: 'overtake',
-    title: 'Overtake',
+    title: 'Road Weave',
     category: 'arcade',
     glyph: '┇',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(OT_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/overtake/ui/OvertakeRoot').then((m) => ({ default: m.OvertakeRoot })),
@@ -1360,7 +1363,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Make the Target',
     category: 'puzzle',
     glyph: '=',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(TG_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/make-the-target/ui/MakeTheTargetRoot').then((m) => ({
@@ -1441,19 +1444,21 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Tangram',
     category: 'puzzle',
     glyph: '⊿',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(TN_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/tangram/ui/TangramRoot').then((m) => ({ default: m.TangramRoot })),
     loadStorageSchemas: () => import('../games/tangram/storage/schemas'),
   },
-  // Nos. 57–61: Web early release. Separate saves, no Club contracts.
+  // Nos. 57–61: Web early release from 2026-10-23; Nim graduated into the app on
+  // 2026-10-25, the other four on 2026-10-29 (owner decisions,
+  // docs/RELEASE_CHECKLIST.md §0). Separate saves, no Club contracts.
   {
     id: 'light-grid',
     title: 'Light Grid',
     category: 'logic',
     glyph: '✚',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(LG_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/light-grid/ui/LightGridRoot').then((m) => ({ default: m.LightGridRoot })),
@@ -1464,7 +1469,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Color Flood',
     category: 'puzzle',
     glyph: '▧',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(CF_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/color-flood/ui/ColorFloodRoot').then((m) => ({ default: m.ColorFloodRoot })),
@@ -1475,7 +1480,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Three Peaks',
     category: 'cards',
     glyph: '⋀',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(TP_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/three-peaks/ui/ThreePeaksRoot').then((m) => ({ default: m.ThreePeaksRoot })),
@@ -1496,19 +1501,21 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Knight’s Tour',
     category: 'logic',
     glyph: '♘',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(KT_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/knight-tour/ui/KnightTourRoot').then((m) => ({ default: m.KnightTourRoot })),
     loadStorageSchemas: () => import('../games/knight-tour/storage/schemas'),
   },
-  // Nos. 62–66: independent Web-beta games.
+  // Nos. 62–66: independent games, Web early release from 2026-10-23. Four
+  // graduated into the app on 2026-10-29 (owner decision, v1.7.0); Falling
+  // Blocks was withdrawn instead (below).
   {
     id: 'invaders',
-    title: 'Invaders',
+    title: 'Formation Fire',
     category: 'arcade',
     glyph: '⌁',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(IV_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/invaders/ui/InvadersRoot').then((m) => ({ default: m.InvadersRoot })),
@@ -1540,7 +1547,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Paddle Rally',
     category: 'arcade',
     glyph: '↔',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(PR_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/paddle-rally/ui/PaddleRallyRoot').then((m) => ({
@@ -1553,7 +1560,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Hanoi Towers',
     category: 'puzzle',
     glyph: '≜',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(HN_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/hanoi-towers/ui/HanoiTowersRoot').then((m) => ({
@@ -1566,7 +1573,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Maze Escape',
     category: 'logic',
     glyph: '⌘',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(ME_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/maze-escape/ui/MazeEscapeRoot').then((m) => ({ default: m.MazeEscapeRoot })),

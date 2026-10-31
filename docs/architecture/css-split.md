@@ -31,6 +31,20 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
   アーケード 2 本が共有する実況行(レベル / 残り / ライフ)だけは `ui/styles.css` に
   `.game-status*` として置いてある — 2 本が同じものを必要とした時点で共有クロムに
   なるのであって、`games/A/` の CSS を `games/B/` が読むことはない。
+- **ゲームのクラス名は、ほかのゲームとぶつけない**(2026-10-30)。ゲームの CSS は遅延チャンクで、
+  一度開いたゲームのスタイルシートはアプリを閉じるまで残る。だから、あるゲームがセレクタの起点にした
+  クラスを別のゲームの要素も持っていると、その規則はそちらにも効く。
+  - **起点**: シェルが定義しないクラスのうち、セレクタで最初に出てくるもの。
+  - **シェルのクラス**: `games/` の外のスタイルシートで、セレクタの先頭に来るもの。
+  - **規則**: あるゲームが起点にするクラスは、ほかのゲームのスタイルシートに出てこない。
+  - **書き方**: シェルのクラスに手を入れるときは、自分の起点の下に置く(Overtake の `.ot-controls .segment`)。
+    同じ名前のクラスでも、それぞれが自分の起点の下に置いていれば互いに届かない(`.kt-screen .game-title` と
+    `.nim-screen .game-title`)。
+  - **経緯**: Hearts と Hanoi Towers は接頭辞 `ht-` を共有していて、`.ht-body` / `.ht-actions` が衝突していた。
+    Hearts を開いた後の Hanoi の盤が内側でスクロールし、逆向きにも漏れていたので、Hanoi を保存キーと同じ
+    `hn-` に改めた。
+  - **検査**: `src/test/styles.test.ts` が、全ゲームについてこの規則と `@keyframes` の名前の重なりを確かめる。
+    別のゲームのマークアップにだけあってスタイルシートにないクラスは、この検査からは見えない。
 - ゲームの CSS は色を書かない。共有のカスタムプロパティ(`--accent` など)だけを使い、
   どの色になるかはシェルが root に付けた `data-game` が決める。
   ゲーム側にパレット値が複製されないので、下地を変えるときに触る場所は 1 か所で済む。
@@ -56,9 +70,10 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
   `var(--accent)` を指す)、Peg Solitaire の木の板(`--pg-plate-face` / `--pg-plate-edge` / `--pg-hole-floor` / `--pg-rim` と
   alpha だけの影と光 6 つ — `PEG_SOLITAIRE_RULES.md` §13)、同じ日に 2 ブロックの形へ揃えた Knight's Tour のマス・印の
   インク・駒の 2 色(`--kt-square-*` / `--kt-board-ink` / `--kt-piece` / `--kt-piece-edge` と alpha だけの 3 つ —
-  `KNIGHT_TOUR_RULES.md`「Visual refinement (2026-10-29)」)、Hanoi Towers の木のトレー・ペグ・台座・円盤・影(`--ht-tray-*` /
-  `--ht-grain` / `--ht-peg*` / `--ht-base*` / `--ht-disk-*` / `--ht-cast*` / `--ht-valid` — `HANOI_TOWERS_RULES.md`「Visual
-  presentation」。Hearts の `--ht-` 接頭辞とは名前が重ならない)、Maze Escape の盤(`--me-floor` / `--me-rim` / `--me-rim-lift` /
+  `KNIGHT_TOUR_RULES.md`「Visual refinement (2026-10-29)」)、Hanoi Towers の木のトレー・ペグ・台座・円盤・影(`--hn-tray-*` /
+  `--hn-grain` / `--hn-peg*` / `--hn-base*` / `--hn-disk-*` / `--hn-cast*` / `--hn-valid` — `HANOI_TOWERS_RULES.md`「Visual
+  presentation」。2026-10-30 までは Hearts と同じ `ht-` 接頭辞で、クラス `.ht-body` / `.ht-actions` が衝突していたので
+  `hn-` に改めた)、Maze Escape の盤(`--me-floor` / `--me-rim` / `--me-rim-lift` /
   `--me-wall-top` / `--me-wall-side` / `--me-cast` / `--me-start` / `--me-trail` / `--me-tray-shade` / `--me-drop` —
   `MAZE_ESCAPE_RULES.md`「Visual presentation」。駒の光沢 `--me-gloss` は `--surface` / `--ink` の別名)。いずれも冒頭の
   ライト / ダークの 2 つのブロックだけに書き、

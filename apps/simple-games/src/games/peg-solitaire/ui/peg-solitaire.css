@@ -126,13 +126,69 @@
   --pg-aspect: 1;
   position: relative;
   width: max(min(100%, 260px), min(100%, 460px, calc((100vh - 305px) * var(--pg-aspect))));
-  width: max(min(100%, 260px), min(100%, 460px, calc((100svh - 305px) * var(--pg-aspect))));
   aspect-ratio: var(--pg-aspect);
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
+}
+
+@supports (height: 100svh) {
+  .pg-board {
+    width: max(min(100%, 260px), min(100%, 460px, calc((100svh - 305px) * var(--pg-aspect))));
+  }
+}
+
+/* In the app the column shares the screen with the banner strip, which starts
+   at 64px and grows to the ad's height, up to 90px (docs/ADS_POLICY.md
+   「バナー広告の仕様」), and with the notch and the bottom inset — none of
+   which the 305px above counts. Measured in headless Chromium as the Android
+   app at 360×640 with the emulator's insets (37px above, 24px below), the
+   cross was still 328px: the column had 1px to spare under a 64px strip and
+   was 25px short under a 90px one, where it scrolled the status line three
+   quarters of the way under the action bar. So under `:root[data-sg-app-banner]`
+   the width is also capped by the height left at the strip's worst case.
+   --pg-chrome is the rest of the stack, 186px — the top bar 64, the column's
+   padding 12 and gap 10, the status line 23, the action bar 77 — and 3px for
+   a longer label in another language: 189px. --pg-edges is the notch
+   (.screen's top padding) and the strip's worst case
+   (`--sg-app-banner-reserve`, ui/styles.css: 90px and the bottom inset). The
+   cross is then 300px at 360×640 (a pitch of 42.9px) under either strip; the
+   triangle there, a taller phone, the web build and the app with ads removed
+   keep the sizes above, and the web's height term stays as a ceiling. The
+   svh forms sit under `@supports`: a var() makes a declaration parse, so on
+   a WebView without svh (Chromium 88) it would win over the vh form and then
+   compute to nothing. */
+.pg-body {
+  --pg-chrome: 189px;
+  --pg-edges: calc(env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve, 0px));
+}
+
+:root[data-sg-app-banner] .pg-board {
+  width: max(
+    min(100%, 260px),
+    min(
+      100%,
+      460px,
+      calc((100vh - 305px) * var(--pg-aspect)),
+      calc((100vh - var(--pg-chrome) - var(--pg-edges)) * var(--pg-aspect))
+    )
+  );
+}
+
+@supports (height: 100svh) {
+  :root[data-sg-app-banner] .pg-board {
+    width: max(
+      min(100%, 260px),
+      min(
+        100%,
+        460px,
+        calc((100svh - 305px) * var(--pg-aspect)),
+        calc((100svh - var(--pg-chrome) - var(--pg-edges)) * var(--pg-aspect))
+      )
+    );
+  }
 }
 
 /* Positioned, so it paints above the board's soft shadow (a positioned
@@ -612,12 +668,51 @@
    Tiers are defined in src/ui/styles.css「wide viewports」. Compact above is
    untouched; the wider tiers only let the board grow, still capped by the
    height the screen leaves it, and the cap stays inside --game-shell-max's
-   560px default so the top bar and Undo stay beside the board. */
+   560px default so the top bar and Undo stay beside the board. The app's
+   strip budget (above) comes along with each tier's own ceiling — the app
+   rule outranks a tier's plain .pg-board, so without its own copy here a
+   tablet's board would drop back to 460px. The status line is 1.5px taller
+   at 16px, so --pg-chrome is 191px. */
 
 @media (min-width: 600px) {
   .pg-board {
     width: max(min(100%, 260px), min(100%, 520px, calc((100vh - 305px) * var(--pg-aspect))));
-    width: max(min(100%, 260px), min(100%, 520px, calc((100svh - 305px) * var(--pg-aspect))));
+  }
+
+  @supports (height: 100svh) {
+    .pg-board {
+      width: max(min(100%, 260px), min(100%, 520px, calc((100svh - 305px) * var(--pg-aspect))));
+    }
+  }
+
+  .pg-body {
+    --pg-chrome: 191px;
+  }
+
+  :root[data-sg-app-banner] .pg-board {
+    width: max(
+      min(100%, 260px),
+      min(
+        100%,
+        520px,
+        calc((100vh - 305px) * var(--pg-aspect)),
+        calc((100vh - var(--pg-chrome) - var(--pg-edges)) * var(--pg-aspect))
+      )
+    );
+  }
+
+  @supports (height: 100svh) {
+    :root[data-sg-app-banner] .pg-board {
+      width: max(
+        min(100%, 260px),
+        min(
+          100%,
+          520px,
+          calc((100svh - 305px) * var(--pg-aspect)),
+          calc((100svh - var(--pg-chrome) - var(--pg-edges)) * var(--pg-aspect))
+        )
+      );
+    }
   }
 
   .pg-status {
@@ -628,6 +723,37 @@
 @media (min-width: 900px) and (orientation: landscape) {
   .pg-board {
     width: max(min(100%, 260px), min(100%, 560px, calc((100vh - 305px) * var(--pg-aspect))));
-    width: max(min(100%, 260px), min(100%, 560px, calc((100svh - 305px) * var(--pg-aspect))));
+  }
+
+  @supports (height: 100svh) {
+    .pg-board {
+      width: max(min(100%, 260px), min(100%, 560px, calc((100svh - 305px) * var(--pg-aspect))));
+    }
+  }
+
+  :root[data-sg-app-banner] .pg-board {
+    width: max(
+      min(100%, 260px),
+      min(
+        100%,
+        560px,
+        calc((100vh - 305px) * var(--pg-aspect)),
+        calc((100vh - var(--pg-chrome) - var(--pg-edges)) * var(--pg-aspect))
+      )
+    );
+  }
+
+  @supports (height: 100svh) {
+    :root[data-sg-app-banner] .pg-board {
+      width: max(
+        min(100%, 260px),
+        min(
+          100%,
+          560px,
+          calc((100svh - 305px) * var(--pg-aspect)),
+          calc((100svh - var(--pg-chrome) - var(--pg-edges)) * var(--pg-aspect))
+        )
+      );
+    }
   }
 }

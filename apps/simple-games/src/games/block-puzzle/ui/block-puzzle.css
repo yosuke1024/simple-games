@@ -81,12 +81,19 @@
    the screen: the top bar (64), the tray (96 plus its gap), the action bar
    (76), this element's padding (12), and the reserved banner (64,
    ADS_POLICY). Naming them is what keeps the cells as large as they can
-   honestly be. */
+   honestly be. In the app the banner term is the native strip's worst case
+   instead (`--sg-app-banner-reserve`, ui/styles.css: 90px and the bottom
+   inset) and the notch (.screen's top padding) is counted too, against the
+   measured rest of the column — 257px (top bar 64, padding 12, gap 14, tray
+   90, action bar 77): on the Android emulator at 360×640 the board rose 12px
+   over the top bar with the 64px slot and 25px with a 90px one, and the tray
+   ran into the action bar (§12). The web build keeps its budget as it was. */
 .bp-board {
+  --bp-chrome: calc(326px + env(safe-area-inset-bottom, 0px));
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   gap: 2px;
-  width: min(100%, 420px, calc(100vh - 326px - env(safe-area-inset-bottom, 0px)));
+  width: min(100%, 420px, calc(100vh - var(--bp-chrome)));
   aspect-ratio: 1;
   padding: 4px;
   border-radius: var(--radius);
@@ -102,6 +109,10 @@
     0 8px 18px var(--accent-ring-soft);
   /* A drag must not become a page scroll (§12). */
   touch-action: none;
+}
+
+:root[data-sg-app-banner] .bp-board {
+  --bp-chrome: calc(257px + env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve));
 }
 
 /* An empty cell is a recess in the tray, not a button that wants pressing:
@@ -505,8 +516,13 @@
 
 @media (min-width: 600px) {
   .bp-board {
-    width: min(100%, 480px, calc(100vh - 326px - env(safe-area-inset-bottom, 0px)));
-    width: min(100%, 480px, calc(100svh - 326px - env(safe-area-inset-bottom, 0px)));
+    width: min(100%, 480px, calc(100vh - var(--bp-chrome)));
+  }
+
+  @supports (height: 100svh) {
+    .bp-board {
+      width: min(100%, 480px, calc(100svh - var(--bp-chrome)));
+    }
   }
 
   .bp-tray {
@@ -516,8 +532,13 @@
 
 @media (min-width: 900px) and (orientation: landscape) {
   .bp-board {
-    width: min(100%, 520px, calc(100vh - 326px - env(safe-area-inset-bottom, 0px)));
-    width: min(100%, 520px, calc(100svh - 326px - env(safe-area-inset-bottom, 0px)));
+    width: min(100%, 520px, calc(100vh - var(--bp-chrome)));
+  }
+
+  @supports (height: 100svh) {
+    .bp-board {
+      width: min(100%, 520px, calc(100svh - var(--bp-chrome)));
+    }
   }
 
   .bp-tray {

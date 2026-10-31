@@ -23,10 +23,20 @@
 }
 
 /* The grid is one figure: an outer frame, hairlines inside, and heavier lines
-   on the box seams so the nine boxes read without being nine separate boxes. */
+   on the box seams so the nine boxes read without being nine separate boxes.
+
+   The nine rows share the board's height equally, whatever the cells hold
+   (docs/SUDOKU_RULES.md §1). Left to their content, a row with no digit
+   shrank to a third of the others or less, the whole board moved when its
+   first digit went in, and a larger system text size made the rows taller
+   than the square so the last ones went under the frame. minmax(0, …) is what
+   keeps a cell's content from stretching its row: a digit taller than the row
+   overflows its cell, still centred. The columns need no such care: a digit
+   is far narrower than its cell. */
 .sudoku-grid {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(9, minmax(0, 1fr));
   width: min(100%, 400px);
   aspect-ratio: 1;
   background: var(--surface);
@@ -438,5 +448,109 @@
 
   :root[data-game='sudoku'] .action-btn {
     max-width: none;
+  }
+}
+
+/* ---------- the app's banner strip ----------
+
+   In the app the board (.sudoku-grid) is what the flex column squeezes. It is
+   a square by aspect-ratio, but .sudoku-body is a column of whatever height
+   the top bar, the action bar and the native banner strip leave, and the board
+   gets only what the pad, the body's padding and its gap leave of that: on a
+   short screen it loses height while its width stays, so it stops being a
+   square, and it loses more when an ad taller than the 64px slot grows the
+   slot. Measured on the Android emulator at 360×640 (safe area 37px above,
+   24px below) the board was 336×294 under the 64px slot and 336×268 under a
+   90px one, with 221px of everything else stacked in the column around it:
+   the top bar 64, the body's padding 14 and gap 14, the pad 52, the action
+   bar 77. So under `:root[data-sg-app-banner]` the width is also capped by
+   the height left at the strip's worst case. --sudoku-chrome is that stack,
+   221px, and 3px for a longer top bar or action label in another language:
+   224px; --sudoku-edges is the notch (.screen's top padding) and the strip's
+   worst case (`--sg-app-banner-reserve`, ui/styles.css: 90px and the bottom
+   inset). The board is then 265×265 at 360×640 with a 64px slot or a 90px
+   one: the same size and the same shape when an ad grows the slot. A phone
+   with room is untouched. The pad keeps its own width, so on a short phone it
+   is wider than the board above it.
+
+   The wide tiers keep their web terms (the flat caps, 500px, and 56vw with
+   540px; the height terms, 350px and 220px) as ceilings and add the same app
+   budget, each with the stack of its own layout. The height terms are already
+   113px and 148px more than that stack, about or more than the 116px the
+   web build reserves for its own ad (ui/styles.css), so the strip is not
+   taken from them a second time. From 600px the column is still stacked, but the body's
+   gap and padding and the keys are larger: 237px, so 240px. From 900px in
+   landscape the pad and the actions sit beside the board, in the grid layout
+   of .game-content, so only the top bar and that layout's bottom padding are
+   stacked with it, 72px, so 75px, and nothing squeezes it; the 224px there
+   would shrink a tablet's board for nothing. The web build keeps its board as
+   published. The svh forms sit under `@supports`: a var() makes a declaration
+   parse, so on a WebView without svh (Chromium 88) it would win over the vh
+   form and then compute to nothing. */
+
+.sudoku-body {
+  --sudoku-chrome: 224px;
+  --sudoku-edges: calc(env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve, 0px));
+}
+
+:root[data-sg-app-banner] .sudoku-grid {
+  width: min(100%, 400px, calc(100vh - var(--sudoku-chrome) - var(--sudoku-edges)));
+}
+
+@supports (height: 100svh) {
+  :root[data-sg-app-banner] .sudoku-grid {
+    width: min(100%, 400px, calc(100svh - var(--sudoku-chrome) - var(--sudoku-edges)));
+  }
+}
+
+@media (min-width: 600px) {
+  .sudoku-body {
+    --sudoku-chrome: 240px;
+  }
+
+  :root[data-sg-app-banner] .sudoku-grid {
+    width: min(
+      100%,
+      500px,
+      calc(100vh - 350px),
+      calc(100vh - var(--sudoku-chrome) - var(--sudoku-edges))
+    );
+  }
+
+  @supports (height: 100svh) {
+    :root[data-sg-app-banner] .sudoku-grid {
+      width: min(
+        100%,
+        500px,
+        calc(100svh - 350px),
+        calc(100svh - var(--sudoku-chrome) - var(--sudoku-edges))
+      );
+    }
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .sudoku-body {
+    --sudoku-chrome: 75px;
+  }
+
+  :root[data-sg-app-banner] .sudoku-grid {
+    width: min(
+      56vw,
+      540px,
+      calc(100vh - 220px),
+      calc(100vh - var(--sudoku-chrome) - var(--sudoku-edges))
+    );
+  }
+
+  @supports (height: 100svh) {
+    :root[data-sg-app-banner] .sudoku-grid {
+      width: min(
+        56vw,
+        540px,
+        calc(100svh - 220px),
+        calc(100svh - var(--sudoku-chrome) - var(--sudoku-edges))
+      );
+    }
   }
 }

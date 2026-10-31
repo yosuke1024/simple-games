@@ -384,3 +384,53 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+
+/* ---------- the app's banner strip ----------
+
+   The play area fills whatever height the column leaves, and ui/layout.ts
+   lays the board and the tray out in pixels from that box, so in the app an
+   ad taller than the 64px slot used to shrink the whole board with it —
+   measured on the Android emulator at 360×640 (notch 37px, bottom inset
+   24px), the play area was 360×381.7 with the 64px slot and 360×355.7 with
+   90px, and the board 255×255 and then 237×237, while the rest of the column
+   (the top bar and the action bar) stayed 133.3px (ADS_POLICY.md: the board
+   keeps its size and its shape). Under `:root[data-sg-app-banner]` the play
+   area is also no taller than the height left at the strip's worst case:
+   --tn-chrome is that rest and a few px for a longer title or label in
+   another language, so 136px; --tn-edges (not --tn-edge, the wood's cut edge)
+   is the notch (.screen's top padding) and `--sg-app-banner-reserve`
+   (ui/styles.css: 90px and the bottom inset). That is 353px at 360×640, and
+   layout.ts turns it into the same 235px square with a 64px slot or a 90px
+   one (arithmetic, not measured). `margin-block: auto` shares what the cap
+   leaves over above and below the play area, so it stays centred between the
+   bars and the action bar stays at the bottom: when an ad grows the slot only
+   the position moves, by half the growth, as the policy accepts. No media
+   query sizes the play area, so there is no wide tier to follow: the cap is
+   a ceiling, and on a tablet it sits within 3px of the height the column
+   leaves at the strip's worst case. The cap never goes below 246px, the
+   play area at which layout.ts's 160px board floor (BOARD_MIN_PX) is reached
+   with the whole tray still in (245.7px): in a window shorter than a phone,
+   such as Android split-screen (411×430, 360×300), the cap alone cut the
+   play area below what the column left, the board stayed at its 160px floor
+   and more of the tray went past the `overflow: hidden`. Below 246px the
+   play area is again what the column leaves, as before the cap. No phone
+   from 320×568 up reaches the floor. The web build keeps its board as
+   published. The svh form sits under `@supports`: a var() makes a
+   declaration parse, so on a WebView without svh (Chromium 88) it would win
+   over the vh form and then compute to nothing. */
+
+.tn-screen {
+  --tn-chrome: 136px;
+  --tn-edges: calc(env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve, 0px));
+}
+
+:root[data-sg-app-banner] .tn-play {
+  max-height: max(246px, calc(100vh - var(--tn-chrome) - var(--tn-edges)));
+  margin-block: auto;
+}
+
+@supports (height: 100svh) {
+  :root[data-sg-app-banner] .tn-play {
+    max-height: max(246px, calc(100svh - var(--tn-chrome) - var(--tn-edges)));
+  }
+}

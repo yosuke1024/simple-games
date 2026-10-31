@@ -272,6 +272,30 @@
         "target": "sha256:87c2ebf7b0ff86723a803165ffd7041a1d2fb01cca8ad18044f650cf06bc9192",
         "reviewedOn": "2026-10-24",
         "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsTitle": {
+        "source": "sha256:65de7793b84f4a8f42aab8adbe2b797d0d967f8c297359f391ef08c61f76f9da",
+        "target": "sha256:8dc075ccfe6cee7559f0cb077c56df39634c2fde99e608787d0870ae072d4ee5",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsBody": {
+        "source": "sha256:eab58ac20e6de53421968ad0b93f476767049f03ef1c6eb76637b110a97b7e5c",
+        "target": "sha256:2c6cad4a0fdd3c349035f90b08a9bbb72b1444879515e2b64914d2701809fe1e",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixMealTagline": {
+        "source": "sha256:44e9569dbec2dad8d736b0103b2cf29015c9673e2b4fa771315946efd6b73ddd",
+        "target": "sha256:3e9d14eb45028d0449b2cd889e13cce39fe6ff469571d749898cc090c74bcc7b",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixWorkTagline": {
+        "source": "sha256:8f0d30a70a80ef6b6602f8d01815f8471714ec02f4c06236f2489d8db06b0649",
+        "target": "sha256:7ad5e474be192ada7c737d8397394dd3ac393f5ab071782b0fbb6d5b0904757b",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
       }
     },
     "th": {
@@ -525,6 +549,30 @@
         "source": "sha256:1e70422c17bd156771453736751149107ea7bb2287488a3a46c107f2d49e1421",
         "target": "sha256:3994aa58444ebc6b1be84376568bdf1ee972afa29806d19dc112b01c10190782",
         "reviewedOn": "2026-10-24",
+        "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsTitle": {
+        "source": "sha256:65de7793b84f4a8f42aab8adbe2b797d0d967f8c297359f391ef08c61f76f9da",
+        "target": "sha256:7b5f53998adfcc9d71ac9ad363703ee3a6314f741c9d86b65e8e8132416209ce",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsBody": {
+        "source": "sha256:eab58ac20e6de53421968ad0b93f476767049f03ef1c6eb76637b110a97b7e5c",
+        "target": "sha256:4547bcfc8ee689538bd338c5bac38e9ebe6a29b5d43c789dd0d2f53a42181648",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixMealTagline": {
+        "source": "sha256:44e9569dbec2dad8d736b0103b2cf29015c9673e2b4fa771315946efd6b73ddd",
+        "target": "sha256:cc9160e42c6dde0e73e7d732bc3e6ef1ea7090b1372204c4b60455e559b0c891",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixWorkTagline": {
+        "source": "sha256:8f0d30a70a80ef6b6602f8d01815f8471714ec02f4c06236f2489d8db06b0649",
+        "target": "sha256:ef187b1e584f7e2c333075a50fc84b6b50cabde70109099728eaac7dbd3a2b6c",
+        "reviewedOn": "2026-10-31",
         "by": "claude-blind-agent"
       }
     },
@@ -780,6 +828,30 @@
         "target": "sha256:4dae923d309e413ffeb61662302a22aee625f9322e121a8557c7b08826a9e69e",
         "reviewedOn": "2026-10-24",
         "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsTitle": {
+        "source": "sha256:65de7793b84f4a8f42aab8adbe2b797d0d967f8c297359f391ef08c61f76f9da",
+        "target": "sha256:9f72c717867a5cd5b667e686661007b3a1229a4257ab5730961045c4a34e6eb0",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsBody": {
+        "source": "sha256:eab58ac20e6de53421968ad0b93f476767049f03ef1c6eb76637b110a97b7e5c",
+        "target": "sha256:46bca8f993fb3a9deb47effb0191081384de6682b574c1dd1a874e83205e8c08",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixMealTagline": {
+        "source": "sha256:44e9569dbec2dad8d736b0103b2cf29015c9673e2b4fa771315946efd6b73ddd",
+        "target": "sha256:fe6fd4f3fe79924c450df00e88ed0dd100d54c6ce9fa94dc6dfd28dd669a00af",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixWorkTagline": {
+        "source": "sha256:8f0d30a70a80ef6b6602f8d01815f8471714ec02f4c06236f2489d8db06b0649",
+        "target": "sha256:42d905b3d2abd1e75556d65b92b8b9ba08e0233152c31c1623e343d5d3cf8238",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
       }
     },
     "vi": {
@@ -1033,6 +1105,30 @@
         "source": "sha256:1e70422c17bd156771453736751149107ea7bb2287488a3a46c107f2d49e1421",
         "target": "sha256:7457d6a0fcd9524320c507a3321586722732b09da30302d030248106358d5bfa",
         "reviewedOn": "2026-10-24",
+        "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsTitle": {
+        "source": "sha256:65de7793b84f4a8f42aab8adbe2b797d0d967f8c297359f391ef08c61f76f9da",
+        "target": "sha256:afe151fe89183cfc108a8f993f8f87e7348d8084cf161f75d620ff70d8540be1",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsBody": {
+        "source": "sha256:eab58ac20e6de53421968ad0b93f476767049f03ef1c6eb76637b110a97b7e5c",
+        "target": "sha256:e6a1b279e3f1298642707fc97ac1b479dc478eaa5468fb164079a3d7ee3791f3",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixMealTagline": {
+        "source": "sha256:44e9569dbec2dad8d736b0103b2cf29015c9673e2b4fa771315946efd6b73ddd",
+        "target": "sha256:f38c6384c756b5bb98bb1c90564f4794df0c234e56d86db67ca83ce291001d34",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixWorkTagline": {
+        "source": "sha256:8f0d30a70a80ef6b6602f8d01815f8471714ec02f4c06236f2489d8db06b0649",
+        "target": "sha256:edc84b6ebfe24fcd9cedb24fec56ebb917cc02afe38c30330285a468dc1ca4af",
+        "reviewedOn": "2026-10-31",
         "by": "claude-blind-agent"
       }
     },
@@ -1288,6 +1384,30 @@
         "target": "sha256:7f5fcab064aacabbc57f2a09a4c62fc1e6ddfcc88136dbfc4e6576185342d850",
         "reviewedOn": "2026-10-24",
         "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsTitle": {
+        "source": "sha256:65de7793b84f4a8f42aab8adbe2b797d0d967f8c297359f391ef08c61f76f9da",
+        "target": "sha256:e81b55f1380e441e1d62f8a834039f6e0a8f6b1e0d63fe32b57ee604a61fec3b",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsBody": {
+        "source": "sha256:eab58ac20e6de53421968ad0b93f476767049f03ef1c6eb76637b110a97b7e5c",
+        "target": "sha256:75da500ee886b628602d465c5398923a30f9d5103a25b08b5fd418a7bf0fdfa6",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixMealTagline": {
+        "source": "sha256:44e9569dbec2dad8d736b0103b2cf29015c9673e2b4fa771315946efd6b73ddd",
+        "target": "sha256:383a874613a5bf1950ee9b19ab3b13cbe40092ddb0cf9760be1219042d833cec",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixWorkTagline": {
+        "source": "sha256:8f0d30a70a80ef6b6602f8d01815f8471714ec02f4c06236f2489d8db06b0649",
+        "target": "sha256:f380f518d7fe3a060f655fdd90646ea319575b117cecd38be188a94293fd3086",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
       }
     },
     "zh-hans": {
@@ -1541,6 +1661,30 @@
         "source": "sha256:1e70422c17bd156771453736751149107ea7bb2287488a3a46c107f2d49e1421",
         "target": "sha256:e474bdc5b7c0004031e957075f1948bcd4d76e6149252949afa8b1710e82ea02",
         "reviewedOn": "2026-10-24",
+        "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsTitle": {
+        "source": "sha256:65de7793b84f4a8f42aab8adbe2b797d0d967f8c297359f391ef08c61f76f9da",
+        "target": "sha256:ba83e49d3900a76d7c1e55c6ed931d956b49eeae4d1b41e89694056fb45b0ff8",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsBody": {
+        "source": "sha256:eab58ac20e6de53421968ad0b93f476767049f03ef1c6eb76637b110a97b7e5c",
+        "target": "sha256:d572491316449f102fa95185dcfab9b93ddd4a12be1d585ce3a8cfe50373acf0",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixMealTagline": {
+        "source": "sha256:44e9569dbec2dad8d736b0103b2cf29015c9673e2b4fa771315946efd6b73ddd",
+        "target": "sha256:b69dfb873d4b47a8b03a85f4145a011098865be3ad2b3b2ae35e8c996ef054c0",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixWorkTagline": {
+        "source": "sha256:8f0d30a70a80ef6b6602f8d01815f8471714ec02f4c06236f2489d8db06b0649",
+        "target": "sha256:3260c8fb1855358547a1dbf6af621e9607eb6552bc8087b43b53f1497450d8df",
+        "reviewedOn": "2026-10-31",
         "by": "claude-blind-agent"
       }
     },
@@ -1796,6 +1940,30 @@
         "target": "sha256:6e8fc734a4987a33a3d26ed6c9664e87b079d373eec16dba91e902601f732f5e",
         "reviewedOn": "2026-10-24",
         "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsTitle": {
+        "source": "sha256:65de7793b84f4a8f42aab8adbe2b797d0d967f8c297359f391ef08c61f76f9da",
+        "target": "sha256:9bf368ae4664f2386829f06655709383d047f438c3656b3edbb38d46b1e69298",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsBody": {
+        "source": "sha256:eab58ac20e6de53421968ad0b93f476767049f03ef1c6eb76637b110a97b7e5c",
+        "target": "sha256:fc8add29fafed218c62f461d12bafd8bfe9e508bfd8c3de3c1af4d3983e7bf7e",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixMealTagline": {
+        "source": "sha256:44e9569dbec2dad8d736b0103b2cf29015c9673e2b4fa771315946efd6b73ddd",
+        "target": "sha256:2cef9fb6e71e0eb430da3875baeacf21a5eab93b630c04e20e724bddd9b0256e",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixWorkTagline": {
+        "source": "sha256:8f0d30a70a80ef6b6602f8d01815f8471714ec02f4c06236f2489d8db06b0649",
+        "target": "sha256:2b51073b492ff6cd5c98bed242cf0ea2a6998691494c0545d786dd3c6358e51b",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
       }
     },
     "es": {
@@ -2049,6 +2217,30 @@
         "source": "sha256:1e70422c17bd156771453736751149107ea7bb2287488a3a46c107f2d49e1421",
         "target": "sha256:a7e64b05996cc6042861cda9380ea323b1beb9b654088b38ae3959e7b7be345c",
         "reviewedOn": "2026-10-24",
+        "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsTitle": {
+        "source": "sha256:65de7793b84f4a8f42aab8adbe2b797d0d967f8c297359f391ef08c61f76f9da",
+        "target": "sha256:6eaeb6cf675c415639e8e1da64df030b0bede85f57c556daa371b9ae96d08e5c",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsBody": {
+        "source": "sha256:eab58ac20e6de53421968ad0b93f476767049f03ef1c6eb76637b110a97b7e5c",
+        "target": "sha256:ed85743b3f32a4a780730a2c6e5b388ad4605ddeb9f8b9461dbf9eee1fe3598c",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixMealTagline": {
+        "source": "sha256:44e9569dbec2dad8d736b0103b2cf29015c9673e2b4fa771315946efd6b73ddd",
+        "target": "sha256:95a38eadcec6845d99072e9fb044a627d4e09c3e715193caaf18dd3baba30346",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixWorkTagline": {
+        "source": "sha256:8f0d30a70a80ef6b6602f8d01815f8471714ec02f4c06236f2489d8db06b0649",
+        "target": "sha256:ea41706614e68e14409d694eb866a3eaa854aa02650d739fedd0aa092ff1392b",
+        "reviewedOn": "2026-10-31",
         "by": "claude-blind-agent"
       }
     },
@@ -2304,6 +2496,30 @@
         "target": "sha256:2b9fc404061eebe78f7be2c28e409f0e7f1fda41b8ae3d84a0f92dcc41e47189",
         "reviewedOn": "2026-10-24",
         "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsTitle": {
+        "source": "sha256:65de7793b84f4a8f42aab8adbe2b797d0d967f8c297359f391ef08c61f76f9da",
+        "target": "sha256:4304c852646b1188b0d37d58410fc0f185cda5d1f67e2b6eede6e07a48c52f35",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsBody": {
+        "source": "sha256:eab58ac20e6de53421968ad0b93f476767049f03ef1c6eb76637b110a97b7e5c",
+        "target": "sha256:1bafec5235abae6b0320431a653add2bde64e55a98b9371139934db68cd3c947",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixMealTagline": {
+        "source": "sha256:44e9569dbec2dad8d736b0103b2cf29015c9673e2b4fa771315946efd6b73ddd",
+        "target": "sha256:ce8472c19dd9b25235aa33fc81ad5e65f44c5e028fac157e711ce058028ede05",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixWorkTagline": {
+        "source": "sha256:8f0d30a70a80ef6b6602f8d01815f8471714ec02f4c06236f2489d8db06b0649",
+        "target": "sha256:30451eb655f1d60ba2a6cceaa0c7626148c2a040d7e1bf45e7f0a6358ec9595b",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
       }
     },
     "fr": {
@@ -2557,6 +2773,30 @@
         "source": "sha256:1e70422c17bd156771453736751149107ea7bb2287488a3a46c107f2d49e1421",
         "target": "sha256:45cb2ffa6d42953c4bbb816fb1d1b171c0b9ea45c2b2746e438b55e9c502a908",
         "reviewedOn": "2026-10-24",
+        "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsTitle": {
+        "source": "sha256:65de7793b84f4a8f42aab8adbe2b797d0d967f8c297359f391ef08c61f76f9da",
+        "target": "sha256:72c6471c2648ad84a74d4f01a96d491770469c6f79688cabd65d6f8c8b57e1df",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsBody": {
+        "source": "sha256:eab58ac20e6de53421968ad0b93f476767049f03ef1c6eb76637b110a97b7e5c",
+        "target": "sha256:aee7a1d5c5aeda7bbf02b041acc137d194eedff197098aac34f3d1847485ef8f",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixMealTagline": {
+        "source": "sha256:44e9569dbec2dad8d736b0103b2cf29015c9673e2b4fa771315946efd6b73ddd",
+        "target": "sha256:410bd44d5cd50b2ef6233fb339eb229c965390e7e0c7de9776cf04517e18959a",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixWorkTagline": {
+        "source": "sha256:8f0d30a70a80ef6b6602f8d01815f8471714ec02f4c06236f2489d8db06b0649",
+        "target": "sha256:17e4df17c9d4583be03a3ba0cc37550e1970c4a25c2560c0b4ebe46cc1c3def3",
+        "reviewedOn": "2026-10-31",
         "by": "claude-blind-agent"
       }
     },
@@ -2812,6 +3052,30 @@
         "target": "sha256:cadd48f117957fa4dc86877e6cc456247e6d685def1a449de67a6c68f1ae5635",
         "reviewedOn": "2026-10-24",
         "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsTitle": {
+        "source": "sha256:65de7793b84f4a8f42aab8adbe2b797d0d967f8c297359f391ef08c61f76f9da",
+        "target": "sha256:ddd3a2a2a8c9a3753cf5608f46abfde6181f659b8315f20753752a3c05812b5a",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsBody": {
+        "source": "sha256:eab58ac20e6de53421968ad0b93f476767049f03ef1c6eb76637b110a97b7e5c",
+        "target": "sha256:f64745077623f3a7558311ff51089fb123986cf29d31d0d98cd750d53925e552",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixMealTagline": {
+        "source": "sha256:44e9569dbec2dad8d736b0103b2cf29015c9673e2b4fa771315946efd6b73ddd",
+        "target": "sha256:888c7f04fe07b6a98ed8b42094e62e179563a19c270146a075468907739dc52e",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixWorkTagline": {
+        "source": "sha256:8f0d30a70a80ef6b6602f8d01815f8471714ec02f4c06236f2489d8db06b0649",
+        "target": "sha256:03d13703205aa4d9c1f5252b38467d9b60ad7853acad9656769284a40e357993",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
       }
     },
     "tr": {
@@ -3065,6 +3329,30 @@
         "source": "sha256:1e70422c17bd156771453736751149107ea7bb2287488a3a46c107f2d49e1421",
         "target": "sha256:2b87e636f4c7b5ff8e87af97a390423e652dfe2fceeb5f27773732c51914c240",
         "reviewedOn": "2026-10-24",
+        "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsTitle": {
+        "source": "sha256:65de7793b84f4a8f42aab8adbe2b797d0d967f8c297359f391ef08c61f76f9da",
+        "target": "sha256:722b87addd9b356a7c54808fe427bf72968d2d2b93a0b52a208b5a96b3c896da",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "moreFromPixAppsBody": {
+        "source": "sha256:eab58ac20e6de53421968ad0b93f476767049f03ef1c6eb76637b110a97b7e5c",
+        "target": "sha256:b49381e3f8701e822938619defc95bc8214dc57aa6e71bfbf243cae488fd2e36",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixMealTagline": {
+        "source": "sha256:44e9569dbec2dad8d736b0103b2cf29015c9673e2b4fa771315946efd6b73ddd",
+        "target": "sha256:ffde95f7ad5df5adb259e755ed198f37cb6e77dab8a60977cde183d6c5c36503",
+        "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixWorkTagline": {
+        "source": "sha256:8f0d30a70a80ef6b6602f8d01815f8471714ec02f4c06236f2489d8db06b0649",
+        "target": "sha256:e67e99476f624d5528d721c76f4770ec3ccc5c1bcfe3fc3b6c78ba7475e1b40d",
+        "reviewedOn": "2026-10-31",
         "by": "claude-blind-agent"
       }
     }

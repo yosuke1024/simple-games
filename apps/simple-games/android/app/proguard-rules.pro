@@ -41,6 +41,25 @@
 # If a future plugin breaks under R8, add a targeted keep for its real FQCN
 # here with a comment naming the plugin — never a wildcard package keep.
 
+# Capacitor's annotation types themselves. The consumer rules above keep the
+# classes and members that CARRY these annotations, not the annotation
+# interfaces. Since 1.7.0 the release build runs R8's optimizer
+# (proguard-android-optimize.txt), and it sees no instance of an annotation
+# interface anywhere in the program — the runtime makes them reflectively — so
+# it treats a value typed as one as always null. PluginHandle keeps the
+# @CapacitorPlugin it read in a field; Bridge.getPermissionStates reads
+# permissions() from that field, and R8 compiled the call to `throw null`.
+# Every permission check crashed the app: Nearby over Bluetooth (BLE needs
+# BLUETOOTH_SCAN / ADVERTISE / CONNECT) closed on both Host and Find, while
+# Wi-Fi, which asks for no permission, kept working. Keeping the interfaces
+# tells R8 that instances exist outside its view.
+-keep @interface com.getcapacitor.annotation.CapacitorPlugin { *; }
+-keep @interface com.getcapacitor.annotation.Permission { *; }
+-keep @interface com.getcapacitor.annotation.PermissionCallback { *; }
+-keep @interface com.getcapacitor.annotation.ActivityCallback { *; }
+-keep @interface com.getcapacitor.PluginMethod { *; }
+-keep @interface com.getcapacitor.NativePlugin { *; }
+
 # Keep file/line info so release crash stacks stay mappable. The AAB carries
 # the mapping (BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map),
 # so Play Console deobfuscates crashes without a separate upload.

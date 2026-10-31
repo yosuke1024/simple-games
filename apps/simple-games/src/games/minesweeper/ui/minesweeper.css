@@ -175,12 +175,29 @@
   background: var(--accent-soft);
 }
 
+/* Shown until the first tap, under the board. On a short screen there is no
+   room left for it: at 360×640 in the app the 9×9 and the 12×12 take 336px of
+   a 374px box under the 64px banner strip (348px under a 90px one) and the
+   14×18 more than all of it, so the line was cut after its first line
+   ("…the first move is always") or scrolled out of sight. Stuck to the box's
+   bottom edge it stays whole in view while the box overflows, over the
+   board's last row, and sits under the board as before when everything fits;
+   its paper ground, widened by a ring of the same colour that takes no
+   layout, is unseen there. The cells it covers are all closed and any of them
+   is a safe first tap (§4), so a tap goes through the line to the cell, and
+   the line is gone with that tap. */
 .mines-start-hint {
+  position: sticky;
+  bottom: 0;
   margin: 0;
   max-width: 320px;
   text-align: center;
   color: var(--ink-soft);
   font-size: 14px;
+  background: var(--paper);
+  border-radius: 8px;
+  box-shadow: 0 0 0 6px var(--paper);
+  pointer-events: none;
 }
 
 /* ---------- top bar ---------- */

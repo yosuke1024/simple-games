@@ -15,7 +15,7 @@
 import type { OvertakeMessages } from './en';
 
 export const zhHans: OvertakeMessages = {
-  overtakeName: 'Overtake',
+  overtakeName: 'Road Weave',
 
   // Home
   overtakeControls: '操作',
@@ -28,7 +28,7 @@ export const zhHans: OvertakeMessages = {
   overtakeTouchToStart: '触摸出发',
   overtakePaused: '已暂停',
   overtakePlaceNow: '4 辆中第 {place} 名',
-  overtakeBoardLabel: 'Overtake，第 {n} 关：{state}',
+  overtakeBoardLabel: 'Road Weave，第 {n} 关：{state}',
   overtakeState_ready: '等待出发',
   overtakeState_running: '行驶中',
   overtakeState_paused: '已暂停',

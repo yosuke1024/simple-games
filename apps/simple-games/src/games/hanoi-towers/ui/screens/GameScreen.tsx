@@ -74,7 +74,7 @@ export function GameScreen() {
   if (!session) return null;
   const over = session.status === 'over';
   return (
-    <div className="screen game-screen ht-screen">
+    <div className="screen game-screen hn-screen">
       <div className="game-content" inert={over || confirmRestart}>
         <header className="game-topbar">
           <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
@@ -90,17 +90,17 @@ export function GameScreen() {
             <IconRetry />
           </button>
         </header>
-        <div className="ht-body">
-          <div className="ht-metrics">
-            <span className="ht-move-count">
+        <div className="hn-body">
+          <div className="hn-metrics">
+            <span className="hn-move-count">
               <span>{t('movesLabel')}</span> <strong>{session.history.length}</strong>
             </span>
-            <span className="ht-reference">
+            <span className="hn-reference">
               {t('hanoiTowersMinimum', { count: 2 ** session.size - 1 })}
             </span>
           </div>
           <Board session={session} selected={selected} onPeg={onPeg} />
-          <p className="ht-instruction" role="status" aria-atomic="true">
+          <p className="hn-instruction" role="status" aria-atomic="true">
             {invalid
               ? t('hanoiTowersInvalid')
               : selected === null
@@ -108,7 +108,7 @@ export function GameScreen() {
                 : t('hanoiTowersPlace', { peg: selected + 1 })}
           </p>
         </div>
-        <div className="action-bar ht-actions">
+        <div className="action-bar hn-actions">
           <button
             type="button"
             className="action-btn"
@@ -121,8 +121,10 @@ export function GameScreen() {
             {t('undo')}
           </button>
         </div>
-        <BannerSlot />
       </div>
+      {/* Outside .game-content, which scrolls on a short screen: the reserved
+          strip stays put under the play area instead of scrolling with it. */}
+      <BannerSlot />
       <ResultOverlay
         session={session}
         best={stats.boards[session.size].best}

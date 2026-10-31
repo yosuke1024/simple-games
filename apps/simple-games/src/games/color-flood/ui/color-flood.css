@@ -61,6 +61,32 @@
   --cf-shade: rgba(0, 0, 0, 0.28);
   --cf-drop: var(--line);
 }
+/* The board's size. The frame is as wide as the column, but no wider than the
+   height left once everything stacked with it is taken: the top bar (64), the
+   body's padding, the metrics and progress rows, the palette label, the
+   palette (one sixth of the column) and the Undo row — measured at 301px on a
+   360-wide column and 306px on the widest (392), so 308px; 276px under the
+   short-screen rule below, so 282px — plus the notch (.screen's top padding)
+   and, in the app, the native banner's worst case (`--sg-app-banner-reserve`,
+   ui/styles.css). Only the board gives way: the palette keeps the column's
+   width, because its keys are what the player taps. 160px is the floor; below
+   it the play area scrolls, above the banner, which sits outside it. The cap
+   applies only in the app while the banner strip is reserved: the web keeps
+   its documented scroll above the ad space, with the board as published. */
+.cf-screen {
+  --cf-chrome: 308px;
+  --cf-edges: calc(env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve, 0px));
+}
+:root[data-sg-app-banner] .cf-board-frame {
+  width: min(100%, max(160px, calc(100vh - var(--cf-chrome) - var(--cf-edges))));
+  margin-inline: auto;
+}
+
+@supports (height: 100svh) {
+  :root[data-sg-app-banner] .cf-board-frame {
+    width: min(100%, max(160px, calc(100svh - var(--cf-chrome) - var(--cf-edges))));
+  }
+}
 .cf-screen .game-content {
   min-height: 0;
   overflow-y: auto;
@@ -405,6 +431,9 @@
   }
 }
 @media (max-height: 680px) {
+  .cf-screen {
+    --cf-chrome: 282px;
+  }
   .cf-body {
     max-width: 320px;
     padding-top: 4px;

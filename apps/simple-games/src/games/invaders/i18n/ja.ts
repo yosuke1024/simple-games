@@ -1,11 +1,11 @@
 // AI translation draft; no human or native review claimed.
 import type { InvadersMessages } from './en';
 export const ja: InvadersMessages = {
-  invadersName: 'インベーダー',
+  invadersName: 'Formation Fire',
   invadersStage: 'ステージ',
   invadersLives: 'ライフ',
   invadersLivesLeft: '残りライフ {count}',
-  invadersBoard: 'インベーダーの空域：残り {count} 機',
+  invadersBoard: '空域：残り {count} 機',
   invadersControls: 'ドラッグ、← →、A D で移動。',
   invadersStart: '開始',
   invadersPause: '一時停止',

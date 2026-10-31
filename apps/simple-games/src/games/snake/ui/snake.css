@@ -38,16 +38,25 @@
    the most the board may take, so a short screen gets a smaller board rather
    than controls pushed off the bottom (§13「寸法」). The web build's bottom ad
    reserve (ui/styles.css `:root[data-sg-web-ads] .screen`, its documented
-   worst case of 116px) is height the board cannot use either. */
+   worst case of 116px) is height the board cannot use either, and so is the
+   app's native banner strip at its worst case (`--sg-app-banner-reserve`,
+   ui/styles.css). */
 .sn-screen {
   --sn-chrome: 254px;
   --sn-reserve: 0px;
   /* The notch and the home indicator are height the board cannot use either. */
   --sn-insets: calc(env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px));
+  --sn-banner: var(--sg-app-banner-reserve, 0px);
 }
 
 :root[data-sg-web-ads] .sn-screen {
   --sn-reserve: 116px;
+}
+
+/* Under the app's banner the home indicator is already in the banner reserve
+   (the slot's bottom margin takes it), so only the notch is left to count. */
+:root[data-sg-app-banner] .sn-screen {
+  --sn-insets: env(safe-area-inset-top, 0px);
 }
 
 .sn-status {
@@ -128,8 +137,11 @@
 .sn-stage-wrap {
   position: relative;
   flex: none;
-  width: min(100%, 560px, calc(100vh - var(--sn-chrome) - var(--sn-reserve) - var(--sn-insets)));
-  width: min(100%, 560px, calc(100svh - var(--sn-chrome) - var(--sn-reserve) - var(--sn-insets)));
+  width: min(
+    100%,
+    560px,
+    calc(100vh - var(--sn-chrome) - var(--sn-reserve) - var(--sn-insets) - var(--sn-banner))
+  );
   min-width: 160px;
   aspect-ratio: 1;
   border-radius: 2.5%;
@@ -138,6 +150,16 @@
     0 0 0 3px var(--paper),
     0 0 0 4px var(--line),
     0 8px 18px var(--accent-ring-soft);
+}
+
+@supports (height: 100svh) {
+  .sn-stage-wrap {
+    width: min(
+      100%,
+      560px,
+      calc(100svh - var(--sn-chrome) - var(--sn-reserve) - var(--sn-insets) - var(--sn-banner))
+    );
+  }
 }
 
 /* The board hears the swipe over its whole box. `touch-action: none` because
@@ -453,13 +475,20 @@
     width: min(
       100% - 240px,
       760px,
-      calc(100vh - var(--sn-side-chrome) - var(--sn-reserve) - var(--sn-insets))
+      calc(100vh - var(--sn-side-chrome) - var(--sn-reserve) - var(--sn-insets) - var(--sn-banner))
     );
-    width: min(
-      100% - 240px,
-      760px,
-      calc(100svh - var(--sn-side-chrome) - var(--sn-reserve) - var(--sn-insets))
-    );
+  }
+
+  @supports (height: 100svh) {
+    .sn-stage-wrap {
+      width: min(
+        100% - 240px,
+        760px,
+        calc(
+          100svh - var(--sn-side-chrome) - var(--sn-reserve) - var(--sn-insets) - var(--sn-banner)
+        )
+      );
+    }
   }
 }
 

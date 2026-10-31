@@ -1,11 +1,12 @@
 /**
  * Two BannerSlot contracts from issue #120:
  *
- * - **The reserved strip never moves the board.** The slot's height is fixed
- *   from the very first render, before any ad has answered, so a size that
- *   arrives later can only grow the strip — never shrink it mid-play, and
- *   never shift the board or the action buttons below it
- *   (docs/ADS_POLICY.md「予約領域」).
+ * - **The reserved strip is there before any ad and only ever grows.** The
+ *   slot's height is fixed from the very first render, before any ad has
+ *   answered, so a size that arrives later can only grow the strip — never
+ *   shrink it mid-play. A growth past 64px lifts what sits above the strip
+ *   by that much at most; the board keeps its size
+ *   (docs/ADS_POLICY.md「バナー広告の仕様」).
  * - **A fail-safe direction when the entitlement cannot be read (issue
  *   #96).** BannerSlot asks the same question `app/boot.ts` asks before
  *   initializing the ad SDK: an unread entitlement is treated the same as an
@@ -72,7 +73,7 @@ afterEach(() => {
   bannerMock.setBannerVisible.mockClear();
 });
 
-describe('the reserved slot never shifts the board (issue #120)', () => {
+describe('the reserved slot is there from the first render and only grows (issue #120)', () => {
   it('is reserved at DEFAULT height on the very first render, before any ad has answered', async () => {
     await initAdRemoval(createMemoryKV());
     const { container } = render(<BannerSlot />);
@@ -83,7 +84,9 @@ describe('the reserved slot never shifts the board (issue #120)', () => {
     // Decorative: nothing here is meant to reach a screen reader.
     expect(slot).toHaveAttribute('aria-hidden', 'true');
     // Shown from mount, not deferred until a size arrives — a delayed show
-    // would be the same board-jump this slot exists to prevent.
+    // would bring the whole strip in late, the full board-jump this slot
+    // exists to prevent (reserved from mount, only a growth past 64px is
+    // left to move anything).
     expect(bannerMock.setBannerVisible).toHaveBeenCalledTimes(1);
     expect(bannerMock.setBannerVisible).toHaveBeenCalledWith(true);
   });
@@ -176,5 +179,80 @@ describe('a fail-safe read of the ad-removal entitlement', () => {
 
     expect(container).toBeEmptyDOMElement();
     expect(bannerMock.setBannerVisible).toHaveBeenCalledWith(false);
+  });
+});
+
+/**
+ * The shell's signal to the games that size their board from the viewport's
+ * height (docs/ARCHITECTURE.md): `data-sg-app-banner` on the root turns on
+ * `--sg-app-banner-reserve` in ui/styles.css, the worst-case strip such a
+ * board must leave free so the controls never sit under the native banner
+ * (docs/ADS_POLICY.md「バナー広告の仕様」).
+ */
+describe('the root carries data-sg-app-banner exactly while a reserved slot is mounted', () => {
+  const marked = () => document.documentElement.hasAttribute('data-sg-app-banner');
+
+  it('is set from the first render and removed on unmount', async () => {
+    await initAdRemoval(createMemoryKV());
+    expect(marked()).toBe(false);
+
+    const { unmount } = render(<BannerSlot />);
+    expect(marked()).toBe(true);
+
+    unmount();
+    expect(marked()).toBe(false);
+  });
+
+  it('survives two slots overlapping during a screen change, and goes with the last one', async () => {
+    await initAdRemoval(createMemoryKV());
+    const leaving = render(<BannerSlot />);
+    const arriving = render(<BannerSlot />);
+
+    // The old screen's slot goes first: the new one still needs the reserve.
+    leaving.unmount();
+    expect(marked()).toBe(true);
+
+    arriving.unmount();
+    expect(marked()).toBe(false);
+  });
+
+  it('is never set off the native ad platform (web/dev)', async () => {
+    bannerMock.native = false;
+    await initAdRemoval(createMemoryKV());
+    render(<BannerSlot />);
+
+    expect(marked()).toBe(false);
+  });
+
+  it('is never set once the ad removal is active', async () => {
+    const kv = createMemoryKV({
+      [STORAGE_KEYS.iap]: JSON.stringify({
+        schemaVersion: 1,
+        adRemovalPurchased: true,
+        purchasedAt: 123,
+      }),
+    });
+    await initAdRemoval(kv);
+    render(<BannerSlot />);
+
+    expect(marked()).toBe(false);
+  });
+
+  it('is dropped the moment a purchase completes, without a remount', async () => {
+    await initAdRemoval(createMemoryKV());
+    render(<BannerSlot />);
+    expect(marked()).toBe(true);
+
+    setAdRemovalStore({
+      isAvailable: () => true,
+      getPrice: () => Promise.resolve('$3.99'),
+      purchase: () => Promise.resolve(true),
+      restore: () => Promise.resolve(false),
+    });
+    await act(async () => {
+      await purchaseAdRemoval();
+    });
+
+    expect(marked()).toBe(false);
   });
 });

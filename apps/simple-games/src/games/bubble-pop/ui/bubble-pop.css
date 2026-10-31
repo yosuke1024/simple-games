@@ -44,17 +44,25 @@
 
 /* ---------- board ---------- */
 
+/* The column is as wide as the board body, not as wide as the canvas: the
+   canvas's own width attribute follows its displayed width times the device
+   pixel ratio (BubbleBoard.tsx), so a column sized by its content kept the
+   board at most 300px wide on a ratio-1 screen and kept it at whatever size
+   it last had when a cap was lifted (§14). */
 .bu-board-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
+  width: 100%;
   min-height: 0;
   max-height: 100%;
 }
 
+/* Capped by the height left on every screen, not only beside a banner or an
+   ad reservation (the variables and the reasons are at the end of the file). */
 .bu-canvas {
-  width: min(100%, 320px);
+  width: min(100%, 320px, calc((var(--bu-vh) - var(--bu-chrome) - var(--bu-edges)) * 0.476));
   max-height: 100%;
   height: auto;
   display: block;
@@ -146,20 +154,171 @@
 /* Wide viewports (issue #93; tiers in ui/styles.css「wide viewports」).
    The board is taller than it is wide (320x672), so on a PC the limit is
    nearly always the height: width follows from the height that remains
-   under the chrome (factor 0.476 ≈ 320/672). The canvas backing store
-   follows the displayed size (BubbleBoard.tsx), so growing here stays
-   sharp. */
+   under a flat 230 / 210px — or under the chrome and the screen's edges
+   when those take more, as a tablet's status and navigation bars do once
+   ads are removed (the variables are at the end of the file). The canvas
+   backing store follows the displayed size (BubbleBoard.tsx), so growing
+   here stays sharp. */
 
 @media (min-width: 600px) {
   .bu-canvas {
-    width: min(100%, 400px, calc((100vh - 230px) * 0.476));
-    width: min(100%, 400px, calc((100svh - 230px) * 0.476));
+    width: min(
+      100%,
+      400px,
+      calc((var(--bu-vh) - max(230px, var(--bu-chrome) + var(--bu-edges))) * 0.476)
+    );
   }
 }
 
 @media (min-width: 900px) and (orientation: landscape) {
   .bu-canvas {
-    width: min(100%, 440px, calc((100vh - 210px) * 0.476));
-    width: min(100%, 440px, calc((100svh - 210px) * 0.476));
+    width: min(
+      100%,
+      440px,
+      calc((var(--bu-vh) - max(210px, var(--bu-chrome) + var(--bu-edges))) * 0.476)
+    );
+  }
+}
+
+/* ---------- what the board leaves free: the app's banner strip, the web's ad
+   reservation, and the home indicator ----------
+
+   The canvas is 320 wide by 672 tall, so on a phone its height decides: at
+   its full 320px it needs more than a screen has once the top bar, the tray
+   under the board and whatever holds the bottom are taken. So on every phone
+   screen the width is also capped by the height left, as the wide tiers above
+   already do (factor 0.476 ≈ 320/672): the base rule for .bu-canvas, with
+   --bu-edges for what holds the bottom (§14).
+
+   --bu-chrome is everything stacked with the canvas: the top bar (64px),
+   the board body's padding (16), the gap (10) and the tray (48) — 138px.
+   From 273px wide the top bar is as tall as its 48px icon buttons and its
+   padding, in all 14 languages and at levels 1-100 (measured in Chromium
+   at every width from 200 to 599px and every 10px to 1400px): the level
+   label beside the shot dots is one line from 308px and at most two at
+   273-307px, 48px, the buttons' height exactly. Below 273px it wraps
+   further — two-digit levels in Japanese and Chinese at 265-272px (an 88px
+   bar), single-digit levels too from 264px in Japanese and 262px in
+   Chinese, Korean from 260px, Japanese up to 112px — so the chrome there is
+   186px, with the edge written 272.98px
+   so that a fractional width just above 272 (a 2.625 device pixel ratio,
+   page zoom) takes it too. Before 1.7.0 a line of text under the level
+   spelled the shots left out ("8 shots until the ceiling drops", which §3
+   rules out); it wrapped with the language, the width and the level's
+   digits, and the 156px this file held before was measured with it in
+   Japanese at 360px wide (151px) — Indonesian needed 169px there and 187px
+   at 320px.
+   The sweep used macOS's system font at 100% text size. The Android app
+   caps its text zoom at 100% (docs/PRODUCT_PRINCIPLES.md), so the label
+   cannot grow there; where a larger text size could still reach it (iOS, a
+   device font, a longer translation), the two-line label at 273-307px grows
+   by its lines (1.5 times the text): simulated at 120% the tray ends about
+   1px, at 130% about 6px, past the board body's 8px of padding into the
+   strip, the reservation or the screen's edge (Chromium, §14).
+
+   --bu-edges is the notch (.screen's top padding) and, at the bottom:
+   - in the app with its banner strip (`:root[data-sg-app-banner]`), the
+     strip's worst case (`--sg-app-banner-reserve`, ui/styles.css: 90px and the
+     bottom inset), so the board keeps its size when an ad taller than the
+     64px slot arrives — measured on the emulator, the full-width board ran
+     the tray 28px under the 64px slot at 411×914 and the shooter itself 88px
+     under it at 360×640;
+   - in the web build with the room every screen keeps clear for the anchor
+     ad (`:root[data-sg-web-ads]`, 116px and the bottom inset, ui/styles.css
+     `:root[data-sg-web-ads] .screen`), that room — the tray sat under it at
+     every size measured, the shooter too at 360×640. The wide tiers take
+     --bu-chrome here instead of 230 / 210px less the reservation: their top
+     bar is one line, so it leaves room without shrinking the board twice;
+   - with neither (the app once ads are removed, the web build without the
+     reservation), the bottom inset — the home indicator. ui/styles.css pads
+     `.game-screen` by it in exactly this state (its rule
+     `:root:not([data-sg-app-banner]):not([data-sg-web-ads]) .game-screen`),
+     so the board body is that much shorter and the budget counts the inset
+     once, here; do not also pad `.bu-board-wrap` by it (the two double up and
+     the board rises by half the inset again). From 600px wide the plain tiers
+     above subtract the chrome and these edges only when they take more than
+     the flat 230 / 210px: on a tablet whose status and navigation bars pass
+     92px together (72px from 900px wide on its side). Before, the board kept
+     its full 320px on a phone, and at 360×640 `.game-screen`'s overflow cut
+     off the shooter and the tray.
+   The app's wide tiers take the same rule: --bu-edges holds the strip's worst
+   case there, so they subtract the chrome and the strip when those take more
+   than the flat 230 / 210px — the flat term as a ceiling and the app budget
+   as a term of its own, in one max().
+
+   With the reservation, the web board never goes below --bu-floor, 126px
+   (bubbles about 16px across; the width 320×568 got while the shots line
+   still wrapped under the level). The web has no orientation lock, and on a
+   phone held sideways or a short window the cap alone leaves boards 22-75px
+   wide (31px at 568×320), so below the floor the page scrolls instead, as it
+   did before the cap — as the Chess and Knight Tour boards do. A screen with
+   neither a banner nor the reservation cannot scroll, so the app, and the web
+   once the reservation is released, have no floor.
+
+   The height is `100svh` where the engine has it and `100vh` where it does
+   not (the Chromium 88 floor), through --bu-vh and an `@supports` block that
+   every width rule here reads — not through an `svh` declaration after the
+   `vh` one. A value that holds var() is not checked until it is used, so on
+   an engine without svh that second declaration still replaces the first and
+   then computes to nothing: the canvas falls back to its own backing-store
+   width, which follows the displayed width, and grows without end (10240px
+   wide at 360×640, simulated in Chromium). */
+
+.bu-board-wrap {
+  --bu-vh: 100vh;
+  --bu-chrome: 138px;
+  --bu-edges: calc(
+    env(safe-area-inset-top, 0px) + var(--sg-app-banner-reserve, env(safe-area-inset-bottom, 0px))
+  );
+}
+
+@media (max-width: 272.98px) {
+  .bu-board-wrap {
+    --bu-chrome: 186px;
+  }
+}
+
+@supports (height: 100svh) {
+  .bu-board-wrap {
+    --bu-vh: 100svh;
+  }
+}
+
+:root[data-sg-web-ads] .bu-board-wrap {
+  --bu-edges: calc(env(safe-area-inset-top, 0px) + 116px + env(safe-area-inset-bottom, 0px));
+  --bu-floor: 126px;
+}
+
+:root[data-sg-web-ads] .bu-canvas {
+  width: min(
+    100%,
+    max(
+      var(--bu-floor),
+      min(320px, calc((var(--bu-vh) - var(--bu-chrome) - var(--bu-edges)) * 0.476))
+    )
+  );
+}
+
+@media (min-width: 600px) {
+  :root[data-sg-web-ads] .bu-canvas {
+    width: min(
+      100%,
+      max(
+        var(--bu-floor),
+        min(400px, calc((var(--bu-vh) - var(--bu-chrome) - var(--bu-edges)) * 0.476))
+      )
+    );
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  :root[data-sg-web-ads] .bu-canvas {
+    width: min(
+      100%,
+      max(
+        var(--bu-floor),
+        min(440px, calc((var(--bu-vh) - var(--bu-chrome) - var(--bu-edges)) * 0.476))
+      )
+    );
   }
 }

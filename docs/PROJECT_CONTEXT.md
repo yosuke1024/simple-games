@@ -42,10 +42,16 @@ Design philosophy:
 ### Collection
 
 - 1つの `Simple Games: Offline Games` として提供する。
-- 現在の正式収録は **45 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ。
-  本数はここで数える)。`GAMES` の全 66 エントリには、下の `channel: 'web-beta'` の 21 本(Web 先行公開中の
-  No. 42〜66 のうち、下記4本を除くタイトル)も含まれる。
-  `'in-development'` のエントリはいま無い。
+- 現在の正式収録は **65 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ。
+  本数はここで数える)。`GAMES` の全 66 エントリのうち、残る 1 本は `'in-development'` の Falling Blocks
+  (2026-10-29 に Web 先行公開から取り下げ — `docs/FALLING_BLOCKS_RULES.md` 冒頭)。`channel: 'web-beta'` の
+  エントリはいま無い。
+- 2026-10-29、オーナーの「ベータを外して、次バージョンでリリース(1.7.0)」という明示判断で、Web 先行公開
+  だった 20 本(No. 42〜66 のうち、2026-10-25 の 4 本と Falling Blocks を除く全タイトル)を正式収録へ変更した。
+  2 週間の安定稼働と滞在時間の確認は満たしておらず、各ルール文書が収録前に求めていた題の商標・ストアの検索など
+  も未了のまま(`docs/RELEASE_CHECKLIST.md` の 2026-10-29 の節)。保存スキーマはこの収録で凍結し、
+  公開中の Web ビルドが書いた保存を各ゲームの `storage/releasedRecords.test.ts` が検証する。以下の各組の
+  公開経緯は当時の記録で、「アプリには出ない」などは当時の状態。
 - 2026-10-25、オーナーの「13本すべてをアプリに収録する」という明示判断で、Chess /
   Nested Tic-Tac-Toe / Scopa / Nim の4本を正式収録へ変更した。以下の各組の公開経緯は当時の記録で、
   この4本の現在のチャンネルは正式収録である。2週間の安定稼働の達成を意味しない。
@@ -405,6 +411,7 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 - club house(`src/club/`、Public / Private、対応ゲームの `challenge/`): `PRODUCT_PRINCIPLES.md`「Club House」+ `architecture/club.md`
 - ads / purchase: `ADS_POLICY.md`
 - Android acquisition measurement (Meta, `android/app/src/metaOn` / `metaOff`, `.github/scripts/check-principles.sh` §8): `PRODUCT_PRINCIPLES.md`「Android の獲得計測(Meta)」+ `META_ANDROID_ACQUISITION.md`
+- Android の文字の倍率(`MainActivity` の `TEXT_ZOOM_CAP_PERCENT`、`.github/scripts/check-principles.sh` §9)と、盤を画面の高さから決めるゲームの上部バー・操作バーの見積もり(`--*-chrome` など): `PRODUCT_PRINCIPLES.md`「Android の文字の倍率」+ `ARCHITECTURE.md`「広告と課金」
 - web only: `WEB_VERSION.md`
 - 練習セットの 5 本(Crown Grid / Number Path / Binary Balance / Sudoku 6×6 / Box Regions)や専用入口: `PUZZLE_PRACTICE_SET.md` + `BRAND.md`「自社タイトルと比較対象の名前」
 - public copy: `BRAND.md`

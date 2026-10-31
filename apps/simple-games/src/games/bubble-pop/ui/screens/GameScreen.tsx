@@ -3,11 +3,12 @@
  * §Bubble Pop).
  *
  * The status row carries the level and the shots left before the next
- * ceiling drop — a dot row, not a countdown number (§3) — reusing the same
- * shared arcade chrome Brick Breaker's life dots use (ui/styles.css's
- * `.game-status*`, built for "two games use it identically" and now a
- * third). Retry is instant and free: an attempt is a minute or two, so
- * there is nothing worth a confirmation dialog.
+ * ceiling drop — a dot row, not a countdown number (§3): the count is only
+ * the dots' accessible name, as Brick Breaker's lives are, and no line of
+ * text under the level repeats it. It reuses the shared arcade chrome
+ * (ui/styles.css's `.game-status*`, built for "two games use it identically"
+ * and now a third). Retry is instant and free: an attempt is a minute or
+ * two, so there is nothing worth a confirmation dialog.
  */
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
@@ -44,12 +45,7 @@ export function BubbleGameScreen() {
             <IconBack />
           </button>
           <div className="game-status">
-            <span className="game-status-level">
-              {t('modeLevel', { n: attempt.level })}
-              <span className="game-status-sub">
-                {t('bubbleShotsLabel', { n: hud.shotsUntilDescent })}
-              </span>
-            </span>
+            <span className="game-status-level">{t('modeLevel', { n: attempt.level })}</span>
             <span
               className="game-lives"
               role="img"

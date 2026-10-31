@@ -15,7 +15,7 @@
 import type { OvertakeMessages } from './en';
 
 export const th: OvertakeMessages = {
-  overtakeName: 'Overtake',
+  overtakeName: 'Road Weave',
 
   // Home
   overtakeControls: 'การควบคุม',
@@ -28,7 +28,7 @@ export const th: OvertakeMessages = {
   overtakeTouchToStart: 'แตะเพื่อออกตัว',
   overtakePaused: 'หยุดชั่วคราวอยู่',
   overtakePlaceNow: 'ลำดับที่ {place} จาก 4',
-  overtakeBoardLabel: 'Overtake เลเวล {n}: {state}',
+  overtakeBoardLabel: 'Road Weave เลเวล {n}: {state}',
   overtakeState_ready: 'พร้อมออกตัว',
   overtakeState_running: 'กำลังวิ่ง',
   overtakeState_paused: 'หยุดชั่วคราวอยู่',
