@@ -1353,8 +1353,10 @@ Network Inspector が使えなかったとき、通信の宛先を特定でき�
 - [ ] 14 言語 × 狭い画面(320 / 360px)× ライト / ダークで崩れず、横スクロールが出ないこと。
       カテゴリの棚・Web の広告枠と見間違えないこと
 - [ ] Web 版で、行の当たり判定と広告ユニットの間が 16px 以上あること
-- [ ] **高リスクキーの門**(§3)に `moreFromPixAppsTitle` / `moreFromPixAppsBody` /
-      `pixMealTagline` / `pixWorkTagline` の 12 言語 × 4 キー = 48 件が入っていること
+- [x] **高リスクキーの門**(§3)に `moreFromPixAppsTitle` / `moreFromPixAppsBody` /
+      `pixMealTagline` / `pixWorkTagline` の 12 言語 × 4 キー = 48 件が入っていること。
+      2026-10-31 に 48 件とも門を通した(`i18n:gate status` は「Gate complete」、`i18n:gate:check` が緑。
+      手順は [I18N_POLICY.md](I18N_POLICY.md)「リリース前の門」)
 
 ## 6. ストア掲載
 
