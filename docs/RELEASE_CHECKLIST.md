@@ -35,6 +35,11 @@ BLUETOOTH_SCAN / ADVERTISE / CONNECT を確かめるので落ち、Wi-Fi は権�
       内部テストに出す 1.7.1 の署名済みビルドを使う
 - [ ] Android 11 以前(BLE に位置情報の権限を使う経路、`legacyLocation`)。同じ `getPermissionStates` を通るので
       直っているはずだが、端末では見ていない
+- [x] 1.7.1(10701)を出す(製品オーナーの指示「記録して1.7.1へ」、2026-10-31)。1.7.0 との差は、この修正・
+      [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md) のオーナーキーの記述・高リスクキーの門の 48 件(§5.18)だけ。
+      10700 は Play の内部テストに上がったので同じ versionCode は使えない。iOS はコードの変更が無いが、タグと
+      同じ版にするため 1.7.1 / 10701 にした(`ios-version.mjs check --tag v1.7.1`)。1.7.0 の各節の未了の項目は、
+      1.7.1 の候補で確かめる
 
 ## 2026-10-31: Android の文字の倍率の上限(1.7.0)
 
