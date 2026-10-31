@@ -1779,9 +1779,11 @@ button:disabled {
    growth (13px at most), a bottom-aligned one, such as the controls right
    above the slot, by all of it (26px), in any game, read or not. The
    bottom inset is in it because the slot's margin takes it. Games read
-   `var(--sg-app-banner-reserve, 0px)`; nothing changes for a game that does
-   not. A declaration that reads it together with svh belongs under
-   `@supports (height: 100svh)` (src/test/styles.test.ts). */
+   `var(--sg-app-banner-reserve, 0px)` — Brick Breaker, Sky Fighter and
+   Bubble Pop, whose budgets count what holds the bottom on every screen,
+   take the bottom inset instead when there is no slot — and nothing changes
+   for a game that does not. A declaration that reads it together with svh
+   belongs under `@supports (height: 100svh)` (src/test/styles.test.ts). */
 :root[data-sg-app-banner] {
   --sg-app-banner-reserve: calc(90px + env(safe-area-inset-bottom));
 }
