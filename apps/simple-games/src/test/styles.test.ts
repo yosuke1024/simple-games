@@ -410,3 +410,25 @@ describe('a class one game anchors on appears in no other game, and no @keyframe
     expect(keyframes.get('hn-settle')).toEqual(new Set(['hanoi-towers']));
   });
 });
+
+/**
+ * Sudoku and Sudoku 6×6 size their grid rows from the board, not from what the
+ * cells hold (docs/SUDOKU_RULES.md §1, docs/SUDOKU_6X6_RULES.md §13). With the
+ * rows left to their content, a row with no digit shrank to a third of the
+ * others or less, and a larger system text size pushed the last rows under the
+ * frame.
+ * As with the nonogram rule above, `css: false` means nothing rendered in a
+ * test can see these declarations go missing.
+ */
+describe('the Sudoku grids give every row the same height', () => {
+  it.each([
+    ['src/games/sudoku/ui/sudoku.css', '.sudoku-grid', 9],
+    ['src/games/sudoku-6x6/ui/sudoku-6x6.css', '.s6-grid', 6],
+    ['src/games/sudoku-6x6/ui/sudoku-6x6.css', '.s6-figure', 6],
+  ])('%s %s', (file, selector, rows) => {
+    const body = ruleBody(selector, readFileSync(resolve(file), 'utf8')).replace(/\s+/g, ' ');
+    // minmax(0, …) rather than 1fr, whose minimum is the content: a digit or a
+    // notes block taller than its share would stretch its row again.
+    expect(body).toContain(`grid-template-rows: repeat(${rows}, minmax(0, 1fr))`);
+  });
+});

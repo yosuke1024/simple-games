@@ -22,11 +22,21 @@
 
 /* Six cells a side, each larger than the 9×9's (§13): 40px on a 320px phone,
    56px at most. In the app a short screen can cap the grid below that (the
-   banner strip section at the end of this file). */
+   banner strip section at the end of this file).
+
+   The six rows share the board's height equally, whatever the cells hold
+   (§13). Left to their content, a row with no clue shrank to a third of the
+   others, the whole board moved when its first digit went in, and a larger
+   system text size made the rows taller than the square so the last one went
+   under the frame. minmax(0, …) is what keeps a cell's content from
+   stretching its row: a digit taller than the row overflows its cell, still
+   centred. The columns need no such care: a digit is far narrower than its
+   cell. */
 .s6-grid {
   --s6-cell: clamp(40px, 13vw, 56px);
   display: grid;
   grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(6, minmax(0, 1fr));
   width: calc(6 * var(--s6-cell));
   max-width: 100%;
   aspect-ratio: 1;
@@ -235,10 +245,13 @@
 }
 
 /* Quick Rules figures: a small real board, drawn like the grid so the picture
-   teaches the 2×3 box as well as the rule. */
+   teaches the 2×3 box as well as the rule. Its rows are equal for the grid's
+   reason: the figures leave four rows empty, and those used to shrink to half
+   the filled ones, which drew the 2×3 box taller than it is. */
 .s6-figure {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(6, minmax(0, 1fr));
   width: 192px;
   aspect-ratio: 1;
   background: var(--surface);
