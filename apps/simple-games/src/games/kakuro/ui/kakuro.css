@@ -12,18 +12,33 @@
 
 /* ---------- board ---------- */
 
-/* The board takes what is left and scrolls when a 10×10 will not fit; the pad
-   below it keeps its natural height. The 24px the cell arithmetic subtracts is
-   spent here once, by this element — the board adds none of its own, so the
-   two cannot drift apart into 48px. */
+/* The board takes what is left and scrolls when it will not fit: in the app
+   at 360×640 (a 37px notch, a 24px bottom inset) the 8×8 and the 10×10 are
+   336px tall over a box of 296px under the 64px banner strip and 270px under
+   a 90px one, where the 6×6's 271px does not fit either (docs/KAKURO_RULES.md
+   §13). The pad below it keeps its natural height. The 24px the cell
+   arithmetic subtracts is spent once, by .kakuro-body — this element adds
+   none of its own, so the two cannot drift apart into 48px (they had: 12px a
+   side here as well, hidden while the board was centred by
+   `justify-content`, which let it hang 12px into each side's padding).
+
+   The board is centred by auto margins rather than `align-items` /
+   `justify-content: center`: a centred board taller than the box overflows
+   up as much as down, and what is above the top is out of the scroll's reach
+   (22px at 360×640, 35px under a 90px strip — more than half the top row).
+   Auto margins centre it the same way while it fits and fall to zero when it
+   does not, so it overflows only down, where the scroll reaches. `safe
+   center` says the same, but needs Chromium 115. */
 .kakuro-board-scroll {
   flex: 1;
   min-height: 0;
   overflow: auto;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 12px 12px;
+  padding: 8px 0 12px;
+}
+
+.kakuro-board-scroll > .kakuro-board {
+  margin: auto;
 }
 
 /*
@@ -39,7 +54,7 @@
   The grid lines are the board's own ground showing through a 1px gap, so a
   square loses nothing to a border of its own:
 
-    cell = (viewport − 24px scroll padding − 2 × 1px board padding
+    cell = (viewport − 24px body padding − 2 × 1px board padding
             − (n − 1) × 1px grid line) / n
 
     320px → (320 − 24 − 2 − 9) / 10 = 285 / 10 = 28.5px
