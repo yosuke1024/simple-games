@@ -161,5 +161,25 @@ if grep -q '^Lcom/pixapps/nearbypoc/' <<< "$native_descriptors"; then
   exit 1
 fi
 echo "Nearby product plugin: present; prototype native package: absent"
+# Capacitor reads its plugin annotations at run time. In 1.7.0 R8's optimizer saw no
+# instance of them and compiled Bridge.getPermissionStates to `throw null`, so every
+# permission check crashed (Nearby over Bluetooth). proguard-rules.pro keeps the
+# annotation interfaces; a kept interface keeps its name, so the mapping shows it as
+# `X -> X:`. If the keep goes missing, R8 renames it (1.7.0: `-> n3.b:`) and this fails.
+mapping="$app/build/outputs/mapping/release/mapping.txt"
+[ -f "$mapping" ] || { echo "::error::R8 の mapping がありません($mapping)"; exit 1; }
+for annotation in \
+  com.getcapacitor.annotation.CapacitorPlugin \
+  com.getcapacitor.annotation.Permission \
+  com.getcapacitor.annotation.PermissionCallback \
+  com.getcapacitor.annotation.ActivityCallback \
+  com.getcapacitor.PluginMethod \
+  com.getcapacitor.NativePlugin; do
+  if ! grep -qxF "$annotation -> $annotation:" "$mapping"; then
+    echo "::error::R8 が Capacitor の注釈 $annotation を残していません(proguard-rules.pro の keep を確認。権限の確認が throw null になる)"
+    exit 1
+  fi
+done
+echo "Capacitor annotation interfaces: kept by R8"
 echo "APK: $(wc -c < "$apk" | tr -d ' ') bytes"
 echo "Android 成果物の検査を通過しました(mode=$mode)。"

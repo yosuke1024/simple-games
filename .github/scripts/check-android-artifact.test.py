@@ -17,6 +17,17 @@ SCRIPT = Path(__file__).with_name("check-android-artifact.sh")
 PLUGIN = "Lcom/pixapps/simplegames/nearby/NearbyPlayPlugin;"
 LEGACY = ("BLUETOOTH", "BLUETOOTH_ADMIN", "ACCESS_FINE_LOCATION")
 MODERN = ("BLUETOOTH_SCAN", "BLUETOOTH_ADVERTISE", "BLUETOOTH_CONNECT")
+# Capacitor's annotation interfaces, which proguard-rules.pro keeps (R8 compiled the
+# permission checks to `throw null` in 1.7.0 when it did not).
+ANNOTATIONS = (
+    "com.getcapacitor.annotation.CapacitorPlugin",
+    "com.getcapacitor.annotation.Permission",
+    "com.getcapacitor.annotation.PermissionCallback",
+    "com.getcapacitor.annotation.ActivityCallback",
+    "com.getcapacitor.PluginMethod",
+    "com.getcapacitor.NativePlugin",
+)
+KEPT_MAPPING = "".join(f"{name} -> {name}:\n" for name in ANNOTATIONS)
 
 
 def manifest():
@@ -42,7 +53,7 @@ def permission(root, name):
 
 
 class AndroidArtifactTest(unittest.TestCase):
-    def audit(self, root, descriptors=(PLUGIN,), mode="off"):
+    def audit(self, root, descriptors=(PLUGIN,), mode="off", mapping=KEPT_MAPPING):
         with tempfile.TemporaryDirectory(prefix="nearby-artifact-test-") as directory:
             app = Path(directory)
             merged = app / "build/intermediates/merged_manifests/release/fixture/AndroidManifest.xml"
@@ -52,6 +63,10 @@ class AndroidArtifactTest(unittest.TestCase):
             apk.parent.mkdir(parents=True)
             with zipfile.ZipFile(apk, "w") as output:
                 output.writestr("classes.dex", "\n".join(descriptors))
+            if mapping is not None:
+                path = app / "build/outputs/mapping/release/mapping.txt"
+                path.parent.mkdir(parents=True)
+                path.write_text(mapping, encoding="utf-8")
             return subprocess.run(["bash", str(SCRIPT), mode, str(app)], text=True, capture_output=True)
 
     def accepted(self, root, **options):
@@ -144,6 +159,13 @@ class AndroidArtifactTest(unittest.TestCase):
     def test_rejects_removed_product_plugin_and_prototype_leak(self):
         self.rejected(manifest(), "NearbyPlayPlugin", descriptors=())
         self.rejected(manifest(), "PoC", descriptors=(PLUGIN, "Lcom/pixapps/nearbypoc/NearbyPocPlugin;"))
+
+    def test_rejects_renamed_capacitor_annotation_or_missing_mapping(self):
+        for name in ANNOTATIONS:
+            with self.subTest(name=name):
+                renamed = KEPT_MAPPING.replace(f"{name} -> {name}:", f"{name} -> n3.b:")
+                self.rejected(manifest(), name, mapping=renamed)
+        self.rejected(manifest(), "mapping", mapping=None)
 
     def test_meta_off_still_excludes_meta_classes(self):
         self.rejected(manifest(), "com/facebook", descriptors=(PLUGIN, "Lcom/facebook/core/Core;"))

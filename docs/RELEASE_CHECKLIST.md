@@ -4,6 +4,38 @@ Google Play への公開前に、この順で確認する。
 **チェックが通らない項目を「たぶん大丈夫」で飛ばさない。**
 実施していない検証を成功扱いにしないこと([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))。
 
+## 2026-10-31: Bluetooth の近くの対戦で落ちる(1.7.0 → 1.7.1)
+
+1.7.0(10700、タグ `v1.7.0` = e6297715)の内部テスト版で、製品オーナーが報告した: Android で「近くの対戦」の
+接続方法を Bluetooth にすると、募集しても集まりを探してもアプリが落ちる。同じ Wi-Fi なら両方動く。iOS は両方動く。
+原因は #292 で入れた R8 の最適化(`proguard-android-optimize.txt`)。Capacitor の consumer rules は注釈の付いた
+クラスとメンバーを残すが、注釈の型そのものは残さない。最適化は、注釈の型の実体がプログラムのどこにも作られない
+(実行時にリフレクションで作られる)ので、その型の値を常に null とみなし、`Bridge.getPermissionStates` の中の
+`annotation.permissions()` を `throw null` にした。権限を確かめる処理はすべて落ちる。Bluetooth は
+BLUETOOTH_SCAN / ADVERTISE / CONNECT を確かめるので落ち、Wi-Fi は権限を確かめないので落ちなかった。
+1.6.x は `-dontoptimize` だったので起きていない。1.7.0 のバイナリではアプリが使う経路のうち Bluetooth だけが
+該当する(JS から `checkPermissions` / `requestPermissions` は呼ばない。Filesystem は Cache ディレクトリでは権限を確かめない)。
+
+- [x] 再現: CI の 1.7.0 の release APK を Android 17 エミュレータ(Pixel 7、Bluetooth / BLE あり)に入れ、
+      「近くの対戦相手を探す」で Bluetooth のまま「集まりを探す」を押すと `NullPointerException` で落ちた。
+      AAB に入っている mapping で `com.getcapacitor.Plugin.getPermissionStates` の 19 行目 = `Bridge.java:1223`
+      (`for (Permission perm : annotation.permissions())`)。dexdump で、出荷した dex のこのメソッドが
+      `getPluginHandle()` のあと `const/4 v0, 0; throw v0` だけになっていることを確かめた
+- [x] 修正: `android/app/proguard-rules.pro` で Capacitor の注釈の型 6 つ(`CapacitorPlugin` / `Permission` /
+      `PermissionCallback` / `ActivityCallback` / `PluginMethod` / `NativePlugin`)を `-keep @interface` で残す。
+      `.github/scripts/check-android-artifact.sh` が R8 の mapping でその 6 つが名前を変えられていないことを見る
+      (1.7.0 の mapping では `CapacitorPlugin -> n3.b` などに変わっていて、この検査は落ちる)
+- [x] 修正後のビルド(手元の `assembleRelease`、R8 最適化あり、debug 鍵で署名。APK の sha256 `35227846…`)を
+      同じエミュレータに入れた。dex の `getPermissionStates` は元の処理(166 命令。`permissions()` / `strings()` /
+      `alias()` を呼ぶ)に戻った。Bluetooth で「集まりを探す」を押すと「付近のデバイス」の許可ダイアログが出て、
+      許可すると探索が始まった(`@PermissionCallback` の経路も動く)。Gin Rummy の「誰かと遊ぶ」から Bluetooth で
+      募集すると「参加申請を待っています…」になった。どちらも落ちず、crash バッファは空。成果物検査
+      (`check-android-artifact.sh off`)も通った
+- [ ] 2 台での Bluetooth の接続と対局(エミュレータ 1 台では相手がいない)。実機(Pixel・Samsung)で、
+      内部テストに出す 1.7.1 の署名済みビルドを使う
+- [ ] Android 11 以前(BLE に位置情報の権限を使う経路、`legacyLocation`)。同じ `getPermissionStates` を通るので
+      直っているはずだが、端末では見ていない
+
 ## 2026-10-31: Android の文字の倍率の上限(1.7.0)
 
 2026-10-31 のオーナー判断。`MainActivity` が WebView の文字の倍率を `min(端末の倍率 × 100, 100)` にする
