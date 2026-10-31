@@ -6,7 +6,8 @@
  * took out 10px, the rack's gap was 12px — a rack whose width was the limit
  * (four or more columns on a phone) came up a few pixels short and wrapped
  * its last tube to a third row nobody asked for, pushing Undo and Hint off a
- * 360×640 screen. This reads the stylesheet as text and keeps them equal.
+ * 360×640 screen. This reads the stylesheet as text and keeps them equal,
+ * and keeps the web's ad reservation and the glass's floor in the height cap.
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -42,5 +43,19 @@ describe('the rack (§12)', () => {
     // The 12px was once written only under the app's banner strip, so every
     // other screen kept the 10px and its third row.
     expect(code).not.toMatch(/\]\s*\.ws-tube\s*\{[^}]*[\s;]width:/);
+  });
+
+  it('takes the web reservation out of the glass cap, above a 64px floor, and gives the app none', () => {
+    // jsdom cannot see the cap either, and the floor reads like the first
+    // thing a tidy-up would drop: without it a phone held sideways got
+    // glasses 12-54px tall on the web (§12).
+    const web = ruleBody(':root[data-sg-web-ads] .ws-rack');
+    expect(web).toMatch(
+      /--ws-edges:\s*calc\(env\(safe-area-inset-top, 0px\) \+ 116px \+ env\(safe-area-inset-bottom, 0px\)\);/,
+    );
+    expect(web).toMatch(/--ws-floor:\s*64px;/);
+    expect(code).toMatch(/\n\.ws-rack \{[^}]*--ws-floor:\s*0px;/);
+    // the vh cap and its svh twin both read the floor
+    expect(code.match(/var\(--ws-floor\)/g)).toHaveLength(2);
   });
 });
