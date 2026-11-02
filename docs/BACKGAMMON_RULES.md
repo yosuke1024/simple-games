@@ -13,6 +13,9 @@
 [I18N_POLICY.md](I18N_POLICY.md))。市中の同名アプリと商標の確認は §14。
 **Web 先行公開(ベータ)のタイトル**で、registry では遊べるようになるまで `channel: 'in-development'`
 (どのビルドにも出ない)、その後 `'web-beta'`([WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)。
+**2026-11-03 に `'web-beta'` にした**(製品オーナーの判断「web-beta にする」)。Web 版で実際に配信されるのは
+landing の `WEB_BETA_GAME_IDS` への同期と Publish ワークフローの後で、その日付は同期の記録に書く。
+正式収録の基準 1(2 週間の安定稼働 — [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §0)の時計は配信開始から。
 Club House には登録しない(§15)。近くの相手との対局はこの版では作らない(§17)。
 
 2 個のサイコロで 15 個ずつの駒を自陣へ運び、先に全部を盤から上げた側が勝つ。**出目を 2 つの駒に
@@ -427,7 +430,7 @@ Class 28 では「BACKGAMMON」の語を**権利不要部分として放棄し�
 | 「待った」の線(§6)                   | 手番内だけ。Ludo / Yacht の前例の外なので、製品オーナーの確認待ち                            |
 | 行き先 1 つでも 1 タップで動かさない | 製品オーナーの確認待ち(Zero Friction との兼ね合い)                                          |
 | 13 言語の文言(§12)                   | AI が書いた(2026-11-02)。ネイティブも作者も未読                                             |
-| Web 版・実機での表示                | 未確認。registry は `'in-development'` のまま(どの扉からも開けない)。`'web-beta'` への切替はオーナー判断 |
+| Web 版・実機での表示                | 未確認。registry は 2026-11-03 から `'web-beta'`(オーナー判断)。landing の同期と Publish が済むまで Web 版には出ない |
 | Nearby(§17)                         | この版では作らない。載せるかは別のオーナー指示                                              |
 
 ## 17. Nearby Play

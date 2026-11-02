@@ -138,5 +138,9 @@ RULES §16 の表のとおり。とくに「待った」を手番内に限る線
   5 秒タイムアウトと生成予算テスト(壁時計の断定)。直してから 18 ファイルをワーカー 2 本で再実行し、
   **18 ファイル 398 件すべて緑**。その後 root の `pnpm build`(brand と app)、app の `build:web`、`size:check`
   (基準値と ±0)も緑。
-- **やっていないこと**: Web 版・実機での表示(registry は `'in-development'` のまま、どの扉からも開けない)、静的モックと
-  Phase 0、Nearby、Club、landing の同期、リモートへの反映と PR。`'web-beta'` への切替は製品オーナーの判断。
+- **やっていないこと**: Web 版・実機での表示、静的モックと Phase 0、Nearby、Club、landing の同期、リモートへの反映と PR。
+
+**2026-11-03 — `'web-beta'` への切替(製品オーナーの判断「web-beta にする」)。** registry の `channel` を変え、
+`gameChannel.test.ts` と `CollectionHomeScreen.test.tsx` の一覧を移した。Web 版で配信されるのは、landing の
+`tests/ui.test.js` で `IN_DEVELOPMENT_GAME_IDS` → `WEB_BETA_GAME_IDS` へ移す同期 PR と Publish ワークフロー
+(人の作業)の後。ブラウザでの表示はまだ確かめていない。

@@ -33,7 +33,7 @@ import { GAMES, type GameDefinition } from './registry';
  * tested while this list is empty. Putting a title on the channel, or
  * promoting one off it, edits this list on purpose.
  */
-const WEB_BETA_IDS: string[] = [];
+const WEB_BETA_IDS: string[] = ['backgammon'];
 
 /**
  * The titles in development today, in registry order: Falling Blocks (No. 63),
@@ -52,7 +52,7 @@ const WEB_BETA_IDS: string[] = [];
  * change that makes it playable. The synthetic in-development entry below
  * keeps the guard's closed doors tested even when this list is empty.
  */
-const IN_DEVELOPMENT_IDS: string[] = ['falling-blocks', 'backgammon'];
+const IN_DEVELOPMENT_IDS: string[] = ['falling-blocks'];
 
 /** A beta title that exists only in this file: a released game's shape, a channel of its own. */
 const SYNTHETIC_BETA: GameDefinition = {
@@ -119,9 +119,10 @@ describe('the channels', () => {
   it('hold exactly the titles this file says they do', () => {
     const beta = GAMES.filter((game) => game.channel === 'web-beta').map((game) => game.id);
     expect(beta).toEqual(WEB_BETA_IDS);
-    // None since 2026-10-29: twenty graduated and Falling Blocks was withdrawn
-    // to 'in-development' (see above).
-    expect(beta).toHaveLength(0);
+    // One since 2026-11-03 (Backgammon, No. 67): the twenty before it
+    // graduated on 2026-10-29 and Falling Blocks was withdrawn to
+    // 'in-development' (see above).
+    expect(beta).toHaveLength(1);
     expect(GAMES.filter((game) => game.channel === undefined)).toHaveLength(65);
     const building = GAMES.filter((game) => game.channel === 'in-development').map(
       (game) => game.id,

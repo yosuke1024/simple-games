@@ -1584,13 +1584,13 @@ export const GAMES: readonly GameDefinition[] = [
   {
     // No. 67 (2026-11-02): the dice race against the CPU — two dice to split
     // between fifteen checkers, blots to risk and points to make
-    // (docs/BACKGAMMON_RULES.md). In development until the product owner opens
-    // it on the web; the glyph is a point of the board.
+    // (docs/BACKGAMMON_RULES.md). On the web early-release channel since
+    // 2026-11-03 by the product owner's call; the glyph is a point of the board.
     id: 'backgammon',
     title: 'Backgammon',
     category: 'board',
     glyph: '▽',
-    channel: 'in-development',
+    channel: 'web-beta',
     storageKeys: Object.values(BK_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/backgammon/ui/BackgammonRoot').then((m) => ({ default: m.BackgammonRoot })),
