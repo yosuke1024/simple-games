@@ -3478,6 +3478,14 @@ button:disabled {
   --accent-ring: rgba(42, 70, 32, 0.38);
   --accent-ring-soft: rgba(42, 70, 32, 0.12);
 }
+:root[data-game='backgammon'],
+.accent-backgammon {
+  --accent: #81675a;
+  --accent-ink: #ffffff;
+  --accent-soft: #e8dcd9;
+  --accent-ring: rgba(129, 103, 90, 0.38);
+  --accent-ring-soft: rgba(129, 103, 90, 0.12);
+}
 :root[data-theme='dark'][data-game='invaders'],
 [data-theme='dark'] .accent-invaders {
   --accent: #4ea7d0;
@@ -3517,4 +3525,12 @@ button:disabled {
   --accent-soft: #2c382a;
   --accent-ring: rgba(139, 189, 100, 0.38);
   --accent-ring-soft: rgba(139, 189, 100, 0.12);
+}
+:root[data-theme='dark'][data-game='backgammon'],
+[data-theme='dark'] .accent-backgammon {
+  --accent: #d28f4b;
+  --accent-ink: #14171c;
+  --accent-soft: #41362a;
+  --accent-ring: rgba(210, 143, 75, 0.38);
+  --accent-ring-soft: rgba(210, 143, 75, 0.12);
 }

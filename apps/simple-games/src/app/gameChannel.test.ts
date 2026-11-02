@@ -52,7 +52,7 @@ const WEB_BETA_IDS: string[] = [];
  * change that makes it playable. The synthetic in-development entry below
  * keeps the guard's closed doors tested even when this list is empty.
  */
-const IN_DEVELOPMENT_IDS: string[] = ['falling-blocks'];
+const IN_DEVELOPMENT_IDS: string[] = ['falling-blocks', 'backgammon'];
 
 /** A beta title that exists only in this file: a released game's shape, a channel of its own. */
 const SYNTHETIC_BETA: GameDefinition = {
