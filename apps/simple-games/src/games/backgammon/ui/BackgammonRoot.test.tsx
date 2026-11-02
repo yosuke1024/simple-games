@@ -190,6 +190,19 @@ describe('BackgammonRoot', () => {
     expect(screen.getByRole('button', { name: 'Roll' })).toBeTruthy();
   });
 
+  it('resumes, rather than overwrites, a saved match when Quick Rules finish without a flags record (§9.4)', async () => {
+    renderGame({ [BK_STORAGE_KEYS.game]: JSON.stringify(midMatchRecord()) });
+    await settle();
+    expect(await screen.findByRole('heading', { name: 'How to Play' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+    // The saved match rests at the player's throw, not at an opening.
+    expect(screen.getByRole('button', { name: 'Roll' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Roll for the opening' })).toBeNull();
+  });
+
   it('opens on the home, not the board, when a shortcut finds nothing to resume', async () => {
     render(
       <SettingsProvider initialSettings={settingsSchema.defaultValue()}>

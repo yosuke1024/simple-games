@@ -120,12 +120,15 @@ export function BackgammonGameScreen() {
   const justOpened =
     session.opening !== null && session.turns.length === 0 && session.lastTurn === null;
   const remaining = phase.kind === 'moving' ? phase.dice.length : 0;
+  // The faces of the roll on the table, so the live line announces them (§11):
+  // the dice picture itself is not a live region.
+  const faces = session.lastRoll
+    ? t('backgammonDiceLabel', { a: session.lastRoll.roll[0], b: session.lastRoll.roll[1] })
+    : '';
   const turnLine = over
     ? ''
     : passed
-      ? session.lastTurn?.side === PLAYER
-        ? t('backgammonNoMoveYou')
-        : t('backgammonNoMoveCpu')
+      ? `${faces} · ${session.lastTurn?.side === PLAYER ? t('backgammonNoMoveYou') : t('backgammonNoMoveCpu')}`
       : phase.kind === 'opening'
         ? t('backgammonRollOpening')
         : justOpened && session.opening
@@ -134,11 +137,11 @@ export function BackgammonGameScreen() {
               cpu: session.opening.cpu,
             })
           : playersMove
-            ? `${t('backgammonYourMove')} · ${t('backgammonDiceLeft', { count: remaining })}`
+            ? `${faces} · ${t('backgammonYourMove')} · ${t('backgammonDiceLeft', { count: remaining })}`
             : canRoll
               ? t('backgammonYourRoll')
               : phase.kind === 'moving'
-                ? t('backgammonCpuMoving')
+                ? `${faces} · ${t('backgammonCpuMoving')}`
                 : t('backgammonCpuTurn');
 
   const yourPips = pipCount(session.board, PLAYER);

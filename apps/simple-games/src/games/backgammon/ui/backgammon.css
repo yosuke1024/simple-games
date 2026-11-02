@@ -100,7 +100,12 @@
   color: inherit;
   touch-action: manipulation;
 }
-.bk-point:disabled {
+/* A point that cannot be pressed right now is still the board: the shared
+   `button:disabled` fade would dim every checker during the CPU's turn (§11). */
+.bk-point:disabled,
+.bk-bar:disabled,
+.bk-tray:disabled {
+  opacity: 1;
   cursor: default;
 }
 .bk-point-top {

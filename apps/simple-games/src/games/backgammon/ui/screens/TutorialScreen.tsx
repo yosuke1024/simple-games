@@ -88,7 +88,8 @@ function Figure({ step }: { step: number }) {
 }
 
 export function BackgammonTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startNewGame, difficulty, goHome } = useBackgammon();
+  const { tutorialCompleted, completeTutorial, startNewGame, resumeGame, canResume, difficulty, goHome } =
+    useBackgammon();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('backgammon', locale);
   const [step, setStep] = useState(0);
@@ -104,7 +105,10 @@ export function BackgammonTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startNewGame(difficulty);
+      // The flags and the saved match are two records: when only the flags
+      // are missing, the match on disk is resumed, never overwritten (§9.4).
+      if (canResume) resumeGame();
+      else startNewGame(difficulty);
     } else {
       goHome();
     }

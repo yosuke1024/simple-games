@@ -14,7 +14,15 @@
  */
 import { buildView, chooseTurn } from './cpu';
 import { diceOf, rollFor, type Roll } from './dice';
-import { allowedSteps, applyStep, bestUsage, hasWon, resultKindOf, type Usage } from './engine';
+import {
+  allowedSteps,
+  applyStep,
+  bestUsage,
+  boardKey,
+  hasWon,
+  resultKindOf,
+  type Usage,
+} from './engine';
 import { createRng } from './rng';
 import {
   CPU,
@@ -303,13 +311,33 @@ export function applyCpuRoll(session: BackgammonSession, plan: boolean = true): 
   return planCpuTurn(rolled);
 }
 
+/**
+ * The last few CPU plans, by the position they answer. The plan is a pure
+ * function of (seed, roll index, strength, board, dice), and two callers ask
+ * for the same one in quick succession: a save that winds the CPU's turn
+ * forward to the canonical state (§9.2) and the beat that then plays it on
+ * screen (§5.4). Remembering the answer keeps the search to one per turn
+ * without changing what it returns.
+ */
+const PLAN_CACHE_LIMIT = 8;
+const planCache = new Map<string, Turn>();
+
 /** Decides the CPU's turn for a `moving` CPU phase that has no plan yet. */
 export function planCpuTurn(session: BackgammonSession): BackgammonSession {
   const phase = session.phase;
   if (phase.kind !== 'moving' || phase.side !== CPU || phase.plan !== null) return session;
-  const view = buildView(session.board, CPU, session.difficulty, phase.dice);
-  const tieBreak = createRng(`${session.seed}:cpu:${session.rollIndex}`)();
-  const { turn } = chooseTurn(view, tieBreak);
+  const key = `${session.seed}:${session.rollIndex}:${session.difficulty}:${boardKey(session.board)}:${phase.dice.join('')}`;
+  let turn = planCache.get(key);
+  if (turn === undefined) {
+    const view = buildView(session.board, CPU, session.difficulty, phase.dice);
+    const tieBreak = createRng(`${session.seed}:cpu:${session.rollIndex}`)();
+    turn = chooseTurn(view, tieBreak).turn;
+    planCache.set(key, turn);
+    if (planCache.size > PLAN_CACHE_LIMIT) {
+      const oldest = planCache.keys().next().value;
+      if (oldest !== undefined) planCache.delete(oldest);
+    }
+  }
   return { ...session, phase: { ...phase, plan: turn } };
 }
 
