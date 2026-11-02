@@ -845,6 +845,28 @@ function Motif({ id }: { id: GameId }): ReactNode {
           <path d="m78 63 3 3 5-6" fill="none" stroke="currentColor" strokeWidth="2" />
         </Board>
       );
+    case 'backgammon':
+      return (
+        <Board>
+          <rect x="58" y="16" width="4" height="56" fill="currentColor" opacity=".18" />
+          <path
+            d="M32 16h8.5L36.25 38zM50 16h8L54 38zM71 16h8.5L75.25 38zM41 72h8.5L45.25 50zM62 72h8.5L66.25 50zM80 72h8L84 50z"
+            fill="currentColor"
+            opacity=".5"
+          />
+          <path
+            d="M41 16h8.5L45.25 38zM62 16h8.5L66.25 38zM80 16h8L84 38zM32 72h8.5L36.25 50zM50 72h8L54 50zM71 72h8.5L75.25 50z"
+            fill="currentColor"
+            opacity=".2"
+          />
+          <circle cx="36.3" cy="66" r="3.4" fill="currentColor" />
+          <circle cx="36.3" cy="59" r="3.4" fill="currentColor" />
+          <circle cx="54" cy="66" r="3.4" fill="currentColor" />
+          <circle cx="84" cy="22" r="3.4" fill="none" stroke="currentColor" strokeWidth="1.6" />
+          <circle cx="84" cy="29" r="3.4" fill="none" stroke="currentColor" strokeWidth="1.6" />
+          <circle cx="66.3" cy="22" r="3.4" fill="none" stroke="currentColor" strokeWidth="1.6" />
+        </Board>
+      );
     case 'solitaire':
     case 'spider-solitaire':
     case 'freecell':

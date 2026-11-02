@@ -243,7 +243,9 @@ describe('web-beta titles', () => {
     // 2026-10-29, when all twenty graduated into the app (v1.7.0). The
     // synthetic title appended by the mock above keeps the tests below
     // walking a beta door.
-    expect(beta.map((game) => game.id)).toEqual(['synthetic-beta']);
+    // Backgammon (No. 67) has been on the beta channel since 2026-11-03; the
+    // synthetic title is appended by the mock above.
+    expect(beta.map((game) => game.id)).toEqual(['backgammon', 'synthetic-beta']);
     expect(released.length).toBeGreaterThan(20);
   });
 
@@ -318,8 +320,9 @@ describe('in-development titles', () => {
   it('exist in this registry (a synthetic one, and the real ones whenever there are any), so the tests below are not vacuous', () => {
     // The real list is app/gameChannel.test.ts's golden — Falling Blocks alone
     // since its withdrawal from the beta channel on 2026-10-29 (Nos. 47–51
-    // moved to the beta channel on 2026-10-22); the synthetic title is appended
-    // by the mock above, and is what the tests below exercise.
+    // moved to the beta channel on 2026-10-22, Backgammon on 2026-11-03); the
+    // synthetic title is appended by the mock above, and is what the tests
+    // below exercise.
     expect(building.map((game) => game.id)).toEqual(['falling-blocks', 'synthetic-in-development']);
   });
 

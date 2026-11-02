@@ -334,6 +334,11 @@ ADS_POLICY.md 側の項目 3 にも 実施済み の印は付いていない。*
 
 ## 先行公開(ベータ)
 
+**2026-11-03 — Backgammon(No. 67)を先行公開の対象にした。** registry は `channel: 'web-beta'`(製品オーナーの判断
+「web-beta にする」。実装は 2026-11-02、`docs/plans/2026-11-02-backgammon.md`)。landing の `WEB_BETA_GAME_IDS` への
+同期 PR と Publish ワークフローはこれから(人の作業)で、配信開始日はその記録に書く。先行公開の対象は 1 本、
+正式収録は 65 本、実装中は 1 本(Falling Blocks)。
+
 No. 62〜66 (Invaders / Falling Blocks / Paddle Rally / Hanoi Towers / Maze Escape) を2026-10-23に追加。
 Falling Blocks は 2026-10-29 に先行公開から取り下げた(製品オーナーの判断、権利上の理由 — `FALLING_BLOCKS_RULES.md` 冒頭)。
 

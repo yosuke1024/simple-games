@@ -1,0 +1,410 @@
+/**
+ * Backgammon's styles (docs/BACKGAMMON_RULES.md §11). The shared shell
+ * classes (.screen, .home-hero, .game-content, .game-topbar, .action-bar,
+ * .dialog, ...) cover the frame; the board, the dice and the two information
+ * rows live here under the game's own `bk-` prefix, which no other game uses
+ * (docs/architecture/css-split.md「ゲームのクラス名は、ほかのゲームとぶつけない」).
+ *
+ * Two colours are the game's content and sit outside the theme and the
+ * accent: the CPU's checkers (a second colour, as Checkers' ivory) and the
+ * two tones of the points. The player's checkers wear the title's accent.
+ */
+
+.bk-body {
+  --bk-cpu: #efe7d6;
+  --bk-cpu-edge: #8a7a66;
+  --bk-point-a: #c9b79a;
+  --bk-point-b: #8e7355;
+  --bk-felt: #e7dcc7;
+  --bk-bar: #b5a48c;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px 0;
+}
+[data-theme='dark'] .bk-body {
+  --bk-cpu: #d9d2c4;
+  --bk-cpu-edge: #6b6052;
+  --bk-point-a: #6d5e4a;
+  --bk-point-b: #3e3528;
+  --bk-felt: #2b2620;
+  --bk-bar: #4d4336;
+}
+
+/* ---------- the two information rows ---------- */
+.bk-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  max-width: 420px;
+  min-height: 24px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.bk-side {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink);
+  font-weight: 600;
+}
+.bk-side-piece {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+.bk-fact strong {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- the board ---------- */
+.bk-board {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  max-width: 420px;
+  padding: 6px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  background: var(--bk-felt);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+.bk-half {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) 22px repeat(6, minmax(0, 1fr)) 26px;
+  height: 132px;
+}
+@media (max-height: 620px) {
+  .bk-half {
+    height: 110px;
+  }
+}
+.bk-point {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  touch-action: manipulation;
+}
+/* A point that cannot be pressed right now is still the board: the shared
+   `button:disabled` fade would dim every checker during the CPU's turn (§11). */
+.bk-point:disabled,
+.bk-bar:disabled,
+.bk-tray:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.bk-point-top {
+  justify-content: flex-start;
+}
+.bk-point-bottom {
+  justify-content: flex-end;
+}
+.bk-point-shape {
+  position: absolute;
+  inset: 0 1px;
+  pointer-events: none;
+}
+.bk-point-top .bk-point-shape {
+  clip-path: polygon(0 0, 100% 0, 50% 92%);
+}
+.bk-point-bottom .bk-point-shape {
+  clip-path: polygon(50% 8%, 0 100%, 100% 100%);
+}
+.bk-point-odd .bk-point-shape {
+  background: var(--bk-point-b);
+}
+.bk-point-even .bk-point-shape {
+  background: var(--bk-point-a);
+}
+
+.bk-stack {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  align-items: center;
+}
+.bk-stack-bottom {
+  flex-direction: column-reverse;
+}
+.bk-checker {
+  display: grid;
+  place-items: center;
+  width: 88%;
+  aspect-ratio: 1;
+  max-width: 26px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+.bk-checker-you {
+  background: var(--accent);
+  border: 2px solid rgba(0, 0, 0, 0.28);
+  color: var(--accent-ink);
+}
+.bk-checker-cpu {
+  background: var(--bk-cpu);
+  /* A thicker edge than the player's: told apart by shape as well as colour (§11). */
+  border: 3px solid var(--bk-cpu-edge);
+  color: #232a33;
+}
+.bk-checker-count {
+  font-size: 10px;
+}
+
+/* What may be picked up, what is held, where it may go (§7, §11). */
+.bk-point-pickable .bk-stack .bk-checker:last-child,
+.bk-bar.bk-point-pickable .bk-stack-bottom .bk-checker:last-child {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent-ring);
+}
+.bk-point-selected .bk-stack .bk-checker:last-child,
+.bk-bar-selected .bk-stack-bottom .bk-checker:last-child {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
+}
+.bk-target-mark {
+  position: absolute;
+  left: 50%;
+  width: 62%;
+  max-width: 22px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px dashed var(--accent);
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 2;
+}
+.bk-point-top .bk-target-mark {
+  bottom: 10px;
+}
+.bk-point-bottom .bk-target-mark,
+.bk-tray .bk-target-mark {
+  top: 10px;
+}
+.bk-point-target .bk-point-shape {
+  filter: brightness(1.08);
+}
+
+/* The bar: the CPU's hit checkers at the top, the player's at the bottom (§2.2). */
+.bk-bar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  margin: 0;
+  padding: 2px 0;
+  border: 0;
+  border-radius: 3px;
+  background: var(--bk-bar);
+  color: inherit;
+}
+.bk-bar-lower {
+  display: block;
+}
+.bk-bar .bk-stack {
+  width: 100%;
+}
+.bk-bar .bk-checker {
+  width: 100%;
+  max-width: 20px;
+}
+
+/* The trays: the CPU's at the top right, the player's — a button when bearing off — at the bottom right. */
+.bk-tray {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1px;
+  margin: 0 0 0 2px;
+  padding: 3px 0;
+  border: 0;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.08);
+  color: inherit;
+}
+.bk-tray-you {
+  justify-content: flex-end;
+}
+.bk-off-checker {
+  width: 18px;
+  height: 7px;
+  border-radius: 2px;
+  box-sizing: border-box;
+}
+.bk-off-checker.bk-checker-cpu {
+  border-width: 2px;
+}
+.bk-tray-count {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- the turn line and the actions ---------- */
+.bk-turn-line {
+  width: 100%;
+  max-width: 420px;
+  min-height: 1.4em;
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.bk-actions {
+  align-items: center;
+  gap: 16px;
+}
+.bk-dice {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--ink);
+}
+.bk-dice-button {
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 1px var(--accent-ring-soft);
+  cursor: pointer;
+}
+.bk-dice-pair {
+  display: inline-flex;
+  gap: 8px;
+}
+.bk-dice-caption {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.bk-die {
+  width: 36px;
+  height: 36px;
+}
+.bk-die-body {
+  fill: var(--surface);
+  stroke: var(--line);
+  stroke-width: 3;
+}
+.bk-die-pip {
+  fill: var(--ink);
+}
+.bk-die-unknown {
+  fill: var(--ink-soft);
+  font-size: 56px;
+  font-weight: 700;
+}
+.bk-die-spent {
+  opacity: 0.35;
+}
+@keyframes bk-die-spin {
+  from {
+    transform: rotate(-90deg) scale(0.8);
+  }
+  to {
+    transform: rotate(0) scale(1);
+  }
+}
+.bk-die-spin {
+  animation: bk-die-spin 220ms ease-out;
+  transform-origin: 50% 50%;
+}
+@keyframes bk-checker-arrive {
+  from {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.bk-checker-arrived {
+  animation: bk-checker-arrive 180ms ease-out;
+}
+.bk-board-still .bk-checker-arrived,
+.bk-board-still ~ * .bk-die-spin {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bk-checker-arrived,
+  .bk-die-spin {
+    animation: none;
+  }
+}
+
+/* ---------- home, result and the tutorial figures ---------- */
+.bk-choose-label {
+  margin: 0 0 8px;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+.bk-result-kind {
+  margin: -4px 0 8px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--accent);
+}
+.bk-figure {
+  display: block;
+  width: 100%;
+  max-width: 240px;
+  margin: 0 auto 12px;
+}
+.bk-fig-point-a {
+  fill: #c9b79a;
+}
+.bk-fig-point-b {
+  fill: #8e7355;
+}
+.bk-fig-you {
+  fill: var(--accent);
+}
+.bk-fig-cpu {
+  fill: #efe7d6;
+  stroke: #8a7a66;
+  stroke-width: 2;
+}
+.bk-fig-bar {
+  fill: #b5a48c;
+}
+.bk-fig-die {
+  fill: var(--surface);
+  stroke: var(--line);
+}
+.bk-fig-pip {
+  fill: var(--ink);
+}
+.bk-fig-arrow {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+.bk-fig-arrow-head {
+  fill: var(--ink);
+}

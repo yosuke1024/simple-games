@@ -91,6 +91,7 @@ import { PR_STORAGE_KEYS } from '../games/paddle-rally/storage/keys';
 import { HT_STORAGE_KEYS as HN_STORAGE_KEYS } from '../games/hanoi-towers/storage/keys';
 import { ME_STORAGE_KEYS } from '../games/maze-escape/storage/keys';
 import { TN_STORAGE_KEYS } from '../games/tangram/storage/keys';
+import { BK_STORAGE_KEYS } from '../games/backgammon/storage/keys';
 import { SUDOKU_CHALLENGE } from '../games/sudoku/challenge/contract';
 import { MINESWEEPER_CHALLENGE } from '../games/minesweeper/challenge/contract';
 import { WATER_SORT_CHALLENGE } from '../games/water-sort/challenge/contract';
@@ -193,7 +194,8 @@ export type GameId =
   | 'falling-blocks'
   | 'paddle-rally'
   | 'hanoi-towers'
-  | 'maze-escape';
+  | 'maze-escape'
+  | 'backgammon';
 
 /**
  * The genre shelves the collection home is divided into. An id is styling- and
@@ -1578,5 +1580,20 @@ export const GAMES: readonly GameDefinition[] = [
     loadRoot: () =>
       import('../games/maze-escape/ui/MazeEscapeRoot').then((m) => ({ default: m.MazeEscapeRoot })),
     loadStorageSchemas: () => import('../games/maze-escape/storage/schemas'),
+  },
+  {
+    // No. 67 (2026-11-02): the dice race against the CPU — two dice to split
+    // between fifteen checkers, blots to risk and points to make
+    // (docs/BACKGAMMON_RULES.md). On the web early-release channel since
+    // 2026-11-03 by the product owner's call; the glyph is a point of the board.
+    id: 'backgammon',
+    title: 'Backgammon',
+    category: 'board',
+    glyph: '▽',
+    channel: 'web-beta',
+    storageKeys: Object.values(BK_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/backgammon/ui/BackgammonRoot').then((m) => ({ default: m.BackgammonRoot })),
+    loadStorageSchemas: () => import('../games/backgammon/storage/schemas'),
   },
 ];

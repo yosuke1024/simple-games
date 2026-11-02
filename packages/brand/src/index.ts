@@ -1318,6 +1318,21 @@ export const titleAccents = {
     onDark: '#14171c',
     softDark: '#2c382a',
   },
+  /**
+   * Backgammon — dusty leather (No. 67, 2026-11-02). The warm band is the
+   * most crowded one in the collection, so the value sits at its low-chroma,
+   * mid-lightness corner: CIE76 ΔE 15.3 (light) / 15.5 (dark) from the
+   * nearest of the other 66 accents, 4.58:1 / 6.64:1 on paper
+   * (docs/BRAND.md「No. 67 のアクセント」).
+   */
+  backgammon: {
+    light: '#81675a',
+    onLight: '#ffffff',
+    softLight: '#e8dcd9',
+    dark: '#d28f4b',
+    onDark: '#14171c',
+    softDark: '#41362a',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;
