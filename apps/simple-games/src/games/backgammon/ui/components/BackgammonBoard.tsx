@@ -7,8 +7,8 @@
  * refused and nothing has to scold.
  *
  * The board is kept in the player's numbering: the 1-point is bottom right
- * and the 24-point top right, the player moving right-to-left along the
- * bottom after coming down the top (§1). Checkers are stacked five high; a
+ * and the 24-point top right, the player moving left-to-right along the
+ * bottom after coming down the left edge (§1). Checkers are stacked five high; a
  * sixth and beyond is a count on the top one (§11).
  */
 import { memo } from 'react';
@@ -37,7 +37,13 @@ export interface BackgammonBoardProps {
 /** The player's point number of a player's distance (identity) — kept for clarity. */
 const pointOf = (dist: Dist): number => dist;
 
-function Checkers({ count, mine, arrived, stepId, top }: {
+function Checkers({
+  count,
+  mine,
+  arrived,
+  stepId,
+  top,
+}: {
   count: number;
   mine: boolean;
   arrived: boolean;
@@ -127,6 +133,9 @@ export const BackgammonBoard = memo(function BackgammonBoard({
         onClick={() => onPoint(dist)}
       >
         <span className="bk-point-shape" aria-hidden="true" />
+        <span className="bk-point-number" aria-hidden="true">
+          {point}
+        </span>
         {count !== 0 ? (
           <Checkers
             count={Math.abs(count)}
@@ -136,7 +145,11 @@ export const BackgammonBoard = memo(function BackgammonBoard({
             top={top}
           />
         ) : null}
-        {isTarget ? <span className="bk-target-mark" aria-hidden="true" /> : null}
+        {isTarget ? (
+          <span className="bk-target-mark" aria-hidden="true">
+            {targetSet.get(dist)!.step.die}
+          </span>
+        ) : null}
       </button>
     );
   };
@@ -165,7 +178,11 @@ export const BackgammonBoard = memo(function BackgammonBoard({
         {[13, 14, 15, 16, 17, 18].map((point) => renderPoint(point, true))}
         <button
           type="button"
-          className={['bk-bar', barSelected ? 'bk-bar-selected' : '', barPickable ? 'bk-point-pickable' : '']
+          className={[
+            'bk-bar',
+            barSelected ? 'bk-bar-selected' : '',
+            barPickable ? 'bk-point-pickable' : '',
+          ]
             .filter(Boolean)
             .join(' ')}
           aria-label={barLabel}
@@ -174,10 +191,22 @@ export const BackgammonBoard = memo(function BackgammonBoard({
           onClick={() => onPoint(BAR)}
         >
           {cpuBar > 0 ? (
-            <Checkers count={cpuBar} mine={false} arrived={arrivedOnBar && lastStep?.by === PLAYER} stepId={lastStep?.stepId ?? 0} top />
+            <Checkers
+              count={cpuBar}
+              mine={false}
+              arrived={arrivedOnBar && lastStep?.by === PLAYER}
+              stepId={lastStep?.stepId ?? 0}
+              top
+            />
           ) : null}
           {playerBar > 0 ? (
-            <Checkers count={playerBar} mine arrived={arrivedOnBar && lastStep?.by !== PLAYER} stepId={lastStep?.stepId ?? 0} top={false} />
+            <Checkers
+              count={playerBar}
+              mine
+              arrived={arrivedOnBar && lastStep?.by !== PLAYER}
+              stepId={lastStep?.stepId ?? 0}
+              top={false}
+            />
           ) : null}
         </button>
         {[19, 20, 21, 22, 23, 24].map((point) => renderPoint(point, true))}
@@ -188,6 +217,10 @@ export const BackgammonBoard = memo(function BackgammonBoard({
           {board.off[1] > 0 ? <span className="bk-tray-count">{board.off[1]}</span> : null}
         </div>
       </div>
+      <svg className="bk-route" viewBox="0 0 420 24" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M374 6H22Q8 6 8 12T22 18H374" />
+        <path d="m34 2-8 4 8 4m332 4 8 4-8 4" />
+      </svg>
       <div className="bk-half bk-half-bottom">
         {[12, 11, 10, 9, 8, 7].map((point) => renderPoint(point, false))}
         <span className="bk-bar bk-bar-lower" aria-hidden="true" />
@@ -195,15 +228,30 @@ export const BackgammonBoard = memo(function BackgammonBoard({
         <button
           type="button"
           className={`bk-tray bk-tray-you ${offTarget ? 'bk-point-target' : ''}`}
-          aria-label={offTarget ? t('backgammonOffTarget') : t('backgammonOffTray', { you: board.off[0], cpu: board.off[1] })}
+          aria-label={
+            offTarget
+              ? t('backgammonOffTarget')
+              : t('backgammonOffTray', { you: board.off[0], cpu: board.off[1] })
+          }
           disabled={!playing || !offTarget}
           onClick={() => onPoint(OFF)}
         >
+          <svg className="bk-home-mark" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m3 11 9-8 9 8M6 9v12h12V9M10 21v-7h4v7" />
+          </svg>
           {Array.from({ length: Math.min(board.off[0], STACK_SHOWN) }, (_, i) => (
             <span key={i} className="bk-off-checker bk-checker-you" aria-hidden="true" />
           ))}
-          {board.off[0] > 0 ? <span className="bk-tray-count" aria-hidden="true">{board.off[0]}</span> : null}
-          {offTarget ? <span className="bk-target-mark" aria-hidden="true" /> : null}
+          {board.off[0] > 0 ? (
+            <span className="bk-tray-count" aria-hidden="true">
+              {board.off[0]}
+            </span>
+          ) : null}
+          {offTarget ? (
+            <span className="bk-target-mark" aria-hidden="true">
+              {targetSet.get(OFF)!.step.die}
+            </span>
+          ) : null}
         </button>
       </div>
     </div>

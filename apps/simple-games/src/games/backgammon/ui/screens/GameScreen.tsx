@@ -35,8 +35,7 @@ export function BackgammonGameScreen() {
 
   const over = session ? session.status !== 'playing' : false;
   const phase = session?.phase ?? null;
-  const playersMove =
-    !over && phase !== null && phase.kind === 'moving' && phase.side === PLAYER;
+  const playersMove = !over && phase !== null && phase.kind === 'moving' && phase.side === PLAYER;
   const canRoll =
     !over &&
     phase !== null &&
@@ -118,7 +117,11 @@ export function BackgammonGameScreen() {
 
   const passed = session.lastTurn?.passed === true && phase.kind === 'awaitingRoll';
   const justOpened =
-    session.opening !== null && session.turns.length === 0 && session.lastTurn === null;
+    session.opening !== null &&
+    session.turns.length === 0 &&
+    session.lastTurn === null &&
+    phase.kind === 'moving' &&
+    phase.steps.length === 0;
   const remaining = phase.kind === 'moving' ? phase.dice.length : 0;
   // The faces of the roll on the table, so the live line announces them (§11):
   // the dice picture itself is not a live region.
