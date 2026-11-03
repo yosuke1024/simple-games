@@ -13,6 +13,7 @@ import { recordGameCompleted } from '../../../services/review';
 import { type KVStore, preferencesKV } from '../../../storage/kv';
 import { saveRecord } from '../../../storage/repo';
 import { useOnUnmount } from '../../../ui/useOnUnmount';
+import { useMovePlayback } from '../../../ui/useMovePlayback';
 import {
   createSession,
   act,
@@ -32,7 +33,13 @@ import {
   type Stats,
 } from '../storage/schemas';
 export type Screen = 'home' | 'tutorial' | 'game' | 'stats';
+interface MovePlayback {
+  before: Session;
+  to: number;
+  durationMs: number;
+}
 interface ContextValue {
+  playback: MovePlayback | null;
   screen: Screen;
   setPaused: (paused: boolean) => void;
   session: Session | null;
@@ -80,6 +87,12 @@ export function FrostRouteProvider({
   );
   const [paused, setPaused] = useState(false);
   const [foreground, setForeground] = useState(() => document.visibilityState !== 'hidden');
+  const {
+    playback,
+    busy,
+    start: startPlayback,
+    finish: finishPlayback,
+  } = useMovePlayback<Omit<MovePlayback, 'durationMs'>>(screen === 'game' && !paused && foreground);
   const [session, setSession] = useState<Session | null>(initialSession);
   const [stats, setStats] = useState(initialStats);
   const [flags, setFlags] = useState(initialFlags);
@@ -128,6 +141,7 @@ export function FrostRouteProvider({
   }, [bookPlayTime, kv, putSession, withElapsed]);
   const begin = useCallback(
     (mode: Mode, seed: number) => {
+      finishPlayback();
       syncActiveGame();
       const currentStats = statsRef.current;
       const record = currentStats.boards[mode];
@@ -145,7 +159,7 @@ export function FrostRouteProvider({
       void saveGame(next, kv);
       setScreen('game');
     },
-    [kv, persistStats, putSession, syncActiveGame],
+    [finishPlayback, kv, persistStats, putSession, syncActiveGame],
   );
   const startBoard = useCallback(
     (mode: Mode) => {
@@ -169,9 +183,16 @@ export function FrostRouteProvider({
   const play = useCallback(
     (action: Action) => {
       const current = sessionRef.current;
-      if (!current) return false;
+      if (!current || busy.current) return false;
       const next = act(withElapsed(current), action);
       if (!next) return false;
+      const distance =
+        Math.abs((next.position % next.board.size) - (current.position % current.board.size)) +
+        Math.abs(
+          Math.floor(next.position / next.board.size) -
+            Math.floor(current.position / current.board.size),
+        );
+      startPlayback({ before: current, to: next.position }, Math.min(650, 180 + distance * 65));
       putSession(next);
       // Every save carries only seconds already booked to avoid a crash losing time.
       bookPlayTime();
@@ -199,18 +220,18 @@ export function FrostRouteProvider({
       }
       return true;
     },
-    [bookPlayTime, kv, persistStats, putSession, withElapsed],
+    [bookPlayTime, busy, kv, persistStats, putSession, startPlayback, withElapsed],
   );
   const applyUndo = useCallback(() => {
     const current = sessionRef.current;
-    if (!current) return false;
+    if (!current || busy.current) return false;
     const next = undo(withElapsed(current));
     if (!next) return false;
     putSession(next);
     bookPlayTime();
     void saveGame(next, kv);
     return true;
-  }, [bookPlayTime, kv, putSession, withElapsed]);
+  }, [bookPlayTime, busy, kv, putSession, withElapsed]);
   const goHome = useCallback(() => {
     syncActiveGame();
     setScreen('home');
@@ -277,6 +298,7 @@ export function FrostRouteProvider({
     <GameContext.Provider
       value={{
         screen,
+        playback,
         setPaused,
         session,
         stats,

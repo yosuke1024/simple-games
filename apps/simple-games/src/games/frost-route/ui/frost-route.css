@@ -78,6 +78,7 @@
   -webkit-text-stroke: 1px var(--accent);
 }
 .fr-board {
+  position: relative;
   display: grid;
   width: min(100%, 390px, calc(100dvh - 255px));
   min-width: 220px;
@@ -89,6 +90,23 @@
     0 5px 0 var(--line),
     inset 0 0 0 1px var(--line);
   overflow: hidden;
+}
+.fr-motion {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 4;
+}
+.fr-moving-puck {
+  fill: var(--accent);
+  stroke: var(--surface);
+  stroke-width: 0.045;
+}
+.fr-puck-ring {
+  fill: none;
+  stroke: var(--accent-ink);
 }
 .fr-cell {
   position: relative;

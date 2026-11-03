@@ -11,7 +11,12 @@ Three difficulties change the CPU movement speed, not the rules. The ball's exit
 angle depends on where it hits the paddle. Each point waits for an explicit serve.
 
 Drag horizontally, hold the left/right buttons, or use arrow/A-D keys. Serve and
-pause have visible buttons and Space/P keyboard equivalents. All help takes the
+pause have visible buttons and Space/P keyboard equivalents. Controls are ordered
+left / serve (or pause/resume) / right, with the primary action in the center.
+A double click on the ready court also serves. Two touch taps within 350ms and
+24 CSS pixels serve; each tap must end within 300ms without moving more than
+12 pixels. Drags, canceled touches, paused play, dialogs and active rallies do
+not serve. This gesture does not pause or resume a match. All help takes the
 form of free immediate replay. No hint or undo replaces a real-time rally.
 
 ## Visual presentation

@@ -163,3 +163,71 @@ it('draws the keys with shell icons and the ball as a lit object at an unchanged
     order.indexOf(document.querySelector('.pr-player')!),
   );
 });
+
+it('centers the serve control and serves only a ready, unpaused court on double click', async () => {
+  const kv = createMemoryKV({
+    [PR_STORAGE_KEYS.saveGame]: JSON.stringify(createSession('normal')),
+    [PR_STORAGE_KEYS.flags]: JSON.stringify({ schemaVersion: 1, tutorialCompleted: true }),
+  });
+  mount(kv);
+  await settle();
+  const board = screen.getByRole('img', { name: /court/i });
+  fireEvent.doubleClick(board);
+  expect(screen.getByRole('button', { name: 'Resume' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Resume' }));
+  const buttons = [...document.querySelectorAll('.pr-controls button')];
+  expect(buttons).toEqual([
+    screen.getByRole('button', { name: 'Move left' }),
+    screen.getByRole('button', { name: 'Serve' }),
+    screen.getByRole('button', { name: 'Move right' }),
+  ]);
+  fireEvent.doubleClick(board);
+  expect(screen.getByRole('button', { name: 'Pause' })).toBeInTheDocument();
+  fireEvent.doubleClick(board);
+  expect(screen.getByRole('button', { name: 'Pause' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'New Game' }));
+  fireEvent.doubleClick(board);
+  expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+});
+
+it('accepts two nearby touch taps but never turns a drag or cancel into a serve', async () => {
+  const kv = createMemoryKV({
+    [PR_STORAGE_KEYS.saveGame]: JSON.stringify(createSession('normal')),
+    [PR_STORAGE_KEYS.flags]: JSON.stringify({ schemaVersion: 1, tutorialCompleted: true }),
+  });
+  mount(kv);
+  await settle();
+  fireEvent.click(screen.getByRole('button', { name: 'Resume' }));
+  const board = screen.getByRole('img', { name: /court/i });
+  Object.defineProperties(board, {
+    setPointerCapture: { value: vi.fn(), configurable: true },
+    hasPointerCapture: { value: () => false, configurable: true },
+    getBoundingClientRect: { value: () => ({ left: 0, width: 320 }), configurable: true },
+  });
+  const pointer = (type: string, x: number, time: number) => {
+    const event = new Event(type, { bubbles: true });
+    Object.defineProperties(event, {
+      pointerId: { value: 1 },
+      pointerType: { value: 'touch' },
+      button: { value: 0 },
+      clientX: { value: x },
+      clientY: { value: 200 },
+      timeStamp: { value: time },
+    });
+    fireEvent(board, event);
+  };
+  pointer('pointerdown', 100, 0);
+  pointer('pointermove', 170, 50);
+  pointer('pointerup', 170, 100);
+  pointer('pointerdown', 170, 150);
+  pointer('pointerup', 170, 200);
+  expect(screen.getByRole('button', { name: 'Serve' })).toBeInTheDocument();
+  pointer('pointerdown', 170, 250);
+  pointer('pointercancel', 170, 275);
+  pointer('pointerdown', 170, 300);
+  pointer('pointerup', 170, 330);
+  expect(screen.getByRole('button', { name: 'Serve' })).toBeInTheDocument();
+  pointer('pointerdown', 172, 420);
+  pointer('pointerup', 172, 450);
+  expect(screen.getByRole('button', { name: 'Pause' })).toBeInTheDocument();
+});

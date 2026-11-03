@@ -7,6 +7,7 @@ import { IconBack, IconRetry } from '@/ui/components/icons';
 import { knowledge, LENGTHS, placement, sunkShips, validFleet } from '../../game';
 import { useFleetSearch } from '../../state/GameContext';
 import { Board, coordinate } from '../components/Board';
+import { Vessel } from '../components/Vessel';
 import { ResultOverlay } from '../components/ResultOverlay';
 export function GameScreen() {
   const { t } = useSettings();
@@ -71,21 +72,32 @@ export function GameScreen() {
                     setVertical(session.fleets[0][i]![1]! - session.fleets[0][i]![0]! === 8);
                   }}
                 >
-                  <span aria-hidden="true">
-                    {Array.from({ length }, (_, j) => (
-                      <i key={j} />
-                    ))}
-                  </span>
+                  <svg
+                    viewBox={`0 0 ${length * 10} 10`}
+                    style={{ width: length * 13 }}
+                    aria-hidden="true"
+                  >
+                    <Vessel length={length} />
+                  </svg>
                 </button>
               ))}
             </div>
           ) : (
             <div className="fs-fleet-status">
-              <span>
-                {t('fleetSearchSunkCount', {
-                  n: sunkShips(session.fleets[1], session.shots[0]).length,
-                })}
-              </span>
+              <div className="fs-remaining">
+                <div className="fs-fleet-silhouettes" aria-hidden="true">
+                  {view.remaining.map((length, i) => (
+                    <svg key={i} viewBox={`0 0 ${length * 10} 10`} style={{ width: length * 10 }}>
+                      <Vessel length={length} />
+                    </svg>
+                  ))}
+                </div>
+                <span>
+                  {t('fleetSearchSunkCount', {
+                    n: sunkShips(session.fleets[1], session.shots[0]).length,
+                  })}
+                </span>
+              </div>
               <button
                 type="button"
                 className="btn btn-ghost fs-view"

@@ -9,10 +9,21 @@ import { slide, solve, type Action } from '../../game';
 import { useFrostRoute } from '../../state/GameContext';
 import { ResultOverlay } from '../components/ResultOverlay';
 const arrows = ['↑', '→', '↓', '←'];
+// Begin at insertion time, not at the SVG document's original clock.
+const beginMotion = (node: SVGAnimateTransformElement | null) => node?.beginElement?.();
 export function GameScreen() {
   const { t } = useSettings();
-  const { session, play, applyUndo, goHome, restartCurrent, startNewBoard, setPaused } =
-    useFrostRoute();
+  const {
+    session: committed,
+    playback,
+    play,
+    applyUndo,
+    goHome,
+    restartCurrent,
+    startNewBoard,
+    setPaused,
+  } = useFrostRoute();
+  const session = playback?.before ?? committed;
   const [confirmRestart, setConfirmRestart] = useState(false),
     [hint, setHint] = useState<Action | null>(null),
     [stuck, setStuck] = useState(false);
@@ -61,7 +72,7 @@ export function GameScreen() {
       }
       return false;
     },
-    session?.status === 'playing' && !confirmRestart,
+    session?.status === 'playing' && !confirmRestart && !playback,
   );
   if (!session) return null;
   const { board } = session,
@@ -160,7 +171,7 @@ export function GameScreen() {
                       ◆
                     </span>
                   ) : null}
-                  {player ? (
+                  {player && !playback ? (
                     <span className="fr-puck" aria-hidden="true">
                       <span />
                     </span>
@@ -177,6 +188,7 @@ export function GameScreen() {
                           col: (cell % board.size) + 1,
                         })
                       }
+                      disabled={!!playback}
                       onClick={() => move(dir as Action)}
                     >
                       <span aria-hidden="true">{arrows[dir]}</span>
@@ -185,6 +197,31 @@ export function GameScreen() {
                 </div>
               );
             })}
+            {playback ? (
+              <svg
+                className="fr-motion"
+                viewBox={`0 0 ${board.size} ${board.size}`}
+                aria-hidden="true"
+              >
+                <g className="fr-moving-puck">
+                  <circle r="0.34" />
+                  <circle r="0.11" className="fr-puck-ring" />
+                  <animateTransform
+                    ref={beginMotion}
+                    begin="indefinite"
+                    attributeName="transform"
+                    type="translate"
+                    from={`${(session.position % board.size) + 0.5} ${Math.floor(session.position / board.size) + 0.5}`}
+                    to={`${(playback.to % board.size) + 0.5} ${Math.floor(playback.to / board.size) + 0.5}`}
+                    dur={`${playback.durationMs}ms`}
+                    calcMode="spline"
+                    keyTimes="0;1"
+                    keySplines="0.2 0 0.35 1"
+                    fill="freeze"
+                  />
+                </g>
+              </svg>
+            ) : null}
           </div>
           <p className="fr-status" role="status">
             <span className="visually-hidden">
@@ -209,7 +246,7 @@ export function GameScreen() {
                 key={d}
                 className={`fr-direction ${d === hint ? 'is-hint' : ''}`}
                 aria-label={t(`frostRouteDirection${d}`)}
-                disabled={!dirs[d]!.path.length}
+                disabled={!!playback || !dirs[d]!.path.length}
                 onClick={() => move(d)}
               >
                 {arrows[d]}
@@ -221,7 +258,7 @@ export function GameScreen() {
               className="action-btn"
               type="button"
               onClick={onUndo}
-              disabled={!session.actions.length}
+              disabled={!!playback || !session.actions.length}
             >
               <span className="action-icon">
                 <IconUndo />
@@ -231,6 +268,7 @@ export function GameScreen() {
             <button
               className="action-btn"
               type="button"
+              disabled={!!playback}
               onClick={() => {
                 const route = solve(board, session.position, session.mask);
                 setHint(route?.[0] ?? null);

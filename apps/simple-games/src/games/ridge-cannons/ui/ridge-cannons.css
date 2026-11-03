@@ -99,6 +99,7 @@
 }
 .rc-landscape > svg {
   display: block;
+  aspect-ratio: 1000 / 420;
   width: 100%;
   overflow: hidden;
 }
@@ -161,6 +162,20 @@
   stroke-width: 4;
   stroke-dasharray: 7 5;
   animation: rc-impact 0.6s ease-out both;
+}
+.rc-projectile {
+  fill: var(--accent);
+  stroke: var(--surface);
+  stroke-width: 3;
+}
+.rc-projectile.rc-side-1 {
+  fill: var(--ink);
+}
+.rc-projectile-glint {
+  fill: none;
+  stroke: var(--surface);
+  stroke-width: 2;
+  stroke-linecap: round;
 }
 @keyframes rc-impact {
   from {

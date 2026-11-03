@@ -23,6 +23,9 @@ export function GameScreen() {
   const [confirmNewGame, setConfirmNewGame] = useState(false);
   const directionRef = useRef(0);
   const pointerRef = useRef<number | null>(null);
+  const pointerTypeRef = useRef('mouse');
+  const touchStart = useRef<{ x: number; y: number; time: number; moved: boolean } | null>(null);
+  const lastTap = useRef<{ x: number; y: number; time: number } | null>(null);
   const running = !!session && session.status === 'playing' && !paused && !confirmNewGame;
   useGameKeys((event) => {
     if (event.ctrlKey || event.metaKey || event.altKey) return false;
@@ -46,6 +49,11 @@ export function GameScreen() {
     }
     return false;
   }, running && !confirmNewGame);
+  useEffect(() => {
+    pointerRef.current = null;
+    touchStart.current = null;
+    lastTap.current = null;
+  }, [running, session?.serving]);
   useEffect(() => {
     const release = () => {
       directionRef.current = 0;
@@ -83,12 +91,34 @@ export function GameScreen() {
   const over = session.status !== 'playing';
   const move = (event: React.PointerEvent<SVGSVGElement>) => {
     if (!running || pointerRef.current !== event.pointerId) return;
+    const start = touchStart.current;
+    if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > 12) {
+      start.moved = true;
+      lastTap.current = null;
+    }
     const box = event.currentTarget.getBoundingClientRect();
     updatePaddle(((event.clientX - box.left) / box.width) * 320);
   };
   const releasePointer = (event: React.PointerEvent<SVGSVGElement>) => {
     if (pointerRef.current !== event.pointerId) return;
     pointerRef.current = null;
+    const start = touchStart.current;
+    touchStart.current = null;
+    if (event.type === 'pointercancel') lastTap.current = null;
+    else if (event.pointerType === 'touch' && start && running && session.serving) {
+      const now = event.timeStamp;
+      const tap = lastTap.current;
+      if (!start.moved && now - start.time <= 300) {
+        if (
+          tap &&
+          now - tap.time <= 350 &&
+          Math.hypot(event.clientX - tap.x, event.clientY - tap.y) <= 24
+        ) {
+          lastTap.current = null;
+          serveBall();
+        } else lastTap.current = { x: event.clientX, y: event.clientY, time: now };
+      } else lastTap.current = null;
+    }
     if (event.currentTarget.hasPointerCapture(event.pointerId))
       event.currentTarget.releasePointerCapture(event.pointerId);
   };
@@ -131,14 +161,27 @@ export function GameScreen() {
             role="img"
             aria-label={t('paddleRallyBoard')}
             onPointerDown={(event) => {
-              if (!running || pointerRef.current !== null) return;
+              if (!running || event.button !== 0) return;
+              if (pointerRef.current !== null) {
+                touchStart.current = null;
+                lastTap.current = null;
+                return;
+              }
+              pointerTypeRef.current = event.pointerType;
               pointerRef.current = event.pointerId;
+              touchStart.current =
+                event.pointerType === 'touch'
+                  ? { x: event.clientX, y: event.clientY, time: event.timeStamp, moved: false }
+                  : null;
               event.currentTarget.setPointerCapture(event.pointerId);
               move(event);
             }}
             onPointerMove={move}
             onPointerUp={releasePointer}
             onPointerCancel={releasePointer}
+            onDoubleClick={() => {
+              if (pointerTypeRef.current !== 'touch' && running && session.serving) serveBall();
+            }}
           >
             <defs>
               <linearGradient id={courtId} x2="0" y2="1">
@@ -187,42 +230,46 @@ export function GameScreen() {
                 : t('paddleRallyControls')}
           </p>
           <div className="pr-controls">
-            {([-1, 1] as const).map((dir) => (
-              <button
-                key={dir}
-                type="button"
-                className="btn btn-secondary"
-                disabled={!running}
-                aria-label={t(dir === -1 ? 'paddleRallyLeft' : 'paddleRallyRight')}
-                onPointerDown={(event) => {
-                  event.currentTarget.setPointerCapture(event.pointerId);
-                  directionRef.current = dir;
-                  updatePaddle(session.player + dir * 18);
-                }}
-                onPointerUp={() => {
-                  directionRef.current = 0;
-                }}
-                onPointerCancel={() => {
-                  directionRef.current = 0;
-                }}
-                onClick={(event) => {
-                  if (event.detail === 0) updatePaddle(session.player + dir * 22);
-                }}
-              >
-                <IconBack className={dir === -1 ? undefined : 'pr-key-arrow-right'} />
-              </button>
-            ))}
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={paused ? resumeGame : session.serving ? serveBall : pauseGame}
-            >
-              {paused
-                ? t('resume')
-                : session.serving
-                  ? t('paddleRallyServe')
-                  : t('paddleRallyPause')}
-            </button>
+            {([-1, 0, 1] as const).map((dir) =>
+              dir === 0 ? (
+                <button
+                  key="serve"
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={paused ? resumeGame : session.serving ? serveBall : pauseGame}
+                >
+                  {paused
+                    ? t('resume')
+                    : session.serving
+                      ? t('paddleRallyServe')
+                      : t('paddleRallyPause')}
+                </button>
+              ) : (
+                <button
+                  key={dir}
+                  type="button"
+                  className="btn btn-secondary"
+                  disabled={!running}
+                  aria-label={t(dir === -1 ? 'paddleRallyLeft' : 'paddleRallyRight')}
+                  onPointerDown={(event) => {
+                    event.currentTarget.setPointerCapture(event.pointerId);
+                    directionRef.current = dir;
+                    updatePaddle(session.player + dir * 18);
+                  }}
+                  onPointerUp={() => {
+                    directionRef.current = 0;
+                  }}
+                  onPointerCancel={() => {
+                    directionRef.current = 0;
+                  }}
+                  onClick={(event) => {
+                    if (event.detail === 0) updatePaddle(session.player + dir * 22);
+                  }}
+                >
+                  <IconBack className={dir === -1 ? undefined : 'pr-key-arrow-right'} />
+                </button>
+              ),
+            )}
           </div>
         </div>
       </div>

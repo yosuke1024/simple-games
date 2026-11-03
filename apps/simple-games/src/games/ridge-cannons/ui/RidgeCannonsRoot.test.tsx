@@ -18,6 +18,7 @@ afterEach(async () => {
   await settle();
   vi.useRealTimers();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   Reflect.deleteProperty(document, 'visibilityState');
 });
 function launch(kv: KVStore, entry?: 'collection' | 'shortcut') {
@@ -138,5 +139,40 @@ it('fires once and suspends the pending CPU turn behind a modal or hidden page',
     vi.advanceTimersByTime(850);
   });
   await settle();
+  expect((await loadSavedGame(kv))?.actions).toHaveLength(2);
+});
+
+it('plays each committed shot before damage and the next turn, without saving it twice', async () => {
+  vi.useFakeTimers();
+  vi.stubGlobal('matchMedia', () => ({
+    matches: false,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  }));
+  const kv = createMemoryKV();
+  await taught(kv);
+  const initial = createSession('easy', 22);
+  await saveGame(initial, kv);
+  launch(kv, 'shortcut');
+  await settle();
+  fireEvent.click(screen.getByRole('button', { name: 'Fire' }));
+  await settle();
+  expect(document.querySelector('.rc-projectile')).not.toBeNull();
+  expect(screen.getByRole('button', { name: 'Fire' })).toBeDisabled();
+  expect(document.querySelector('.rc-impact')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Fire' }));
+  expect((await loadSavedGame(kv))?.actions).toHaveLength(1);
+  await act(async () => vi.advanceTimersByTime(1100));
+  expect(document.querySelector('.rc-projectile')).toBeNull();
+  expect(document.querySelector('.rc-impact')).not.toBeNull();
+  expect((await loadSavedGame(kv))?.actions).toHaveLength(1);
+  await act(async () => vi.advanceTimersByTime(800));
+  await settle();
+  expect(document.querySelector('.rc-projectile.rc-side-1')).not.toBeNull();
+  expect((await loadSavedGame(kv))?.actions).toHaveLength(2);
+  Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+  act(() => document.dispatchEvent(new Event('visibilitychange')));
+  expect(document.querySelector('.rc-projectile')).toBeNull();
+  await act(async () => vi.advanceTimersByTime(3000));
   expect((await loadSavedGame(kv))?.actions).toHaveLength(2);
 });
