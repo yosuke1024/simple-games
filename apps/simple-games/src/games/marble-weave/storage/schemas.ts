@@ -106,7 +106,7 @@ export const statsSchema: SchemaDef<Stats> = {
         puzzles[id] = { played, completed, best };
       }
     }
-    return { schemaVersion: 2, totalPlaySeconds: seconds, boards, puzzles };
+    return { schemaVersion: 2, puzzles, totalPlaySeconds: seconds, boards };
   },
 };
 export interface PersistedGame {
