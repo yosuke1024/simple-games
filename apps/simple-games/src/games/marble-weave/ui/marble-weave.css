@@ -1,0 +1,233 @@
+.mw-home-content {
+  width: 100%;
+}
+.mw-choose {
+  margin: 0 0 8px;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+.mw-choice {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.mw-screen .game-content {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.mw-screen .game-topbar,
+.mw-body {
+  flex-shrink: 0;
+}
+.mw-body {
+  width: 100%;
+  max-width: 560px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 16px 12px;
+}
+.mw-screen button {
+  touch-action: manipulation;
+}
+.mw-screen button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  z-index: 3;
+}
+.mw-status {
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  min-height: 36px;
+  margin: 0;
+  max-width: 420px;
+}
+.mw-actions {
+  width: 100%;
+  padding: 0;
+  justify-content: center;
+  gap: 32px;
+}
+.mw-actions .action-btn {
+  min-height: 42px;
+  flex-direction: row;
+  gap: 6px;
+}
+.mw-actions .action-icon,
+.mw-actions .action-icon svg {
+  width: 20px;
+  height: 20px;
+  display: flex;
+}
+.mw-metrics {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 420px;
+  font-size: 12px;
+  color: var(--ink-soft);
+  gap: 8px;
+}
+.mw-metrics strong {
+  font-size: 22px;
+  color: var(--ink);
+  margin-left: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.mw-tutorial-figure {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  height: 170px;
+  margin: 12px auto 20px;
+  color: var(--accent);
+}
+:root[data-sg-web-ads] .mw-screen {
+  height: 100%;
+}
+[data-game='marble-weave'] .home-title {
+  word-break: normal;
+  overflow-wrap: normal;
+}
+@media (max-width: 380px) {
+  [data-game='marble-weave'] .home-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  [data-game='marble-weave'] .home-title {
+    font-size: 30px;
+  }
+}
+@media (max-height: 700px) {
+  .mw-body {
+    gap: 6px;
+    padding-bottom: 8px;
+  }
+}
+
+.mw-board {
+  position: relative;
+  display: grid;
+  width: min(100%, 420px, calc(100dvh - 225px));
+  min-width: 245px;
+  aspect-ratio: 1;
+  background: var(--surface);
+  border: 4px solid var(--accent-soft);
+  border-radius: 13px;
+  box-shadow: 0 5px 0 var(--line);
+  overflow: hidden;
+}
+.mw-cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 3px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  min-width: 0;
+  aspect-ratio: 1;
+}
+.mw-cell:nth-child(even) {
+  background: var(--surface-recessed);
+}
+.mw-cell.is-selected {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.mw-cell.is-selected .mw-marble {
+  transform: scale(1.1);
+}
+.mw-marble {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 86%;
+  height: 86%;
+  border-radius: 50%;
+  background: var(--marble);
+  color: #fff;
+  box-shadow:
+    inset -2px -3px 0 #0003,
+    inset 2px 2px 0 #fff5,
+    0 2px 2px #0002;
+}
+.mw-marble > span {
+  font-size: clamp(10px, 3.7vw, 21px);
+  line-height: 1;
+  text-shadow: 0 1px 1px #0004;
+}
+.mw-color-1 {
+  --marble: #af4558;
+}
+.mw-color-2 {
+  --marble: #3d6aab;
+}
+.mw-color-3 {
+  --marble: #287a55;
+}
+.mw-color-4 {
+  --marble: #99700d;
+}
+.mw-color-5 {
+  --marble: #8258a3;
+}
+.mw-color-6 {
+  --marble: #227a83;
+}
+.mw-color-7 {
+  --marble: #ad477e;
+}
+[data-theme='dark'] .mw-marble {
+  outline: 1px solid #ffffff35;
+}
+.mw-reachable-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.6;
+}
+.mw-preview {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mw-preview-ball {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+}
+.mw-preview-ball .mw-marble > span {
+  font-size: 12px;
+}
+.mw-motion {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.mw-moving-ball {
+  fill: var(--marble);
+  stroke: var(--surface);
+  stroke-width: 0.035;
+}
+:root[data-sg-web-ads] .mw-board {
+  width: min(100%, 420px, calc(100dvh - 325px));
+}
+:root[data-sg-app-banner] .mw-board {
+  width: min(100%, 420px, calc(100dvh - 295px));
+}

@@ -3588,3 +3588,57 @@ button:disabled {
   --accent-ring: rgba(84, 207, 182, 0.38);
   --accent-ring-soft: rgba(84, 207, 182, 0.12);
 }
+
+:root[data-game='chain-territory'],
+.accent-chain-territory {
+  --accent: #6a6325;
+  --accent-ink: #ffffff;
+  --accent-soft: #ddd9ca;
+  --accent-ring: rgba(106, 99, 37, 0.38);
+  --accent-ring-soft: rgba(106, 99, 37, 0.12);
+}
+
+:root[data-theme='dark'][data-game='chain-territory'],
+[data-theme='dark'] .accent-chain-territory {
+  --accent: #cdc9ad;
+  --accent-ink: #14171c;
+  --accent-soft: #323333;
+  --accent-ring: rgba(205, 201, 173, 0.38);
+  --accent-ring-soft: rgba(205, 201, 173, 0.12);
+}
+
+:root[data-game='marble-weave'],
+.accent-marble-weave {
+  --accent: #5b31af;
+  --accent-ink: #ffffff;
+  --accent-soft: #dbd1e0;
+  --accent-ring: rgba(91, 49, 175, 0.38);
+  --accent-ring-soft: rgba(91, 49, 175, 0.12);
+}
+
+:root[data-theme='dark'][data-game='marble-weave'],
+[data-theme='dark'] .accent-marble-weave {
+  --accent: #d15c9e;
+  --accent-ink: #14171c;
+  --accent-soft: #322231;
+  --accent-ring: rgba(209, 92, 158, 0.38);
+  --accent-ring-soft: rgba(209, 92, 158, 0.12);
+}
+
+:root[data-game='river-cargo'],
+.accent-river-cargo {
+  --accent: #5c6460;
+  --accent-ink: #ffffff;
+  --accent-soft: #dbdad3;
+  --accent-ring: rgba(92, 100, 96, 0.38);
+  --accent-ring-soft: rgba(92, 100, 96, 0.12);
+}
+
+:root[data-theme='dark'][data-game='river-cargo'],
+[data-theme='dark'] .accent-river-cargo {
+  --accent: #5cd15c;
+  --accent-ink: #14171c;
+  --accent-soft: #203526;
+  --accent-ring: rgba(92, 209, 92, 0.38);
+  --accent-ring-soft: rgba(92, 209, 92, 0.12);
+}

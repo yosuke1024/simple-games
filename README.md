@@ -64,7 +64,7 @@ PixApps が運用する Public Club House は
 
 2026-10-25のオーナー判断でChess / Nested Tic-Tac-Toe / Scopa / Nimを正式収録へ変更しました。
 2026-10-29のオーナー判断で、Web先行公開(ベータ)だった残り20本もすべて正式収録へ変更しました(1.7.0)。
-以下のWeb公開経緯は当時の記録です。現在のコードは正式65本＋Web先行公開4本(Backgammon / Ridge Cannons / Fleet Search / Frost Route、No. 67〜70)＋実装中1本(Falling Blocks。2026-10-29にWeb先行公開から取り下げ)＝70本です。新作3本の検証・配信記録は [実装記録](docs/plans/2026-11-03-three-games-68-70.md) を参照してください。
+以下のWeb公開経緯は当時の記録です。現在のコードは正式65本＋Web先行公開7本(Backgammon / Ridge Cannons / Fleet Search / Frost Route / Chain Territory / Marble Weave / River Cargo、No. 67〜73)＋実装中1本(Falling Blocks。2026-10-29にWeb先行公開から取り下げ)＝73本です。直近3本の検証・配信記録は [実装記録](docs/plans/2026-11-03-three-games-71-73.md) を参照してください。
 Android / iOSでは1対1ターン制13本の各ゲームtopから「誰かと遊ぶ」で近くの相手を募集・検索できます。
 Bluetoothまたは同一Wi-Fi、host承認と双方Readyで元のゲーム画面を使います。募集時のチャットは既定OFF、ONなら任意の会話と端末内履歴を使えます。
 対象: Yacht / Reversi / Connect Four / Gomoku / Checkers / Gin Rummy / Mancala / Dominoes /

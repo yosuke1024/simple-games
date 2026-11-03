@@ -750,3 +750,21 @@ Gomoku も同じで、マゼンタ帯の 3 タイトルとは色相ではなく�
 | ridge-cannons | dark | #d5d56c | 15.28 | 11.6 |
 | fleet-search | dark | #96d2de | 11.66 | 10.75 |
 | frost-route | dark | #54cfb6 | 13.61 | 9.39 |
+
+## No. 71〜73 のアクセント (2026-11-03)
+
+既存70色と新作の残り2色、警告色とのCIE76最小距離。紙はライト `#f3f0e9` / ダーク `#14171c`。
+色だけでなく盤面SVGとタイトルで区別する。クロム以外ではMarble Weaveの玉7色と記号、River Cargoの動物と荷物の素材色を持つ。
+
+| Title | Theme | Color | nearest ΔE | paper contrast |
+| --- | --- | --- | --- | --- |
+| chainTerritory | light | `#6a6325` | 11.26 | 5.39 |
+| chainTerritory | dark | `#cdc9ad` | 13.53 | 10.74 |
+| marbleWeave | light | `#5b31af` | 15.37 | 7.37 |
+| marbleWeave | dark | `#d15c9e` | 11.10 | 4.91 |
+| riverCargo | light | `#5c6460` | 16.43 | 5.35 |
+| riverCargo | dark | `#5cd15c` | 21.74 | 9.18 |
+
+River Cargo の `--rg-*` は塗りのあるオリジナルSVGの毛・葉・木材・顔を描く色。
+オーナーの指摘で単色線画から丸い輪郭と大きな目のキャラクターへ改訂。両テーマで素材の意味を維持する。
+ブラウザーの狭い画面で確認。Android/iOSの実機では未確認。

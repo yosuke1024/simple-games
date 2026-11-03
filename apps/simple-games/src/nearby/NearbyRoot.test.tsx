@@ -331,7 +331,11 @@ describe('Nearby Play user flows', () => {
     fireEvent.click(screen.getByRole('button', { name: en.back }));
     fixtures.saved = [savedGathering()];
     fireEvent.click(screen.getByRole('button', { name: en.back }));
-    fireEvent.click(screen.getByRole('button', { name: en.history }));
+    // The prior list stays visible during reload. Await the new fixture before
+    // selecting its identically named row, rather than opening the old peer.
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: en.history }));
+    });
     fireEvent.click(await screen.findByRole('button', { name: /Saved host/ }));
     expect(screen.queryByRole('button', { name: en.blockPlayer })).not.toBeInTheDocument();
     expect(screen.getByText('Saved locally')).toBeVisible();

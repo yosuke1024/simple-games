@@ -1,0 +1,40 @@
+// AI translation; not reviewed by a native speaker.
+import type { RiverCargoMessages } from './en';
+export const de: RiverCargoMessages = {
+  riverCargoName: 'River Cargo',
+  riverCargoBest: 'Wenigste Überfahrten',
+  riverCargoWon: 'Alle sind drüben!',
+  riverCargoPar: 'Kürzester Weg',
+  riverCargoSeats: 'Frachtplätze: {n}',
+  riverCargoField: 'Zwei Ufer und eine Fähre',
+  riverCargoLeft: 'Linkes Ufer',
+  riverCargoRight: 'Rechtes Ufer',
+  riverCargoBoat: 'Fähre mit Fährmann',
+  riverCargoFull: 'Es passen {n} Frachtstücke. Lade zuerst eines aus.',
+  riverCargoUnsafe: '{a} und {b} dürfen nicht ohne Fährmann bleiben.',
+  riverCargoLimit: 'Nimm eine Überfahrt zurück oder beginne erneut.',
+  riverCargoKeepApart: 'Diese Paare brauchen den Fährmann am Ufer.',
+  riverCargoSelect: 'Wähle Fracht und fahre los. Leere Rückfahrten sind erlaubt.',
+  riverCargoCross: 'Überqueren',
+  riverCargoHintEmpty: 'Fahre ohne Fracht zurück.',
+  riverCargoHintLoad: 'Nimm die umrandete Fracht mit.',
+  riverCargo_wolf: 'Wolf',
+  riverCargo_goat: 'Ziege',
+  riverCargo_cabbage: 'Kohl',
+  riverCargo_fox: 'Fuchs',
+  riverCargo_hen: 'Huhn',
+  riverCargo_grain: 'Getreide',
+  riverCargo_crate: 'Kiste',
+  riverCargoStep1Title: 'Die Fähre beladen',
+  riverCargoStep1Body:
+    'Wähle Fracht am Ufer der Fähre und fahre los. Der Fährmann fährt immer mit.',
+  riverCargoStep2Title: 'Beide Ufer beachten',
+  riverCargoStep2Body:
+    'Die gezeigten Paare dürfen nicht ohne Fährmann zusammenbleiben. Unsichere Fahrten werden mit Begründung verhindert.',
+  riverCargoStep3Title: 'Alle hinüberbringen',
+  riverCargoStep3Body:
+    'Bringe alles ans rechte Ufer. Fahre bei Bedarf leer zurück. Rückgängig und Hinweis helfen.',
+  riverCargoMode_easy: 'Leicht',
+  riverCargoMode_normal: 'Normal',
+  riverCargoMode_hard: 'Schwer',
+};
