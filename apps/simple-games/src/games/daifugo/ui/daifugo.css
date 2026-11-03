@@ -46,6 +46,11 @@
   --df-card-edge: #c7c6b9;
   --df-card-red: #a32c43;
   --df-card-black: #263d39;
+  --df-joker: #75469b;
+  --df-selection: #fff8d8;
+  --df-card-shadow: #0000000d;
+  --df-back-paper: #fffdf7;
+  --df-felt-inset: color-mix(in srgb, var(--df-felt-edge) 25%, transparent);
 }
 [data-theme='dark'][data-game='daifugo'] {
   --df-felt: #1b322c;
@@ -55,6 +60,11 @@
   --df-card-edge: #adae9e;
   --df-card-red: #a1223b;
   --df-card-black: #213833;
+  --df-joker: #75469b;
+  --df-selection: #fff8d8;
+  --df-card-shadow: #0000000d;
+  --df-back-paper: #fffdf7;
+  --df-felt-inset: color-mix(in srgb, var(--df-felt-edge) 25%, transparent);
 }
 .df-opponents {
   display: grid;
@@ -113,7 +123,7 @@
   border-radius: 20px;
   background:
     radial-gradient(ellipse at 50% 25%, transparent, var(--df-felt-edge) 180%), var(--df-felt);
-  box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--df-felt-edge) 25%, transparent);
+  box-shadow: inset 0 0 0 5px var(--df-felt-inset);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -201,7 +211,7 @@
   aspect-ratio: 5/7;
   box-shadow:
     0 2px 0 var(--df-card-edge),
-    0 3px 6px #0000000d;
+    0 3px 6px var(--df-card-shadow);
   min-width: 0;
   touch-action: manipulation;
   user-select: none;
@@ -210,7 +220,7 @@
   color: var(--df-card-red);
 }
 .df-joker {
-  color: #75469b;
+  color: var(--df-joker);
 }
 .df-card-corner {
   position: absolute;
@@ -266,7 +276,7 @@ svg.df-card-symbol {
   box-shadow:
     0 3px 0 var(--accent),
     0 0 0 2px var(--accent);
-  background: #fff8d8;
+  background: var(--df-selection);
 }
 .df-card-back {
   display: grid;

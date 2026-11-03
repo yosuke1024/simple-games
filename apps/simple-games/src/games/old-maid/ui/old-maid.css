@@ -46,6 +46,11 @@
   --om-card-edge: #c7c6b9;
   --om-card-red: #a32c43;
   --om-card-black: #263d39;
+  --om-joker: #75469b;
+  --om-selection: #fff8d8;
+  --om-card-shadow: #0000000d;
+  --om-back-paper: #fffdf7;
+  --om-felt-inset: color-mix(in srgb, var(--om-felt-edge) 25%, transparent);
 }
 [data-theme='dark'][data-game='old-maid'] {
   --om-felt: #1b322c;
@@ -55,6 +60,11 @@
   --om-card-edge: #adae9e;
   --om-card-red: #a1223b;
   --om-card-black: #213833;
+  --om-joker: #75469b;
+  --om-selection: #fff8d8;
+  --om-card-shadow: #0000000d;
+  --om-back-paper: #fffdf7;
+  --om-felt-inset: color-mix(in srgb, var(--om-felt-edge) 25%, transparent);
 }
 .om-opponents {
   display: grid;
@@ -113,7 +123,7 @@
   border-radius: 20px;
   background:
     radial-gradient(ellipse at 50% 25%, transparent, var(--om-felt-edge) 180%), var(--om-felt);
-  box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--om-felt-edge) 25%, transparent);
+  box-shadow: inset 0 0 0 5px var(--om-felt-inset);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -201,7 +211,7 @@
   aspect-ratio: 5/7;
   box-shadow:
     0 2px 0 var(--om-card-edge),
-    0 3px 6px #0000000d;
+    0 3px 6px var(--om-card-shadow);
   min-width: 0;
   touch-action: manipulation;
   user-select: none;
@@ -210,7 +220,7 @@
   color: var(--om-card-red);
 }
 .om-joker {
-  color: #75469b;
+  color: var(--om-joker);
 }
 .om-card-corner {
   position: absolute;
@@ -266,7 +276,7 @@ svg.om-card-symbol {
   box-shadow:
     0 3px 0 var(--accent),
     0 0 0 2px var(--accent);
-  background: #fff8d8;
+  background: var(--om-selection);
 }
 .om-card-back {
   display: grid;
@@ -343,7 +353,7 @@ svg.om-card-symbol {
 }
 .om-draw-hand .om-card {
   min-height: 50px;
-  --om-card-paper: #fffdf7;
+  --om-card-paper: var(--om-back-paper);
 }
 .om-table.om-draw-table {
   min-height: 185px;

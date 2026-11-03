@@ -46,6 +46,11 @@
   --sv-card-edge: #c7c6b9;
   --sv-card-red: #a32c43;
   --sv-card-black: #263d39;
+  --sv-joker: #75469b;
+  --sv-selection: #fff8d8;
+  --sv-card-shadow: #0000000d;
+  --sv-back-paper: #fffdf7;
+  --sv-felt-inset: color-mix(in srgb, var(--sv-felt-edge) 25%, transparent);
 }
 [data-theme='dark'][data-game='sevens'] {
   --sv-felt: #1b322c;
@@ -55,6 +60,11 @@
   --sv-card-edge: #adae9e;
   --sv-card-red: #a1223b;
   --sv-card-black: #213833;
+  --sv-joker: #75469b;
+  --sv-selection: #fff8d8;
+  --sv-card-shadow: #0000000d;
+  --sv-back-paper: #fffdf7;
+  --sv-felt-inset: color-mix(in srgb, var(--sv-felt-edge) 25%, transparent);
 }
 .sv-opponents {
   display: grid;
@@ -113,7 +123,7 @@
   border-radius: 20px;
   background:
     radial-gradient(ellipse at 50% 25%, transparent, var(--sv-felt-edge) 180%), var(--sv-felt);
-  box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--sv-felt-edge) 25%, transparent);
+  box-shadow: inset 0 0 0 5px var(--sv-felt-inset);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -201,7 +211,7 @@
   aspect-ratio: 5/7;
   box-shadow:
     0 2px 0 var(--sv-card-edge),
-    0 3px 6px #0000000d;
+    0 3px 6px var(--sv-card-shadow);
   min-width: 0;
   touch-action: manipulation;
   user-select: none;
@@ -210,7 +220,7 @@
   color: var(--sv-card-red);
 }
 .sv-joker {
-  color: #75469b;
+  color: var(--sv-joker);
 }
 .sv-card-corner {
   position: absolute;
@@ -266,7 +276,7 @@ svg.sv-card-symbol {
   box-shadow:
     0 3px 0 var(--accent),
     0 0 0 2px var(--accent);
-  background: #fff8d8;
+  background: var(--sv-selection);
 }
 .sv-card-back {
   display: grid;
