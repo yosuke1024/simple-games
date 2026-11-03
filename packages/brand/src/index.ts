@@ -1333,6 +1333,36 @@ export const titleAccents = {
     onDark: '#14171c',
     softDark: '#41362a',
   },
+
+  // No. 68–70: measured against all existing accents (docs/BRAND.md).
+  ridgeCannons: {
+    light: '#821c1c',
+    onLight: '#ffffff',
+    softLight: '#e2d0ca',
+    dark: '#d5d56c',
+    onDark: '#14171c',
+    softDark: '#313428',
+  },
+
+  // No. 68–70: measured against all existing accents (docs/BRAND.md).
+  fleetSearch: {
+    light: '#564875',
+    onLight: '#ffffff',
+    softLight: '#dbd7d8',
+    dark: '#96d2de',
+    onDark: '#14171c',
+    softDark: '#283339',
+  },
+
+  // No. 68–70: measured against all existing accents (docs/BRAND.md).
+  frostRoute: {
+    light: '#425e2c',
+    onLight: '#ffffff',
+    softLight: '#d8dacd',
+    dark: '#54cfb6',
+    onDark: '#14171c',
+    softDark: '#1e3333',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

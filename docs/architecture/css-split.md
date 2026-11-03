@@ -28,7 +28,8 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
   (No. 57〜61、2026-10-23 に実装)、
   `invaders.css` / `falling-blocks.css` / `paddle-rally.css` / `hanoi-towers.css` / `maze-escape.css`
   (No. 62〜66、2026-10-23 に実装)、
-  `backgammon.css`(No. 67、2026-11-02 に着手)。
+  `backgammon.css`(No. 67、2026-11-02 に着手)、
+  `ridge-cannons.css` / `fleet-search.css` / `frost-route.css`(No. 68〜70、2026-11-03)。
   アーケード 2 本が共有する実況行(レベル / 残り / ライフ)だけは `ui/styles.css` に
   `.game-status*` として置いてある — 2 本が同じものを必要とした時点で共有クロムに
   なるのであって、`games/A/` の CSS を `games/B/` が読むことはない。

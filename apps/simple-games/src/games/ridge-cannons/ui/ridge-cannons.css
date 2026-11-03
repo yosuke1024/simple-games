@@ -1,0 +1,300 @@
+.rc-home-content {
+  width: 100%;
+}
+.rc-choose {
+  margin: 0 0 8px;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+.rc-choice {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.rc-screen .game-content {
+  display: flex;
+  flex-direction: column;
+}
+.rc-body {
+  width: 100%;
+  max-width: 620px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 16px 12px;
+}
+.rc-screen button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+[data-game='ridge-cannons'] .home-title {
+  word-break: normal;
+  overflow-wrap: normal;
+}
+@media (max-width: 380px) {
+  [data-game='ridge-cannons'] .home-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  [data-game='ridge-cannons'] .home-title {
+    font-size: 30px;
+  }
+}
+
+.rc-scoreboard {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  gap: 48px;
+}
+.rc-health {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.rc-health:last-child {
+  text-align: right;
+}
+.rc-health strong {
+  font-size: 24px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.rc-health small {
+  font-size: 12px;
+  font-weight: 500;
+}
+.rc-health-track {
+  height: 5px;
+  border-radius: 8px;
+  background: var(--line);
+  overflow: hidden;
+}
+.rc-health-track > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.25s;
+}
+.rc-side-1 .rc-health-track > span {
+  background: var(--ink);
+}
+.rc-landscape {
+  position: relative;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: 0 5px 0 var(--line);
+}
+.rc-landscape > svg {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+}
+.rc-wind {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.rc-wind strong {
+  margin-left: 8px;
+  color: var(--ink);
+  font-size: 17px;
+}
+.rc-far-ridge {
+  fill: var(--accent);
+  opacity: 0.08;
+}
+.rc-terrain {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.rc-trail {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 4;
+  stroke-dasharray: 8 10;
+  opacity: 0.7;
+}
+.rc-trail.rc-side-1 {
+  stroke: var(--ink);
+  stroke-dasharray: 4 12;
+  opacity: 0.45;
+}
+.rc-cannon {
+  fill: var(--accent);
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.rc-cannon.rc-side-1 {
+  fill: var(--ink);
+  stroke: var(--ink);
+}
+.rc-barrel {
+  stroke-width: 14;
+  stroke-linecap: round;
+}
+.rc-hub {
+  fill: var(--surface);
+  stroke: none;
+}
+.rc-impact {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 4;
+  stroke-dasharray: 7 5;
+  animation: rc-impact 0.6s ease-out both;
+}
+@keyframes rc-impact {
+  from {
+    opacity: 1;
+    r: 4;
+  }
+  to {
+    opacity: 0.55;
+    r: 22;
+  }
+}
+.rc-status {
+  font-size: 14px;
+  text-align: center;
+  margin: 4px 0 0;
+  min-height: 42px;
+  color: var(--ink);
+}
+.rc-status span {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-top: 4px;
+}
+.rc-aim {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  display: flex;
+  gap: 20px;
+}
+.rc-control {
+  flex: 1;
+  min-width: 0;
+}
+.rc-control label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+.rc-control strong {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.rc-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.rc-slider-row input {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  accent-color: var(--accent);
+}
+.rc-adjust {
+  border: 0;
+  background: transparent;
+  font-size: 22px;
+  color: var(--ink);
+  min-width: 32px;
+  height: 44px;
+  border-radius: 10px;
+}
+.rc-fire {
+  width: 100%;
+  max-width: 360px;
+  min-height: 46px;
+}
+@media (max-width: 420px) {
+  .rc-aim {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .rc-body {
+    gap: 10px;
+  }
+  .rc-landscape > svg {
+    min-height: 152px;
+  }
+}
+@media (max-height: 700px) {
+  .rc-body {
+    gap: 8px;
+  }
+  .rc-health strong {
+    font-size: 21px;
+  }
+  .rc-status {
+    margin: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rc-impact {
+    animation: none;
+  }
+  .rc-health-track > span {
+    transition: none;
+  }
+}
+
+:root[data-sg-web-ads] .rc-screen {
+  height: 100%;
+}
+.rc-screen .game-content {
+  overflow-y: auto;
+}
+.rc-screen .game-topbar,
+.rc-body {
+  flex-shrink: 0;
+}
+
+@media (max-width: 420px) {
+  .rc-control {
+    display: grid;
+    grid-template-columns: 68px 1fr;
+    align-items: center;
+    gap: 8px;
+  }
+  .rc-control label {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+  .rc-aim {
+    gap: 8px;
+  }
+  .rc-adjust {
+    min-width: 40px;
+  }
+  .rc-slider-row input {
+    height: 44px;
+  }
+}

@@ -51,6 +51,9 @@ const UNREAD_JA_GAME_IDS = [
   'paddle-rally',
   'hanoi-towers',
   'maze-escape',
+  'ridge-cannons',
+  'fleet-search',
+  'frost-route',
 ] as const;
 
 const gameModules = import.meta.glob<{ catalogs: Record<Locale, Record<string, string>> }>(

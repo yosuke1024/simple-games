@@ -92,6 +92,9 @@ import { HT_STORAGE_KEYS as HN_STORAGE_KEYS } from '../games/hanoi-towers/storag
 import { ME_STORAGE_KEYS } from '../games/maze-escape/storage/keys';
 import { TN_STORAGE_KEYS } from '../games/tangram/storage/keys';
 import { BK_STORAGE_KEYS } from '../games/backgammon/storage/keys';
+import { RC_STORAGE_KEYS } from '../games/ridge-cannons/storage/keys';
+import { FS_STORAGE_KEYS } from '../games/fleet-search/storage/keys';
+import { FR_STORAGE_KEYS } from '../games/frost-route/storage/keys';
 import { SUDOKU_CHALLENGE } from '../games/sudoku/challenge/contract';
 import { MINESWEEPER_CHALLENGE } from '../games/minesweeper/challenge/contract';
 import { WATER_SORT_CHALLENGE } from '../games/water-sort/challenge/contract';
@@ -195,7 +198,10 @@ export type GameId =
   | 'paddle-rally'
   | 'hanoi-towers'
   | 'maze-escape'
-  | 'backgammon';
+  | 'backgammon'
+  | 'ridge-cannons'
+  | 'fleet-search'
+  | 'frost-route';
 
 /**
  * The genre shelves the collection home is divided into. An id is styling- and
@@ -1595,5 +1601,42 @@ export const GAMES: readonly GameDefinition[] = [
     loadRoot: () =>
       import('../games/backgammon/ui/BackgammonRoot').then((m) => ({ default: m.BackgammonRoot })),
     loadStorageSchemas: () => import('../games/backgammon/storage/schemas'),
+  },
+  {
+    id: 'ridge-cannons',
+    title: 'Ridge Cannons',
+    category: 'arcade',
+    glyph: '⌁',
+    channel: 'web-beta',
+    storageKeys: Object.values(RC_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/ridge-cannons/ui/RidgeCannonsRoot').then((m) => ({
+        default: m.RidgeCannonsRoot,
+      })),
+    loadStorageSchemas: () => import('../games/ridge-cannons/storage/schemas'),
+  },
+  {
+    id: 'fleet-search',
+    title: 'Fleet Search',
+    category: 'board',
+    glyph: '⊞',
+    channel: 'web-beta',
+    storageKeys: Object.values(FS_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/fleet-search/ui/FleetSearchRoot').then((m) => ({
+        default: m.FleetSearchRoot,
+      })),
+    loadStorageSchemas: () => import('../games/fleet-search/storage/schemas'),
+  },
+  {
+    id: 'frost-route',
+    title: 'Frost Route',
+    category: 'puzzle',
+    glyph: '◇',
+    channel: 'web-beta',
+    storageKeys: Object.values(FR_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/frost-route/ui/FrostRouteRoot').then((m) => ({ default: m.FrostRouteRoot })),
+    loadStorageSchemas: () => import('../games/frost-route/storage/schemas'),
   },
 ];

@@ -845,6 +845,47 @@ function Motif({ id }: { id: GameId }): ReactNode {
           <path d="m78 63 3 3 5-6" fill="none" stroke="currentColor" strokeWidth="2" />
         </Board>
       );
+    case 'ridge-cannons':
+      return (
+        <g>
+          <path d="M15 71 44 31 67 58 83 42 106 71Z" fill="currentColor" opacity=".16" />
+          <path d="M24 59Q59 3 98 59" stroke="currentColor" strokeWidth="2" strokeDasharray="3 5" />
+          <g fill="currentColor">
+            <circle cx="23" cy="66" r="8" />
+            <path d="m20 60 17-13 5 6-17 13Z" />
+            <circle cx="97" cy="66" r="8" />
+            <path d="m96 60-14-10-4 6 15 9Z" />
+          </g>
+          <circle cx="23" cy="66" r="3" fill={PAPER} />
+          <circle cx="97" cy="66" r="3" fill={PAPER} />
+        </g>
+      );
+    case 'fleet-search':
+      return (
+        <Board>
+          <path
+            d="M33 28H87M33 41H87M33 54H87M46 17V69M59 17V69M72 17V69"
+            stroke="currentColor"
+            opacity=".18"
+          />
+          <path d="M35 35h34l-6 11H40Z" fill="currentColor" />
+          <path d="M45 28h14v7H45Z" fill="currentColor" />
+          <circle cx="76" cy="59" r="8" stroke="currentColor" strokeWidth="2" />
+          <path d="m70 53 12 12m-12 0 12-12" stroke="currentColor" strokeWidth="2" />
+          <circle cx="44" cy="59" r="2" fill="currentColor" />
+        </Board>
+      );
+    case 'frost-route':
+      return (
+        <Board>
+          <path d="M35 58H74V25" stroke="currentColor" strokeWidth="3" strokeDasharray="4 4" />
+          <path d="m39 20 7-3 6 9-4 9-13-2Z" fill="currentColor" opacity=".22" />
+          <path d="m60 51 5 7-5 7-5-7Z" fill="currentColor" />
+          <path d="M74 37V18h12l-4 5 4 5H74" stroke="currentColor" strokeWidth="2" />
+          <circle cx="35" cy="58" r="8" fill="currentColor" />
+          <circle cx="35" cy="58" r="3" fill={PAPER} />
+        </Board>
+      );
     case 'backgammon':
       return (
         <Board>
