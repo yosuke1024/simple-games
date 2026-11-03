@@ -1711,6 +1711,38 @@ function Motif({ id }: { id: GameId }): ReactNode {
         </g>
       );
   }
+  if (id === 'daifugo' || id === 'sevens' || id === 'old-maid') {
+    const ranks =
+      id === 'daifugo' ? ['3', '2', '★'] : id === 'sevens' ? ['6', '7', '8'] : ['8', '8', '★'];
+    return (
+      <g>
+        {ranks.map((rank, i) => (
+          <g
+            key={i}
+            transform={`translate(${20 + i * 26} ${19 + (i === 1 ? 0 : 6)}) rotate(${(i - 1) * 9} 14 23)`}
+          >
+            <rect
+              width="30"
+              height="46"
+              rx="4"
+              fill={PAPER}
+              stroke="currentColor"
+              strokeWidth="1.8"
+            />
+            <Number x={8} y={9} size={9}>
+              {rank}
+            </Number>
+            <Number x={15} y={29} size={17}>
+              {id === 'sevens' ? '♥' : rank === '★' ? '★' : '♠'}
+            </Number>
+          </g>
+        ))}
+        {id === 'daifugo' ? (
+          <path d="m47 9 5-6 8 5 8-5 5 6" stroke="currentColor" strokeWidth="2" />
+        ) : null}
+      </g>
+    );
+  }
   // A newly registered game needs artwork too; keep that omission a type error.
   const unhandled: never = id;
   return unhandled;

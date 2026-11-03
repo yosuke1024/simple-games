@@ -1389,6 +1389,30 @@ export const titleAccents = {
     onDark: '#14171c',
     softDark: '#203526',
   },
+  daifugo: {
+    light: '#2525d0',
+    onLight: '#ffffff',
+    softLight: '#d4d0e4',
+    dark: '#dcb038',
+    onDark: '#14171c',
+    softDark: '#3b3729',
+  },
+  sevens: {
+    light: '#a225d0',
+    onLight: '#ffffff',
+    softLight: '#e8d0e4',
+    dark: '#d1dc38',
+    onDark: '#14171c',
+    softDark: '#393e29',
+  },
+  oldMaid: {
+    light: '#a94c1e',
+    onLight: '#ffffff',
+    softLight: '#e9d7c8',
+    dark: '#38dc38',
+    onDark: '#14171c',
+    softDark: '#203e29',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

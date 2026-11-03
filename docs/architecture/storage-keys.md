@@ -55,7 +55,7 @@ Nearby Play は下表の KV / Preferences に保存しない。専用 native plu
 | `pn.*`          | Pipe Link(saveGame / saveDaily / stats / flags / prefs — 中断は 2 スロット独立、prefs は最後に選んだ難易度だけ。同上)                                                                                                                |
 | `bo.*`          | Bounce Up(stats / flags / prefs — prefs は足場の幅だけ。**saveGame なし**(ランの途中保存を作らない)・デイリーなし。同上)                                                                                                             |
 | `ep.*`          | Echo Pads(saveGame / saveDaily / progress / stats / flags / prefs — 中断は 2 スロット独立で run の位置だけ(列は seed から作り直す)、progress はレベルごとのクリアと次の attempt・今日のデイリーの attempt、prefs は Pace だけ。同上) |
-| `ot.*`          | Road Weave(旧 Overtake。progress / stats / flags / prefs — progress は開放の最前線、prefs は操作の形(Drag / Buttons)だけ。途中保存なし・デイリーなし。Web 先行公開のベータのキー — 下記)                                                            |
+| `ot.*`          | Road Weave(旧 Overtake。progress / stats / flags / prefs — progress は開放の最前線、prefs は操作の形(Drag / Buttons)だけ。途中保存なし・デイリーなし。Web 先行公開のベータのキー — 下記)                                             |
 | `tg.*`          | Make the Target(saveGame / saveDaily / stats / flags / prefs — 中断は 2 スロット独立、prefs は最後に選んだ難易度だけ。同上)                                                                                                          |
 | `nt.*`          | Nested Tic-Tac-Toe(saveGame / stats / flags / prefs — prefs は先後だけ。統計は難易度別。デイリーなし。同上)                                                                                                                          |
 | `sc.*`          | Scopa(saveGame / stats / flags。**prefs なし** — 難易度は 1 段階、配り手はシードと交代で決まり、覚える設定が無い。デイリーなし。同上)                                                                                                |
@@ -206,3 +206,7 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
 全ゲームがsaveGame / stats / flagsを持ち、Paddle Rally / Hanoi Towers / Maze Escapeはprefsも持つ。
 既存のキー・payloadは変更しない。お気に入りの受入上限だけ64から128へ広げ、
 66本すべてを登録できるようにした。旧レコードはそのまま読める。
+
+## No. 74〜76 のWeb先行公開キー
+
+`df.saveGame / df.stats / df.flags`、`sv.saveGame / sv.stats / sv.flags`、`om.saveGame / om.stats / om.flags`を各ゲームの所有キーとして追加。すべてschemaVersion 1。途中保存はカードの完全な分割、手番、順位、パス数などの不変条件を検証する。勝敗確定後は保存を消し、順位別の回数とプレイ秒数を統計に記録。既存のキーは変更しない。リセット・バックアップへregistry経由で登録する。

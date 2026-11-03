@@ -30,7 +30,8 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
   (No. 62〜66、2026-10-23 に実装)、
   `backgammon.css`(No. 67、2026-11-02 に着手)、
   `ridge-cannons.css` / `fleet-search.css` / `frost-route.css`(No. 68〜70、2026-11-03)、
-  `chain-territory.css` / `marble-weave.css` / `river-cargo.css`(No. 71〜73、2026-11-03)。
+  `chain-territory.css` / `marble-weave.css` / `river-cargo.css`(No. 71〜73、2026-11-03)、
+  `daifugo.css` / `sevens.css` / `old-maid.css`(No. 74〜76、2026-11-03)。
   アーケード 2 本が共有する実況行(レベル / 残り / ライフ)だけは `ui/styles.css` に
   `.game-status*` として置いてある — 2 本が同じものを必要とした時点で共有クロムに
   なるのであって、`games/A/` の CSS を `games/B/` が読むことはない。
@@ -89,3 +90,5 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
   無いこと」を確かめる対象に含める。
 
 No. 71〜73: Chain Territory は人とCPUの駒を形でも分ける。Marble Weave の7色の玉は色と記号を併用する。River Cargo の動物・野菜・荷物はオリジナルSVGで、毛・葉・木材の色をゲーム固有CSS冒頭の `--rg-*` に置く。クロムは共有アクセントのまま。
+
+No. 74–76: `daifugo/ui/daifugo.css`, `sevens/ui/sevens.css`, `old-maid/ui/old-maid.css` は各Rootだけが読む。

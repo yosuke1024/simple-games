@@ -98,6 +98,9 @@ import { FR_STORAGE_KEYS } from '../games/frost-route/storage/keys';
 import { CT_STORAGE_KEYS } from '../games/chain-territory/storage/keys';
 import { MW_STORAGE_KEYS } from '../games/marble-weave/storage/keys';
 import { RG_STORAGE_KEYS } from '../games/river-cargo/storage/keys';
+import { DF_STORAGE_KEYS } from '../games/daifugo/storage/keys';
+import { SV_STORAGE_KEYS } from '../games/sevens/storage/keys';
+import { OM_STORAGE_KEYS } from '../games/old-maid/storage/keys';
 import { SUDOKU_CHALLENGE } from '../games/sudoku/challenge/contract';
 import { MINESWEEPER_CHALLENGE } from '../games/minesweeper/challenge/contract';
 import { WATER_SORT_CHALLENGE } from '../games/water-sort/challenge/contract';
@@ -207,7 +210,10 @@ export type GameId =
   | 'frost-route'
   | 'chain-territory'
   | 'marble-weave'
-  | 'river-cargo';
+  | 'river-cargo'
+  | 'daifugo'
+  | 'sevens'
+  | 'old-maid';
 
 /**
  * The genre shelves the collection home is divided into. An id is styling- and
@@ -1682,5 +1688,38 @@ export const GAMES: readonly GameDefinition[] = [
     loadRoot: () =>
       import('../games/river-cargo/ui/RiverCargoRoot').then((m) => ({ default: m.RiverCargoRoot })),
     loadStorageSchemas: () => import('../games/river-cargo/storage/schemas'),
+  },
+  {
+    id: 'daifugo',
+    title: 'Daifugo',
+    category: 'cards',
+    glyph: '♔',
+    channel: 'web-beta',
+    storageKeys: Object.values(DF_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/daifugo/ui/DaifugoRoot').then((m) => ({ default: m.DaifugoRoot })),
+    loadStorageSchemas: () => import('../games/daifugo/storage/schemas'),
+  },
+  {
+    id: 'sevens',
+    title: 'Sevens',
+    category: 'cards',
+    glyph: '7',
+    channel: 'web-beta',
+    storageKeys: Object.values(SV_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/sevens/ui/SevensRoot').then((m) => ({ default: m.SevensRoot })),
+    loadStorageSchemas: () => import('../games/sevens/storage/schemas'),
+  },
+  {
+    id: 'old-maid',
+    title: 'Old Maid',
+    category: 'cards',
+    glyph: '♧',
+    channel: 'web-beta',
+    storageKeys: Object.values(OM_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/old-maid/ui/OldMaidRoot').then((m) => ({ default: m.OldMaidRoot })),
+    loadStorageSchemas: () => import('../games/old-maid/storage/schemas'),
   },
 ];

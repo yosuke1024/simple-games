@@ -40,6 +40,9 @@ const WEB_BETA_IDS: string[] = [
   'frost-route',
   'chain-territory',
   'river-cargo',
+  'daifugo',
+  'sevens',
+  'old-maid',
 ];
 
 /**
@@ -127,10 +130,10 @@ describe('the channels', () => {
   it('hold exactly the titles this file says they do', () => {
     const beta = GAMES.filter((game) => game.channel === 'web-beta').map((game) => game.id);
     expect(beta).toEqual(WEB_BETA_IDS);
-    // Six after Marble Weave was withdrawn on 2026-11-03: the twenty before them
+    // Nine after adding the three classic card games on 2026-11-03: the twenty before them
     // graduated on 2026-10-29 and Falling Blocks was withdrawn to
     // 'in-development' (see above).
-    expect(beta).toHaveLength(6);
+    expect(beta).toHaveLength(9);
     expect(GAMES.filter((game) => game.channel === undefined)).toHaveLength(65);
     const building = GAMES.filter((game) => game.channel === 'in-development').map(
       (game) => game.id,

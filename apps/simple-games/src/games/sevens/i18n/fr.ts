@@ -1,0 +1,48 @@
+import type { SevensMessages } from './en';
+// AI authored; no native-speaker review.
+export const fr: SevensMessages = {
+  sevensPlayed: 'Parties commencées',
+  sevensFinished: 'Parties terminées',
+  sevensWins: 'Victoires',
+  sevensPlace: 'Votre place',
+  sevensPlaceValue: 'Place {n}',
+  sevensYou: 'Vous',
+  sevensCpu: 'CPU {n}',
+  sevensCards: '{n} cartes',
+  sevensOpponents: 'Adversaires',
+  sevensField: 'Table de cartes',
+  sevensTable: 'Table',
+  sevensHand: 'Votre main',
+  sevensYourTurn: 'À vous de jouer',
+  sevensTurn: '{name} joue…',
+  sevensJoker: 'Joker',
+  sevensCard: '{rank} {suit}',
+  sevensEvent_deal: 'Cartes distribuées',
+  sevensEvent_play: '{name} a joué',
+  sevensEvent_pass: '{name} passe',
+  sevensEvent_clear: '{name} vide la table',
+  sevensEvent_exchange: 'Cartes échangées',
+  sevensEvent_draw: '{name} pioche une carte',
+  sevensEvent_pair: '{name} forme une paire',
+  sevensEvent_out: '{name} est éliminé',
+  sevensName: 'Le Sept',
+  sevensIntro: 'Étendez les quatre couleurs à partir des 7.',
+  sevensRules: 'Sans Joker ni liaison A–K · Trois passes, élimination au quatrième.',
+  sevensWon: 'Première place !',
+  sevensLost: 'Manche terminée',
+  sevensPlaceCard: 'Jouer {card}',
+  sevensPasses: 'Passes restants : {n}',
+  sevensPass: 'Passer',
+  sevensPassOutTitle: 'Passer une quatrième fois ?',
+  sevensPassOutBody:
+    'Le quatrième passe vous élimine et place toutes vos cartes restantes sur la table.',
+  sevensStep1Title: 'Commencer au sept',
+  sevensStep1Body:
+    'Les quatre 7 sont déjà placés ; prolongez chaque couleur vers A ou K, une carte par tour.',
+  sevensStep2Title: 'Trouver une ouverture',
+  sevensStep2Body:
+    'Jouez une carte encadrée de votre main ou touchez sa place marquée sur la table.',
+  sevensStep3Title: 'Gérer les passes',
+  sevensStep3Body:
+    'Vous pouvez passer trois fois ; au quatrième passe, vous êtes éliminé et posez vos cartes restantes.',
+};

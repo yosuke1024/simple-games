@@ -1,0 +1,48 @@
+import type { SevensMessages } from './en';
+// AI authored; no native-speaker review.
+export const de: SevensMessages = {
+  sevensPlayed: 'Begonnene Spiele',
+  sevensFinished: 'Beendete Spiele',
+  sevensWins: 'Siege',
+  sevensPlace: 'Dein Platz',
+  sevensPlaceValue: 'Platz {n}',
+  sevensYou: 'Du',
+  sevensCpu: 'CPU {n}',
+  sevensCards: '{n} Karten',
+  sevensOpponents: 'Gegner',
+  sevensField: 'Kartentisch',
+  sevensTable: 'Tisch',
+  sevensHand: 'Deine Hand',
+  sevensYourTurn: 'Du bist dran',
+  sevensTurn: '{name} ist dran…',
+  sevensJoker: 'Joker',
+  sevensCard: '{rank} {suit}',
+  sevensEvent_deal: 'Karten ausgeteilt',
+  sevensEvent_play: '{name} hat ausgespielt',
+  sevensEvent_pass: '{name} passt',
+  sevensEvent_clear: '{name} räumt den Tisch ab',
+  sevensEvent_exchange: 'Karten getauscht',
+  sevensEvent_draw: '{name} zieht eine Karte',
+  sevensEvent_pair: '{name} bildet ein Paar',
+  sevensEvent_out: '{name} scheidet aus',
+  sevensName: 'Siebener',
+  sevensIntro: 'Baue vier Farbreihen von den Siebenen aus.',
+  sevensRules: 'Kein Joker · Kein A–K-Übergang · Drei Pässe, beim vierten ausgeschieden.',
+  sevensWon: 'Erster Platz!',
+  sevensLost: 'Runde beendet',
+  sevensPlaceCard: '{card} spielen',
+  sevensPasses: 'Verbleibende Pässe: {n}',
+  sevensPass: 'Passen',
+  sevensPassOutTitle: 'Ein viertes Mal passen?',
+  sevensPassOutBody:
+    'Beim vierten Pass scheidest du aus und alle übrigen Karten werden aufgedeckt auf den Tisch gelegt.',
+  sevensStep1Title: 'Bei sieben beginnen',
+  sevensStep1Body:
+    'Die vier Siebenen liegen bereit; erweitere jede Farbe Zug für Zug in Richtung A oder K.',
+  sevensStep2Title: 'Eine Lücke finden',
+  sevensStep2Body:
+    'Spiele eine markierte Handkarte oder tippe auf ihr markiertes Feld auf dem Tisch.',
+  sevensStep3Title: 'Pässe gut nutzen',
+  sevensStep3Body:
+    'Du darfst dreimal passen; beim vierten Mal scheidest du aus und legst deine restlichen Karten offen aus.',
+};

@@ -3654,3 +3654,57 @@ button:disabled {
   --accent-ring: rgba(92, 209, 92, 0.38);
   --accent-ring-soft: rgba(92, 209, 92, 0.12);
 }
+
+:root[data-game='daifugo'],
+.accent-daifugo {
+  --accent: #2525d0;
+  --accent-ink: #ffffff;
+  --accent-soft: #d4d0e4;
+  --accent-ring: rgba(37, 37, 208, 0.38);
+  --accent-ring-soft: rgba(37, 37, 208, 0.12);
+}
+
+:root[data-theme='dark'][data-game='daifugo'],
+[data-theme='dark'] .accent-daifugo {
+  --accent: #dcb038;
+  --accent-ink: #14171c;
+  --accent-soft: #3b3729;
+  --accent-ring: rgba(220, 176, 56, 0.38);
+  --accent-ring-soft: rgba(220, 176, 56, 0.12);
+}
+
+:root[data-game='sevens'],
+.accent-sevens {
+  --accent: #a225d0;
+  --accent-ink: #ffffff;
+  --accent-soft: #e8d0e4;
+  --accent-ring: rgba(162, 37, 208, 0.38);
+  --accent-ring-soft: rgba(162, 37, 208, 0.12);
+}
+
+:root[data-theme='dark'][data-game='sevens'],
+[data-theme='dark'] .accent-sevens {
+  --accent: #d1dc38;
+  --accent-ink: #14171c;
+  --accent-soft: #393e29;
+  --accent-ring: rgba(209, 220, 56, 0.38);
+  --accent-ring-soft: rgba(209, 220, 56, 0.12);
+}
+
+:root[data-game='old-maid'],
+.accent-old-maid {
+  --accent: #a94c1e;
+  --accent-ink: #ffffff;
+  --accent-soft: #e9d7c8;
+  --accent-ring: rgba(169, 76, 30, 0.38);
+  --accent-ring-soft: rgba(169, 76, 30, 0.12);
+}
+
+:root[data-theme='dark'][data-game='old-maid'],
+[data-theme='dark'] .accent-old-maid {
+  --accent: #38dc38;
+  --accent-ink: #14171c;
+  --accent-soft: #203e29;
+  --accent-ring: rgba(56, 220, 56, 0.38);
+  --accent-ring-soft: rgba(56, 220, 56, 0.12);
+}

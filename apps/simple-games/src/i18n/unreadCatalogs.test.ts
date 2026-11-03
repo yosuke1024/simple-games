@@ -57,6 +57,9 @@ const UNREAD_JA_GAME_IDS = [
   'chain-territory',
   'marble-weave',
   'river-cargo',
+  'daifugo',
+  'sevens',
+  'old-maid',
 ] as const;
 
 const gameModules = import.meta.glob<{ catalogs: Record<Locale, Record<string, string>> }>(
