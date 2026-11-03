@@ -60,6 +60,7 @@ function Face({ value, spent, spin }: { value: number | null; spent: boolean; sp
           <circle key={index} cx={cx} cy={cy} r="9" className="bk-die-pip" />
         ))
       )}
+      {spent ? <path d="M22 78 78 22" className="bk-die-used-mark" /> : null}
     </svg>
   );
 }
@@ -79,8 +80,15 @@ export interface DiceProps {
 
 export function Dice({ roll, remaining, canRoll, opening, rollKey, onRoll }: DiceProps) {
   const { t } = useSettings();
-  const faces: (number | null)[] = roll ? [roll[0], roll[1]] : [null, null];
-  // Doubles show two dice and play four; the pair dims once both are spent.
+  // Four playable faces make doubles' four steps visible, including after undo.
+  // Before a fresh throw, show unrolled faces rather than the previous side's dice.
+  const doubles = !canRoll && roll !== null && roll[0] === roll[1];
+  const faces: (number | null)[] =
+    canRoll || !roll
+      ? [null, null]
+      : doubles
+        ? [roll[0], roll[0], roll[0], roll[0]]
+        : [roll[0], roll[1]];
   const left = [...remaining];
   const spent = faces.map((face) => {
     if (face === null) return false;
@@ -90,7 +98,7 @@ export function Dice({ roll, remaining, canRoll, opening, rollKey, onRoll }: Dic
     return false;
   });
   const label = roll
-    ? t('backgammonDiceLabel', { a: roll[0], b: roll[1] })
+    ? `${t('backgammonDiceLabel', { a: roll[0], b: roll[1] })} · ${t('backgammonDiceLeft', { count: remaining.length })}`
     : t('backgammonDiceUnrolled');
 
   if (canRoll) {
@@ -113,10 +121,11 @@ export function Dice({ roll, remaining, canRoll, opening, rollKey, onRoll }: Dic
   }
 
   return (
-    <div className="bk-dice" role="img" aria-label={label}>
+    <div className={`bk-dice ${doubles ? 'bk-dice-double' : ''}`} role="img" aria-label={label}>
       <span className="bk-dice-pair" key={rollKey}>
-        <Face value={faces[0]!} spent={spent[0]!} spin={roll !== null} />
-        <Face value={faces[1]!} spent={spent[1]!} spin={roll !== null} />
+        {faces.map((face, index) => (
+          <Face key={index} value={face} spent={spent[index]!} spin={roll !== null} />
+        ))}
       </span>
     </div>
   );

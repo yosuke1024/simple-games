@@ -37,7 +37,7 @@ export function BackgammonHomeScreen() {
   };
 
   return (
-    <div className="screen home-screen illustrated-game-home">
+    <div className="screen home-screen illustrated-game-home bk-home">
       <GameHomeHeader gameId="backgammon" onBack={exitToCollection} />
 
       <div className="home-hero">

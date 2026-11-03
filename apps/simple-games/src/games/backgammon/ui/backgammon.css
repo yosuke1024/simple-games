@@ -81,11 +81,14 @@
 .bk-half {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr)) 22px repeat(6, minmax(0, 1fr)) 26px;
-  height: 132px;
+  height: clamp(120px, calc(40vw - 10px), 154px);
 }
-@media (max-height: 620px) {
+@media (max-height: 700px) {
   .bk-half {
-    height: 110px;
+    height: min(128px, max(120px, calc(40vw - 10px)));
+  }
+  .bk-checker {
+    max-width: 20px;
   }
 }
 .bk-point {
@@ -117,6 +120,33 @@
 .bk-point-shape {
   position: absolute;
   inset: 0 1px;
+  pointer-events: none;
+}
+.bk-point-number {
+  position: absolute;
+  z-index: 1;
+  font-size: 10px;
+  line-height: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  pointer-events: none;
+}
+.bk-point-top .bk-point-number {
+  bottom: 0;
+}
+.bk-point-bottom .bk-point-number {
+  top: 0;
+}
+.bk-route {
+  display: block;
+  flex: 0 0 24px;
+  width: 100%;
+  height: 24px;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   pointer-events: none;
 }
 .bk-point-top .bk-point-shape {
@@ -174,33 +204,52 @@
 /* What may be picked up, what is held, where it may go (§7, §11). */
 .bk-point-pickable .bk-stack .bk-checker:last-child,
 .bk-bar.bk-point-pickable .bk-stack-bottom .bk-checker:last-child {
-  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent-ring);
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--accent-ring);
 }
 .bk-point-selected .bk-stack .bk-checker:last-child,
 .bk-bar-selected .bk-stack-bottom .bk-checker:last-child {
-  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--accent);
 }
 .bk-target-mark {
   position: absolute;
   left: 50%;
-  width: 62%;
-  max-width: 22px;
+  display: grid;
+  place-items: center;
+  width: 90%;
+  max-width: 26px;
+  box-sizing: border-box;
   aspect-ratio: 1;
   border-radius: 50%;
-  border: 2px dashed var(--accent);
+  border: 2px solid var(--accent);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 0 0 2px var(--surface);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
   transform: translateX(-50%);
   pointer-events: none;
   z-index: 2;
 }
 .bk-point-top .bk-target-mark {
-  bottom: 10px;
+  bottom: 22px;
 }
 .bk-point-bottom .bk-target-mark,
 .bk-tray .bk-target-mark {
-  top: 10px;
+  top: 22px;
 }
 .bk-point-target .bk-point-shape {
-  filter: brightness(1.08);
+  outline: 2px solid var(--accent);
+  filter: brightness(1.2);
+}
+.bk-point-target {
+  background: var(--accent-ring-soft);
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 2px var(--accent);
 }
 
 /* The bar: the CPU's hit checkers at the top, the player's at the bottom (§2.2). */
@@ -244,6 +293,17 @@
 }
 .bk-tray-you {
   justify-content: flex-end;
+}
+.bk-home-mark {
+  position: absolute;
+  top: 2px;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .bk-off-checker {
   width: 18px;
@@ -296,6 +356,13 @@
   display: inline-flex;
   gap: 8px;
 }
+.bk-dice-double .bk-dice-pair {
+  gap: 4px;
+}
+.bk-dice-double .bk-die {
+  width: 28px;
+  height: 28px;
+}
 .bk-dice-caption {
   font-size: 12px;
   font-weight: 600;
@@ -318,8 +385,15 @@
   font-size: 56px;
   font-weight: 700;
 }
-.bk-die-spent {
+.bk-die-spent .bk-die-body,
+.bk-die-spent .bk-die-pip {
   opacity: 0.35;
+}
+.bk-die-used-mark {
+  fill: none;
+  stroke: var(--ink-soft);
+  stroke-width: 5;
+  stroke-linecap: round;
 }
 @keyframes bk-die-spin {
   from {
@@ -358,6 +432,20 @@
 }
 
 /* ---------- home, result and the tutorial figures ---------- */
+.bk-home .home-title {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+@media (max-width: 380px) {
+  .bk-home .home-hero {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: 12px;
+  }
+  .bk-home .home-title {
+    text-align: center;
+  }
+}
 .bk-choose-label {
   margin: 0 0 8px;
   text-align: center;
