@@ -1,0 +1,35 @@
+// AI translation; not reviewed by a native speaker.
+import type { MarbleWeaveMessages } from './en';
+export const ko: MarbleWeaveMessages = {
+  marbleWeaveName: 'Marble Weave',
+  marbleWeaveBest: '최고 점수',
+  marbleWeaveFinished: '끝낸 게임',
+  marbleWeaveLost: '이번 결과',
+  marbleWeaveField: '구슬 판',
+  marbleWeaveEmpty: '빈칸',
+  marbleWeaveCell: '{row}행 {col}열: {color}',
+  marbleWeaveNext: '다음',
+  marbleWeaveTarget: '{n}개 한 줄',
+  marbleWeaveSelect: '움직일 구슬을 고르세요.',
+  marbleWeaveDestination: '점이 있는 칸을 고르세요. 다른 구슬을 통과할 수 없습니다.',
+  marbleWeaveBlocked: '빈 길이 없습니다. 다른 칸이나 구슬을 고르세요.',
+  marbleWeaveMoving: '빈 길을 따라 이동 중…',
+  marbleWeaveColor1: '빨간 원',
+  marbleWeaveColor2: '파란 마름모',
+  marbleWeaveColor3: '초록 십자',
+  marbleWeaveColor4: '금색 삼각형',
+  marbleWeaveColor5: '보라 별',
+  marbleWeaveColor6: '청록 사각형',
+  marbleWeaveColor7: '분홍 꽃',
+  marbleWeaveStep1Title: '빈 길 찾기',
+  marbleWeaveStep1Body: '구슬을 고른 뒤 점이 있는 칸을 고르세요. 빈칸을 상하좌우로만 지나갑니다.',
+  marbleWeaveStep2Title: '같은 색 한 줄',
+  marbleWeaveStep2Body:
+    '쉬움은 4개, 보통과 어려움은 5개를 같은 색으로 정렬하세요. 가로, 세로, 대각선 모두 가능합니다.',
+  marbleWeaveStep3Title: '움직일 공간 남기기',
+  marbleWeaveStep3Body:
+    '줄을 완성하지 못하면 예고된 구슬 3개가 생깁니다. 되돌리기는 새 구슬까지 한 수 전체를 되돌립니다.',
+  marbleWeaveMode_easy: '쉬움',
+  marbleWeaveMode_normal: '보통',
+  marbleWeaveMode_hard: '어려움',
+};

@@ -1,0 +1,40 @@
+// AI translation; not reviewed by a native speaker.
+import type { RiverCargoMessages } from './en';
+export const tr: RiverCargoMessages = {
+  riverCargoName: 'River Cargo',
+  riverCargoBest: 'En az geçiş',
+  riverCargoWon: 'Hepsi karşıda!',
+  riverCargoPar: 'En kısa',
+  riverCargoSeats: 'Yük kapasitesi: {n}',
+  riverCargoField: 'İki kıyı ve bir tekne',
+  riverCargoLeft: 'Sol kıyı',
+  riverCargoRight: 'Sağ kıyı',
+  riverCargoBoat: 'Tekne ve kayıkçı',
+  riverCargoFull: 'Tekne {n} yük alır. Önce birini indirin.',
+  riverCargoUnsafe: '{a} ve {b}, kayıkçı olmadan bırakılamaz.',
+  riverCargoLimit: 'Bir geçişi geri alın veya yeniden deneyin.',
+  riverCargoKeepApart: 'Bu çiftleri kayıkçı olmadan bir arada bırakmayın.',
+  riverCargoSelect: 'Yükü seçip geçin. Boş tekneyle dönebilirsiniz.',
+  riverCargoCross: 'Karşıya geç',
+  riverCargoHintEmpty: 'Yük almadan geri dönün.',
+  riverCargoHintLoad: 'Çerçevelenen yükleri alın.',
+  riverCargo_wolf: 'Kurt',
+  riverCargo_goat: 'Keçi',
+  riverCargo_cabbage: 'Lahana',
+  riverCargo_fox: 'Tilki',
+  riverCargo_hen: 'Tavuk',
+  riverCargo_grain: 'Tahıl',
+  riverCargo_crate: 'Sandık',
+  riverCargoStep1Title: 'Tekneyi yükleyin',
+  riverCargoStep1Body:
+    'Teknenin bulunduğu kıyıdan yük seçip geçin. Kayıkçı her zaman tekneyle gider.',
+  riverCargoStep2Title: 'İki kıyıyı da izleyin',
+  riverCargoStep2Body:
+    'Gösterilen çiftler kayıkçısız bir arada kalamaz. Güvensiz geçişler durdurulur ve nedeni açıklanır.',
+  riverCargoStep3Title: 'Hepsini karşıya taşıyın',
+  riverCargoStep3Body:
+    'Tüm yükleri sağ kıyıya taşıyın. Gerekirse boş dönün. Geri al ve İpucu yardımcı olabilir.',
+  riverCargoMode_easy: 'Kolay',
+  riverCargoMode_normal: 'Normal',
+  riverCargoMode_hard: 'Zor',
+};

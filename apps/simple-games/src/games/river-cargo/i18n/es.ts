@@ -1,0 +1,40 @@
+// AI translation; not reviewed by a native speaker.
+import type { RiverCargoMessages } from './en';
+export const es: RiverCargoMessages = {
+  riverCargoName: 'River Cargo',
+  riverCargoBest: 'Menos cruces',
+  riverCargoWon: '¡Todos al otro lado!',
+  riverCargoPar: 'Mínimo',
+  riverCargoSeats: 'Espacios de carga: {n}',
+  riverCargoField: 'Dos orillas y una barca',
+  riverCargoLeft: 'Orilla izquierda',
+  riverCargoRight: 'Orilla derecha',
+  riverCargoBoat: 'Barca y barquero',
+  riverCargoFull: 'Caben {n} elementos. Descarga uno primero.',
+  riverCargoUnsafe: 'No puedes dejar a {a} y {b} sin el barquero.',
+  riverCargoLimit: 'Deshaz un cruce o vuelve a intentarlo.',
+  riverCargoKeepApart: 'Estas parejas no pueden quedarse sin el barquero.',
+  riverCargoSelect: 'Elige la carga y cruza. Puedes regresar sin carga.',
+  riverCargoCross: 'Cruzar',
+  riverCargoHintEmpty: 'Regresa sin carga.',
+  riverCargoHintLoad: 'Lleva la carga marcada.',
+  riverCargo_wolf: 'Lobo',
+  riverCargo_goat: 'Cabra',
+  riverCargo_cabbage: 'Col',
+  riverCargo_fox: 'Zorro',
+  riverCargo_hen: 'Gallina',
+  riverCargo_grain: 'Grano',
+  riverCargo_crate: 'Caja',
+  riverCargoStep1Title: 'Carga la barca',
+  riverCargoStep1Body:
+    'Elige carga en la orilla de la barca y cruza. El barquero siempre viaja con ella.',
+  riverCargoStep2Title: 'Vigila ambas orillas',
+  riverCargoStep2Body:
+    'Las parejas mostradas no pueden quedarse juntas sin el barquero. Los cruces peligrosos se impiden y se explica por qué.',
+  riverCargoStep3Title: 'Lleva todo al otro lado',
+  riverCargoStep3Body:
+    'Lleva todo a la orilla derecha. Regresa sin carga cuando haga falta. Deshacer y Pista pueden ayudarte.',
+  riverCargoMode_easy: 'Fácil',
+  riverCargoMode_normal: 'Normal',
+  riverCargoMode_hard: 'Difícil',
+};

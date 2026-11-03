@@ -43,13 +43,18 @@ Design philosophy:
 
 - 1つの `Simple Games: Offline Games` として提供する。
 - 現在の正式収録は **65 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ。
-  本数はここで数える)。`GAMES` は全70エントリで、Web先行公開4本と実装中1本を含む。
-  Web先行公開は Backgammon(No. 67)、Ridge Cannons(No. 68)、Fleet Search(No. 69)、Frost Route(No. 70)。
+  本数はここで数える)。`GAMES` は全73エントリで、Web先行公開7本と実装中1本を含む。
+  Web先行公開は Backgammon(No. 67)、Ridge Cannons(No. 68)、Fleet Search(No. 69)、Frost Route(No. 70)、
+  Chain Territory(No. 71)、Marble Weave(No. 72)、River Cargo(No. 73)。
   実装中は Falling Blocks(2026-10-29にWeb先行公開から取り下げ)。
   Backgammonの仕様は `docs/BACKGAMMON_RULES.md`。新作3本は製品オーナーの
   「3つくらいゲーム追加、UIを他のゲームに揃え、Web公開まで」という依頼と候補選択に基づく。
   Cannon Duel / Hidden Fleet / Ice Trailという仮題から、同名作との衝突を避ける公開名へ変更した。
   仕様の正は各 `docs/*_RULES.md`、検証・配信記録は `docs/plans/2026-11-03-three-games-68-70.md`。
+- 2026-11-03、オーナーの「あと3つ、UXを揃えてWeb公開まで」と3ジャンルの承認により、
+  Chain Territory(連鎖陣取りCPU対戦)、Marble Weave(同色の玉を並べる)、River Cargo(川渡り)を追加。
+  3難易度、14言語、途中再開、取り消し、共通の説明・結果・統計を備える。
+  検証・公開記録は `docs/plans/2026-11-03-three-games-71-73.md`。
 - 2026-10-29、オーナーの「ベータを外して、次バージョンでリリース(1.7.0)」という明示判断で、Web 先行公開
   だった 20 本(No. 42〜66 のうち、2026-10-25 の 4 本と Falling Blocks を除く全タイトル)を正式収録へ変更した。
   2 週間の安定稼働と滞在時間の確認は満たしておらず、各ルール文書が収録前に求めていた題の商標・ストアの検索など

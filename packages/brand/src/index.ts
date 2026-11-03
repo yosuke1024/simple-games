@@ -1363,6 +1363,32 @@ export const titleAccents = {
     onDark: '#14171c',
     softDark: '#1e3333',
   },
+
+  // No. 71-73: individually measured; see docs/BRAND.md.
+  chainTerritory: {
+    light: '#6a6325',
+    onLight: '#ffffff',
+    softLight: '#ddd9ca',
+    dark: '#cdc9ad',
+    onDark: '#14171c',
+    softDark: '#323333',
+  },
+  marbleWeave: {
+    light: '#5b31af',
+    onLight: '#ffffff',
+    softLight: '#dbd1e0',
+    dark: '#d15c9e',
+    onDark: '#14171c',
+    softDark: '#322231',
+  },
+  riverCargo: {
+    light: '#5c6460',
+    onLight: '#ffffff',
+    softLight: '#dbdad3',
+    dark: '#5cd15c',
+    onDark: '#14171c',
+    softDark: '#203526',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

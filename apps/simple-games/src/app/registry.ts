@@ -95,6 +95,9 @@ import { BK_STORAGE_KEYS } from '../games/backgammon/storage/keys';
 import { RC_STORAGE_KEYS } from '../games/ridge-cannons/storage/keys';
 import { FS_STORAGE_KEYS } from '../games/fleet-search/storage/keys';
 import { FR_STORAGE_KEYS } from '../games/frost-route/storage/keys';
+import { CT_STORAGE_KEYS } from '../games/chain-territory/storage/keys';
+import { MW_STORAGE_KEYS } from '../games/marble-weave/storage/keys';
+import { RG_STORAGE_KEYS } from '../games/river-cargo/storage/keys';
 import { SUDOKU_CHALLENGE } from '../games/sudoku/challenge/contract';
 import { MINESWEEPER_CHALLENGE } from '../games/minesweeper/challenge/contract';
 import { WATER_SORT_CHALLENGE } from '../games/water-sort/challenge/contract';
@@ -201,7 +204,10 @@ export type GameId =
   | 'backgammon'
   | 'ridge-cannons'
   | 'fleet-search'
-  | 'frost-route';
+  | 'frost-route'
+  | 'chain-territory'
+  | 'marble-weave'
+  | 'river-cargo';
 
 /**
  * The genre shelves the collection home is divided into. An id is styling- and
@@ -1638,5 +1644,42 @@ export const GAMES: readonly GameDefinition[] = [
     loadRoot: () =>
       import('../games/frost-route/ui/FrostRouteRoot').then((m) => ({ default: m.FrostRouteRoot })),
     loadStorageSchemas: () => import('../games/frost-route/storage/schemas'),
+  },
+  {
+    id: 'chain-territory',
+    title: 'Chain Territory',
+    category: 'board',
+    glyph: '✣',
+    channel: 'web-beta',
+    storageKeys: Object.values(CT_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/chain-territory/ui/ChainTerritoryRoot').then((m) => ({
+        default: m.ChainTerritoryRoot,
+      })),
+    loadStorageSchemas: () => import('../games/chain-territory/storage/schemas'),
+  },
+  {
+    id: 'marble-weave',
+    title: 'Marble Weave',
+    category: 'puzzle',
+    glyph: '●',
+    channel: 'web-beta',
+    storageKeys: Object.values(MW_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/marble-weave/ui/MarbleWeaveRoot').then((m) => ({
+        default: m.MarbleWeaveRoot,
+      })),
+    loadStorageSchemas: () => import('../games/marble-weave/storage/schemas'),
+  },
+  {
+    id: 'river-cargo',
+    title: 'River Cargo',
+    category: 'logic',
+    glyph: '≈',
+    channel: 'web-beta',
+    storageKeys: Object.values(RG_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/river-cargo/ui/RiverCargoRoot').then((m) => ({ default: m.RiverCargoRoot })),
+    loadStorageSchemas: () => import('../games/river-cargo/storage/schemas'),
   },
 ];

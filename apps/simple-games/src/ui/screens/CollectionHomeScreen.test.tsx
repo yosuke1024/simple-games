@@ -250,6 +250,9 @@ describe('web-beta titles', () => {
       'ridge-cannons',
       'fleet-search',
       'frost-route',
+      'chain-territory',
+      'marble-weave',
+      'river-cargo',
       'synthetic-beta',
     ]);
     expect(released.length).toBeGreaterThan(20);

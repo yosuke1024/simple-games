@@ -1,0 +1,40 @@
+// English source.
+export const en = {
+  riverCargoName: 'River Cargo',
+  riverCargoMode_easy: 'Easy',
+  riverCargoMode_normal: 'Normal',
+  riverCargoMode_hard: 'Hard',
+  riverCargoBest: 'Fewest crossings',
+  riverCargoWon: 'Everyone across!',
+  riverCargoPar: 'Shortest',
+  riverCargoSeats: 'Cargo seats: {n}',
+  riverCargoField: 'Two riverbanks and a ferry',
+  riverCargoLeft: 'Left bank',
+  riverCargoRight: 'Right bank',
+  riverCargoBoat: 'Ferry and boatman',
+  riverCargoFull: 'The boat holds {n} cargo items. Unload one first.',
+  riverCargoUnsafe: 'Cannot leave {a} and {b} without the boatman.',
+  riverCargoLimit: 'Undo a crossing or retry this puzzle.',
+  riverCargoKeepApart: 'Keep these pairs apart without the boatman.',
+  riverCargoSelect: 'Choose cargo, then cross. The boat can return empty.',
+  riverCargoCross: 'Cross river',
+  riverCargoHintEmpty: 'Return with the boat empty.',
+  riverCargoHintLoad: 'Take the outlined cargo on the next crossing.',
+  riverCargo_wolf: 'Wolf',
+  riverCargo_goat: 'Goat',
+  riverCargo_cabbage: 'Cabbage',
+  riverCargo_fox: 'Fox',
+  riverCargo_hen: 'Hen',
+  riverCargo_grain: 'Grain',
+  riverCargo_crate: 'Crate',
+  riverCargoStep1Title: 'Load the ferry',
+  riverCargoStep1Body:
+    "Choose cargo on the boat's bank, then cross. The boatman always travels with the boat.",
+  riverCargoStep2Title: 'Watch both banks',
+  riverCargoStep2Body:
+    'The pictured pairs cannot stay together without the boatman. Unsafe crossings stay put and explain why.',
+  riverCargoStep3Title: 'Bring everyone across',
+  riverCargoStep3Body:
+    'Move every item to the right bank. Return empty when needed; Undo and Hint can help.',
+} as const;
+export type RiverCargoMessages = Record<keyof typeof en, string>;

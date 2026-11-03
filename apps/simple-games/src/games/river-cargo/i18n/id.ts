@@ -1,0 +1,40 @@
+// AI translation; not reviewed by a native speaker.
+import type { RiverCargoMessages } from './en';
+export const id: RiverCargoMessages = {
+  riverCargoName: 'River Cargo',
+  riverCargoBest: 'Penyeberangan tersedikit',
+  riverCargoWon: 'Semua sudah menyeberang!',
+  riverCargoPar: 'Terpendek',
+  riverCargoSeats: 'Tempat muatan: {n}',
+  riverCargoField: 'Dua tepi sungai dan perahu',
+  riverCargoLeft: 'Tepi kiri',
+  riverCargoRight: 'Tepi kanan',
+  riverCargoBoat: 'Perahu dan pendayung',
+  riverCargoFull: 'Perahu memuat {n} benda. Turunkan satu dulu.',
+  riverCargoUnsafe: '{a} dan {b} tidak boleh ditinggal tanpa pendayung.',
+  riverCargoLimit: 'Urungkan penyeberangan atau coba lagi.',
+  riverCargoKeepApart: 'Pasangan ini tidak boleh bersama tanpa pendayung.',
+  riverCargoSelect: 'Pilih muatan, lalu menyeberang. Boleh kembali tanpa muatan.',
+  riverCargoCross: 'Menyeberang',
+  riverCargoHintEmpty: 'Kembali tanpa muatan.',
+  riverCargoHintLoad: 'Bawa muatan yang diberi bingkai.',
+  riverCargo_wolf: 'Serigala',
+  riverCargo_goat: 'Kambing',
+  riverCargo_cabbage: 'Kubis',
+  riverCargo_fox: 'Rubah',
+  riverCargo_hen: 'Ayam',
+  riverCargo_grain: 'Biji-bijian',
+  riverCargo_crate: 'Peti',
+  riverCargoStep1Title: 'Muat perahu',
+  riverCargoStep1Body:
+    'Pilih muatan di tepi tempat perahu berada, lalu menyeberang. Pendayung selalu ikut perahu.',
+  riverCargoStep2Title: 'Awasi kedua tepi',
+  riverCargoStep2Body:
+    'Pasangan pada gambar tidak boleh bersama tanpa pendayung. Penyeberangan berbahaya ditolak beserta alasannya.',
+  riverCargoStep3Title: 'Bawa semuanya menyeberang',
+  riverCargoStep3Body:
+    'Pindahkan semua muatan ke tepi kanan. Kembali tanpa muatan bila perlu. Urungkan dan Petunjuk dapat membantu.',
+  riverCargoMode_easy: 'Mudah',
+  riverCargoMode_normal: 'Normal',
+  riverCargoMode_hard: 'Sulit',
+};

@@ -50,7 +50,7 @@ Webでは無効なアプリ専用案内として表示する。
 | 広告       | ディスプレイ広告ほか([ADS_POLICY.md](ADS_POLICY.md)「Web 版」。既定は無効)                                                                                                                                                                                          | Anchored Adaptive Banner 1 枠のみ                                                                                                                  |
 | 課金       | なし(完全無料)                                                                                                                                                                                                                                                      | $3.99 買い切りで広告永久削除                                                                                                                       |
 | 計測       | サイト共通のページ解析(下の「計測」節。実装済み・既定は無効)                                                                                                                                                                                                        | なし — Analytics を入れないことがアプリの約束([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))                                                      |
-| ゲーム内容 | 正式収録の65本と先行公開4本(Backgammon / Ridge Cannons / Fleet Search / Frost Route)。registryにはほかに実装中1本 — 取り下げたFalling Blocks。実際の配信版・開始日は下の「先行公開」節とリンク先の公開記録を参照。ソロ / CPU 戦は共通、近隣対戦はアプリ専用表示のみ | 正式収録の65本（registryで`channel`を持たないエントリ）。新作は先行公開で検証後に収録（2026-10-02に11本、2026-10-25に4本、2026-10-29に20本を収録） |
+| ゲーム内容 | 正式収録の65本と先行公開7本(Backgammon / Ridge Cannons / Fleet Search / Frost Route / Chain Territory / Marble Weave / River Cargo)。registryにはほかに実装中1本 — 取り下げたFalling Blocks。実際の配信版・開始日は下の「先行公開」節とリンク先の公開記録を参照。ソロ / CPU 戦は共通、近隣対戦はアプリ専用表示のみ | 正式収録の65本（registryで`channel`を持たないエントリ）。新作は先行公開で検証後に収録（2026-10-02に11本、2026-10-25に4本、2026-10-29に20本を収録） |
 
 **Play instantly on the web. Play quietly and offline in the app.**
 
@@ -333,6 +333,11 @@ ADS_POLICY.md 側の項目 3 にも 実施済み の印は付いていない。*
 「native 成果物に不在」へ書き換え済みである。**
 
 ## 先行公開(ベータ)
+
+**2026-11-03 — 追加の3本(No. 71〜73)を先行公開の対象に追加。** Chain Territory(連鎖陣取りCPU対戦)、
+Marble Weave(同色の玉を並べる)、River Cargo(川渡り)。オーナーが3候補を承認し、Web公開まで依頼。
+正式65本、Webベータ7本、実装中1本の計73本。
+検証・配信記録は [実装記録](plans/2026-11-03-three-games-71-73.md)。
 
 **2026-11-03 — 新作3本(No. 68〜70)を先行公開の対象に追加。** Ridge Cannons(砲撃CPU対戦)、
 Fleet Search(艦隊探索CPU対戦)、Frost Route(氷床の経路パズル)。製品オーナーが3ジャンルを選択し、

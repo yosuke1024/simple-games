@@ -1,0 +1,40 @@
+// AI translation; not reviewed by a native speaker.
+import type { RiverCargoMessages } from './en';
+export const fr: RiverCargoMessages = {
+  riverCargoName: 'River Cargo',
+  riverCargoBest: 'Moins de traversées',
+  riverCargoWon: 'Tout le monde est passé !',
+  riverCargoPar: 'Minimum',
+  riverCargoSeats: 'Places de chargement : {n}',
+  riverCargoField: 'Deux rives et un bac',
+  riverCargoLeft: 'Rive gauche',
+  riverCargoRight: 'Rive droite',
+  riverCargoBoat: 'Bac et passeur',
+  riverCargoFull: 'Le bac peut transporter {n} éléments. Déchargez-en un.',
+  riverCargoUnsafe: 'Impossible de laisser {a} et {b} sans le passeur.',
+  riverCargoLimit: 'Annulez une traversée ou recommencez.',
+  riverCargoKeepApart: 'Ces paires ne peuvent rester sans le passeur.',
+  riverCargoSelect: 'Choisissez le chargement, puis traversez. Le retour à vide est permis.',
+  riverCargoCross: 'Traverser',
+  riverCargoHintEmpty: 'Revenez sans chargement.',
+  riverCargoHintLoad: 'Emportez les éléments encadrés.',
+  riverCargo_wolf: 'Loup',
+  riverCargo_goat: 'Chèvre',
+  riverCargo_cabbage: 'Chou',
+  riverCargo_fox: 'Renard',
+  riverCargo_hen: 'Poule',
+  riverCargo_grain: 'Grain',
+  riverCargo_crate: 'Caisse',
+  riverCargoStep1Title: 'Charger le bac',
+  riverCargoStep1Body:
+    'Choisissez des éléments sur la rive du bac, puis traversez. Le passeur accompagne toujours le bac.',
+  riverCargoStep2Title: 'Surveiller les deux rives',
+  riverCargoStep2Body:
+    'Les paires illustrées ne peuvent rester ensemble sans le passeur. Les traversées dangereuses sont refusées avec une explication.',
+  riverCargoStep3Title: 'Tout faire traverser',
+  riverCargoStep3Body:
+    'Amenez tout sur la rive droite. Revenez à vide si nécessaire. Annuler et Indice peuvent aider.',
+  riverCargoMode_easy: 'Facile',
+  riverCargoMode_normal: 'Normal',
+  riverCargoMode_hard: 'Difficile',
+};

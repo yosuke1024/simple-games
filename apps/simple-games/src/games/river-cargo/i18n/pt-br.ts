@@ -1,0 +1,40 @@
+// AI translation; not reviewed by a native speaker.
+import type { RiverCargoMessages } from './en';
+export const ptBR: RiverCargoMessages = {
+  riverCargoName: 'River Cargo',
+  riverCargoBest: 'Menos travessias',
+  riverCargoWon: 'Todos atravessaram!',
+  riverCargoPar: 'Mínimo',
+  riverCargoSeats: 'Vagas de carga: {n}',
+  riverCargoField: 'Duas margens e uma balsa',
+  riverCargoLeft: 'Margem esquerda',
+  riverCargoRight: 'Margem direita',
+  riverCargoBoat: 'Balsa e barqueiro',
+  riverCargoFull: 'Cabem {n} itens. Retire um primeiro.',
+  riverCargoUnsafe: 'Não deixe {a} e {b} sem o barqueiro.',
+  riverCargoLimit: 'Desfaça uma travessia ou tente de novo.',
+  riverCargoKeepApart: 'Estes pares não podem ficar sem o barqueiro.',
+  riverCargoSelect: 'Escolha a carga e atravesse. É possível voltar sem carga.',
+  riverCargoCross: 'Atravessar',
+  riverCargoHintEmpty: 'Volte sem carga.',
+  riverCargoHintLoad: 'Leve os itens contornados.',
+  riverCargo_wolf: 'Lobo',
+  riverCargo_goat: 'Cabra',
+  riverCargo_cabbage: 'Repolho',
+  riverCargo_fox: 'Raposa',
+  riverCargo_hen: 'Galinha',
+  riverCargo_grain: 'Grãos',
+  riverCargo_crate: 'Caixa',
+  riverCargoStep1Title: 'Carregue a balsa',
+  riverCargoStep1Body:
+    'Escolha itens na margem da balsa e atravesse. O barqueiro sempre viaja com ela.',
+  riverCargoStep2Title: 'Cuide das duas margens',
+  riverCargoStep2Body:
+    'Os pares mostrados não podem ficar juntos sem o barqueiro. Travessias perigosas são impedidas com uma explicação.',
+  riverCargoStep3Title: 'Leve tudo para o outro lado',
+  riverCargoStep3Body:
+    'Leve todos os itens à margem direita. Volte sem carga quando necessário. Desfazer e Dica podem ajudar.',
+  riverCargoMode_easy: 'Fácil',
+  riverCargoMode_normal: 'Normal',
+  riverCargoMode_hard: 'Difícil',
+};

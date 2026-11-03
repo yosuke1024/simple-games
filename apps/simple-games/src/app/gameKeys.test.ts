@@ -233,6 +233,9 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   'ridge-cannons': ['rc.saveGame', 'rc.stats', 'rc.flags', 'rc.prefs'],
   'fleet-search': ['fs.saveGame', 'fs.stats', 'fs.flags', 'fs.prefs'],
   'frost-route': ['fr.saveGame', 'fr.stats', 'fr.flags', 'fr.prefs'],
+  'chain-territory': ['ct.saveGame', 'ct.stats', 'ct.flags', 'ct.prefs'],
+  'marble-weave': ['mw.saveGame', 'mw.stats', 'mw.flags', 'mw.prefs'],
+  'river-cargo': ['rg.saveGame', 'rg.stats', 'rg.flags', 'rg.prefs'],
 };
 
 const PREFIXES: Record<string, string> = {
@@ -306,6 +309,9 @@ const PREFIXES: Record<string, string> = {
   'ridge-cannons': 'rc.',
   'fleet-search': 'fs.',
   'frost-route': 'fr.',
+  'chain-territory': 'ct.',
+  'marble-weave': 'mw.',
+  'river-cargo': 'rg.',
 };
 
 describe('registry storage keys (released data — do not edit to make green)', () => {

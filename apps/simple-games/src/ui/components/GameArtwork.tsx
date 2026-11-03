@@ -875,6 +875,54 @@ function Motif({ id }: { id: GameId }): ReactNode {
           <circle cx="44" cy="59" r="2" fill="currentColor" />
         </Board>
       );
+    case 'chain-territory':
+      return (
+        <Board>
+          <path d="M30 36h60M30 54h60M50 17v54M70 17v54" stroke="currentColor" opacity=".2" />
+          <g fill="currentColor">
+            <circle cx="40" cy="27" r="6" />
+            <circle cx="60" cy="27" r="6" />
+            <circle cx="40" cy="45" r="6" />
+          </g>
+          <path d="m80 38 7 7-7 7-7-7Z" fill="currentColor" opacity=".45" />
+          <path d="m58 49 5 6-5 6m-2-6h-12" stroke="currentColor" strokeWidth="2" />
+        </Board>
+      );
+    case 'marble-weave':
+      return (
+        <Board>
+          <path d="M30 36h60M30 54h60M50 17v54M70 17v54" stroke="currentColor" opacity=".2" />
+          <g fill="currentColor">
+            <circle cx="40" cy="27" r="6" />
+            <circle cx="60" cy="45" r="6" />
+            <circle cx="80" cy="63" r="6" />
+          </g>
+          <circle cx="80" cy="27" r="5" fill="currentColor" opacity=".35" />
+          <path
+            d="m40 27 40 36"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeDasharray="3 3"
+            opacity=".4"
+          />
+        </Board>
+      );
+    case 'river-cargo':
+      return (
+        <g>
+          <path
+            d="M20 65q10-7 20 0t20 0 20 0 20 0M20 74q10-7 20 0t20 0 20 0 20 0"
+            stroke="currentColor"
+            strokeWidth="2"
+            opacity=".25"
+          />
+          <path d="M25 48h70L82 62H38Z" fill="currentColor" />
+          <circle cx="43" cy="30" r="7" fill="currentColor" />
+          <path d="M34 46V40q9-10 18 0v6m-3-12 23 28" stroke="currentColor" strokeWidth="4" />
+          <path d="M65 43V27h17v16Z" stroke="currentColor" strokeWidth="2" />
+          <path d="m65 27 17 16m0-16L65 43" stroke="currentColor" opacity=".4" />
+        </g>
+      );
     case 'frost-route':
       return (
         <Board>

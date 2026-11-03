@@ -1,0 +1,35 @@
+// AI translation; not reviewed by a native speaker.
+import type { MarbleWeaveMessages } from './en';
+export const hi: MarbleWeaveMessages = {
+  marbleWeaveName: 'Marble Weave',
+  marbleWeaveBest: 'सबसे अधिक अंक',
+  marbleWeaveFinished: 'समाप्त खेल',
+  marbleWeaveLost: 'आपका परिणाम',
+  marbleWeaveField: 'कंचों का बोर्ड',
+  marbleWeaveEmpty: 'खाली',
+  marbleWeaveCell: 'पंक्ति {row}, स्तंभ {col}: {color}',
+  marbleWeaveNext: 'अगले',
+  marbleWeaveTarget: '{n} की कतार',
+  marbleWeaveSelect: 'एक कंचा चुनें।',
+  marbleWeaveDestination: 'बिंदु वाला खाना चुनें। रास्ता दूसरे कंचों से नहीं गुजर सकता।',
+  marbleWeaveBlocked: 'खाली रास्ता नहीं है। दूसरा खाना या कंचा चुनें।',
+  marbleWeaveMoving: 'खाली रास्ते पर चल रहा है…',
+  marbleWeaveColor1: 'लाल वृत्त',
+  marbleWeaveColor2: 'नीला समचतुर्भुज',
+  marbleWeaveColor3: 'हरा क्रॉस',
+  marbleWeaveColor4: 'सुनहरा त्रिकोण',
+  marbleWeaveColor5: 'बैंगनी तारा',
+  marbleWeaveColor6: 'फ़िरोज़ी वर्ग',
+  marbleWeaveColor7: 'गुलाबी फूल',
+  marbleWeaveStep1Title: 'खाली रास्ता खोजें',
+  marbleWeaveStep1Body: 'कंचा चुनें, फिर बिंदु वाला खाना। वह खाली खानों में चलता है, तिरछा नहीं।',
+  marbleWeaveStep2Title: 'एक रंग की कतार बनाएं',
+  marbleWeaveStep2Body:
+    'आसान में एक रंग के 4 कंचे, सामान्य और कठिन में 5 सजाएं। आड़ी, खड़ी और तिरछी कतारें गिनी जाती हैं।',
+  marbleWeaveStep3Title: 'चलने की जगह छोड़ें',
+  marbleWeaveStep3Body:
+    'कतार न बनने पर दिखाए गए 3 कंचे जुड़ते हैं। वापस करें पूरी चाल को नए कंचों सहित लौटाता है।',
+  marbleWeaveMode_easy: 'आसान',
+  marbleWeaveMode_normal: 'सामान्य',
+  marbleWeaveMode_hard: 'कठिन',
+};
