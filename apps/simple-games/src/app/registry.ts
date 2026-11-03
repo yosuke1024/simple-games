@@ -1663,7 +1663,8 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Marble Weave',
     category: 'puzzle',
     glyph: '●',
-    channel: 'web-beta',
+    // Withdrawn by the owner on 2026-11-03; keep storage ownership for backups.
+    channel: 'in-development',
     storageKeys: Object.values(MW_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/marble-weave/ui/MarbleWeaveRoot').then((m) => ({

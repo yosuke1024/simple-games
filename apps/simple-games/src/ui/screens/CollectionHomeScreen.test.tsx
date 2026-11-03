@@ -251,7 +251,6 @@ describe('web-beta titles', () => {
       'fleet-search',
       'frost-route',
       'chain-territory',
-      'marble-weave',
       'river-cargo',
       'synthetic-beta',
     ]);
@@ -327,12 +326,16 @@ describe('in-development titles', () => {
   const building = GAMES.filter((game) => game.channel === 'in-development');
 
   it('exist in this registry (a synthetic one, and the real ones whenever there are any), so the tests below are not vacuous', () => {
-    // The real list is app/gameChannel.test.ts's golden — Falling Blocks alone
-    // since its withdrawal from the beta channel on 2026-10-29 (Nos. 47–51
+    // The real list is app/gameChannel.test.ts's golden — Falling Blocks
+    // since 2026-10-29 and Marble Weave since 2026-11-03 (Nos. 47–51
     // moved to the beta channel on 2026-10-22, Backgammon on 2026-11-03); the
     // synthetic title is appended by the mock above, and is what the tests
     // below exercise.
-    expect(building.map((game) => game.id)).toEqual(['falling-blocks', 'synthetic-in-development']);
+    expect(building.map((game) => game.id)).toEqual([
+      'falling-blocks',
+      'marble-weave',
+      'synthetic-in-development',
+    ]);
   });
 
   it.each([
