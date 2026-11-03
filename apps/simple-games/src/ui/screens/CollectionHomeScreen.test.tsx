@@ -251,7 +251,6 @@ describe('web-beta titles', () => {
       'fleet-search',
       'frost-route',
       'chain-territory',
-      'marble-weave',
       'river-cargo',
       'synthetic-beta',
     ]);

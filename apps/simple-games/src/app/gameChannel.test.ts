@@ -39,7 +39,6 @@ const WEB_BETA_IDS: string[] = [
   'fleet-search',
   'frost-route',
   'chain-territory',
-  'marble-weave',
   'river-cargo',
 ];
 
@@ -60,7 +59,8 @@ const WEB_BETA_IDS: string[] = [
  * change that makes it playable. The synthetic in-development entry below
  * keeps the guard's closed doors tested even when this list is empty.
  */
-const IN_DEVELOPMENT_IDS: string[] = ['falling-blocks'];
+// Marble Weave was withdrawn on 2026-11-03 after the owner declined inclusion.
+const IN_DEVELOPMENT_IDS: string[] = ['falling-blocks', 'marble-weave'];
 
 /** A beta title that exists only in this file: a released game's shape, a channel of its own. */
 const SYNTHETIC_BETA: GameDefinition = {
@@ -127,10 +127,10 @@ describe('the channels', () => {
   it('hold exactly the titles this file says they do', () => {
     const beta = GAMES.filter((game) => game.channel === 'web-beta').map((game) => game.id);
     expect(beta).toEqual(WEB_BETA_IDS);
-    // Seven since 2026-11-03 (Backgammon and Nos. 68-73): the twenty before them
+    // Six after Marble Weave was withdrawn on 2026-11-03: the twenty before them
     // graduated on 2026-10-29 and Falling Blocks was withdrawn to
     // 'in-development' (see above).
-    expect(beta).toHaveLength(7);
+    expect(beta).toHaveLength(6);
     expect(GAMES.filter((game) => game.channel === undefined)).toHaveLength(65);
     const building = GAMES.filter((game) => game.channel === 'in-development').map(
       (game) => game.id,

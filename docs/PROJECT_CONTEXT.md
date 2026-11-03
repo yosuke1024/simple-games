@@ -8,6 +8,8 @@ Updated: 2026-11-03
 
 2026-11-03 オーナーの公開後フィードバック対応: Chain Territoryは盤面の青/コーラル配色、Marble Weaveは手数以内の全消し12問、River Cargoは定員・重さ・同乗条件の異なる12問へ更新。旧保存と記録の扱いは各RULESを参照。
 
+2026-11-03、オーナーがカラーライン(Marble Weave)の導入見送り・削除を指示。先行公開から取り下げ、一覧・検索・お気に入り・再開・直接URLから開けなくする。既存の取り下げと同じ `in-development` チャンネルで非公開化し、保存の所有情報はバックアップとローカルデータ削除のため保持する。再公開予定は設けない。
+
 ## 1. Authority — 何を正とするか
 
 情報が食い違う場合は、次の順で扱う。
@@ -45,10 +47,10 @@ Design philosophy:
 
 - 1つの `Simple Games: Offline Games` として提供する。
 - 現在の正式収録は **65 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ。
-  本数はここで数える)。`GAMES` は全73エントリで、Web先行公開7本と実装中1本を含む。
+  本数はここで数える)。`GAMES` は全73エントリで、Web先行公開6本と収録見送り2本を含む。
   Web先行公開は Backgammon(No. 67)、Ridge Cannons(No. 68)、Fleet Search(No. 69)、Frost Route(No. 70)、
-  Chain Territory(No. 71)、Marble Weave(No. 72)、River Cargo(No. 73)。
-  実装中は Falling Blocks(2026-10-29にWeb先行公開から取り下げ)。
+  Chain Territory(No. 71)、River Cargo(No. 73)。
+  収録見送りは Falling Blocks(2026-10-29に取り下げ)とMarble Weave(No. 72、2026-11-03に取り下げ)。
   Backgammonの仕様は `docs/BACKGAMMON_RULES.md`。新作3本は製品オーナーの
   「3つくらいゲーム追加、UIを他のゲームに揃え、Web公開まで」という依頼と候補選択に基づく。
   Cannon Duel / Hidden Fleet / Ice Trailという仮題から、同名作との衝突を避ける公開名へ変更した。
