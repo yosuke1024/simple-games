@@ -123,7 +123,8 @@ export function chooseCpuMove(s: Session): Action | null {
   const legal = legalMoves(s);
   if (s.turn !== 2 || !legal.length) return null;
   let hash = (s.seed ^ Math.imul(s.actions.length + 1, 0x9e3779b1)) >>> 0;
-  hash ^= hash >>> 16;
+  // XOR returns a signed int; keep the array index in the unsigned range.
+  hash = (hash ^ (hash >>> 16)) >>> 0;
   if (s.mode === 'easy') return legal[hash % legal.length]!;
   const ranked = legal.map((cell) => {
     const next = act(s, cell, false)!;

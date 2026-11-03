@@ -114,7 +114,7 @@ it('pauses a CPU reply behind a dialog or hidden tab and undoes both turns', asy
   vi.useFakeTimers();
   const kv = createMemoryKV();
   await taught(kv);
-  const initial = createSession('easy', 7);
+  const initial = createSession('easy', 0x80000000);
   await saveGame(initial, kv);
   launch(kv, 'shortcut');
   await settle();

@@ -30,18 +30,26 @@ describe('Chain Territory rules', () => {
   });
   it('plays many complete legal matches without a repeating cascade', () => {
     for (let seed = 0; seed < 120; seed++) {
-      let s = createSession(seed % 2 ? 'normal' : 'hard', seed);
+      const mode = (['easy', 'normal', 'hard'] as const)[seed % 3]!;
+      let s = createSession(mode, Math.imul(seed, 0x9e3779b1) >>> 0);
       while (s.status === 'playing') {
         const moves = legalMoves(s);
         const move =
           s.turn === 2
             ? chooseCpuMove(s)!
             : moves[(seed * 17 + s.actions.length * 7) % moves.length]!;
+        expect(moves).toContain(move);
         const next: Session = act(s, move)!;
         expect(next.board.reduce((sum, c) => sum + c.count, 0)).toBe(next.actions.length);
         expect(next.actions.length).toBeLessThanOrEqual(69);
         s = next;
       }
+    }
+  });
+  it('chooses a legal easy reply across the unsigned seed range', () => {
+    for (const seed of [0, 1, 0x7fffffff, 0x80000000, 0xffffffff]) {
+      const first = act(createSession('easy', seed), 0)!;
+      expect(legalMoves(first)).toContain(chooseCpuMove(first));
     }
   });
   it('undo restores the player decision before the CPU reply', () => {
