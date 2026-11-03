@@ -1,0 +1,32 @@
+// AI translation; no human review claimed.
+import type { RidgeCannonsMessages } from './en';
+export const th: RidgeCannonsMessages = {
+  ridgeCannonsName: 'Ridge Cannons',
+  ridgeCannonsMode_easy: 'ง่าย',
+  ridgeCannonsMode_normal: 'ปานกลาง',
+  ridgeCannonsMode_hard: 'ยาก',
+  ridgeCannonsYou: 'คุณ',
+  ridgeCannonsCpu: 'CPU',
+  ridgeCannonsThinking: 'CPU กำลังคิด…',
+  ridgeCannonsWon: 'คุณชนะ',
+  ridgeCannonsLost: 'CPU ชนะ',
+  ridgeCannonsWins: 'ชนะ',
+  ridgeCannonsBest: 'เกราะเหลือสูงสุด',
+  ridgeCannonsMetric: 'เกราะที่เหลือ',
+  ridgeCannonsDraw: 'เสมอ',
+  ridgeCannonsRound: 'รอบ {n} / 12',
+  ridgeCannonsWind: 'ลม',
+  ridgeCannonsField: 'ปืนใหญ่สองกระบอกคั่นด้วยสันเขา',
+  ridgeCannonsAim: 'ปรับมุมและแรง แล้วยิง',
+  ridgeCannonsDamage: 'ความเสียหาย',
+  ridgeCannonsAngle: 'มุม',
+  ridgeCannonsPower: 'แรง',
+  ridgeCannonsFire: 'ยิง',
+  ridgeCannonsStep1Title: 'เล็งเป้า',
+  ridgeCannonsStep1Body: 'ปรับมุมและแรงเพื่อยิงข้ามสันเขา',
+  ridgeCannonsStep2Title: 'ดูลม',
+  ridgeCannonsStep2Body: 'ลูกศรแสดงทิศลม วิถีลูกก่อนหน้ายังแสดงอยู่เพื่อช่วยเล็งครั้งต่อไป',
+  ridgeCannonsStep3Title: 'ผลัดกันยิง',
+  ridgeCannonsStep3Body:
+    'ผลัดกันยิงกับ CPU ลดเกราะอีกฝ่ายให้เหลือศูนย์ หรือมีเกราะมากกว่าเมื่อครบ 12 รอบ',
+};

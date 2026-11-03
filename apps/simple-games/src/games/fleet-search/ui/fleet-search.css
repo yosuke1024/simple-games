@@ -1,0 +1,365 @@
+.fs-home-content {
+  width: 100%;
+}
+.fs-choose {
+  margin: 0 0 8px;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+.fs-choice {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.fs-screen .game-content {
+  display: flex;
+  flex-direction: column;
+}
+.fs-body {
+  width: 100%;
+  max-width: 620px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 16px 12px;
+}
+.fs-screen button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+[data-game='fleet-search'] .home-title {
+  word-break: normal;
+  overflow-wrap: normal;
+}
+@media (max-width: 380px) {
+  [data-game='fleet-search'] .home-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  [data-game='fleet-search'] .home-title {
+    font-size: 30px;
+  }
+}
+
+.fs-body {
+  max-width: 500px;
+  gap: 10px;
+}
+.fs-chart {
+  position: relative;
+  width: min(100%, 350px, calc(100dvh - 315px));
+  min-width: 208px;
+  padding: 16px 0 0 16px;
+}
+.fs-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  aspect-ratio: 1;
+  border: 1px solid var(--accent);
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: 0 4px 0 var(--line);
+}
+.fs-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 24px;
+  line-height: 1;
+  font-weight: 800;
+  aspect-ratio: 1;
+  touch-action: manipulation;
+}
+.fs-cell:nth-of-type(8n) {
+  border-right: 0;
+}
+.fs-cell:nth-of-type(n + 57) {
+  border-bottom: 0;
+}
+.fs-ship {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.fs-hit,
+.fs-sunk {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.fs-sunk {
+  box-shadow: inset 0 0 0 3px var(--surface);
+}
+.fs-miss {
+  color: var(--ink-soft);
+  background: var(--surface-recessed);
+}
+.fs-selected {
+  z-index: 1;
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+  background: var(--accent-soft);
+}
+.fs-crosshair {
+  width: 48%;
+  height: 48%;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+}
+.fs-crosshair:after {
+  content: '';
+  position: absolute;
+  inset: 45% 18%;
+  border-top: 2px solid var(--accent);
+}
+.fs-preview {
+  box-shadow: inset 0 0 0 3px var(--accent);
+  background: var(--accent-soft);
+}
+.fs-invalid {
+  background: repeating-linear-gradient(45deg, var(--surface) 0 4px, var(--line) 4px 7px);
+  box-shadow: inset 0 0 0 2px var(--ink-soft);
+}
+.fs-axis {
+  position: absolute;
+  display: grid;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  text-align: center;
+}
+.fs-axis-top {
+  top: 0;
+  left: 16px;
+  right: 0;
+  grid-template-columns: repeat(8, 1fr);
+}
+.fs-axis-left {
+  top: 16px;
+  bottom: 0;
+  left: 0;
+  width: 16px;
+  grid-template-rows: repeat(8, 1fr);
+  align-items: center;
+}
+.fs-fleet-choices {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  width: 100%;
+}
+.fs-ship-choice {
+  height: 38px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--accent);
+}
+.fs-ship-choice > span {
+  display: flex;
+  gap: 2px;
+}
+.fs-ship-choice i {
+  display: block;
+  width: 10px;
+  height: 12px;
+  border: 1px solid currentColor;
+  background: var(--accent-soft);
+}
+.fs-ship-choice.is-selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.fs-message {
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+  min-height: 36px;
+  margin: 0;
+  max-width: 350px;
+  color: var(--ink-soft);
+}
+.fs-setup-tools {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.fs-setup-tools .btn {
+  min-height: 38px;
+  padding: 6px 12px;
+  font-size: 12px;
+}
+.fs-fire {
+  width: 100%;
+  max-width: 350px;
+  min-height: 44px;
+}
+.fs-fleet-status {
+  width: 100%;
+  max-width: 350px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  gap: 8px;
+}
+.fs-view.btn {
+  font-size: 12px;
+  min-height: 32px;
+  padding: 4px 6px;
+}
+.fs-report {
+  display: flex;
+  width: 100%;
+  max-width: 350px;
+  gap: 14px;
+  align-items: center;
+}
+.fs-report > div:last-child {
+  flex: 1;
+  font-size: 12px;
+  min-width: 0;
+}
+.fs-report strong {
+  font-size: 13px;
+}
+.fs-report p {
+  margin: 4px 0;
+  line-height: 1.5;
+}
+.fs-report span {
+  color: var(--ink-soft);
+}
+.fs-mini {
+  padding: 0;
+  width: 76px;
+  min-width: 76px;
+}
+.fs-mini .fs-cell {
+  font-size: 10px;
+}
+.fs-mini .fs-grid {
+  box-shadow: none;
+}
+.fs-mini .fs-ship {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.fs-mini .fs-sunk {
+  box-shadow: inset 0 0 0 1px var(--surface);
+}
+.fs-result-fleets {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin: 12px 0;
+  font-size: 12px;
+  text-align: center;
+}
+.fs-result-fleets .fs-mini {
+  width: 96px;
+  margin-top: 6px;
+}
+@media (max-height: 700px) {
+  .fs-body {
+    gap: 7px;
+    padding-top: 0;
+  }
+  .fs-chart:not(.fs-mini) {
+    width: min(100%, calc(100dvh - 312px));
+  }
+  .fs-fleet-choices {
+    gap: 6px;
+  }
+  .fs-ship-choice {
+    height: 32px;
+  }
+  .fs-message {
+    min-height: 32px;
+  }
+}
+
+:root[data-sg-web-ads] .fs-screen {
+  height: 100%;
+}
+.fs-screen .game-content {
+  overflow-y: auto;
+}
+.fs-screen .game-topbar,
+.fs-body {
+  flex-shrink: 0;
+}
+
+@media (max-height: 750px) {
+  .fs-chart:not(.fs-mini) {
+    width: min(100%, calc(100dvh - 336px));
+  }
+  .fs-setting .fs-chart {
+    width: min(100%, calc(100dvh - 380px));
+  }
+  .fs-report > .fs-mini,
+  .fs-report strong {
+    display: none;
+  }
+  .fs-report > div:last-child {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 28px;
+  }
+  .fs-report p {
+    margin: 0;
+  }
+  .fs-report span {
+    white-space: nowrap;
+  }
+}
+
+.fs-grid {
+  position: relative;
+}
+.fs-vessels {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+.fs-hull {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+  stroke-width: 0.65;
+  stroke-linejoin: round;
+}
+.fs-deck {
+  fill: var(--accent);
+  opacity: 0.45;
+}
+.fs-cell {
+  z-index: 2;
+}
+.fs-grid .fs-ship:not(.fs-hit):not(.fs-sunk):not(.fs-preview) {
+  background: transparent;
+  box-shadow: none;
+}
+.fs-cell.fs-hit,
+.fs-cell.fs-sunk {
+  z-index: 3;
+}

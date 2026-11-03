@@ -1,0 +1,32 @@
+// AI translation; no human review claimed.
+import type { RidgeCannonsMessages } from './en';
+export const ja: RidgeCannonsMessages = {
+  ridgeCannonsName: 'Ridge Cannons',
+  ridgeCannonsMode_easy: 'やさしい',
+  ridgeCannonsMode_normal: 'ふつう',
+  ridgeCannonsMode_hard: 'むずかしい',
+  ridgeCannonsYou: 'あなた',
+  ridgeCannonsCpu: 'CPU',
+  ridgeCannonsThinking: 'CPU が考えています…',
+  ridgeCannonsWon: 'あなたの勝ち',
+  ridgeCannonsLost: 'CPU の勝ち',
+  ridgeCannonsWins: '勝ち',
+  ridgeCannonsBest: '残り耐久の最高',
+  ridgeCannonsMetric: '残り耐久',
+  ridgeCannonsDraw: '引き分け',
+  ridgeCannonsRound: '{n} / 12 ラウンド',
+  ridgeCannonsWind: '風',
+  ridgeCannonsField: '山を挟んだ2門の大砲',
+  ridgeCannonsAim: '角度と威力を調整して発射。',
+  ridgeCannonsDamage: 'ダメージ',
+  ridgeCannonsAngle: '角度',
+  ridgeCannonsPower: '威力',
+  ridgeCannonsFire: '発射',
+  ridgeCannonsStep1Title: '狙いを定める',
+  ridgeCannonsStep1Body: '角度と威力を調整し、山を越えて弾を飛ばします。',
+  ridgeCannonsStep2Title: '風を読む',
+  ridgeCannonsStep2Body: '矢印は風向きです。前の弾道を参考に次の狙いを調整できます。',
+  ridgeCannonsStep3Title: '交互に撃つ',
+  ridgeCannonsStep3Body:
+    'CPUと交互に発射。相手の耐久を0にするか、12ラウンド後に耐久が多い方が勝ちです。',
+};

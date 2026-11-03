@@ -736,3 +736,17 @@ Gomoku も同じで、マゼンタ帯の 3 タイトルとは色相ではなく�
 
 最も近い既存色はライトが Checkers `#5a4632`、ダークが Pipe Link `#dba775`。算術の値であり、
 ホームのタイルの隣接とダークテーマの実機は未確認。
+
+## No. 68〜70 のアクセント (2026-11-03)
+
+既存67色と警告色に対しCIE76で比較。紙上4.5:1以上、ライトの白文字4.5:1以上。
+色に加えて固有の盤面SVGと題名で識別する。実機では未確認。
+
+| Title | Theme | Color | nearest ΔE | paper contrast |
+|---|---|---|---|---|
+| ridge-cannons | light | #821c1c | 13.18 | 8.65 |
+| fleet-search | light | #564875 | 12.83 | 7.15 |
+| frost-route | light | #425e2c | 11.24 | 6.43 |
+| ridge-cannons | dark | #d5d56c | 15.28 | 11.6 |
+| fleet-search | dark | #96d2de | 11.66 | 10.75 |
+| frost-route | dark | #54cfb6 | 13.61 | 9.39 |

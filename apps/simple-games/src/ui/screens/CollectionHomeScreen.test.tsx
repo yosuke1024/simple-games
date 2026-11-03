@@ -245,7 +245,13 @@ describe('web-beta titles', () => {
     // walking a beta door.
     // Backgammon (No. 67) has been on the beta channel since 2026-11-03; the
     // synthetic title is appended by the mock above.
-    expect(beta.map((game) => game.id)).toEqual(['backgammon', 'synthetic-beta']);
+    expect(beta.map((game) => game.id)).toEqual([
+      'backgammon',
+      'ridge-cannons',
+      'fleet-search',
+      'frost-route',
+      'synthetic-beta',
+    ]);
     expect(released.length).toBeGreaterThan(20);
   });
 

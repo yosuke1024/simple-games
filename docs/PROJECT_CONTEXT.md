@@ -1,6 +1,6 @@
 # Simple Games — Project Context / Source of Truth
 
-Updated: 2026-10-27
+Updated: 2026-11-03
 
 この文書は、Simple Games を変更・レビュー・説明するときの **共通の入口** である。
 ここに全仕様を複製しない。実装上の事実はコード、恒久的な原則は各 canonical document を正とし、
@@ -43,11 +43,13 @@ Design philosophy:
 
 - 1つの `Simple Games: Offline Games` として提供する。
 - 現在の正式収録は **65 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ。
-  本数はここで数える)。`GAMES` の全 67 エントリのうち、残る 2 本は、`'in-development'` の Falling Blocks
-  (2026-10-29 に Web 先行公開から取り下げ — `docs/FALLING_BLOCKS_RULES.md` 冒頭)と、`'web-beta'` の
-  **Backgammon(No. 67)**。Backgammon は Issue #264 の候補比較(`docs/plans/2026-11-02-backgammon.md`「選定の経緯」)で
-  選び、2026-11-02 に規則・エンジン・画面・14 言語の仮訳まで実装、**2026-11-03 に製品オーナーの判断で `'web-beta'`**
-  にした(仕様は `docs/BACKGAMMON_RULES.md`、未決事項は同 §16)。Web 版での配信は landing の同期と Publish の後。
+  本数はここで数える)。`GAMES` は全70エントリで、Web先行公開4本と実装中1本を含む。
+  Web先行公開は Backgammon(No. 67)、Ridge Cannons(No. 68)、Fleet Search(No. 69)、Frost Route(No. 70)。
+  実装中は Falling Blocks(2026-10-29にWeb先行公開から取り下げ)。
+  Backgammonの仕様は `docs/BACKGAMMON_RULES.md`。新作3本は製品オーナーの
+  「3つくらいゲーム追加、UIを他のゲームに揃え、Web公開まで」という依頼と候補選択に基づく。
+  Cannon Duel / Hidden Fleet / Ice Trailという仮題から、同名作との衝突を避ける公開名へ変更した。
+  仕様の正は各 `docs/*_RULES.md`、検証・配信記録は `docs/plans/2026-11-03-three-games-68-70.md`。
 - 2026-10-29、オーナーの「ベータを外して、次バージョンでリリース(1.7.0)」という明示判断で、Web 先行公開
   だった 20 本(No. 42〜66 のうち、2026-10-25 の 4 本と Falling Blocks を除く全タイトル)を正式収録へ変更した。
   2 週間の安定稼働と滞在時間の確認は満たしておらず、各ルール文書が収録前に求めていた題の商標・ストアの検索など
