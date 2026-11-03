@@ -1,3 +1,4 @@
+import { Vessel } from './Vessel';
 export function TutorialFigure({ step }: { step: number }) {
   return (
     <svg
@@ -21,11 +22,15 @@ export function TutorialFigure({ step }: { step: number }) {
       ))}
       {step === 0 ? (
         <>
-          <path
-            d="M97 22h70v17H97Z M167 74h17v52h-17Z M97 91h35v17H97Z"
-            fill="currentColor"
-            opacity=".7"
-          />
+          <g transform="translate(97.5 21.5) scale(1.75)">
+            <Vessel length={4} />
+          </g>
+          <g transform="translate(185 74) rotate(90) scale(1.75)">
+            <Vessel length={3} />
+          </g>
+          <g transform="translate(97.5 91.5) scale(1.75)">
+            <Vessel length={2} />
+          </g>
         </>
       ) : (
         <>

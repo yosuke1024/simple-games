@@ -18,6 +18,7 @@ afterEach(async () => {
   await settle();
   vi.useRealTimers();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   Reflect.deleteProperty(document, 'visibilityState');
 });
 function launch(kv: KVStore, entry?: 'collection' | 'shortcut') {
@@ -137,4 +138,42 @@ it('shows a hint without moving, undoes crystals and completes a real generated 
   expect(screen.getByRole('button', { name: 'Share' })).toBeInTheDocument();
   expect(await loadSavedGame(kv)).toBeNull();
   expect((await loadRecord(statsSchema, kv)).boards.easy.completed).toBe(1);
+});
+
+it('shows the slide before the final board while committing once and preventing repeated input', async () => {
+  vi.useFakeTimers();
+  vi.stubGlobal('matchMedia', () => ({
+    matches: false,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  }));
+  const kv = createMemoryKV();
+  await taught(kv);
+  const initial = createSession('easy', 7);
+  await saveGame(initial, kv);
+  launch(kv, 'shortcut');
+  await settle();
+  const dir = solve(initial.board)![0]!;
+  const keys = ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft'];
+  fireEvent.keyDown(window, { key: keys[dir] });
+  await settle();
+  expect(document.querySelector('.fr-motion')).not.toBeNull();
+  expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+  fireEvent.keyDown(window, { key: keys[dir] });
+  expect((await loadSavedGame(kv))?.actions).toHaveLength(1);
+  await act(async () => vi.advanceTimersByTime(700));
+  expect(document.querySelector('.fr-motion')).toBeNull();
+  const saved = (await loadSavedGame(kv))!;
+  expect(
+    document.querySelectorAll('.fr-cell')[saved.position]?.querySelector('.fr-puck'),
+  ).not.toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+  await settle();
+  expect(await loadSavedGame(kv)).toEqual(initial);
+  fireEvent.keyDown(window, { key: keys[dir] });
+  Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+  act(() => document.dispatchEvent(new Event('visibilitychange')));
+  expect(document.querySelector('.fr-motion')).toBeNull();
+  await settle();
+  expect((await loadSavedGame(kv))?.actions).toHaveLength(1);
 });

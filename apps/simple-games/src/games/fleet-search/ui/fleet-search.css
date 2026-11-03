@@ -170,16 +170,10 @@
   background: var(--surface);
   color: var(--accent);
 }
-.fs-ship-choice > span {
-  display: flex;
-  gap: 2px;
-}
-.fs-ship-choice i {
+.fs-ship-choice svg {
   display: block;
-  width: 10px;
-  height: 12px;
-  border: 1px solid currentColor;
-  background: var(--accent-soft);
+  height: 20px;
+  overflow: visible;
 }
 .fs-ship-choice.is-selected {
   outline: 2px solid var(--accent);
@@ -350,7 +344,6 @@
 }
 .fs-deck {
   fill: var(--accent);
-  opacity: 0.45;
 }
 .fs-cell {
   z-index: 2;
@@ -362,4 +355,62 @@
 .fs-cell.fs-hit,
 .fs-cell.fs-sunk {
   z-index: 3;
+}
+
+.fs-gun {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 0.8;
+  stroke-linecap: round;
+}
+.fs-turret {
+  fill: var(--surface);
+  stroke: var(--accent);
+  stroke-width: 0.55;
+}
+.fs-bridge {
+  fill: var(--surface);
+}
+.fs-keel {
+  fill: none;
+  stroke: var(--surface);
+  stroke-width: 0.4;
+}
+/* Keep the continuous silhouette visible beneath grid interaction and damage. */
+.fs-grid .fs-ship.fs-hit,
+.fs-grid .fs-ship.fs-sunk {
+  background: transparent;
+  box-shadow: none;
+}
+.fs-ship .fs-shot-mark:not(:empty) {
+  display: grid;
+  place-items: center;
+  width: 65%;
+  height: 65%;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--accent);
+  font-size: 0.8em;
+  border: 1px solid var(--accent);
+}
+.fs-grid .fs-sunk .fs-shot-mark {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.fs-mini .fs-shot-mark:not(:empty) {
+  border: 0;
+}
+.fs-remaining {
+  display: grid;
+  gap: 4px;
+}
+.fs-fleet-silhouettes {
+  display: flex;
+  gap: 7px;
+  height: 14px;
+  align-items: center;
+}
+.fs-fleet-silhouettes svg {
+  height: 12px;
+  overflow: visible;
 }

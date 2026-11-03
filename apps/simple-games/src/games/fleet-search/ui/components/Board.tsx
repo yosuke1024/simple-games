@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { Vessel } from './Vessel';
 import { useSettings } from '@/state/SettingsContext';
 import { knowledge, type Session } from '../../game';
 export const coordinate = (c: number) =>
@@ -64,25 +65,20 @@ export function Board({
         <svg className="fs-vessels" viewBox="0 0 80 80" aria-hidden="true">
           {(own || reveal ? fleet : view.sunk).map((ship, index) => {
             const cell = ship[0]!,
-              vertical = ship[1]! - cell === 8,
-              length = ship.length * 10;
+              vertical = ship[1]! - cell === 8;
             return (
               <g
                 key={index}
                 transform={`translate(${(cell % 8) * 10 + (vertical ? 10 : 0)} ${Math.floor(cell / 8) * 10}) rotate(${vertical ? 90 : 0})`}
               >
-                <path
-                  d={`M2 1.7H${length - 7}Q${length - 2} 1.7 ${length - 1} 5Q${length - 2} 8.3 ${length - 7} 8.3H2Z`}
-                  className="fs-hull"
-                />
-                <rect x="5" y="3.2" width={length - 15} height="3.6" rx="1" className="fs-deck" />
+                <Vessel length={ship.length} />
               </g>
             );
           })}
         </svg>
         {Array.from({ length: 64 }, (_, cell) => {
           const kind = state(cell),
-            ship = (own || reveal) && fleet.some((s) => s.includes(cell)),
+            ship = ((own || reveal) && fleet.some((s) => s.includes(cell))) || kind === 'Sunk',
             content = kind === 'Hit' || kind === 'Sunk' ? '×' : kind === 'Miss' ? '·' : '';
           const className = `fs-cell fs-${kind.toLowerCase()} ${ship ? 'fs-ship' : ''} ${selected === cell ? 'fs-selected' : ''} ${preview.includes(cell) ? `fs-preview ${invalid ? 'fs-invalid' : ''}` : ''}`;
           if (mini)
@@ -116,7 +112,7 @@ export function Board({
                 refs.current[next]?.focus();
               }}
             >
-              {content}
+              <span className="fs-shot-mark">{content}</span>
               {selected === cell ? <span className="fs-crosshair" aria-hidden="true" /> : null}
             </button>
           );

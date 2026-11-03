@@ -9,9 +9,19 @@ import { useRidgeCannons } from '../../state/GameContext';
 import { ResultOverlay } from '../components/ResultOverlay';
 const line = (path: Point[]) =>
   path.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(1)},${(420 - p.y).toFixed(1)}`).join(' ');
+// Begin at insertion time, not at the SVG document's original clock.
+const beginMotion = (node: SVGAnimateTransformElement | null) => node?.beginElement?.();
 export function GameScreen() {
   const { t } = useSettings();
-  const { session, play, goHome, restartCurrent, startNewBoard, setPaused } = useRidgeCannons();
+  const {
+    session: committed,
+    playback,
+    play,
+    goHome,
+    restartCurrent,
+    startNewBoard,
+    setPaused,
+  } = useRidgeCannons();
   const [confirmRestart, setConfirmRestart] = useState(false),
     [angle, setAngle] = useState(50),
     [power, setPower] = useState(80);
@@ -19,13 +29,18 @@ export function GameScreen() {
     setPaused(confirmRestart);
     return () => setPaused(false);
   }, [confirmRestart, setPaused]);
+  const session = playback?.before ?? committed;
   if (!session) return null;
   const over = session.status !== 'playing',
-    ready = session.phase === 'player' && !over;
+    ready = session.phase === 'player' && !over && !playback;
   const terrain = `M0 420 ${session.terrain.map((y, i) => `L${i * 10} ${420 - y}`).join(' ')} L1000 420Z`;
   const shot = session.shots.at(-1),
     playerShot = session.shots.filter((s) => s.side === 0).at(-1),
     cpuShot = session.shots.filter((s) => s.side === 1).at(-1);
+  const visiblePaths = [playerShot, cpuShot, playback?.shot].flatMap((s) => s?.path ?? []);
+  const sky = Math.min(0, ...visiblePaths.map((p) => 420 - p.y - 26));
+  const left = Math.min(0, ...visiblePaths.map((p) => p.x - 26));
+  const right = Math.max(1000, ...visiblePaths.map((p) => p.x + 26));
   const w = wind(session),
     round = Math.min(12, Math.floor(session.actions.length / 2) + 1);
   return (
@@ -67,7 +82,12 @@ export function GameScreen() {
                 {w === 0 ? '·' : w > 0 ? '→' : '←'} {Math.abs(w)}
               </strong>
             </div>
-            <svg viewBox="0 0 1000 420" role="img" aria-label={t('ridgeCannonsField')}>
+            <svg
+              viewBox={`${left} ${sky} ${right - left} ${420 - sky}`}
+              preserveAspectRatio="xMidYMax meet"
+              role="img"
+              aria-label={t('ridgeCannonsField')}
+            >
               <path
                 d="M0 255 Q130 200 240 250 T490 220 T760 240 T1000 215 V420H0Z"
                 className="rc-far-ridge"
@@ -79,7 +99,12 @@ export function GameScreen() {
               {[0, 1].map((side) => {
                 const x = side === 0 ? 105 : 895,
                   y = 420 - ground(session, x) - 8,
-                  a = side === 0 ? angle : (cpuShot?.action.angle ?? 45),
+                  a =
+                    playback?.shot.side === side
+                      ? playback.shot.action.angle
+                      : side === 0
+                        ? angle
+                        : (cpuShot?.action.angle ?? 45),
                   sign = side === 0 ? 1 : -1;
                 return (
                   <g key={side} className={`rc-cannon rc-side-${side}`}>
@@ -93,7 +118,24 @@ export function GameScreen() {
                   </g>
                 );
               })}
-              {shot ? (
+              {playback ? (
+                <g className={`rc-projectile rc-side-${playback.shot.side}`} aria-hidden="true">
+                  <circle r="13" />
+                  <path d="M-6 -4a7 7 0 0 1 6-4" className="rc-projectile-glint" />
+                  <animateTransform
+                    ref={beginMotion}
+                    begin="indefinite"
+                    attributeName="transform"
+                    type="translate"
+                    values={playback.shot.path
+                      .map((p) => `${p.x.toFixed(1)} ${(420 - p.y).toFixed(1)}`)
+                      .join(';')}
+                    dur={`${playback.durationMs}ms`}
+                    calcMode="linear"
+                    fill="freeze"
+                  />
+                </g>
+              ) : shot ? (
                 <circle
                   key={session.actions.length}
                   cx={shot.path.at(-1)!.x}
@@ -105,8 +147,12 @@ export function GameScreen() {
             </svg>
           </div>
           <p className="rc-status" role="status" aria-live="polite">
-            {ready ? t('ridgeCannonsAim') : t('ridgeCannonsThinking')}
-            {shot ? (
+            {playback
+              ? t(playback.shot.side === 0 ? 'ridgeCannonsYou' : 'ridgeCannonsCpu')
+              : ready
+                ? t('ridgeCannonsAim')
+                : t('ridgeCannonsThinking')}
+            {shot && !playback ? (
               <span>
                 {t(shot.side === 0 ? 'ridgeCannonsYou' : 'ridgeCannonsCpu')} ·{' '}
                 {t('ridgeCannonsDamage')}: {shot.damage[shot.side === 0 ? 1 : 0]}
