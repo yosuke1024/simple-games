@@ -71,7 +71,7 @@ describe('RiverCargo UI', () => {
     expect(document.querySelector('.game-content')).not.toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Home' }));
     await settle();
-    expect(screen.getByText('Resume')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Resume/ })).toBeInTheDocument();
     view.unmount();
     await settle();
     expect((await loadSavedGame(kv))?.elapsedSeconds).toBe(18);
@@ -84,7 +84,7 @@ describe('RiverCargo UI', () => {
     await saveGame(saved, kv);
     launch(kv);
     await settle();
-    fireEvent.click(screen.getByRole('button', { name: 'Normal' }));
+    fireEvent.click(screen.getAllByRole('button', { name: /^Puzzle 1/ })[1]!);
     expect(screen.getByRole('alertdialog').closest('[inert]')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(await loadSavedGame(kv)).toEqual(saved);
@@ -117,7 +117,7 @@ it('explains unsafe moves, hints without moving, and completes the seven-crossin
   const initial = createSession('easy', 7);
   await saveGame(initial, kv);
   const stats = statsSchema.defaultValue();
-  stats.boards.easy.played = 1;
+  stats.puzzles['easy-1'] = { played: 1, completed: 0, best: null };
   await saveRecord(statsSchema, stats, kv);
   launch(kv, 'shortcut');
   await settle();
@@ -132,8 +132,7 @@ it('explains unsafe moves, hints without moving, and completes the seven-crossin
   const names: Record<string, string> = { wolf: 'Wolf', goat: 'Goat', cabbage: 'Cabbage' };
   for (const action of solve('easy')!) {
     PUZZLES.easy.cargo.forEach((cargo, i) => {
-      if (action & (1 << i))
-        fireEvent.click(screen.getByRole('button', { name: names[cargo] }));
+      if (action & (1 << i)) fireEvent.click(screen.getByRole('button', { name: names[cargo] }));
     });
     fireEvent.click(screen.getByRole('button', { name: /Cross river/ }));
     await settle();
@@ -142,9 +141,30 @@ it('explains unsafe moves, hints without moving, and completes the seven-crossin
   expect(screen.getByRole('button', { name: 'Share' })).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'New Game' })).not.toBeInTheDocument();
   expect(await loadSavedGame(kv)).toBeNull();
-  expect((await loadRecord(statsSchema, kv)).boards.easy).toEqual({
+  expect((await loadRecord(statsSchema, kv)).puzzles['easy-1']).toEqual({
     played: 1,
     completed: 1,
     best: 7,
   });
+});
+it.each([
+  ['easy-4', ['Crate, weight 2', 'Fox, weight 3'], 'Weight limit: 3'],
+  ['normal-2', [], 'Every crossing needs one of: Goat / Fox'],
+  ['normal-3', ['Wolf', 'Fox'], 'Wolf and Fox cannot share the boat'],
+] as const)('explains the special condition in %s without moving', async (id, cargo, message) => {
+  const kv = createMemoryKV();
+  await taught(kv);
+  const { puzzleById } = await import('../game');
+  await saveGame(createSession(puzzleById(id)!.mode, 0, id), kv);
+  launch(kv, 'shortcut');
+  await settle();
+  for (const name of cargo) fireEvent.click(screen.getByRole('button', { name }));
+  fireEvent.click(screen.getByRole('button', { name: /Cross river/ }));
+  await settle();
+  expect(screen.getByRole('status')).toHaveTextContent(message);
+  expect((await loadSavedGame(kv))?.actions).toEqual([]);
+  fireEvent.click(screen.getByRole('button', { name: 'Hint' }));
+  await settle();
+  expect(screen.getByRole('status')).toHaveTextContent('Take ');
+  expect((await loadSavedGame(kv))?.actions).toEqual([]);
 });

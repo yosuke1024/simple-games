@@ -5,13 +5,14 @@ import { BannerSlot } from '@/ui/components/BannerSlot';
 import { RestartDialog } from '@/ui/components/RestartDialog';
 import { IconBack, IconRetry, IconUndo, IconHint } from '@/ui/components/icons';
 import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
-import { bitCount, PUZZLES, solve, unsafePair } from '../../game';
+import { bitCount, puzzleById, solve, unsafePair, cargoWeight, loadProblem } from '../../game';
 import { useRiverCargo } from '../../state/GameContext';
 import { CargoIcon } from '../components/CargoIcon';
 import { ResultOverlay } from '../components/ResultOverlay';
 export function GameScreen() {
   const { t } = useSettings();
-  const { session, playback, play, applyUndo, goHome, restartCurrent, setPaused } = useRiverCargo();
+  const { session, playback, play, applyUndo, goHome, restartCurrent, startNewBoard, setPaused } =
+    useRiverCargo();
   const [confirmRestart, setConfirmRestart] = useState(false),
     [selected, setSelected] = useState(0),
     [hint, setHint] = useState<number | null>(null),
@@ -20,11 +21,11 @@ export function GameScreen() {
     setPaused(confirmRestart);
     return () => setPaused(false);
   }, [confirmRestart, setPaused]);
-  const reset = () => {
+  const reset = (fn: () => void) => {
     setSelected(0);
     setHint(null);
     setNotice('');
-    restartCurrent();
+    fn();
   };
   const undo = () => {
     if (applyUndo()) {
@@ -46,8 +47,10 @@ export function GameScreen() {
     !over && !confirmRestart && !playback,
   );
   if (!session) return null;
-  const puzzle = PUZZLES[session.mode],
+  const puzzle = puzzleById(session.puzzleId)!,
     shown = playback?.before ?? session;
+  const crewNames = (puzzle.crew ?? []).map((i) => t(`riverCargo_${puzzle.cargo[i]!}`)).join(' / ');
+  const issue = loadProblem(puzzle, selected);
   const passengers = playback ? playback.after.actions.at(-1)! : selected;
   const conflict = unsafePair(puzzle, session.mask ^ selected, (1 - session.boat) as 0 | 1);
   const load = (i: number) => {
@@ -61,6 +64,19 @@ export function GameScreen() {
   };
   const cross = () => {
     if (playback) return;
+    if (issue) {
+      setNotice(
+        issue.kind === 'weight'
+          ? t('riverCargoOverweight', { n: puzzle.weightLimit! })
+          : issue.kind === 'crew'
+            ? t('riverCargoNeedCrew', { cargo: crewNames })
+            : t('riverCargoBoatConflict', {
+                a: t(`riverCargo_${puzzle.cargo[issue.pair[0]]!}`),
+                b: t(`riverCargo_${puzzle.cargo[issue.pair[1]]!}`),
+              }),
+      );
+      return;
+    }
     if (conflict) {
       setNotice(
         t('riverCargoUnsafe', {
@@ -84,7 +100,10 @@ export function GameScreen() {
           <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
             <IconBack />
           </button>
-          <span className="game-mode">{t(`riverCargoMode_${session.mode}`)}</span>
+          <span className="game-mode">
+            {t(`riverCargoMode_${session.mode}`)} ·{' '}
+            {t('riverCargoPuzzle', { n: session.puzzleId.split('-')[1]! })}
+          </span>
           <button
             type="button"
             className="icon-btn"
@@ -104,6 +123,11 @@ export function GameScreen() {
             </span>
             <span>{t('riverCargoSeats', { n: puzzle.seats })}</span>
           </div>
+          {puzzle.weightLimit !== undefined ? (
+            <p className="rg-weight-total">
+              {t('riverCargoWeight', { n: cargoWeight(puzzle, selected), max: puzzle.weightLimit })}
+            </p>
+          ) : null}
           <div
             className="rg-landscape"
             data-cargo-count={puzzle.cargo.length}
@@ -130,13 +154,27 @@ export function GameScreen() {
                               (selected & (1 << i) ? 'is-selected ' : '') +
                               (hint !== null && hint & (1 << i) ? 'is-hint' : '')
                             }
-                            aria-label={t(`riverCargo_${cargo}`)}
+                            aria-label={
+                              puzzle.weights
+                                ? t('riverCargoWeightedCargo', {
+                                    cargo: t(`riverCargo_${cargo}`),
+                                    n: puzzle.weights[i]!,
+                                  })
+                                : t(`riverCargo_${cargo}`)
+                            }
                             aria-pressed={!!(selected & (1 << i))}
                             disabled={!!playback || session.boat !== bank}
                             onClick={() => load(i)}
                           >
                             <CargoIcon cargo={cargo} />
-                            <span>{t(`riverCargo_${cargo}`)}</span>
+                            <span>
+                              {t(`riverCargo_${cargo}`)}
+                              {puzzle.weights ? (
+                                <small className="rg-cargo-weight" aria-hidden="true">
+                                  {puzzle.weights[i]}
+                                </small>
+                              ) : null}
+                            </span>
                           </button>
                         ) : (
                           <span className="rg-empty-slot" aria-hidden="true" />
@@ -166,7 +204,7 @@ export function GameScreen() {
             </div>
           </div>
           <div className="rg-rules">
-            <p>{t('riverCargoKeepApart')}</p>
+            {puzzle.conflicts.length ? <p>{t('riverCargoKeepApart')}</p> : null}
             <div className="rg-pairs">
               {puzzle.conflicts.map(([a, b]) => (
                 <span
@@ -183,29 +221,43 @@ export function GameScreen() {
                 </span>
               ))}
             </div>
+            {puzzle.crew?.length ? (
+              <p className="rg-extra-rule">{t('riverCargoNeedCrew', { cargo: crewNames })}</p>
+            ) : null}
+            {puzzle.boatConflicts?.map(([a, b]) => (
+              <p className="rg-extra-rule" key={a + ':' + b}>
+                {t('riverCargoBoatConflict', {
+                  a: t(`riverCargo_${puzzle.cargo[a]!}`),
+                  b: t(`riverCargo_${puzzle.cargo[b]!}`),
+                })}
+              </p>
+            ))}
           </div>
+        </div>
+        <div className="rg-controls">
           <p className="rg-status" role="status">
             {notice ||
               (hint !== null
                 ? hint === 0
                   ? t('riverCargoHintEmpty')
-                  : t('riverCargoHintLoad') +
-                    ' ' +
-                    puzzle.cargo
-                      .filter((_, i) => hint & (1 << i))
-                      .map((cargo) => t(`riverCargo_${cargo}`))
-                      .join(', ')
+                  : t('riverCargoHintLoad', {
+                      cargo: puzzle.cargo
+                        .filter((_, i) => hint & (1 << i))
+                        .map((cargo) => t(`riverCargo_${cargo}`))
+                        .join(' / '),
+                    })
                 : t('riverCargoSelect'))}
           </p>
-          <button
-            type="button"
-            className="btn btn-primary rg-cross"
-            disabled={!!playback}
-            onClick={cross}
-          >
-            {t('riverCargoCross')} <span aria-hidden="true">{session.boat ? '←' : '→'}</span>
-          </button>
           <div className="action-bar rg-actions">
+            <button
+              type="button"
+              className="btn btn-primary rg-cross"
+              disabled={!!playback}
+              onClick={cross}
+            >
+              {t('riverCargoCross')} <span aria-hidden="true">{session.boat ? '←' : '→'}</span>
+            </button>
+
             <button
               type="button"
               className="action-btn"
@@ -223,7 +275,9 @@ export function GameScreen() {
               disabled={!!playback}
               onClick={() => {
                 setNotice('');
-                setHint(solve(session.mode, session.mask, session.boat)?.[0] ?? null);
+                const route = solve(puzzle, session.mask, session.boat);
+                setHint(route?.[0] ?? null);
+                if (!route?.length) setNotice(t('riverCargoNoRoute'));
               }}
             >
               <span className="action-icon">
@@ -235,11 +289,17 @@ export function GameScreen() {
         </div>
       </div>
       <BannerSlot />
-      <ResultOverlay session={playback?.before ?? session} onRetry={reset} onHome={goHome} />
+      <ResultOverlay
+        session={playback?.before ?? session}
+        onRetry={() => reset(restartCurrent)}
+        onNewBoard={() => reset(startNewBoard)}
+        onHome={goHome}
+      />
       <RestartDialog
         open={confirmRestart}
         onClose={() => setConfirmRestart(false)}
-        onRetry={reset}
+        onRetry={() => reset(restartCurrent)}
+        newBoard={{ label: t('riverCargoNextPuzzle'), start: () => reset(startNewBoard) }}
       />
     </div>
   );

@@ -22,15 +22,25 @@ export const tr: MarbleWeaveMessages = {
   marbleWeaveColor6: 'Turkuaz kare',
   marbleWeaveColor7: 'Pembe çiçek',
   marbleWeaveStep1Title: 'Açık bir yol bulun',
-  marbleWeaveStep1Body:
-    'Bir bilye, sonra noktalı bir kare seçin. Bilye boş karelerden geçer; çapraz gidemez.',
   marbleWeaveStep2Title: 'Bir renk sırası oluşturun',
-  marbleWeaveStep2Body:
-    'Kolayda aynı renkten 4, Normal ve Zorda 5 bilye dizin. Yatay, dikey ve çapraz sıralar geçerlidir.',
-  marbleWeaveStep3Title: 'Hareket için yer bırakın',
-  marbleWeaveStep3Body:
-    'Sıra oluşturmazsanız gösterilen 3 bilye eklenir. Geri al, yeni bilyeler dahil tüm hamleyi geri alır.',
   marbleWeaveMode_easy: 'Kolay',
   marbleWeaveMode_normal: 'Normal',
   marbleWeaveMode_hard: 'Zor',
+  marbleWeaveChoosePuzzle: 'Bulmaca seç',
+  marbleWeavePuzzle: 'Bulmaca {n}',
+  marbleWeaveLegacy: 'Klasik puan oyunu',
+  marbleWeaveGoal: '{n} hamlede hepsini temizle',
+  marbleWeavePuzzleBest: 'En iyi: {n} hamle',
+  marbleWeaveMovesLeft: 'Kalan hamle: {n}',
+  marbleWeaveRemaining: 'Kalan bilye: {n}',
+  marbleWeaveExhausted: 'Hamle kalmadı — başka bir sıra için geri al veya yeniden dene.',
+  marbleWeaveWon: 'Hepsi temizlendi!',
+  marbleWeaveNextPuzzle: 'Sonraki bulmaca',
+  marbleWeaveStep1Body:
+    'Bir bilye ve ardından noktalı bir kare seçerek boş yoldan çapraz adım atmadan ilerlet.',
+  marbleWeaveStep2Body:
+    'Aynı renkten 3 bilyeyi, Zor seviyede 4 bilyeyi satır, sütun veya çaprazda dizerek temizle.',
+  marbleWeaveStep3Title: 'Hepsini temizlemeyi planla',
+  marbleWeaveStep3Body:
+    'Hamle sınırı içinde tüm bilyeleri temizle; yeni bilye gelmez ve Geri al ile sırayı yeniden düşünebilirsin.',
 };

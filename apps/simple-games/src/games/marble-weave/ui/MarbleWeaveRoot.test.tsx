@@ -71,7 +71,7 @@ describe('MarbleWeave UI', () => {
     expect(document.querySelector('.game-content')).not.toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Home' }));
     await settle();
-    expect(screen.getByText('Resume')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Resume/ })).toBeInTheDocument();
     view.unmount();
     await settle();
     expect((await loadSavedGame(kv))?.elapsedSeconds).toBe(18);
@@ -84,7 +84,7 @@ describe('MarbleWeave UI', () => {
     await saveGame(saved, kv);
     launch(kv);
     await settle();
-    fireEvent.click(screen.getByRole('button', { name: 'Normal' }));
+    fireEvent.click(screen.getAllByRole('button', { name: /^Puzzle 1/ })[1]!);
     expect(screen.getByRole('alertdialog').closest('[inert]')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(await loadSavedGame(kv)).toEqual(saved);
@@ -119,7 +119,7 @@ it('selects reachable cells, persists a whole move and restores it with keyboard
   launch(kv, 'shortcut');
   await settle();
   const from = initial.board.findIndex(Boolean),
-    to = initial.board.findIndex((c, i) => !c && findPath(initial.board, from, i, 7));
+    to = initial.board.findIndex((c, i) => !c && findPath(initial.board, from, i, initial.size));
   fireEvent.click(document.querySelectorAll('.mw-cell')[from]!);
   expect(document.querySelectorAll('.mw-reachable-dot').length).toBeGreaterThan(0);
   fireEvent.click(document.querySelectorAll('.mw-cell')[to]!);
@@ -134,4 +134,69 @@ it('selects reachable cells, persists a whole move and restores it with keyboard
   fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
   await settle();
   expect(await loadSavedGame(kv)).toEqual(initial);
+});
+it('finishes a restored puzzle without stats, records its moves, then starts the next problem', async () => {
+  const { PUZZLES } = await import('../game');
+  const kv = createMemoryKV();
+  await taught(kv);
+  await saveGame(createSession('easy', 0, 'easy-1'), kv);
+  launch(kv, 'shortcut');
+  await settle();
+  expect(screen.queryByLabelText('Next')).not.toBeInTheDocument();
+  for (const a of PUZZLES[0]!.solution) {
+    fireEvent.click(document.querySelectorAll('.mw-cell')[a.from]!);
+    fireEvent.click(document.querySelectorAll('.mw-cell')[a.to]!);
+    await settle();
+  }
+  expect(screen.getByRole('alertdialog')).toHaveTextContent('All clear!');
+  expect(await loadSavedGame(kv)).toBeNull();
+  expect((await loadRecord(statsSchema, kv)).puzzles['easy-1']).toEqual({
+    played: 1,
+    completed: 1,
+    best: 2,
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Next puzzle' }));
+  await settle();
+  expect((await loadSavedGame(kv))?.puzzleId).toBe('easy-2');
+});
+it('lets an exhausted attempt recover through undo without counting a finish', async () => {
+  const { act: move, findPath } = await import('../game');
+  const kv = createMemoryKV();
+  await taught(kv);
+  const initial = createSession('easy', 0, 'easy-1');
+  const from = initial.board.findIndex(Boolean),
+    to = initial.board.findIndex((n, i) => !n && findPath(initial.board, from, i, initial.size));
+  const first = move(initial, { from, to })!;
+  await saveGame(move(first, { from: to, to: from })!, kv);
+  launch(kv, 'shortcut');
+  await settle();
+  expect(screen.getByRole('status')).toHaveTextContent('No moves left');
+  fireEvent.click(document.querySelectorAll('.mw-cell')[from]!);
+  fireEvent.click(document.querySelectorAll('.mw-cell')[to]!);
+  await settle();
+  expect((await loadSavedGame(kv))?.actions).toHaveLength(2);
+  fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+  await settle();
+  expect(await loadSavedGame(kv)).toEqual(first);
+  expect(screen.getByRole('status')).not.toHaveTextContent('No moves left');
+  expect((await loadRecord(statsSchema, kv)).puzzles).toEqual({});
+});
+it('labels resumed classic saves and keeps their score records visible separately', async () => {
+  const { createLegacySession } = await import('../game');
+  const kv = createMemoryKV();
+  await taught(kv);
+  await saveGame(createLegacySession('normal', 123), kv);
+  const stats = statsSchema.defaultValue();
+  stats.boards.normal = { played: 2, completed: 1, best: 420 };
+  await saveRecord(statsSchema, stats, kv);
+  launch(kv, 'shortcut');
+  await settle();
+  expect(screen.getByText('Classic score game')).toBeInTheDocument();
+  expect(screen.getByLabelText('Next')).toBeInTheDocument();
+  expect(document.querySelectorAll('.mw-cell')).toHaveLength(81);
+  fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Statistics' }));
+  await settle();
+  expect(screen.getByText('Highest score')).toBeInTheDocument();
+  expect(screen.getByText('420')).toBeInTheDocument();
 });

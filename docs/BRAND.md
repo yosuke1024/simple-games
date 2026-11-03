@@ -754,7 +754,7 @@ Gomoku も同じで、マゼンタ帯の 3 タイトルとは色相ではなく�
 ## No. 71〜73 のアクセント (2026-11-03)
 
 既存70色と新作の残り2色、警告色とのCIE76最小距離。紙はライト `#f3f0e9` / ダーク `#14171c`。
-色だけでなく盤面SVGとタイトルで区別する。クロム以外ではMarble Weaveの玉7色と記号、River Cargoの動物と荷物の素材色を持つ。
+色だけでなく盤面SVGとタイトルで区別する。クロム以外ではChain Territoryの青い丸とコーラル系の菱形、Marble Weaveの玉7色と記号、River Cargoの動物と荷物の素材色を持つ。
 
 | Title | Theme | Color | nearest ΔE | paper contrast |
 | --- | --- | --- | --- | --- |

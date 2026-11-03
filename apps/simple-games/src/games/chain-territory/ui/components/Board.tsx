@@ -72,6 +72,7 @@ export function Board({
           className={
             'ct-cell ' + (lastCell === i ? 'ct-last ' : '') + (cell.owner === 1 ? 'ct-yours' : '')
           }
+          data-owner={cell.owner}
           aria-disabled={blocked || cell.owner === 2}
           aria-label={t('chainTerritoryCell', {
             row: Math.floor(i / COLS) + 1,

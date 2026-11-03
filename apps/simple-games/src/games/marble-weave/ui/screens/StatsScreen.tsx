@@ -1,7 +1,7 @@
 import { useSettings } from '@/state/SettingsContext';
 import { IconBack } from '@/ui/components/icons';
 import { formatDuration } from '@/ui/format';
-import { MODES } from '../../game';
+import { MODES, PUZZLES } from '../../game';
 import { useMarbleWeave } from '../../state/GameContext';
 export function StatsScreen() {
   const { t } = useSettings();
@@ -19,6 +19,25 @@ export function StatsScreen() {
         {MODES.map((mode) => (
           <section className="stats-section" key={mode}>
             <h2 className="stats-title">{t(`marbleWeaveMode_${mode}`)}</h2>
+            <dl className="stats-grid">
+              {PUZZLES.filter((p) => p.mode === mode).map((p) => (
+                <div className="stats-row" key={p.id}>
+                  <dt>{t('marbleWeavePuzzle', { n: p.id.split('-')[1]! })}</dt>
+                  <dd>
+                    {stats.puzzles[p.id]?.best != null
+                      ? t('marbleWeavePuzzleBest', { n: stats.puzzles[p.id]!.best! })
+                      : '—'}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        ))}
+        {MODES.filter((mode) => stats.boards[mode].played > 0).map((mode) => (
+          <section className="stats-section" key={'legacy-' + mode}>
+            <h2 className="stats-title">
+              {t('marbleWeaveLegacy')} · {t(`marbleWeaveMode_${mode}`)}
+            </h2>
             <dl className="stats-grid">
               <div className="stats-row">
                 <dt>{t('played')}</dt>

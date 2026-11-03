@@ -22,14 +22,25 @@ export const ko: MarbleWeaveMessages = {
   marbleWeaveColor6: '청록 사각형',
   marbleWeaveColor7: '분홍 꽃',
   marbleWeaveStep1Title: '빈 길 찾기',
-  marbleWeaveStep1Body: '구슬을 고른 뒤 점이 있는 칸을 고르세요. 빈칸을 상하좌우로만 지나갑니다.',
   marbleWeaveStep2Title: '같은 색 한 줄',
-  marbleWeaveStep2Body:
-    '쉬움은 4개, 보통과 어려움은 5개를 같은 색으로 정렬하세요. 가로, 세로, 대각선 모두 가능합니다.',
-  marbleWeaveStep3Title: '움직일 공간 남기기',
-  marbleWeaveStep3Body:
-    '줄을 완성하지 못하면 예고된 구슬 3개가 생깁니다. 되돌리기는 새 구슬까지 한 수 전체를 되돌립니다.',
   marbleWeaveMode_easy: '쉬움',
   marbleWeaveMode_normal: '보통',
   marbleWeaveMode_hard: '어려움',
+  marbleWeaveChoosePuzzle: '문제 선택',
+  marbleWeavePuzzle: '문제 {n}',
+  marbleWeaveLegacy: '기존 점수 방식',
+  marbleWeaveGoal: '{n}수 안에 모두 없애기',
+  marbleWeavePuzzleBest: '최고: {n}수',
+  marbleWeaveMovesLeft: '남은 수: {n}',
+  marbleWeaveRemaining: '남은 구슬: {n}개',
+  marbleWeaveExhausted: '수를 모두 썼어요. 되돌리거나 다시 시작해 다른 순서를 찾아보세요.',
+  marbleWeaveWon: '모두 없앴어요!',
+  marbleWeaveNextPuzzle: '다음 문제',
+  marbleWeaveStep1Body:
+    '구슬을 고른 뒤 점이 있는 칸을 누르면 빈길을 가로와 세로로 따라 이동합니다.',
+  marbleWeaveStep2Body:
+    '같은 색 구슬을 가로·세로·대각선으로 3개, 어려움에서는 4개 이으면 사라집니다.',
+  marbleWeaveStep3Title: '모두 없앨 순서 찾기',
+  marbleWeaveStep3Body:
+    '새 구슬은 생기지 않으니 정해진 수 안에 모두 없애고, 되돌리기로 순서를 다시 생각해 보세요.',
 };

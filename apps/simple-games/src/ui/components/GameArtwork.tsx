@@ -879,12 +879,12 @@ function Motif({ id }: { id: GameId }): ReactNode {
       return (
         <Board>
           <path d="M30 36h60M30 54h60M50 17v54M70 17v54" stroke="currentColor" opacity=".2" />
-          <g fill="currentColor">
+          <g fill="var(--ct-you)">
             <circle cx="40" cy="27" r="6" />
             <circle cx="60" cy="27" r="6" />
             <circle cx="40" cy="45" r="6" />
           </g>
-          <path d="m80 38 7 7-7 7-7-7Z" fill="currentColor" opacity=".45" />
+          <path d="m80 38 7 7-7 7-7-7Z" fill="var(--ct-cpu)" />
           <path d="m58 49 5 6-5 6m-2-6h-12" stroke="currentColor" strokeWidth="2" />
         </Board>
       );

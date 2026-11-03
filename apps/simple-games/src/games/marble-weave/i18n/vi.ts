@@ -22,15 +22,25 @@ export const vi: MarbleWeaveMessages = {
   marbleWeaveColor6: 'Vuông xanh ngọc',
   marbleWeaveColor7: 'Hoa hồng',
   marbleWeaveStep1Title: 'Tìm đường trống',
-  marbleWeaveStep1Body:
-    'Chọn một viên bi rồi chọn ô có chấm. Bi đi qua các ô trống, không đi chéo.',
   marbleWeaveStep2Title: 'Xếp hàng cùng màu',
-  marbleWeaveStep2Body:
-    'Xếp 4 viên cùng màu ở Dễ, hoặc 5 ở Thường và Khó. Hàng ngang, dọc và chéo đều tính.',
-  marbleWeaveStep3Title: 'Chừa đường đi',
-  marbleWeaveStep3Body:
-    'Nếu không tạo được hàng, 3 viên báo trước sẽ xuất hiện. Hoàn tác trả lại toàn bộ lượt, kể cả bi mới.',
   marbleWeaveMode_easy: 'Dễ',
   marbleWeaveMode_normal: 'Thường',
   marbleWeaveMode_hard: 'Khó',
+  marbleWeaveChoosePuzzle: 'Chọn câu đố',
+  marbleWeavePuzzle: 'Câu đố {n}',
+  marbleWeaveLegacy: 'Chế độ tính điểm cũ',
+  marbleWeaveGoal: 'Xóa hết trong {n} lượt',
+  marbleWeavePuzzleBest: 'Tốt nhất: {n} lượt',
+  marbleWeaveMovesLeft: 'Lượt còn lại: {n}',
+  marbleWeaveRemaining: 'Bi còn lại: {n}',
+  marbleWeaveExhausted: 'Hết lượt — hoàn tác hoặc chơi lại để thử thứ tự khác.',
+  marbleWeaveWon: 'Đã xóa hết!',
+  marbleWeaveNextPuzzle: 'Câu đố tiếp theo',
+  marbleWeaveStep1Body:
+    'Chọn một viên bi rồi chọn ô có chấm để di chuyển theo đường trống, không đi chéo.',
+  marbleWeaveStep2Body:
+    'Xếp 3 viên cùng màu theo hàng, cột hoặc đường chéo để xóa, hoặc 4 viên ở mức Khó.',
+  marbleWeaveStep3Title: 'Lên kế hoạch xóa hết',
+  marbleWeaveStep3Body:
+    'Xóa mọi viên bi trong giới hạn lượt; không có bi mới và Hoàn tác giúp thử lại thứ tự.',
 };

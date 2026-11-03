@@ -7,23 +7,27 @@ import { resultValue, type Session } from '../../game';
 export function ResultOverlay({
   session,
   onRetry,
+  onNewBoard,
   onHome,
 }: {
   session: Session;
   onRetry: () => void;
+  onNewBoard: () => void;
   onHome: () => void;
 }) {
   const revealed = useResultReveal(session.status !== 'playing');
   if (!revealed) return null;
-  return <ResultCard session={session} onRetry={onRetry} onHome={onHome} />;
+  return <ResultCard session={session} onRetry={onRetry} onNewBoard={onNewBoard} onHome={onHome} />;
 }
 function ResultCard({
   session,
   onRetry,
+  onNewBoard,
   onHome,
 }: {
   session: Session;
   onRetry: () => void;
+  onNewBoard: () => void;
   onHome: () => void;
 }) {
   const { t } = useSettings();
@@ -34,6 +38,10 @@ function ResultCard({
     { label: t('movesLabel'), value: String(resultValue(session)) },
     { label: t('riverCargoPar'), value: String(session.par) },
     { label: t('difficulty'), value: t(`riverCargoMode_${session.mode}`) },
+    {
+      label: t('riverCargoChoosePuzzle'),
+      value: t('riverCargoPuzzle', { n: session.puzzleId.split('-')[1]! }),
+    },
   ];
   return (
     <div className="overlay overlay-result">
@@ -53,7 +61,10 @@ function ResultCard({
           ))}
         </dl>
         <div className="result-actions">
-          <button className="btn btn-primary" type="button" autoFocus onClick={onRetry}>
+          <button className="btn btn-primary" type="button" autoFocus onClick={onNewBoard}>
+            {t('riverCargoNextPuzzle')}
+          </button>
+          <button className="btn btn-secondary" type="button" onClick={onRetry}>
             {t('tryAgain')}
           </button>
           <button className="btn btn-ghost" type="button" onClick={onHome}>

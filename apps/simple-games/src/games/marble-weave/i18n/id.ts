@@ -22,15 +22,25 @@ export const id: MarbleWeaveMessages = {
   marbleWeaveColor6: 'Persegi biru kehijauan',
   marbleWeaveColor7: 'Bunga merah muda',
   marbleWeaveStep1Title: 'Cari jalur kosong',
-  marbleWeaveStep1Body:
-    'Pilih kelereng lalu petak bertitik. Kelereng bergerak melalui petak kosong, tidak secara diagonal.',
   marbleWeaveStep2Title: 'Buat deret warna',
-  marbleWeaveStep2Body:
-    'Sejajarkan 4 warna sama di Mudah, atau 5 di Normal dan Sulit. Baris, kolom, dan diagonal dihitung.',
-  marbleWeaveStep3Title: 'Sisakan ruang',
-  marbleWeaveStep3Body:
-    'Langkah tanpa deret menambahkan 3 kelereng yang ditampilkan. Urungkan membatalkan seluruh langkah, termasuk kelereng baru.',
   marbleWeaveMode_easy: 'Mudah',
   marbleWeaveMode_normal: 'Normal',
   marbleWeaveMode_hard: 'Sulit',
+  marbleWeaveChoosePuzzle: 'Pilih teka-teki',
+  marbleWeavePuzzle: 'Teka-teki {n}',
+  marbleWeaveLegacy: 'Permainan skor klasik',
+  marbleWeaveGoal: 'Hapus semua dalam {n} langkah',
+  marbleWeavePuzzleBest: 'Terbaik: {n} langkah',
+  marbleWeaveMovesLeft: 'Sisa langkah: {n}',
+  marbleWeaveRemaining: 'Sisa kelereng: {n}',
+  marbleWeaveExhausted: 'Langkah habis — urungkan atau ulangi untuk mencoba urutan lain.',
+  marbleWeaveWon: 'Semua terhapus!',
+  marbleWeaveNextPuzzle: 'Teka-teki berikutnya',
+  marbleWeaveStep1Body:
+    'Pilih kelereng lalu petak bertitik untuk memindahkannya melalui jalur kosong tanpa langkah diagonal.',
+  marbleWeaveStep2Body:
+    'Sejajarkan 3 kelereng sewarna dalam baris, kolom, atau diagonal, atau 4 pada Sulit.',
+  marbleWeaveStep3Title: 'Rencanakan hingga bersih',
+  marbleWeaveStep3Body:
+    'Hapus semua kelereng dalam batas langkah; tidak ada kelereng baru dan Urungkan membantu mengatur ulang urutan.',
 };

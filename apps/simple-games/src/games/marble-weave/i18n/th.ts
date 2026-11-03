@@ -22,15 +22,24 @@ export const th: MarbleWeaveMessages = {
   marbleWeaveColor6: 'สี่เหลี่ยมเขียวอมฟ้า',
   marbleWeaveColor7: 'ดอกไม้ชมพู',
   marbleWeaveStep1Title: 'หาทางว่าง',
-  marbleWeaveStep1Body:
-    'เลือกลูกแก้วแล้วเลือกช่องที่มีจุด ลูกแก้วเดินผ่านช่องว่างในแนวตรง ไม่เดินทแยง',
   marbleWeaveStep2Title: 'เรียงสีเดียวกัน',
-  marbleWeaveStep2Body:
-    'เรียงสีเดียวกัน 4 ลูกในระดับง่าย หรือ 5 ลูกในระดับปกติและยาก ได้ทั้งแนวนอน แนวตั้ง และทแยง',
-  marbleWeaveStep3Title: 'เว้นที่ให้ย้าย',
-  marbleWeaveStep3Body:
-    'ถ้าเรียงไม่สำเร็จ ลูกแก้วที่แสดงไว้ 3 ลูกจะเพิ่มลงมา การย้อนกลับจะคืนทั้งตารวมถึงลูกแก้วใหม่',
   marbleWeaveMode_easy: 'ง่าย',
   marbleWeaveMode_normal: 'ปานกลาง',
   marbleWeaveMode_hard: 'ยาก',
+  marbleWeaveChoosePuzzle: 'เลือกปริศนา',
+  marbleWeavePuzzle: 'ปริศนา {n}',
+  marbleWeaveLegacy: 'โหมดคะแนนเดิม',
+  marbleWeaveGoal: 'ล้างทั้งหมดใน {n} ตา',
+  marbleWeavePuzzleBest: 'ดีที่สุด: {n} ตา',
+  marbleWeaveMovesLeft: 'ตาที่เหลือ: {n}',
+  marbleWeaveRemaining: 'ลูกแก้วที่เหลือ: {n}',
+  marbleWeaveExhausted: 'หมดตาแล้ว — ย้อนกลับหรือเริ่มใหม่เพื่อลองลำดับอื่น',
+  marbleWeaveWon: 'ล้างหมดแล้ว!',
+  marbleWeaveNextPuzzle: 'ปริศนาถัดไป',
+  marbleWeaveStep1Body: 'เลือกลูกแก้วแล้วเลือกช่องที่มีจุดเพื่อเคลื่อนผ่านทางว่างโดยไม่เดินทแยง',
+  marbleWeaveStep2Body:
+    'เรียงลูกแก้วสีเดียวกัน 3 ลูกในแนวนอน แนวตั้ง หรือแนวทแยงเพื่อลบออก โดยระดับยากใช้ 4 ลูก',
+  marbleWeaveStep3Title: 'วางแผนล้างทั้งหมด',
+  marbleWeaveStep3Body:
+    'ล้างลูกแก้วทั้งหมดภายในจำนวนตาที่กำหนด โดยไม่มีลูกแก้วใหม่เพิ่มและย้อนกลับเพื่อเปลี่ยนลำดับได้',
 };
