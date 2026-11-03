@@ -34,7 +34,7 @@ export function GameScreen() {
     if (!keys.includes(event.key)) return;
     const buttons = Array.from(
       (event.target as HTMLElement)
-        .closest('[aria-label]')
+        .closest('.om-hand, .om-draw-hand')
         ?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [],
     );
     if (!buttons.length) return;
@@ -47,7 +47,9 @@ export function GameScreen() {
             : event.key === 'ArrowUp'
               ? -7
               : 7;
-    buttons[(Math.max(0, current) + offset + buttons.length) % buttons.length]?.focus();
+    buttons[
+      (((Math.max(0, current) + offset) % buttons.length) + buttons.length) % buttons.length
+    ]?.focus();
     event.preventDefault();
   };
   useGameKeys(

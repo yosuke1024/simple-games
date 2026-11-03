@@ -227,3 +227,22 @@ it('chooses the outgoing exchange before seeing received cards and preserves 53 
   expect(saved.previousOrder).toEqual([0, 1, 2, 3]);
   expect(new Set([...saved.hands.flat(), ...saved.table, ...saved.discard]).size).toBe(53);
 });
+
+it('wraps keyboard navigation within the cards even with fewer than seven choices', async () => {
+  timers();
+  const kv = createMemoryKV();
+  await taught(kv, onHuman());
+  launch(kv);
+  await settle();
+  const cards = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('.df-hand button:not(:disabled)'),
+  );
+  expect(cards.length).toBeGreaterThan(0);
+  cards[0]!.focus();
+  fireEvent.keyDown(cards[0]!, { key: 'ArrowLeft' });
+  expect(document.activeElement).toBe(cards.at(-1));
+  fireEvent.keyDown(cards.at(-1)!, { key: 'ArrowUp' });
+  expect(document.activeElement).toBe(
+    cards[(((cards.length - 1 - 7) % cards.length) + cards.length) % cards.length],
+  );
+});

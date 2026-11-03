@@ -219,3 +219,22 @@ it('renders only anonymous card backs and ignores a repeated draw during playbac
   await settle();
   expect((await loadSavedGame(kv))?.moves).toBe(s.moves + 1);
 });
+
+it('wraps keyboard navigation within the cards even with fewer than seven choices', async () => {
+  timers();
+  const kv = createMemoryKV();
+  await taught(kv, onHuman());
+  launch(kv);
+  await settle();
+  const cards = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('.om-draw-hand button:not(:disabled)'),
+  );
+  expect(cards.length).toBeGreaterThan(0);
+  cards[0]!.focus();
+  fireEvent.keyDown(cards[0]!, { key: 'ArrowLeft' });
+  expect(document.activeElement).toBe(cards.at(-1));
+  fireEvent.keyDown(cards.at(-1)!, { key: 'ArrowUp' });
+  expect(document.activeElement).toBe(
+    cards[(((cards.length - 1 - 7) % cards.length) + cards.length) % cards.length],
+  );
+});
