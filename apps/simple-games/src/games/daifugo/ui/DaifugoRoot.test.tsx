@@ -71,20 +71,18 @@ function onHuman(seed = 1) {
   return s;
 }
 function clickMove(action: Action) {
-  if (action.kind === 'pass')
-    fireEvent.click(screen.getByRole('button', { name: 'Pass', exact: true }));
+  if (action.kind === 'pass') fireEvent.click(screen.getByRole('button', { name: 'Pass' }));
   else {
     for (const card of action.cards) {
       const label =
         card === 52
           ? 'Joker'
           : `${['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'][card % 13]} ${['♠', '♥', '♦', '♣'][Math.floor(card / 13)]}`;
-      fireEvent.click(screen.getByRole('button', { name: label, exact: true }));
+      fireEvent.click(screen.getByRole('button', { name: label }));
     }
     fireEvent.click(
       screen.getByRole('button', {
         name: action.kind === 'exchange' ? 'Exchange' : 'Play cards',
-        exact: true,
       }),
     );
   }
@@ -130,7 +128,7 @@ describe('Daifugo UI and lifecycle', () => {
     launch(kv, false);
     await settle();
     const saved = await loadSavedGame(kv);
-    fireEvent.click(screen.getByRole('button', { name: 'New Game', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: 'New Game' }));
     expect(screen.getByRole('alertdialog').closest('[inert]')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     await settle();
@@ -221,7 +219,7 @@ it('chooses the outgoing exchange before seeing received cards and preserves 53 
   await taught(kv, s);
   launch(kv);
   await settle();
-  expect(screen.getByRole('button', { name: 'Exchange', exact: true })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Exchange' })).toBeDisabled();
   clickMove({ kind: 'exchange', cards: s.hands[0]!.slice(0, 2) });
   await settle();
   const saved = (await loadSavedGame(kv))!;

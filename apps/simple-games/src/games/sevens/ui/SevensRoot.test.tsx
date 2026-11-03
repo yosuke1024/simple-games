@@ -72,12 +72,12 @@ function onHuman(seed = 1) {
 }
 function clickMove(action: Action) {
   if (action.kind === 'pass') {
-    fireEvent.click(screen.getByRole('button', { name: 'Pass', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: 'Pass' }));
     const dialog = screen.queryByRole('alertdialog');
-    if (dialog) fireEvent.click(within(dialog).getByRole('button', { name: 'Pass', exact: true }));
+    if (dialog) fireEvent.click(within(dialog).getByRole('button', { name: 'Pass' }));
   } else {
     const label = `${['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'][action.card % 13]} ${['♠', '♥', '♦', '♣'][Math.floor(action.card / 13)]}`;
-    fireEvent.click(screen.getByRole('button', { name: label, exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: label }));
   }
 }
 describe('Sevens UI and lifecycle', () => {
@@ -121,7 +121,7 @@ describe('Sevens UI and lifecycle', () => {
     launch(kv, false);
     await settle();
     const saved = await loadSavedGame(kv);
-    fireEvent.click(screen.getByRole('button', { name: 'New Game', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: 'New Game' }));
     expect(screen.getByRole('alertdialog').closest('[inert]')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     await settle();
@@ -213,7 +213,7 @@ it('cancels a fourth pass unchanged and confirms it exactly once', async () => {
   launch(kv);
   await settle();
   const before = await loadSavedGame(kv);
-  fireEvent.click(screen.getByRole('button', { name: 'Pass', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Pass' }));
   expect(screen.getByRole('alertdialog', { name: 'Take a fourth pass?' })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
   await settle();

@@ -116,7 +116,7 @@ describe('OldMaid UI and lifecycle', () => {
     launch(kv, false);
     await settle();
     const saved = await loadSavedGame(kv);
-    fireEvent.click(screen.getByRole('button', { name: 'New Game', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: 'New Game' }));
     expect(screen.getByRole('alertdialog').closest('[inert]')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     await settle();
