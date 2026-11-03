@@ -35,7 +35,7 @@ export function TutorialFigure({ step }: { step: number }) {
       <path d="M99 15v120m60-120v120M39 75h180" stroke="var(--line)" />
       {cells.map(([x, y, owner], i) =>
         owner ? (
-          <g key={i} fill={owner === 1 ? 'currentColor' : 'var(--ink-soft)'}>
+          <g key={i} fill={owner === 1 ? 'currentColor' : 'var(--ct-cpu)'}>
             {owner === 1 ? (
               <circle cx={69 + x! * 60} cy={45 + y! * 60} r="12" />
             ) : (

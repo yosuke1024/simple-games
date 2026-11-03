@@ -22,15 +22,26 @@ export const es: MarbleWeaveMessages = {
   marbleWeaveColor6: 'Cuadrado turquesa',
   marbleWeaveColor7: 'Flor rosa',
   marbleWeaveStep1Title: 'Busca un camino',
-  marbleWeaveStep1Body:
-    'Elige una canica y luego una casilla con punto. Se mueve por casillas vacías, nunca en diagonal.',
   marbleWeaveStep2Title: 'Forma una línea',
-  marbleWeaveStep2Body:
-    'Alinea 4 del mismo color en Fácil, o 5 en Normal y Difícil. Cuentan filas, columnas y diagonales.',
-  marbleWeaveStep3Title: 'Deja espacio',
-  marbleWeaveStep3Body:
-    'Si no formas una línea, aparecen las 3 canicas anunciadas. Deshacer revierte toda la jugada, incluidas las nuevas canicas.',
   marbleWeaveMode_easy: 'Fácil',
   marbleWeaveMode_normal: 'Normal',
   marbleWeaveMode_hard: 'Difícil',
+  marbleWeaveChoosePuzzle: 'Elige un puzle',
+  marbleWeavePuzzle: 'Puzle {n}',
+  marbleWeaveLegacy: 'Partida clásica por puntos',
+  marbleWeaveGoal: 'Elimina todo en {n} movimientos',
+  marbleWeavePuzzleBest: 'Mejor: {n} movimientos',
+  marbleWeaveMovesLeft: 'Movimientos restantes: {n}',
+  marbleWeaveRemaining: 'Bolas restantes: {n}',
+  marbleWeaveExhausted: 'Sin movimientos — deshaz o reinicia para probar otro orden.',
+  marbleWeaveWon: '¡Todo despejado!',
+  marbleWeaveNextPuzzle: 'Siguiente puzle',
+  marbleWeaveStep1Body:
+    'Elige una bola y luego una casilla con punto para moverla por un camino libre, sin pasos diagonales.',
+  marbleWeaveStep2Body:
+    'Forma una fila, columna o diagonal de 3 bolas del mismo color, o de 4 en Difícil.',
+  marbleWeaveStep3Title: 'Planea cómo eliminar todo',
+  marbleWeaveStep3Body:
+    'Elimina todas las bolas dentro del límite; no aparecen nuevas y Deshacer te permite cambiar el orden.',
+  marbleWeavePuzzleLabel: 'Puzle',
 };

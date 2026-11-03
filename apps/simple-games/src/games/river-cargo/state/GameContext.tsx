@@ -16,6 +16,8 @@ import { useOnUnmount } from '../../../ui/useOnUnmount';
 import { useMovePlayback } from '../../../ui/useMovePlayback';
 import {
   createSession,
+  puzzleById,
+  CATALOG,
   act,
   resultValue,
   undo,
@@ -49,6 +51,7 @@ interface ContextValue {
   canResume: boolean;
   navigate: (screen: Screen) => void;
   startBoard: (mode: Mode) => void;
+  startPuzzle: (id: string) => void;
   resumeGame: () => void;
   restartCurrent: () => void;
   startNewBoard: () => void;
@@ -140,16 +143,20 @@ export function RiverCargoProvider({
     void saveGame(next, kv);
   }, [bookPlayTime, kv, putSession, withElapsed]);
   const begin = useCallback(
-    (mode: Mode, seed: number) => {
+    (mode: Mode, seed: number, puzzleId?: string) => {
       finishPlayback();
       syncActiveGame();
+      const next = createSession(mode, seed, puzzleId);
       const currentStats = statsRef.current;
-      const record = currentStats.boards[mode];
-      persistStats({
-        ...currentStats,
-        boards: { ...currentStats.boards, [mode]: { ...record, played: record.played + 1 } },
-      });
-      const next = createSession(mode, seed);
+      const record = next.puzzleId
+        ? (currentStats.puzzles[next.puzzleId] ?? { played: 0, completed: 0, best: null })
+        : currentStats.boards[mode];
+      const started = { ...record, played: record.played + 1 };
+      persistStats(
+        next.puzzleId
+          ? { ...currentStats, puzzles: { ...currentStats.puzzles, [next.puzzleId]: started } }
+          : { ...currentStats, boards: { ...currentStats.boards, [mode]: started } },
+      );
       elapsedRef.current = 0;
       bookedRef.current = 0;
       putSession(next);
@@ -165,18 +172,28 @@ export function RiverCargoProvider({
     (mode: Mode) => {
       let seed = (Date.now() ^ Math.floor(Math.random() * 0x100000000)) >>> 0;
       if (seed === sessionRef.current?.seed) seed = (seed + 1) >>> 0;
-      begin(mode, seed);
+      begin(mode, seed, mode + '-1');
+    },
+    [begin],
+  );
+  const startPuzzle = useCallback(
+    (id: string) => {
+      const p = puzzleById(id);
+      if (p) begin(p.mode, 0, p.id);
     },
     [begin],
   );
   const restartCurrent = useCallback(() => {
     const current = sessionRef.current;
-    if (current) begin(current.mode, current.seed);
+    if (current) begin(current.mode, current.seed, current.puzzleId ?? undefined);
   }, [begin]);
   const startNewBoard = useCallback(() => {
     const current = sessionRef.current;
-    if (current) startBoard(current.mode);
-  }, [startBoard]);
+    if (!current) return;
+    const options = CATALOG.filter((p) => p.mode === current.mode);
+    const index = options.findIndex((p) => p.id === current.puzzleId);
+    startPuzzle(options[(index + 1) % options.length]!.id);
+  }, [startPuzzle]);
   const resumeGame = useCallback(() => {
     if (sessionRef.current?.status === 'playing') setScreen('game');
   }, []);
@@ -194,22 +211,21 @@ export function RiverCargoProvider({
       else {
         void clearSavedGame(kv);
         const all = statsRef.current;
-        const record = all.boards[next.mode];
+        const record = next.puzzleId
+          ? (all.puzzles[next.puzzleId] ?? { played: 0, completed: 0, best: null })
+          : all.boards[next.mode];
         const completed = record.completed + (next.status === 'won' ? 1 : 0);
-        persistStats({
-          ...all,
-          boards: {
-            ...all.boards,
-            [next.mode]: {
-              ...record,
-              completed,
-              best:
-                next.status === 'won'
-                  ? Math.min(record.best ?? Infinity, resultValue(next))
-                  : record.best,
-            },
-          },
-        });
+        const finished = {
+          ...record,
+          played: Math.max(record.played, completed),
+          completed,
+          best: Math.min(record.best ?? Infinity, resultValue(next)),
+        };
+        persistStats(
+          next.puzzleId
+            ? { ...all, puzzles: { ...all.puzzles, [next.puzzleId]: finished } }
+            : { ...all, boards: { ...all.boards, [next.mode]: finished } },
+        );
         recordGameCompleted();
       }
       return true;
@@ -312,6 +328,7 @@ export function RiverCargoProvider({
         canResume: session?.status === 'playing',
         navigate: setScreen,
         startBoard,
+        startPuzzle,
         resumeGame,
         restartCurrent,
         startNewBoard,

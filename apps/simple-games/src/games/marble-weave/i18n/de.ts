@@ -22,15 +22,26 @@ export const de: MarbleWeaveMessages = {
   marbleWeaveColor6: 'Türkises Quadrat',
   marbleWeaveColor7: 'Rosa Blume',
   marbleWeaveStep1Title: 'Einen freien Weg finden',
-  marbleWeaveStep1Body:
-    'Wähle eine Kugel und dann ein Feld mit Punkt. Sie bewegt sich nur waagerecht oder senkrecht durch freie Felder.',
   marbleWeaveStep2Title: 'Eine Farblinie bilden',
-  marbleWeaveStep2Body:
-    'Bilde eine Linie aus 4 gleichfarbigen Kugeln auf Leicht, sonst aus 5. Waagerecht, senkrecht und diagonal zählen.',
-  marbleWeaveStep3Title: 'Platz zum Bewegen lassen',
-  marbleWeaveStep3Body:
-    'Ohne fertige Linie erscheinen die 3 angekündigten Kugeln. Rückgängig nimmt den ganzen Zug samt neuen Kugeln zurück.',
   marbleWeaveMode_easy: 'Leicht',
   marbleWeaveMode_normal: 'Normal',
   marbleWeaveMode_hard: 'Schwer',
+  marbleWeaveChoosePuzzle: 'Rätsel wählen',
+  marbleWeavePuzzle: 'Rätsel {n}',
+  marbleWeaveLegacy: 'Klassisches Punktespiel',
+  marbleWeaveGoal: 'Alles in {n} Zügen leeren',
+  marbleWeavePuzzleBest: 'Bestwert: {n} Züge',
+  marbleWeaveMovesLeft: 'Züge übrig: {n}',
+  marbleWeaveRemaining: 'Kugeln übrig: {n}',
+  marbleWeaveExhausted: 'Keine Züge mehr — zurücknehmen oder neu versuchen.',
+  marbleWeaveWon: 'Alles leer!',
+  marbleWeaveNextPuzzle: 'Nächstes Rätsel',
+  marbleWeaveStep1Body:
+    'Wähle eine Kugel und dann ein gepunktetes Feld, um sie ohne diagonale Schritte durch freie Felder zu bewegen.',
+  marbleWeaveStep2Body:
+    'Bilde eine Reihe, Spalte oder Diagonale aus 3 gleichfarbigen Kugeln, bei Schwer aus 4.',
+  marbleWeaveStep3Title: 'Plane ein leeres Brett',
+  marbleWeaveStep3Body:
+    'Entferne alle Kugeln innerhalb des Zuglimits; neue kommen nicht hinzu, und Zurücknehmen hilft beim Umplanen.',
+  marbleWeavePuzzleLabel: 'Rätsel',
 };

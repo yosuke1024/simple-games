@@ -22,15 +22,26 @@ export const ptBR: MarbleWeaveMessages = {
   marbleWeaveColor6: 'Quadrado turquesa',
   marbleWeaveColor7: 'Flor rosa',
   marbleWeaveStep1Title: 'Encontre um caminho',
-  marbleWeaveStep1Body:
-    'Escolha uma bolinha e depois uma casa com ponto. Ela passa por casas vazias, nunca na diagonal.',
   marbleWeaveStep2Title: 'Forme uma linha',
-  marbleWeaveStep2Body:
-    'Alinhe 4 da mesma cor no Fácil ou 5 no Normal e Difícil. Valem linhas, colunas e diagonais.',
-  marbleWeaveStep3Title: 'Deixe espaço',
-  marbleWeaveStep3Body:
-    'Sem formar uma linha, surgem as 3 bolinhas anunciadas. Desfazer volta a jogada inteira, incluindo as novas bolinhas.',
   marbleWeaveMode_easy: 'Fácil',
   marbleWeaveMode_normal: 'Normal',
   marbleWeaveMode_hard: 'Difícil',
+  marbleWeaveChoosePuzzle: 'Escolha um desafio',
+  marbleWeavePuzzle: 'Desafio {n}',
+  marbleWeaveLegacy: 'Partida clássica por pontos',
+  marbleWeaveGoal: 'Elimine tudo em {n} jogadas',
+  marbleWeavePuzzleBest: 'Melhor: {n} jogadas',
+  marbleWeaveMovesLeft: 'Jogadas restantes: {n}',
+  marbleWeaveRemaining: 'Bolinhas restantes: {n}',
+  marbleWeaveExhausted: 'Sem jogadas — desfaça ou reinicie para tentar outra ordem.',
+  marbleWeaveWon: 'Tudo eliminado!',
+  marbleWeaveNextPuzzle: 'Próximo desafio',
+  marbleWeaveStep1Body:
+    'Escolha uma bolinha e depois uma casa com ponto para movê-la por um caminho livre, sem passos diagonais.',
+  marbleWeaveStep2Body:
+    'Forme uma linha, coluna ou diagonal de 3 bolinhas da mesma cor, ou de 4 no Difícil.',
+  marbleWeaveStep3Title: 'Planeje eliminar tudo',
+  marbleWeaveStep3Body:
+    'Elimine todas as bolinhas dentro do limite; não surgem novas, e Desfazer permite repensar a ordem.',
+  marbleWeavePuzzleLabel: 'Desafio',
 };

@@ -24,13 +24,23 @@ export const en = {
   marbleWeaveColor6: 'Teal square',
   marbleWeaveColor7: 'Pink flower',
   marbleWeaveStep1Title: 'Find an open path',
-  marbleWeaveStep1Body:
-    'Choose a marble, then a dotted square. It moves through empty squares, never diagonally.',
   marbleWeaveStep2Title: 'Make a color line',
-  marbleWeaveStep2Body:
-    'Line up 4 of one color in Easy, or 5 in Normal and Hard. Rows, columns and diagonals all count.',
-  marbleWeaveStep3Title: 'Leave room to move',
+  marbleWeaveChoosePuzzle: 'Choose a puzzle',
+  marbleWeavePuzzle: 'Puzzle {n}',
+  marbleWeaveLegacy: 'Classic score game',
+  marbleWeaveGoal: 'Clear all in {n} moves',
+  marbleWeavePuzzleBest: 'Best: {n} moves',
+  marbleWeaveMovesLeft: 'Moves left: {n}',
+  marbleWeaveRemaining: 'Marbles left: {n}',
+  marbleWeaveExhausted: 'No moves left — undo or retry to try a different order.',
+  marbleWeaveWon: 'All clear!',
+  marbleWeaveNextPuzzle: 'Next puzzle',
+  marbleWeaveStep1Body:
+    'Choose a marble, then a dotted square to move through an empty path without diagonal steps.',
+  marbleWeaveStep2Body: 'Clear a row, column or diagonal of 3 matching marbles, or 4 in Hard.',
+  marbleWeaveStep3Title: 'Plan an all-clear',
   marbleWeaveStep3Body:
-    'A move without a line adds the 3 preview marbles. Undo takes back the whole move, including new marbles.',
+    'Clear every marble within the move limit; no new marbles appear, and Undo lets you rethink the order.',
+  marbleWeavePuzzleLabel: 'Puzzle',
 } as const;
 export type MarbleWeaveMessages = Record<keyof typeof en, string>;

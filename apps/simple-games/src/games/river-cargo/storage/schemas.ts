@@ -1,6 +1,15 @@
 import type { SchemaDef } from '../../../storage/schemas';
 import { asInt, isRecord } from '../../../storage/validate';
-import { act, createSession, isMode, MODES, type Session, type Mode, type Action } from '../game';
+import {
+  act,
+  createSession,
+  puzzleById,
+  isMode,
+  MODES,
+  type Session,
+  type Mode,
+  type Action,
+} from '../game';
 import { RG_STORAGE_KEYS } from './keys';
 export { RG_STORAGE_KEYS };
 export interface Flags {
@@ -35,15 +44,17 @@ export interface BoardStats {
   best: number | null;
 }
 export interface Stats {
-  schemaVersion: 1;
+  schemaVersion: 2;
+  puzzles: Record<string, BoardStats>;
   totalPlaySeconds: number;
   boards: Record<Mode, BoardStats>;
 }
 export const statsSchema: SchemaDef<Stats> = {
   key: RG_STORAGE_KEYS.stats,
-  version: 1,
+  version: 2,
   defaultValue: () => ({
-    schemaVersion: 1,
+    schemaVersion: 2,
+    puzzles: {},
     totalPlaySeconds: 0,
     boards: {
       easy: { played: 0, completed: 0, best: null },
@@ -52,7 +63,12 @@ export const statsSchema: SchemaDef<Stats> = {
     },
   }),
   validate: (raw) => {
-    if (!isRecord(raw) || raw.schemaVersion !== 1 || !isRecord(raw.boards)) return null;
+    if (
+      !isRecord(raw) ||
+      (raw.schemaVersion !== 1 && raw.schemaVersion !== 2) ||
+      !isRecord(raw.boards)
+    )
+      return null;
     const seconds = asInt(raw.totalPlaySeconds, 0, 1e12);
     if (seconds === null) return null;
     const boards = {} as Record<Mode, BoardStats>;
@@ -71,11 +87,33 @@ export const statsSchema: SchemaDef<Stats> = {
         return null;
       boards[mode] = { played, completed, best };
     }
-    return { schemaVersion: 1, totalPlaySeconds: seconds, boards };
+    const puzzles: Record<string, BoardStats> = {};
+    if (raw.schemaVersion === 2) {
+      if (!isRecord(raw.puzzles)) return null;
+      for (const [id, b] of Object.entries(raw.puzzles)) {
+        if (!puzzleById(id) || !isRecord(b)) return null;
+        const played = asInt(b.played, 0, 1e9),
+          completed = asInt(b.completed, 0, 1e9),
+          best = b.best === null ? null : asInt(b.best, 0, 1e9);
+        if (
+          played === null ||
+          completed === null ||
+          completed > played ||
+          (best === null && b.best !== null)
+        )
+          return null;
+        puzzles[id] = { played, completed, best };
+      }
+    } else
+      for (const mode of MODES) {
+        if (boards[mode].played) puzzles[mode + '-1'] = { ...boards[mode] };
+      }
+    return { schemaVersion: 2, puzzles, totalPlaySeconds: seconds, boards };
   },
 };
 export interface PersistedGame {
-  schemaVersion: 1;
+  schemaVersion: 2;
+  puzzleId: string;
   seed: number;
   mode: Mode;
   actions: Action[];
@@ -85,7 +123,7 @@ export interface PersistedGame {
 export function restore(raw: unknown): Session | null {
   if (
     !isRecord(raw) ||
-    raw.schemaVersion !== 1 ||
+    (raw.schemaVersion !== 1 && raw.schemaVersion !== 2) ||
     !isMode(raw.mode) ||
     !Array.isArray(raw.actions) ||
     raw.actions.length > 512
@@ -94,7 +132,9 @@ export function restore(raw: unknown): Session | null {
   const seed = asInt(raw.seed, 0, 0xffffffff),
     elapsedSeconds = asInt(raw.elapsedSeconds, 0, 1e12);
   if (seed === null || elapsedSeconds === null) return null;
-  let session = createSession(raw.mode, seed);
+  const puzzleId = raw.schemaVersion === 1 ? raw.mode + '-1' : raw.puzzleId;
+  if (typeof puzzleId !== 'string' || puzzleById(puzzleId)?.mode !== raw.mode) return null;
+  let session = createSession(raw.mode, seed, puzzleId);
   for (const action of raw.actions) {
     const next = act(session, action as Action);
     if (!next) return null;
@@ -104,7 +144,8 @@ export function restore(raw: unknown): Session | null {
 }
 export function toPersisted(s: Session, savedAt: number): PersistedGame {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
+    puzzleId: s.puzzleId,
     seed: s.seed,
     mode: s.mode,
     actions: s.actions,
@@ -114,7 +155,7 @@ export function toPersisted(s: Session, savedAt: number): PersistedGame {
 }
 export const gameSchema: SchemaDef<PersistedGame | null> = {
   key: RG_STORAGE_KEYS.game,
-  version: 1,
+  version: 2,
   defaultValue: () => null,
   validate: (raw) => {
     if (!isRecord(raw)) return null;

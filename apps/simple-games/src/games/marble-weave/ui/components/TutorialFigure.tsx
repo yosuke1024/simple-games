@@ -5,13 +5,14 @@ export function TutorialFigure({ step }: { step: number }) {
           [1, 2],
           [2, 2],
           [3, 2],
-          [4, 2],
         ]
-      : [
-          [1, 1],
-          [3, 1],
-          [4, 3],
-        ];
+      : step === 2
+        ? []
+        : [
+            [1, 1],
+            [3, 1],
+            [4, 3],
+          ];
   return (
     <svg className="mw-tutorial-figure" viewBox="0 0 260 160" aria-hidden="true">
       <rect
@@ -52,7 +53,7 @@ export function TutorialFigure({ step }: { step: number }) {
         <rect
           x="50"
           y="48"
-          width="129"
+          width="96"
           height="28"
           rx="14"
           fill="none"
@@ -60,17 +61,16 @@ export function TutorialFigure({ step }: { step: number }) {
           strokeWidth="2"
         />
       ) : null}
-      {step === 2
-        ? [0, 1, 2].map((i) => (
-            <circle
-              key={i}
-              cx={98 + i * 33}
-              cy="128"
-              r="8"
-              fill={['#8258a3', '#3d6aab', '#af4558'][i]}
-            />
-          ))
-        : null}
+      {step === 2 ? (
+        <path
+          d="m112 78 13 13 26-30"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ) : null}
     </svg>
   );
 }

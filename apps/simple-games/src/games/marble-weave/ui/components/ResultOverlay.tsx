@@ -32,11 +32,22 @@ function ResultCard({
 }) {
   const { t } = useSettings();
   useDialogDismiss(onHome);
-  const won = false,
-    title = t('marbleWeaveLost');
+  const won = session.status === 'won',
+    title = t(won ? 'marbleWeaveWon' : 'marbleWeaveLost');
   const details = [
-    { label: t('score'), value: String(resultValue(session)) },
+    {
+      label: t(session.rulesVersion === 1 ? 'score' : 'movesLabel'),
+      value: String(resultValue(session)),
+    },
     { label: t('difficulty'), value: t(`marbleWeaveMode_${session.mode}`) },
+    ...(session.puzzleId
+      ? [
+          {
+            label: t('marbleWeavePuzzleLabel'),
+            value: session.puzzleId.split('-')[1]!,
+          },
+        ]
+      : []),
   ];
   return (
     <div className="overlay overlay-result">
@@ -57,7 +68,7 @@ function ResultCard({
         </dl>
         <div className="result-actions">
           <button className="btn btn-primary" type="button" autoFocus onClick={onNewBoard}>
-            {t('newGame')}
+            {t('marbleWeaveNextPuzzle')}
           </button>
           <button className="btn btn-secondary" type="button" onClick={onRetry}>
             {t('tryAgain')}

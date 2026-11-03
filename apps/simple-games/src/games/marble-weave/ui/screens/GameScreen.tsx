@@ -5,7 +5,7 @@ import { BannerSlot } from '@/ui/components/BannerSlot';
 import { RestartDialog } from '@/ui/components/RestartDialog';
 import { IconBack, IconRetry, IconUndo } from '@/ui/components/icons';
 import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
-import { CONFIG, reachable } from '../../game';
+import { reachable } from '../../game';
 import { useMarbleWeave } from '../../state/GameContext';
 import { Marble } from '../components/Marble';
 import { ResultOverlay } from '../components/ResultOverlay';
@@ -52,11 +52,13 @@ export function GameScreen() {
     !over && !confirmRestart && !playback,
   );
   if (!session) return null;
-  const { size, target } = CONFIG[session.mode],
+  const { size, target } = session,
     shown = playback?.before ?? session;
+  const puzzle = session.rulesVersion === 2;
+  const exhausted = puzzle && session.actions.length >= session.moveLimit;
   const destinations = selected === null ? [] : reachable(session.board, selected, size);
   const select = (cell: number) => {
-    if (playback || over) return;
+    if (playback || over || exhausted) return;
     if (session.board[cell]) {
       setSelected(selected === cell ? null : cell);
       setBlocked(false);
@@ -78,7 +80,10 @@ export function GameScreen() {
             <IconBack />
           </button>
           <span className="game-mode">
-            {size} × {size} · {t('marbleWeaveTarget', { n: target })}
+            {puzzle
+              ? t('marbleWeavePuzzle', { n: session.puzzleId!.split('-')[1]! })
+              : `${size} × ${size}`}{' '}
+            · {t('marbleWeaveTarget', { n: target })}
           </span>
           <button
             type="button"
@@ -91,22 +96,38 @@ export function GameScreen() {
         </header>
         <div className="mw-body">
           <div className="mw-metrics">
-            <span>
-              {t('score')} <strong>{session.score}</strong>
-            </span>
-            <span className="mw-preview" aria-label={t('marbleWeaveNext')}>
-              {t('marbleWeaveNext')}
-              {shown.next.map((color, i) => (
-                <span
-                  key={i}
-                  className="mw-preview-ball"
-                  aria-label={t(`marbleWeaveColor${color as 1 | 2 | 3 | 4 | 5 | 6 | 7}`)}
-                >
-                  <Marble color={color} />
+            {puzzle ? (
+              <>
+                <span>
+                  {t('marbleWeaveMovesLeft', { n: shown.moveLimit - shown.actions.length })}
                 </span>
-              ))}
-            </span>
+                <span>{t('marbleWeaveRemaining', { n: shown.board.filter(Boolean).length })}</span>
+              </>
+            ) : (
+              <>
+                <span>
+                  {t('score')} <strong>{session.score}</strong>
+                </span>
+                <span className="mw-preview" aria-label={t('marbleWeaveNext')}>
+                  {t('marbleWeaveNext')}
+                  {shown.next.map((color, i) => (
+                    <span
+                      key={i}
+                      className="mw-preview-ball"
+                      aria-label={t(`marbleWeaveColor${color as 1 | 2 | 3 | 4 | 5 | 6 | 7}`)}
+                    >
+                      <Marble color={color} />
+                    </span>
+                  ))}
+                </span>
+              </>
+            )}
           </div>
+          {puzzle ? (
+            <p className="mw-goal">{t('marbleWeaveGoal', { n: session.moveLimit })}</p>
+          ) : (
+            <p className="mw-goal">{t('marbleWeaveLegacy')}</p>
+          )}
           <div
             className="mw-board"
             style={{ gridTemplateColumns: `repeat(${size},1fr)` }}
@@ -166,7 +187,7 @@ export function GameScreen() {
                     color: label,
                   })}
                   aria-pressed={selected === cell}
-                  aria-disabled={!!playback}
+                  aria-disabled={!!playback || exhausted}
                   onClick={() => select(cell)}
                 >
                   {color && !moving ? <Marble color={color} /> : null}
@@ -199,13 +220,15 @@ export function GameScreen() {
           </div>
           <p className="mw-status" role="status">
             {t(
-              blocked
-                ? 'marbleWeaveBlocked'
-                : playback
-                  ? 'marbleWeaveMoving'
-                  : selected === null
-                    ? 'marbleWeaveSelect'
-                    : 'marbleWeaveDestination',
+              exhausted && !playback
+                ? 'marbleWeaveExhausted'
+                : blocked
+                  ? 'marbleWeaveBlocked'
+                  : playback
+                    ? 'marbleWeaveMoving'
+                    : selected === null
+                      ? 'marbleWeaveSelect'
+                      : 'marbleWeaveDestination',
             )}
           </p>
           <div className="action-bar mw-actions">
@@ -234,7 +257,7 @@ export function GameScreen() {
         open={confirmRestart}
         onClose={() => setConfirmRestart(false)}
         onRetry={() => reset(restartCurrent)}
-        newBoard={{ label: t('newGame'), start: () => reset(startNewBoard) }}
+        newBoard={{ label: t('marbleWeaveNextPuzzle'), start: () => reset(startNewBoard) }}
       />
     </div>
   );

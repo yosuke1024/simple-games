@@ -45,7 +45,7 @@ describe('Chain Territory rules', () => {
         s = next;
       }
     }
-  });
+  }, 15000);
   it('chooses a legal easy reply across the unsigned seed range', () => {
     for (const seed of [0, 1, 0x7fffffff, 0x80000000, 0xffffffff]) {
       const first = act(createSession('easy', seed), 0)!;

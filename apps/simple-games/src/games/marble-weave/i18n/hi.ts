@@ -22,14 +22,26 @@ export const hi: MarbleWeaveMessages = {
   marbleWeaveColor6: 'फ़िरोज़ी वर्ग',
   marbleWeaveColor7: 'गुलाबी फूल',
   marbleWeaveStep1Title: 'खाली रास्ता खोजें',
-  marbleWeaveStep1Body: 'कंचा चुनें, फिर बिंदु वाला खाना। वह खाली खानों में चलता है, तिरछा नहीं।',
   marbleWeaveStep2Title: 'एक रंग की कतार बनाएं',
-  marbleWeaveStep2Body:
-    'आसान में एक रंग के 4 कंचे, सामान्य और कठिन में 5 सजाएं। आड़ी, खड़ी और तिरछी कतारें गिनी जाती हैं।',
-  marbleWeaveStep3Title: 'चलने की जगह छोड़ें',
-  marbleWeaveStep3Body:
-    'कतार न बनने पर दिखाए गए 3 कंचे जुड़ते हैं। वापस करें पूरी चाल को नए कंचों सहित लौटाता है।',
   marbleWeaveMode_easy: 'आसान',
   marbleWeaveMode_normal: 'सामान्य',
   marbleWeaveMode_hard: 'कठिन',
+  marbleWeaveChoosePuzzle: 'पहेली चुनें',
+  marbleWeavePuzzle: 'पहेली {n}',
+  marbleWeaveLegacy: 'पुराना स्कोर खेल',
+  marbleWeaveGoal: '{n} चालों में सब हटाएँ',
+  marbleWeavePuzzleBest: 'सर्वश्रेष्ठ: {n} चालें',
+  marbleWeaveMovesLeft: 'बाकी चालें: {n}',
+  marbleWeaveRemaining: 'बाकी गोलियाँ: {n}',
+  marbleWeaveExhausted: 'चालें समाप्त — वापस करें या फिर शुरू करके दूसरा क्रम आज़माएँ।',
+  marbleWeaveWon: 'सब हट गया!',
+  marbleWeaveNextPuzzle: 'अगली पहेली',
+  marbleWeaveStep1Body:
+    'गोली चुनकर बिंदु वाले खाने को दबाएँ ताकि वह खाली रास्ते पर बिना तिरछे कदमों के चले।',
+  marbleWeaveStep2Body:
+    'एक रंग की 3 गोलियाँ पंक्ति, स्तंभ या तिरछी रेखा में मिलाएँ, कठिन स्तर पर 4 चाहिए।',
+  marbleWeaveStep3Title: 'सब हटाने की योजना बनाएँ',
+  marbleWeaveStep3Body:
+    'सीमित चालों में सभी गोलियाँ हटाएँ; नई गोलियाँ नहीं आतीं और वापस करें से क्रम बदल सकते हैं।',
+  marbleWeavePuzzleLabel: 'पहेली',
 };

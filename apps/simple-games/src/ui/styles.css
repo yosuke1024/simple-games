@@ -3596,6 +3596,12 @@ button:disabled {
   --accent-soft: #ddd9ca;
   --accent-ring: rgba(106, 99, 37, 0.38);
   --accent-ring-soft: rgba(106, 99, 37, 0.12);
+  --ct-you: #245cc1;
+  --ct-you-soft: #c5d8f5;
+  --ct-you-tint: rgba(36, 92, 193, 0.1);
+  --ct-cpu: #aa3829;
+  --ct-cpu-soft: #f3c5b9;
+  --ct-cpu-tint: rgba(170, 56, 41, 0.1);
 }
 
 :root[data-theme='dark'][data-game='chain-territory'],
@@ -3605,6 +3611,12 @@ button:disabled {
   --accent-soft: #323333;
   --accent-ring: rgba(205, 201, 173, 0.38);
   --accent-ring-soft: rgba(205, 201, 173, 0.12);
+  --ct-you: #7cb5ff;
+  --ct-you-soft: #29436a;
+  --ct-you-tint: rgba(124, 181, 255, 0.12);
+  --ct-cpu: #ff9b82;
+  --ct-cpu-soft: #714338;
+  --ct-cpu-tint: rgba(255, 155, 130, 0.12);
 }
 
 :root[data-game='marble-weave'],

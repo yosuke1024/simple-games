@@ -25,12 +25,21 @@ export const ja: MarbleWeaveMessages = {
   marbleWeaveColor6: '青緑の四角',
   marbleWeaveColor7: '桃色の花',
   marbleWeaveStep1Title: '空きマスを通る',
-  marbleWeaveStep1Body:
-    '玉を選び、点のある空きマスを選びます。上下左右の空きマスだけを通って移動します。',
   marbleWeaveStep2Title: '同じ色を並べる',
-  marbleWeaveStep2Body:
-    'かんたんは4個、ふつう・むずかしいは5個。同じ色を縦・横・斜めに並べると消えます。',
-  marbleWeaveStep3Title: '通り道を残す',
+  marbleWeaveChoosePuzzle: '問題を選ぶ',
+  marbleWeavePuzzle: '問題 {n}',
+  marbleWeaveLegacy: '旧ルール・スコア式',
+  marbleWeaveGoal: '{n}手以内に全消し',
+  marbleWeavePuzzleBest: 'ベスト：{n}手',
+  marbleWeaveMovesLeft: 'あと{n}手',
+  marbleWeaveRemaining: '残り{n}個',
+  marbleWeaveExhausted: '手数を使い切りました。「戻す」か「やり直す」で順番を考え直せます。',
+  marbleWeaveWon: 'すべて消せました！',
+  marbleWeaveNextPuzzle: '次の問題',
+  marbleWeaveStep1Body: '玉を選んでから点のあるマスを押すと、空いた道を縦横に通って移動します。',
+  marbleWeaveStep2Body: '同じ色を縦・横・斜めに3個、むずかしいでは4個並べると消えます。',
+  marbleWeaveStep3Title: '全消しの順番を考える',
   marbleWeaveStep3Body:
-    '消せなかった手では予告の3個が増えます。待ったは新しい玉も含め、1手全部を戻します。',
+    '玉は増えないので、手数以内に全部消せる順番を考え、迷ったら「戻す」で試し直しましょう。',
+  marbleWeavePuzzleLabel: '問題',
 };

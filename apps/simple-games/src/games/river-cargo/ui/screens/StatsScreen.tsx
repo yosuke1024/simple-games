@@ -1,7 +1,7 @@
 import { useSettings } from '@/state/SettingsContext';
 import { IconBack } from '@/ui/components/icons';
 import { formatDuration } from '@/ui/format';
-import { MODES } from '../../game';
+import { MODES, CATALOG } from '../../game';
 import { useRiverCargo } from '../../state/GameContext';
 export function StatsScreen() {
   const { t } = useSettings();
@@ -20,18 +20,16 @@ export function StatsScreen() {
           <section className="stats-section" key={mode}>
             <h2 className="stats-title">{t(`riverCargoMode_${mode}`)}</h2>
             <dl className="stats-grid">
-              <div className="stats-row">
-                <dt>{t('played')}</dt>
-                <dd>{stats.boards[mode].played}</dd>
-              </div>
-              <div className="stats-row">
-                <dt>{t('cleared')}</dt>
-                <dd>{stats.boards[mode].completed}</dd>
-              </div>
-              <div className="stats-row">
-                <dt>{t('riverCargoBest')}</dt>
-                <dd>{stats.boards[mode].best ?? '—'}</dd>
-              </div>
+              {CATALOG.filter((p) => p.mode === mode).map((p) => (
+                <div className="stats-row" key={p.id}>
+                  <dt>{t('riverCargoPuzzle', { n: p.id.split('-')[1]! })}</dt>
+                  <dd>
+                    {stats.puzzles[p.id]?.best != null
+                      ? t('riverCargoPuzzleBest', { n: stats.puzzles[p.id]!.best! })
+                      : '—'}
+                  </dd>
+                </div>
+              ))}
             </dl>
           </section>
         ))}

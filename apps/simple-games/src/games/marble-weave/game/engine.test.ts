@@ -1,74 +1,70 @@
 import { describe, expect, it } from 'vitest';
-import { act, createSession, findPath, lines, undo, CONFIG, type Session } from './index';
-describe('Marble Weave rules', () => {
-  it('finds orthogonal paths and rejects jumps and invalid coordinates', () => {
-    const board = [1, 2, 0, 0, 2, 0, 0, 0, 0];
-    expect(findPath(board, 0, 2, 3)).toEqual([0, 3, 6, 7, 8, 5, 2]);
-    board[3] = 3;
-    expect(findPath(board, 0, 2, 3)).toBeNull();
-    expect(findPath(board, -1, 2, 3)).toBeNull();
-    expect(findPath(board, 0, 99, 3)).toBeNull();
-  });
-  it('clears crossing lines once and never wraps rows', () => {
-    const board = Array<number>(49).fill(0);
-    [15, 16, 17, 18, 3, 10, 24].forEach((n) => {
-      board[n] = 1;
-    });
-    expect(lines(board, [17], 7, 4).sort((a, b) => a - b)).toEqual([3, 10, 15, 16, 17, 18, 24]);
-    const wrapped = Array<number>(49).fill(0);
-    [5, 6, 7, 8].forEach((n) => {
-      wrapped[n] = 1;
-    });
-    expect(lines(wrapped, [6], 7, 4)).toEqual([]);
-  });
-  it('does not spawn when a move clears and scores the actual cleared count', () => {
-    const s = createSession('easy', 10);
-    s.board.fill(0);
-    [0, 1, 2, 10].forEach((n) => {
-      s.board[n] = 1;
-    });
-    const next = act(s, { from: 10, to: 3 })!;
-    expect(next.score).toBe(40);
-    expect(next.cleared).toHaveLength(4);
-    expect(next.spawned).toEqual([]);
-    expect(next.next).toEqual(s.next);
-    expect(next.rng).toBe(s.rng);
-  });
-  it('spawns preview colors and undo restores board, preview and randomness', () => {
-    const s = createSession('normal', 36);
-    const from = s.board.findIndex(Boolean),
-      to = s.board.findIndex((n, i) => !n && findPath(s.board, from, i, 9));
-    const action = { from, to },
-      next = act(s, action)!;
-    expect(next.spawned.map((i) => next.spawnedBoard[i])).toEqual(s.next);
-    const previous = undo(next)!;
-    expect(previous.board).toEqual(s.board);
-    expect(previous.next).toEqual(s.next);
-    expect(previous.rng).toBe(s.rng);
-    expect(act(previous, action)).toEqual(next);
-  });
-  it('handles the last free cell without overwriting a marble', () => {
-    const s = createSession('hard', 1);
-    s.board = Array.from({ length: 81 }, (_, i) => ((i + Math.floor(i / 9)) % 7) + 1);
-    s.board[0] = 0;
-    const next = act(s, { from: 1, to: 0 })!;
-    expect(next.spawned).toEqual([1]);
-    expect(next.status).toBe('lost');
-  });
-  it('starts without pre-existing lines for every mode', () => {
-    for (const mode of ['easy', 'normal', 'hard'] as const)
-      for (let seed = 0; seed < 50; seed++) {
-        const s: Session = createSession(mode, seed),
-          c = CONFIG[mode];
-        expect(s.board.filter(Boolean)).toHaveLength(5);
-        expect(
-          lines(
-            s.board,
-            s.board.map((_, i) => i),
-            c.size,
-            c.target,
-          ),
-        ).toEqual([]);
+import { act, createSession, lines, undo, PUZZLES } from './index';
+describe('Marble Weave all-clear puzzles', () => {
+  it.each(PUZZLES)(
+    '$id has a complete solution in its move limit, without random additions',
+    (p) => {
+      let s = createSession(p.mode, 0, p.id);
+      expect(
+        lines(
+          s.board,
+          s.board.map((_, i) => i),
+          p.size,
+          p.target,
+        ),
+      ).toEqual([]);
+      expect(p.solution.length).toBe(p.moveLimit);
+      expect(new Set(PUZZLES.map((p) => p.id)).size).toBe(12);
+      for (const a of p.solution) {
+        const before = s.board.filter(Boolean).length;
+        s = act(s, a)!;
+        expect(s).not.toBeNull();
+        expect(s.board.filter(Boolean).length).toBe(before - s.cleared.length);
+        expect(s.next).toEqual([]);
+        expect(s.spawned).toEqual([]);
       }
+      expect(s.status).toBe('won');
+      expect(s.actions).toHaveLength(p.moveLimit);
+      expect(act(s, p.solution[0]!)).toBeNull();
+    },
+  );
+  it('requires a setup move on every normal and hard puzzle', () => {
+    for (const p of PUZZLES.filter((p) => p.mode !== 'easy')) {
+      let s = createSession(p.mode, 0, p.id);
+      const counts: number[] = [];
+      for (const a of p.solution) {
+        s = act(s, a)!;
+        counts.push(s.cleared.length);
+      }
+      expect(counts).toContain(0);
+    }
+  });
+  it('keeps an exhausted attempt available for undo, with no extra moves or balls', () => {
+    const initial = createSession('easy', 0, 'easy-1');
+    const from = initial.board.findIndex(Boolean);
+    const to = initial.board.findIndex((n) => !n);
+    const a = act(initial, { from, to })!;
+    const b = act(a, { from: to, to: from })!;
+    expect(b.board).toEqual(initial.board);
+    expect(b.status).toBe('playing');
+    expect(b.actions).toHaveLength(2);
+    expect(act(b, { from, to })).toBeNull();
+    expect(undo(b)).toEqual(a);
+    expect(undo(a)).toEqual(initial);
+  });
+  it('uses fixed puzzle identity across seeds and rejects an unknown or mismatched identity', () => {
+    expect(createSession('hard', 0, 'hard-4').board).toEqual(
+      createSession('hard', 999, 'hard-4').board,
+    );
+    expect(() => createSession('easy', 0, 'unknown')).toThrow();
+    expect(() => createSession('easy', 0, 'hard-1')).toThrow();
+    const s = createSession('easy', 0);
+    for (const action of [
+      { from: -1, to: 0 },
+      { from: 0, to: 99 },
+      { from: 1.5, to: 0 },
+      { from: 0, to: 0 },
+    ])
+      expect(act(s, action)).toBeNull();
   });
 });

@@ -70,11 +70,11 @@ export function GameScreen() {
         </header>
         <div className="ct-body">
           <div className="ct-scoreboard">
-            <span className={shown.turn === 1 ? 'is-turn' : ''}>
+            <span data-owner="1" className={shown.turn === 1 ? 'is-turn' : ''}>
               <i className="ct-you-mark" />
               {t('chainTerritoryYou')} <strong>{own}</strong>
             </span>
-            <span className={shown.turn === 2 ? 'is-turn' : ''}>
+            <span data-owner="2" className={shown.turn === 2 ? 'is-turn' : ''}>
               <i className="ct-cpu-mark" />
               {t('chainTerritoryCpu')} <strong>{cpu}</strong>
             </span>

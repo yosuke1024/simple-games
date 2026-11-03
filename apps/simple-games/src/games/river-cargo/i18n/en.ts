@@ -16,10 +16,8 @@ export const en = {
   riverCargoUnsafe: 'Cannot leave {a} and {b} without the boatman.',
   riverCargoLimit: 'Undo a crossing or retry this puzzle.',
   riverCargoKeepApart: 'Keep these pairs apart without the boatman.',
-  riverCargoSelect: 'Choose cargo, then cross. The boat can return empty.',
   riverCargoCross: 'Cross river',
   riverCargoHintEmpty: 'Return with the boat empty.',
-  riverCargoHintLoad: 'Take the outlined cargo on the next crossing.',
   riverCargo_wolf: 'Wolf',
   riverCargo_goat: 'Goat',
   riverCargo_cabbage: 'Cabbage',
@@ -28,13 +26,25 @@ export const en = {
   riverCargo_grain: 'Grain',
   riverCargo_crate: 'Crate',
   riverCargoStep1Title: 'Load the ferry',
-  riverCargoStep1Body:
-    "Choose cargo on the boat's bank, then cross. The boatman always travels with the boat.",
   riverCargoStep2Title: 'Watch both banks',
-  riverCargoStep2Body:
-    'The pictured pairs cannot stay together without the boatman. Unsafe crossings stay put and explain why.',
   riverCargoStep3Title: 'Bring everyone across',
-  riverCargoStep3Body:
-    'Move every item to the right bank. Return empty when needed; Undo and Hint can help.',
+  riverCargoChoosePuzzle: 'Choose a puzzle',
+  riverCargoPuzzle: 'Puzzle {n}',
+  riverCargoPuzzleSummary: '{cargo} cargo · {seats} seats',
+  riverCargoPuzzleBest: 'Best: {n} crossings',
+  riverCargoNextPuzzle: 'Next puzzle',
+  riverCargoWeight: 'Weight: {n} / {max}',
+  riverCargoWeightedCargo: '{cargo}, weight {n}',
+  riverCargoOverweight: 'Weight limit: {n}; unload something first.',
+  riverCargoNeedCrew: 'Every crossing needs one of: {cargo}.',
+  riverCargoBoatConflict: '{a} and {b} cannot share the boat.',
+  riverCargoNoRoute: 'No route from here — undo a crossing.',
+  riverCargoHintLoad: 'Take {cargo} on the next crossing.',
+  riverCargoSelect: 'Choose cargo, check the conditions, then cross.',
+  riverCargoStep1Body: 'Choose cargo on the boat’s bank and cross with the boatman.',
+  riverCargoStep2Body:
+    'Keep the pictured pairs apart without the boatman, and follow any weight or passenger conditions shown.',
+  riverCargoStep3Body: 'Move everyone to the right bank, using Undo or Hint when you need a hand.',
+  riverCargoPuzzleLabel: 'Puzzle',
 } as const;
 export type RiverCargoMessages = Record<keyof typeof en, string>;

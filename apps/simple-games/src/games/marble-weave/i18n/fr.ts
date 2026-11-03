@@ -22,15 +22,26 @@ export const fr: MarbleWeaveMessages = {
   marbleWeaveColor6: 'Carré turquoise',
   marbleWeaveColor7: 'Fleur rose',
   marbleWeaveStep1Title: 'Trouver un passage',
-  marbleWeaveStep1Body:
-    'Choisissez une bille puis une case marquée. Elle traverse les cases vides, jamais en diagonale.',
   marbleWeaveStep2Title: 'Former une ligne',
-  marbleWeaveStep2Body:
-    'Alignez 4 billes de même couleur en Facile, ou 5 en Normal et Difficile. Lignes, colonnes et diagonales comptent.',
-  marbleWeaveStep3Title: 'Garder de la place',
-  marbleWeaveStep3Body:
-    'Sans ligne formée, les 3 billes annoncées arrivent. Annuler retire tout le coup, y compris les nouvelles billes.',
   marbleWeaveMode_easy: 'Facile',
   marbleWeaveMode_normal: 'Normal',
   marbleWeaveMode_hard: 'Difficile',
+  marbleWeaveChoosePuzzle: 'Choisir une énigme',
+  marbleWeavePuzzle: 'Énigme {n}',
+  marbleWeaveLegacy: 'Partie classique à points',
+  marbleWeaveGoal: 'Tout effacer en {n} coups',
+  marbleWeavePuzzleBest: 'Record : {n} coups',
+  marbleWeaveMovesLeft: 'Coups restants : {n}',
+  marbleWeaveRemaining: 'Billes restantes : {n}',
+  marbleWeaveExhausted: 'Plus de coups — annulez ou recommencez pour essayer un autre ordre.',
+  marbleWeaveWon: 'Tout est effacé !',
+  marbleWeaveNextPuzzle: 'Énigme suivante',
+  marbleWeaveStep1Body:
+    'Choisissez une bille puis une case pointillée pour la déplacer par un chemin libre, sans pas en diagonale.',
+  marbleWeaveStep2Body:
+    'Alignez 3 billes de même couleur en ligne, colonne ou diagonale, ou 4 en Difficile.',
+  marbleWeaveStep3Title: 'Prévoir un plateau vide',
+  marbleWeaveStep3Body:
+    'Effacez toutes les billes dans la limite de coups ; aucune nouvelle bille ne paraît et Annuler permet de revoir votre plan.',
+  marbleWeavePuzzleLabel: 'Énigme',
 };
