@@ -1,0 +1,520 @@
+.sv-home-content {
+  width: 100%;
+}
+.sv-intro,
+.sv-rule-summary {
+  text-align: center;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+.sv-rule-summary {
+  font-size: 12px;
+  margin-top: 10px;
+}
+.sv-screen .game-content {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.sv-screen .game-topbar {
+  flex-shrink: 0;
+}
+.sv-body {
+  width: 100%;
+  max-width: 650px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 6px 16px 18px;
+  flex-shrink: 0;
+}
+.sv-screen button:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+.sv-screen .game-mode {
+  font-size: 14px;
+}
+[data-game='sevens'] {
+  --sv-felt: #edf3ed;
+  --sv-felt-edge: #ccd9ca;
+  --sv-felt-ink: #364e40;
+  --sv-card-paper: #fffdf7;
+  --sv-card-edge: #c7c6b9;
+  --sv-card-red: #a32c43;
+  --sv-card-black: #263d39;
+}
+[data-theme='dark'][data-game='sevens'] {
+  --sv-felt: #1b322c;
+  --sv-felt-edge: #3e5148;
+  --sv-felt-ink: #d1e1d6;
+  --sv-card-paper: #e9e6dd;
+  --sv-card-edge: #adae9e;
+  --sv-card-red: #a1223b;
+  --sv-card-black: #213833;
+}
+.sv-opponents {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.sv-seat {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 8px 4px;
+  display: grid;
+  grid-template-columns: 25px 1fr;
+  align-items: center;
+  gap: 3px 5px;
+  min-width: 0;
+}
+.sv-seat-active {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  background: var(--accent-soft);
+}
+.sv-avatar {
+  grid-row: span 2;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  color: var(--accent);
+}
+.sv-seat-name {
+  font-size: 12px;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+.sv-seat-cards {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.sv-mini-back {
+  width: 11px;
+  height: 15px;
+  display: block;
+}
+.sv-table {
+  position: relative;
+  min-height: 154px;
+  border: 1px solid var(--sv-felt-edge);
+  border-radius: 20px;
+  background:
+    radial-gradient(ellipse at 50% 25%, transparent, var(--sv-felt-edge) 180%), var(--sv-felt);
+  box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--sv-felt-edge) 25%, transparent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 10px;
+  color: var(--sv-felt-ink);
+}
+.sv-table-label {
+  font-size: 12px;
+  margin: 0;
+  line-height: 1.4;
+  text-align: center;
+  min-height: 17px;
+}
+.sv-table-cards {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  min-height: 76px;
+}
+.sv-table-cards .sv-card {
+  width: 53px;
+  height: 76px;
+}
+.sv-empty-mark {
+  width: 54px;
+  height: 76px;
+  border: 1px dashed var(--sv-felt-edge);
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  opacity: 0.65;
+}
+.sv-badge {
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.sv-status {
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.45;
+  min-height: 22px;
+  margin: 0;
+  color: var(--ink);
+}
+.sv-status.is-yours {
+  font-weight: 750;
+  color: var(--accent);
+}
+.sv-hand-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--ink-soft);
+  font-size: 12px;
+  gap: 8px;
+}
+.sv-hand-heading strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+.sv-hand {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 9px 5px;
+  align-self: center;
+  width: 100%;
+  max-width: 480px;
+  padding: 4px 0;
+}
+.sv-card {
+  position: relative;
+  display: block;
+  border: 1px solid var(--sv-card-edge);
+  border-radius: 7px;
+  background: var(--sv-card-paper);
+  color: var(--sv-card-black);
+  padding: 0;
+  aspect-ratio: 5/7;
+  box-shadow:
+    0 2px 0 var(--sv-card-edge),
+    0 3px 6px #0000000d;
+  min-width: 0;
+  touch-action: manipulation;
+  user-select: none;
+}
+.sv-red {
+  color: var(--sv-card-red);
+}
+.sv-joker {
+  color: #75469b;
+}
+.sv-card-corner {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  font-size: clamp(11px, 3.4vw, 17px);
+  line-height: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+.sv-card-corner b {
+  font-weight: 800;
+}
+.sv-card-corner > span {
+  font-size: 11px;
+}
+.sv-card-bottom {
+  transform: rotate(180deg);
+  top: auto;
+  left: auto;
+  bottom: 4px;
+  right: 4px;
+}
+.sv-card-symbol {
+  position: absolute;
+  width: 45%;
+  height: 45%;
+  top: 29%;
+  left: 28%;
+  display: grid;
+  place-items: center;
+  font-size: clamp(19px, 5vw, 29px);
+}
+svg.sv-card-symbol {
+  fill: currentColor;
+}
+.sv-hand button.sv-card:disabled {
+  cursor: default;
+}
+.sv-hand button.sv-card.is-unplayable {
+  filter: saturate(0.45);
+  opacity: 0.58;
+}
+.sv-hand button.sv-card.is-legal {
+  box-shadow:
+    0 2px 0 var(--sv-card-edge),
+    0 0 0 2px var(--accent);
+}
+.sv-hand button.sv-card.is-selected {
+  transform: translateY(-6px);
+  box-shadow:
+    0 3px 0 var(--accent),
+    0 0 0 2px var(--accent);
+  background: #fff8d8;
+}
+.sv-card-back {
+  display: grid;
+  place-items: center;
+  position: absolute;
+  inset: 0;
+  border: 3px solid var(--sv-card-paper);
+  border-radius: inherit;
+  background: var(--accent);
+  color: var(--accent-ink);
+  overflow: hidden;
+}
+.sv-card-back svg {
+  width: 90%;
+  height: 90%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+  opacity: 0.5;
+}
+.sv-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.sv-controls .btn {
+  min-height: 44px;
+  min-width: 100px;
+}
+.sv-note {
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+  margin: 0;
+}
+.sv-event-card {
+  animation: sv-arrive 300ms ease-out both;
+}
+.sv-tutorial-figure {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 20px 12px;
+  background: var(--accent-soft);
+  border-radius: 18px;
+  margin: 0 0 20px;
+}
+.sv-tutorial-figure .sv-card {
+  width: 49px;
+  height: 70px;
+  --sv-card-paper: var(--surface);
+  --sv-card-edge: var(--line);
+  --sv-card-black: var(--ink);
+  --sv-card-red: var(--warn);
+}
+.sv-demo-arrow {
+  width: 100%;
+  text-align: center;
+  font-weight: 800;
+  color: var(--accent);
+  font-size: 25px;
+  margin-bottom: 10px;
+}
+.sv-sevens-grid {
+  display: grid;
+  grid-template-columns: repeat(13, minmax(0, 1fr));
+  gap: 4px 2px;
+  width: 100%;
+}
+.sv-sevens-grid .sv-card,
+.sv-slot {
+  aspect-ratio: 3/5;
+  border-radius: 3px;
+  box-shadow: none;
+  min-width: 0;
+  min-height: 30px;
+}
+.sv-sevens-grid .sv-card-corner {
+  font-size: clamp(9px, 2.7vw, 14px);
+  top: 3px;
+  left: 0;
+  width: 100%;
+  gap: 3px;
+}
+.sv-sevens-grid .sv-card-symbol,
+.sv-sevens-grid .sv-card-bottom {
+  display: none;
+}
+.sv-slot {
+  border: 1px dashed var(--sv-felt-edge);
+  background: transparent;
+  padding: 0;
+  color: var(--sv-felt-ink);
+  font-size: 10px;
+}
+.sv-slot.is-target {
+  background: var(--accent-soft);
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  font-weight: 800;
+}
+.sv-sevens-table {
+  padding: 12px 7px;
+}
+.sv-pass-track {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+@keyframes sv-arrive {
+  from {
+    transform: translateY(-12px) rotate(-4deg);
+    opacity: 0.3;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sv-event-card {
+    animation: none;
+  }
+  .sv-card {
+    transition: none;
+  }
+}
+[data-reduced-motion='true'] .sv-event-card {
+  animation: none;
+}
+@media (min-width: 700px) {
+  .sv-body {
+    gap: 16px;
+    padding: 12px 24px 20px;
+  }
+  .sv-table {
+    min-height: 190px;
+  }
+  .sv-hand {
+    max-width: 490px;
+    gap: 10px;
+  }
+  .sv-table-cards .sv-card {
+    width: 64px;
+    height: 90px;
+  }
+}
+@media (max-height: 720px) {
+  .sv-body {
+    gap: 8px;
+    padding-top: 3px;
+  }
+  .sv-table {
+    min-height: 128px;
+    padding: 10px;
+  }
+  .sv-table-cards {
+    min-height: 63px;
+  }
+  .sv-table-cards .sv-card {
+    width: 45px;
+    height: 63px;
+  }
+  .sv-seat {
+    padding: 5px 3px;
+  }
+  .sv-hand {
+    gap: 8px 4px;
+    max-width: 390px;
+  }
+  .sv-sevens-table {
+    min-height: 150px;
+    padding: 9px 6px;
+  }
+}
+@media (max-width: 350px) {
+  .sv-body {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .sv-hand {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+  .sv-card-corner {
+    font-size: 11px;
+  }
+  .sv-card-corner > span {
+    font-size: 9px;
+  }
+  .sv-card-bottom {
+    display: none;
+  }
+  .sv-seat {
+    grid-template-columns: 19px 1fr;
+    gap: 2px;
+  }
+  .sv-avatar {
+    width: 18px;
+    height: 18px;
+    font-size: 8px;
+  }
+  .sv-seat-cards {
+    font-size: 10px;
+  }
+  .sv-sevens-grid {
+    gap: 3px 1px;
+  }
+}
+
+.sv-mini-back {
+  position: relative;
+  border-radius: 2px;
+}
+
+/* Keep the hand and actions above the reserved banner on short phones. */
+@media (max-height: 720px) {
+  .sv-body {
+    gap: 6px;
+  }
+  .sv-table {
+    gap: 6px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+  .sv-empty-mark {
+    width: 40px;
+    height: 56px;
+  }
+  .sv-table-cards {
+    min-height: 56px;
+  }
+  .sv-table-cards .sv-card {
+    width: 40px;
+    height: 56px;
+  }
+  .sv-badge {
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+  .sv-note {
+    font-size: 11px;
+    line-height: 1.3;
+  }
+}

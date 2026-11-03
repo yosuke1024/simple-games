@@ -1,0 +1,501 @@
+.om-home-content {
+  width: 100%;
+}
+.om-intro,
+.om-rule-summary {
+  text-align: center;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+.om-rule-summary {
+  font-size: 12px;
+  margin-top: 10px;
+}
+.om-screen .game-content {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.om-screen .game-topbar {
+  flex-shrink: 0;
+}
+.om-body {
+  width: 100%;
+  max-width: 650px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 6px 16px 18px;
+  flex-shrink: 0;
+}
+.om-screen button:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+.om-screen .game-mode {
+  font-size: 14px;
+}
+[data-game='old-maid'] {
+  --om-felt: #edf3ed;
+  --om-felt-edge: #ccd9ca;
+  --om-felt-ink: #364e40;
+  --om-card-paper: #fffdf7;
+  --om-card-edge: #c7c6b9;
+  --om-card-red: #a32c43;
+  --om-card-black: #263d39;
+}
+[data-theme='dark'][data-game='old-maid'] {
+  --om-felt: #1b322c;
+  --om-felt-edge: #3e5148;
+  --om-felt-ink: #d1e1d6;
+  --om-card-paper: #e9e6dd;
+  --om-card-edge: #adae9e;
+  --om-card-red: #a1223b;
+  --om-card-black: #213833;
+}
+.om-opponents {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.om-seat {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 8px 4px;
+  display: grid;
+  grid-template-columns: 25px 1fr;
+  align-items: center;
+  gap: 3px 5px;
+  min-width: 0;
+}
+.om-seat-active {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  background: var(--accent-soft);
+}
+.om-avatar {
+  grid-row: span 2;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  color: var(--accent);
+}
+.om-seat-name {
+  font-size: 12px;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+.om-seat-cards {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.om-mini-back {
+  width: 11px;
+  height: 15px;
+  display: block;
+}
+.om-table {
+  position: relative;
+  min-height: 154px;
+  border: 1px solid var(--om-felt-edge);
+  border-radius: 20px;
+  background:
+    radial-gradient(ellipse at 50% 25%, transparent, var(--om-felt-edge) 180%), var(--om-felt);
+  box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--om-felt-edge) 25%, transparent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 10px;
+  color: var(--om-felt-ink);
+}
+.om-table-label {
+  font-size: 12px;
+  margin: 0;
+  line-height: 1.4;
+  text-align: center;
+  min-height: 17px;
+}
+.om-table-cards {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  min-height: 76px;
+}
+.om-table-cards .om-card {
+  width: 53px;
+  height: 76px;
+}
+.om-empty-mark {
+  width: 54px;
+  height: 76px;
+  border: 1px dashed var(--om-felt-edge);
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  opacity: 0.65;
+}
+.om-badge {
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.om-status {
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.45;
+  min-height: 22px;
+  margin: 0;
+  color: var(--ink);
+}
+.om-status.is-yours {
+  font-weight: 750;
+  color: var(--accent);
+}
+.om-hand-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--ink-soft);
+  font-size: 12px;
+  gap: 8px;
+}
+.om-hand-heading strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+.om-hand {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 9px 5px;
+  align-self: center;
+  width: 100%;
+  max-width: 480px;
+  padding: 4px 0;
+}
+.om-card {
+  position: relative;
+  display: block;
+  border: 1px solid var(--om-card-edge);
+  border-radius: 7px;
+  background: var(--om-card-paper);
+  color: var(--om-card-black);
+  padding: 0;
+  aspect-ratio: 5/7;
+  box-shadow:
+    0 2px 0 var(--om-card-edge),
+    0 3px 6px #0000000d;
+  min-width: 0;
+  touch-action: manipulation;
+  user-select: none;
+}
+.om-red {
+  color: var(--om-card-red);
+}
+.om-joker {
+  color: #75469b;
+}
+.om-card-corner {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  font-size: clamp(11px, 3.4vw, 17px);
+  line-height: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+.om-card-corner b {
+  font-weight: 800;
+}
+.om-card-corner > span {
+  font-size: 11px;
+}
+.om-card-bottom {
+  transform: rotate(180deg);
+  top: auto;
+  left: auto;
+  bottom: 4px;
+  right: 4px;
+}
+.om-card-symbol {
+  position: absolute;
+  width: 45%;
+  height: 45%;
+  top: 29%;
+  left: 28%;
+  display: grid;
+  place-items: center;
+  font-size: clamp(19px, 5vw, 29px);
+}
+svg.om-card-symbol {
+  fill: currentColor;
+}
+.om-hand button.om-card:disabled {
+  cursor: default;
+}
+.om-hand button.om-card.is-unplayable {
+  filter: saturate(0.45);
+  opacity: 0.58;
+}
+.om-hand button.om-card.is-legal {
+  box-shadow:
+    0 2px 0 var(--om-card-edge),
+    0 0 0 2px var(--accent);
+}
+.om-hand button.om-card.is-selected {
+  transform: translateY(-6px);
+  box-shadow:
+    0 3px 0 var(--accent),
+    0 0 0 2px var(--accent);
+  background: #fff8d8;
+}
+.om-card-back {
+  display: grid;
+  place-items: center;
+  position: absolute;
+  inset: 0;
+  border: 3px solid var(--om-card-paper);
+  border-radius: inherit;
+  background: var(--accent);
+  color: var(--accent-ink);
+  overflow: hidden;
+}
+.om-card-back svg {
+  width: 90%;
+  height: 90%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+  opacity: 0.5;
+}
+.om-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.om-controls .btn {
+  min-height: 44px;
+  min-width: 100px;
+}
+.om-note {
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+  margin: 0;
+}
+.om-event-card {
+  animation: om-arrive 300ms ease-out both;
+}
+.om-tutorial-figure {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 20px 12px;
+  background: var(--accent-soft);
+  border-radius: 18px;
+  margin: 0 0 20px;
+}
+.om-tutorial-figure .om-card {
+  width: 49px;
+  height: 70px;
+  --om-card-paper: var(--surface);
+  --om-card-edge: var(--line);
+  --om-card-black: var(--ink);
+  --om-card-red: var(--warn);
+}
+.om-demo-arrow {
+  width: 100%;
+  text-align: center;
+  font-weight: 800;
+  color: var(--accent);
+  font-size: 25px;
+  margin-bottom: 10px;
+}
+.om-draw-hand {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 7px;
+  width: 100%;
+  max-width: 430px;
+}
+.om-draw-hand .om-card {
+  min-height: 50px;
+  --om-card-paper: #fffdf7;
+}
+.om-table.om-draw-table {
+  min-height: 185px;
+}
+.om-pair-preview {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  min-height: 55px;
+}
+.om-pair-preview .om-card {
+  width: 36px;
+  height: 50px;
+}
+.om-pair-preview .om-card-corner {
+  font-size: 10px;
+}
+.om-pair-preview .om-card-bottom {
+  display: none;
+}
+.om-pair-preview .om-card-symbol {
+  font-size: 19px;
+}
+@keyframes om-arrive {
+  from {
+    transform: translateY(-12px) rotate(-4deg);
+    opacity: 0.3;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .om-event-card {
+    animation: none;
+  }
+  .om-card {
+    transition: none;
+  }
+}
+[data-reduced-motion='true'] .om-event-card {
+  animation: none;
+}
+@media (min-width: 700px) {
+  .om-body {
+    gap: 16px;
+    padding: 12px 24px 20px;
+  }
+  .om-table {
+    min-height: 190px;
+  }
+  .om-hand {
+    max-width: 490px;
+    gap: 10px;
+  }
+  .om-table-cards .om-card {
+    width: 64px;
+    height: 90px;
+  }
+}
+@media (max-height: 720px) {
+  .om-body {
+    gap: 8px;
+    padding-top: 3px;
+  }
+  .om-table {
+    min-height: 128px;
+    padding: 10px;
+  }
+  .om-table-cards {
+    min-height: 63px;
+  }
+  .om-table-cards .om-card {
+    width: 45px;
+    height: 63px;
+  }
+  .om-seat {
+    padding: 5px 3px;
+  }
+  .om-hand {
+    gap: 8px 4px;
+    max-width: 390px;
+  }
+  .om-table.om-draw-table {
+    min-height: 144px;
+  }
+}
+@media (max-width: 350px) {
+  .om-body {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .om-hand {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+  .om-card-corner {
+    font-size: 11px;
+  }
+  .om-card-corner > span {
+    font-size: 9px;
+  }
+  .om-card-bottom {
+    display: none;
+  }
+  .om-seat {
+    grid-template-columns: 19px 1fr;
+    gap: 2px;
+  }
+  .om-avatar {
+    width: 18px;
+    height: 18px;
+    font-size: 8px;
+  }
+  .om-seat-cards {
+    font-size: 10px;
+  }
+}
+
+.om-mini-back {
+  position: relative;
+  border-radius: 2px;
+}
+
+/* Keep the hand and actions above the reserved banner on short phones. */
+@media (max-height: 720px) {
+  .om-body {
+    gap: 6px;
+  }
+  .om-table {
+    gap: 6px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+  .om-empty-mark {
+    width: 40px;
+    height: 56px;
+  }
+  .om-table-cards {
+    min-height: 56px;
+  }
+  .om-table-cards .om-card {
+    width: 40px;
+    height: 56px;
+  }
+  .om-badge {
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+  .om-note {
+    font-size: 11px;
+    line-height: 1.3;
+  }
+}

@@ -252,6 +252,9 @@ describe('web-beta titles', () => {
       'frost-route',
       'chain-territory',
       'river-cargo',
+      'daifugo',
+      'sevens',
+      'old-maid',
       'synthetic-beta',
     ]);
     expect(released.length).toBeGreaterThan(20);

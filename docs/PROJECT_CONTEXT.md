@@ -47,14 +47,17 @@ Design philosophy:
 
 - 1つの `Simple Games: Offline Games` として提供する。
 - 現在の正式収録は **65 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ。
-  本数はここで数える)。`GAMES` は全73エントリで、Web先行公開6本と収録見送り2本を含む。
+  本数はここで数える)。`GAMES` は全76エントリで、Web先行公開9本と収録見送り2本を含む。
   Web先行公開は Backgammon(No. 67)、Ridge Cannons(No. 68)、Fleet Search(No. 69)、Frost Route(No. 70)、
-  Chain Territory(No. 71)、River Cargo(No. 73)。
+  Chain Territory(No. 71)、River Cargo(No. 73)、Daifugo(No. 74)、Sevens(No. 75)、Old Maid(No. 76)。
   収録見送りは Falling Blocks(2026-10-29に取り下げ)とMarble Weave(No. 72、2026-11-03に取り下げ)。
   Backgammonの仕様は `docs/BACKGAMMON_RULES.md`。新作3本は製品オーナーの
   「3つくらいゲーム追加、UIを他のゲームに揃え、Web公開まで」という依頼と候補選択に基づく。
   Cannon Duel / Hidden Fleet / Ice Trailという仮題から、同名作との衝突を避ける公開名へ変更した。
   仕様の正は各 `docs/*_RULES.md`、検証・配信記録は `docs/plans/2026-11-03-three-games-68-70.md`。
+- 2026-11-03、オーナーが選んだ「大富豪・七並べ・ババ抜き」をCPU3人との4人戦として追加。
+  途中再開・14言語・説明・結果・統計は共通UXに揃え、Web先行公開にする。
+  詳細は各RULESと `docs/plans/2026-11-03-classic-cards-74-76.md`。
 - 2026-11-03、オーナーの「あと3つ、UXを揃えてWeb公開まで」と3ジャンルの承認により、
   Chain Territory(連鎖陣取りCPU対戦)、Marble Weave(同色の玉を並べる)、River Cargo(川渡り)を追加。
   3難易度、14言語、途中再開、取り消し、共通の説明・結果・統計を備える。
