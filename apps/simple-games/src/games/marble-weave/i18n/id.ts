@@ -43,4 +43,5 @@ export const id: MarbleWeaveMessages = {
   marbleWeaveStep3Title: 'Rencanakan hingga bersih',
   marbleWeaveStep3Body:
     'Hapus semua kelereng dalam batas langkah; tidak ada kelereng baru dan Urungkan membantu mengatur ulang urutan.',
+  marbleWeavePuzzleLabel: 'Teka-teki',
 };

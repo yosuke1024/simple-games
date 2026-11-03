@@ -43,4 +43,5 @@ export const tr: MarbleWeaveMessages = {
   marbleWeaveStep3Title: 'Hepsini temizlemeyi planla',
   marbleWeaveStep3Body:
     'Hamle sınırı içinde tüm bilyeleri temizle; yeni bilye gelmez ve Geri al ile sırayı yeniden düşünebilirsin.',
+  marbleWeavePuzzleLabel: 'Bulmaca',
 };

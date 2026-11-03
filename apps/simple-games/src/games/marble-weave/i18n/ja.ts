@@ -41,4 +41,5 @@ export const ja: MarbleWeaveMessages = {
   marbleWeaveStep3Title: '全消しの順番を考える',
   marbleWeaveStep3Body:
     '玉は増えないので、手数以内に全部消せる順番を考え、迷ったら「戻す」で試し直しましょう。',
+  marbleWeavePuzzleLabel: '問題',
 };

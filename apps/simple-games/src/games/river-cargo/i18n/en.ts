@@ -45,5 +45,6 @@ export const en = {
   riverCargoStep2Body:
     'Keep the pictured pairs apart without the boatman, and follow any weight or passenger conditions shown.',
   riverCargoStep3Body: 'Move everyone to the right bank, using Undo or Hint when you need a hand.',
+  riverCargoPuzzleLabel: 'Puzzle',
 } as const;
 export type RiverCargoMessages = Record<keyof typeof en, string>;

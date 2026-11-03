@@ -46,4 +46,5 @@ export const tr: RiverCargoMessages = {
   riverCargoStep2Body:
     'Gösterilen çiftleri kayıkçısız birlikte bırakma ve belirtilen ağırlık veya yolcu koşullarına uy.',
   riverCargoStep3Body: 'Gerekirse Geri al veya İpucu kullanarak herkesi sağ kıyıya taşı.',
+  riverCargoPuzzleLabel: 'Bulmaca',
 };

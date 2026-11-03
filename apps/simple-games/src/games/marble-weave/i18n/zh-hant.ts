@@ -40,4 +40,5 @@ export const zhHant: MarbleWeaveMessages = {
   marbleWeaveStep2Body: '將3顆同色珠子排成橫線、直線或斜線即可消除，困難模式需4顆。',
   marbleWeaveStep3Title: '規劃全消順序',
   marbleWeaveStep3Body: '在限定步數內消除所有珠子，過程中不會增加新珠子，可用復原重新規劃順序。',
+  marbleWeavePuzzleLabel: '題目',
 };

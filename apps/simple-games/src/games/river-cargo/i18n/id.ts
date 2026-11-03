@@ -47,4 +47,5 @@ export const id: RiverCargoMessages = {
   riverCargoStep2Body:
     'Pisahkan pasangan pada gambar saat tanpa pengemudi dan ikuti syarat berat atau penumpang yang ditampilkan.',
   riverCargoStep3Body: 'Bawa semua ke tepi kanan dengan bantuan Urungkan atau Petunjuk bila perlu.',
+  riverCargoPuzzleLabel: 'Teka-teki',
 };

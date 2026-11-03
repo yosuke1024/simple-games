@@ -46,4 +46,5 @@ export const vi: RiverCargoMessages = {
   riverCargoStep2Body:
     'Không để các cặp trong hình ở cùng nhau khi vắng người lái và tuân thủ điều kiện khối lượng hay đi cùng.',
   riverCargoStep3Body: 'Đưa tất cả sang bờ phải, dùng Hoàn tác hoặc Gợi ý khi cần.',
+  riverCargoPuzzleLabel: 'Câu đố',
 };

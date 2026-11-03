@@ -39,8 +39,8 @@ function ResultCard({
     { label: t('riverCargoPar'), value: String(session.par) },
     { label: t('difficulty'), value: t(`riverCargoMode_${session.mode}`) },
     {
-      label: t('riverCargoChoosePuzzle'),
-      value: t('riverCargoPuzzle', { n: session.puzzleId.split('-')[1]! }),
+      label: t('riverCargoPuzzleLabel'),
+      value: session.puzzleId.split('-')[1]!,
     },
   ];
   return (

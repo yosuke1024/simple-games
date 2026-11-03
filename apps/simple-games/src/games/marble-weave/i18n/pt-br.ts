@@ -43,4 +43,5 @@ export const ptBR: MarbleWeaveMessages = {
   marbleWeaveStep3Title: 'Planeje eliminar tudo',
   marbleWeaveStep3Body:
     'Elimine todas as bolinhas dentro do limite; não surgem novas, e Desfazer permite repensar a ordem.',
+  marbleWeavePuzzleLabel: 'Desafio',
 };

@@ -43,4 +43,5 @@ export const hi: MarbleWeaveMessages = {
   marbleWeaveStep3Title: 'सब हटाने की योजना बनाएँ',
   marbleWeaveStep3Body:
     'सीमित चालों में सभी गोलियाँ हटाएँ; नई गोलियाँ नहीं आतीं और वापस करें से क्रम बदल सकते हैं।',
+  marbleWeavePuzzleLabel: 'पहेली',
 };

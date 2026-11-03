@@ -46,4 +46,5 @@ export const es: RiverCargoMessages = {
   riverCargoStep2Body:
     'Separa las parejas indicadas cuando no esté el barquero y respeta las condiciones de peso y pasajeros.',
   riverCargoStep3Body: 'Lleva todo a la orilla derecha usando Deshacer o Pista si necesitas ayuda.',
+  riverCargoPuzzleLabel: 'Puzle',
 };

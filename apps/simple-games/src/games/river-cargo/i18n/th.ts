@@ -46,4 +46,5 @@ export const th: RiverCargoMessages = {
   riverCargoStep2Body:
     'อย่าทิ้งคู่ที่แสดงไว้ด้วยกันโดยไม่มีคนพาย และทำตามเงื่อนไขน้ำหนักหรือผู้โดยสาร',
   riverCargoStep3Body: 'พาทั้งหมดไปฝั่งขวา โดยใช้ย้อนกลับหรือคำใบ้เมื่อจำเป็น',
+  riverCargoPuzzleLabel: 'ปริศนา',
 };

@@ -43,4 +43,5 @@ export const de: MarbleWeaveMessages = {
   marbleWeaveStep3Title: 'Plane ein leeres Brett',
   marbleWeaveStep3Body:
     'Entferne alle Kugeln innerhalb des Zuglimits; neue kommen nicht hinzu, und Zurücknehmen hilft beim Umplanen.',
+  marbleWeavePuzzleLabel: 'Rätsel',
 };

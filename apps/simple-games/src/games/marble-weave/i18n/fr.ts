@@ -43,4 +43,5 @@ export const fr: MarbleWeaveMessages = {
   marbleWeaveStep3Title: 'Prévoir un plateau vide',
   marbleWeaveStep3Body:
     'Effacez toutes les billes dans la limite de coups ; aucune nouvelle bille ne paraît et Annuler permet de revoir votre plan.',
+  marbleWeavePuzzleLabel: 'Énigme',
 };

@@ -46,4 +46,5 @@ export const hi: RiverCargoMessages = {
   riverCargoStep2Body:
     'दिखाए गए जोड़ों को नाविक के बिना साथ न छोड़ें और वज़न या यात्रियों की शर्तों का पालन करें।',
   riverCargoStep3Body: 'ज़रूरत पर वापस करें या संकेत की मदद लेकर सभी को दाएँ किनारे पहुँचाएँ।',
+  riverCargoPuzzleLabel: 'पहेली',
 };

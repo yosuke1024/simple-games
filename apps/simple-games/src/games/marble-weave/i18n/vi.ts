@@ -43,4 +43,5 @@ export const vi: MarbleWeaveMessages = {
   marbleWeaveStep3Title: 'Lên kế hoạch xóa hết',
   marbleWeaveStep3Body:
     'Xóa mọi viên bi trong giới hạn lượt; không có bi mới và Hoàn tác giúp thử lại thứ tự.',
+  marbleWeavePuzzleLabel: 'Câu đố',
 };

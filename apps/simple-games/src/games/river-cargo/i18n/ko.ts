@@ -46,4 +46,5 @@ export const ko: RiverCargoMessages = {
   riverCargoStep2Body:
     '그림의 짝을 뱃사공 없이 함께 남기지 말고 표시된 무게와 동승 조건도 지키세요.',
   riverCargoStep3Body: '되돌리기와 힌트를 활용해 모두 오른쪽 강둑으로 옮기세요.',
+  riverCargoPuzzleLabel: '문제',
 };

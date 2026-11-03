@@ -41,5 +41,6 @@ export const en = {
   marbleWeaveStep3Title: 'Plan an all-clear',
   marbleWeaveStep3Body:
     'Clear every marble within the move limit; no new marbles appear, and Undo lets you rethink the order.',
+  marbleWeavePuzzleLabel: 'Puzzle',
 } as const;
 export type MarbleWeaveMessages = Record<keyof typeof en, string>;

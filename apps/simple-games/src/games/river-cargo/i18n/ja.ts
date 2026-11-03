@@ -46,4 +46,5 @@ export const ja: RiverCargoMessages = {
   riverCargoStep2Body:
     '図の組み合わせを船頭なしで残さず、問題ごとの重さや同乗の条件も守りましょう。',
   riverCargoStep3Body: '「戻す」や「ヒント」も使いながら、全員を右岸へ渡しましょう。',
+  riverCargoPuzzleLabel: '問題',
 };

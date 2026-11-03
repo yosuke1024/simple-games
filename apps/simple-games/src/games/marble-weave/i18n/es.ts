@@ -43,4 +43,5 @@ export const es: MarbleWeaveMessages = {
   marbleWeaveStep3Title: 'Planea cómo eliminar todo',
   marbleWeaveStep3Body:
     'Elimina todas las bolas dentro del límite; no aparecen nuevas y Deshacer te permite cambiar el orden.',
+  marbleWeavePuzzleLabel: 'Puzle',
 };

@@ -42,4 +42,5 @@ export const th: MarbleWeaveMessages = {
   marbleWeaveStep3Title: 'วางแผนล้างทั้งหมด',
   marbleWeaveStep3Body:
     'ล้างลูกแก้วทั้งหมดภายในจำนวนตาที่กำหนด โดยไม่มีลูกแก้วใหม่เพิ่มและย้อนกลับเพื่อเปลี่ยนลำดับได้',
+  marbleWeavePuzzleLabel: 'ปริศนา',
 };

@@ -45,4 +45,5 @@ export const zhHans: RiverCargoMessages = {
   riverCargoStep1Body: '在船所在的河岸选择货物，与船夫一起渡河。',
   riverCargoStep2Body: '船夫不在时不要留下图中的组合，还要遵守显示的重量和同船条件。',
   riverCargoStep3Body: '借助撤销或提示，将所有货物运到右岸。',
+  riverCargoPuzzleLabel: '题目',
 };

@@ -47,4 +47,5 @@ export const de: RiverCargoMessages = {
     'Lass die gezeigten Paare nicht ohne Fährmann zusammen und beachte die angezeigten Gewichts- und Mitfahrregeln.',
   riverCargoStep3Body:
     'Bringe alle ans rechte Ufer und nutze bei Bedarf Zurücknehmen oder Hinweis.',
+  riverCargoPuzzleLabel: 'Rätsel',
 };

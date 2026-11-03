@@ -43,4 +43,5 @@ export const ko: MarbleWeaveMessages = {
   marbleWeaveStep3Title: '모두 없앨 순서 찾기',
   marbleWeaveStep3Body:
     '새 구슬은 생기지 않으니 정해진 수 안에 모두 없애고, 되돌리기로 순서를 다시 생각해 보세요.',
+  marbleWeavePuzzleLabel: '문제',
 };

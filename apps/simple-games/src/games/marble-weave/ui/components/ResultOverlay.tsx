@@ -43,8 +43,8 @@ function ResultCard({
     ...(session.puzzleId
       ? [
           {
-            label: t('marbleWeavePuzzle', { n: session.puzzleId.split('-')[1]! }),
-            value: t('marbleWeaveGoal', { n: session.moveLimit }),
+            label: t('marbleWeavePuzzleLabel'),
+            value: session.puzzleId.split('-')[1]!,
           },
         ]
       : []),

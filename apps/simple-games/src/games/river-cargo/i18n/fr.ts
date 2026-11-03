@@ -47,4 +47,5 @@ export const fr: RiverCargoMessages = {
   riverCargoStep2Body:
     'Séparez les paires illustrées en l’absence du passeur et respectez les conditions de poids et de passagers.',
   riverCargoStep3Body: 'Amenez tout le monde à droite en utilisant Annuler ou Indice au besoin.',
+  riverCargoPuzzleLabel: 'Énigme',
 };

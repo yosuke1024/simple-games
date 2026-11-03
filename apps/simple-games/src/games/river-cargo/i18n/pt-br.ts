@@ -46,4 +46,5 @@ export const ptBR: RiverCargoMessages = {
   riverCargoStep2Body:
     'Separe os pares mostrados quando o barqueiro não estiver e respeite as condições de peso e passageiros.',
   riverCargoStep3Body: 'Leve todos à margem direita usando Desfazer ou Dica quando precisar.',
+  riverCargoPuzzleLabel: 'Desafio',
 };
