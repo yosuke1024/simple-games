@@ -1,4 +1,7 @@
 export const en = {
+  daifugoSelected: '{n} selected',
+  daifugoMatchCount: 'Play {n} cards of one rank, stronger than the table.',
+  daifugoNoGroup: 'No playable group. Pass to continue.',
   daifugoPlayed: 'Games started',
   daifugoFinished: 'Games finished',
   daifugoWins: 'Wins',

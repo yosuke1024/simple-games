@@ -1,6 +1,9 @@
 import type { DaifugoMessages } from './en';
 // AI authored; no native-speaker review.
 export const ptBR: DaifugoMessages = {
+  daifugoSelected: '{n} selecionadas',
+  daifugoMatchCount: 'Jogue {n} cartas do mesmo valor, mais fortes que as da mesa.',
+  daifugoNoGroup: 'Nenhum grupo válido. Passe para continuar.',
   daifugoPlayed: 'Partidas iniciadas',
   daifugoFinished: 'Partidas terminadas',
   daifugoWins: 'Vitórias',

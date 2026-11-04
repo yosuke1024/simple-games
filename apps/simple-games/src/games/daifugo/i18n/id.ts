@@ -1,6 +1,9 @@
 import type { DaifugoMessages } from './en';
 // AI authored; no native-speaker review.
 export const id: DaifugoMessages = {
+  daifugoSelected: '{n} dipilih',
+  daifugoMatchCount: 'Mainkan {n} kartu dengan nilai sama yang lebih kuat dari kartu di meja.',
+  daifugoNoGroup: 'Tidak ada kelompok yang bisa dimainkan. Lewati giliran.',
   daifugoPlayed: 'Permainan dimulai',
   daifugoFinished: 'Permainan selesai',
   daifugoWins: 'Kemenangan',

@@ -1,6 +1,9 @@
 import type { DaifugoMessages } from './en';
 // AI authored; no native-speaker review.
 export const th: DaifugoMessages = {
+  daifugoSelected: 'เลือกแล้ว {n} ใบ',
+  daifugoMatchCount: 'ลงไพ่แต้มเดียวกัน {n} ใบที่สูงกว่าไพ่บนโต๊ะ',
+  daifugoNoGroup: 'ไม่มีชุดไพ่ที่ลงได้ ให้ผ่านตา',
   daifugoPlayed: 'เกมที่เริ่ม',
   daifugoFinished: 'เกมที่จบ',
   daifugoWins: 'ชนะ',

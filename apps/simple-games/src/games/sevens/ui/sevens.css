@@ -1,3 +1,40 @@
+[data-game='sevens'] {
+  --sv-felt: #edf3ed;
+  --sv-felt-edge: #ccd9ca;
+  --sv-felt-ink: #364e40;
+  --sv-card-paper: #fffdf7;
+  --sv-card-edge: #c7c6b9;
+  --sv-card-red: #a32c43;
+  --sv-card-black: #263d39;
+  --sv-joker: #75469b;
+  --sv-selection: #fff8d8;
+  --sv-card-shadow: #0000000d;
+  --sv-back-fill: #6b437e;
+  --sv-back-ink: #fffdf7;
+  --sv-back-paper: #fffdf7;
+  --sv-felt-inset: color-mix(in srgb, var(--sv-felt-edge) 25%, transparent);
+  --sv-card-muted: #f1efe7;
+  --sv-felt-glow: color-mix(in srgb, var(--sv-card-paper) 28%, transparent);
+}
+[data-theme='dark'][data-game='sevens'] {
+  --sv-felt: #1b322c;
+  --sv-felt-edge: #3e5148;
+  --sv-felt-ink: #d1e1d6;
+  --sv-card-paper: #e9e6dd;
+  --sv-card-edge: #adae9e;
+  --sv-card-red: #a1223b;
+  --sv-card-black: #213833;
+  --sv-joker: #75469b;
+  --sv-selection: #fff8d8;
+  --sv-card-shadow: #0000000d;
+  --sv-back-fill: #6b437e;
+  --sv-back-ink: #fffdf7;
+  --sv-back-paper: #fffdf7;
+  --sv-felt-inset: color-mix(in srgb, var(--sv-felt-edge) 25%, transparent);
+  --sv-card-muted: #d4d5cc;
+  --sv-felt-glow: color-mix(in srgb, var(--sv-card-paper) 28%, transparent);
+}
+
 .sv-home-content {
   width: 100%;
 }
@@ -21,163 +58,169 @@
 .sv-screen .game-topbar {
   flex-shrink: 0;
 }
+.sv-screen .game-mode {
+  font-size: 16px;
+}
 .sv-body {
   width: 100%;
-  max-width: 650px;
-  margin: auto;
+  max-width: 720px;
+  margin: 12px auto 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 6px 16px 18px;
+  padding: 0 16px 24px;
   flex-shrink: 0;
 }
 .sv-screen button:focus-visible {
   outline: 3px solid var(--ink);
-  outline-offset: 3px;
+  outline-offset: 4px;
+  z-index: 3;
 }
-.sv-screen .game-mode {
-  font-size: 14px;
-}
-[data-game='sevens'] {
-  --sv-felt: #edf3ed;
-  --sv-felt-edge: #ccd9ca;
-  --sv-felt-ink: #364e40;
-  --sv-card-paper: #fffdf7;
-  --sv-card-edge: #c7c6b9;
-  --sv-card-red: #a32c43;
-  --sv-card-black: #263d39;
-  --sv-joker: #75469b;
-  --sv-selection: #fff8d8;
-  --sv-card-shadow: #0000000d;
-  --sv-back-paper: #fffdf7;
-  --sv-felt-inset: color-mix(in srgb, var(--sv-felt-edge) 25%, transparent);
-}
-[data-theme='dark'][data-game='sevens'] {
-  --sv-felt: #1b322c;
-  --sv-felt-edge: #3e5148;
-  --sv-felt-ink: #d1e1d6;
-  --sv-card-paper: #e9e6dd;
-  --sv-card-edge: #adae9e;
-  --sv-card-red: #a1223b;
-  --sv-card-black: #213833;
-  --sv-joker: #75469b;
-  --sv-selection: #fff8d8;
-  --sv-card-shadow: #0000000d;
-  --sv-back-paper: #fffdf7;
-  --sv-felt-inset: color-mix(in srgb, var(--sv-felt-edge) 25%, transparent);
+.sv-arena {
+  border: 1px solid var(--sv-felt-edge);
+  border-radius: 30px;
+  padding: 10px 12px 10px;
+  background:
+    radial-gradient(ellipse at 50% 30%, var(--sv-felt-glow), transparent 75%), var(--sv-felt);
+  box-shadow:
+    inset 0 0 0 5px var(--sv-felt-inset),
+    0 4px 12px var(--sv-card-shadow);
 }
 .sv-opponents {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
+  max-width: 540px;
+  margin: 0 auto 10px;
 }
 .sv-seat {
-  border: 1px solid var(--line);
-  background: var(--surface);
-  border-radius: 14px;
-  padding: 8px 4px;
-  display: grid;
-  grid-template-columns: 25px 1fr;
-  align-items: center;
-  gap: 3px 5px;
+  position: relative;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 3px 5px;
+  border-radius: 15px;
+  border: 1px solid transparent;
+  color: var(--sv-felt-ink);
 }
 .sv-seat-active {
+  background: var(--surface);
   border-color: var(--accent);
-  box-shadow: inset 0 0 0 1px var(--accent);
-  background: var(--accent-soft);
+  box-shadow: 0 2px 0 var(--accent);
 }
-.sv-avatar {
-  grid-row: span 2;
-  width: 24px;
-  height: 24px;
-  border: 1px solid var(--line);
-  border-radius: 50%;
+.sv-seat.is-source {
+  border-color: var(--accent);
+}
+.sv-seat.is-resting .sv-seat-fan {
+  opacity: 0.5;
+}
+.sv-seat-fan {
+  height: 36px;
+  width: 80px;
+  position: relative;
+  margin: 0 0 3px;
+}
+.sv-seat-back {
+  position: absolute;
+  width: 27px;
+  height: 38px;
+  left: calc(50% - 13.5px);
+  bottom: 0;
+  transform: translateX(var(--fan-x)) rotate(var(--fan-angle));
+  transform-origin: center 90%;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px var(--sv-card-shadow);
+}
+.sv-seat-finished {
   display: grid;
   place-items: center;
-  font-size: 10px;
-  color: var(--accent);
+  height: 100%;
+  font-size: 30px;
 }
 .sv-seat-name {
-  font-size: 12px;
-  font-weight: 750;
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 800;
   overflow-wrap: anywhere;
 }
 .sv-seat-cards {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.3;
   font-variant-numeric: tabular-nums;
 }
-.sv-mini-back {
-  width: 11px;
-  height: 15px;
-  display: block;
+.sv-seat-state {
+  font-size: 11px;
+  line-height: 1.3;
+  text-align: center;
 }
 .sv-table {
   position: relative;
-  min-height: 154px;
-  border: 1px solid var(--sv-felt-edge);
-  border-radius: 20px;
-  background:
-    radial-gradient(ellipse at 50% 25%, transparent, var(--sv-felt-edge) 180%), var(--sv-felt);
-  box-shadow: inset 0 0 0 5px var(--sv-felt-inset);
+  min-height: 156px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 14px 10px;
+  gap: 10px;
+  padding: 10px 0 2px;
   color: var(--sv-felt-ink);
+  border-top: 1px solid var(--sv-felt-edge);
 }
 .sv-table-label {
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 700;
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.5;
   text-align: center;
-  min-height: 17px;
+  min-height: 20px;
 }
 .sv-table-cards {
   display: flex;
   justify-content: center;
-  gap: 7px;
-  min-height: 76px;
+  gap: 8px;
+  min-height: 90px;
+  align-items: center;
 }
 .sv-table-cards .sv-card {
-  width: 53px;
-  height: 76px;
+  width: 64px;
+  height: 90px;
 }
 .sv-empty-mark {
-  width: 54px;
-  height: 76px;
+  width: 64px;
+  height: 90px;
   border: 1px dashed var(--sv-felt-edge);
-  border-radius: 7px;
+  border-radius: 9px;
   display: grid;
   place-items: center;
-  font-size: 28px;
-  opacity: 0.65;
+  font-size: 32px;
 }
 .sv-badge {
   border-radius: 20px;
   background: var(--surface);
   color: var(--ink);
-  padding: 4px 10px;
-  font-size: 11px;
+  padding: 4px 12px;
+  font-size: 12px;
   font-weight: 700;
 }
 .sv-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   font-size: 14px;
-  line-height: 1.45;
-  min-height: 22px;
+  line-height: 1.4;
+  min-height: 36px;
+  border-radius: 12px;
   margin: 0;
-  color: var(--ink);
+  padding: 5px 8px;
+  color: var(--ink-soft);
+  background: var(--surface);
 }
 .sv-status.is-yours {
-  font-weight: 750;
+  font-weight: 800;
   color: var(--accent);
+  background: var(--accent-soft);
 }
 .sv-hand-heading {
   display: flex;
@@ -189,16 +232,16 @@
 }
 .sv-hand-heading strong {
   color: var(--ink);
-  font-size: 13px;
+  font-size: 14px;
 }
 .sv-hand {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 9px 5px;
+  gap: 12px 5px;
   align-self: center;
   width: 100%;
-  max-width: 480px;
-  padding: 4px 0;
+  max-width: 560px;
+  padding: 8px 0 4px;
 }
 .sv-card {
   position: relative;
@@ -211,10 +254,13 @@
   aspect-ratio: 5/7;
   box-shadow:
     0 2px 0 var(--sv-card-edge),
-    0 3px 6px var(--sv-card-shadow);
+    0 4px 7px var(--sv-card-shadow);
   min-width: 0;
   touch-action: manipulation;
   user-select: none;
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease;
 }
 .sv-red {
   color: var(--sv-card-red);
@@ -226,7 +272,7 @@
   position: absolute;
   top: 4px;
   left: 4px;
-  font-size: clamp(11px, 3.4vw, 17px);
+  font-size: clamp(14px, 3.8vw, 19px);
   line-height: 1;
   display: flex;
   flex-direction: column;
@@ -234,7 +280,7 @@
   gap: 1px;
 }
 .sv-card-corner b {
-  font-weight: 800;
+  font-weight: 850;
 }
 .sv-card-corner > span {
   font-size: 11px;
@@ -248,45 +294,86 @@
 }
 .sv-card-symbol {
   position: absolute;
-  width: 45%;
-  height: 45%;
-  top: 29%;
-  left: 28%;
+  width: 46%;
+  height: 50%;
+  top: 24%;
+  left: 27%;
+  fill: currentColor;
+}
+.sv-card-pips {
+  position: absolute;
+  inset: 23% 26%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  align-content: space-evenly;
+  justify-items: center;
+  font-size: clamp(7px, 1.9vw, 12px);
+  line-height: 1;
+}
+.sv-pips-1 {
   display: grid;
   place-items: center;
-  font-size: clamp(19px, 5vw, 29px);
+  grid-template-columns: 1fr;
+  font-size: clamp(25px, 6vw, 40px);
+  inset: 24% 20%;
 }
-svg.sv-card-symbol {
-  fill: currentColor;
+.sv-pips-2,
+.sv-pips-3 {
+  grid-template-columns: 1fr;
+}
+.sv-pips-5 > :last-child,
+.sv-pips-7 > :last-child,
+.sv-pips-9 > :last-child {
+  grid-column: 1 / -1;
+}
+.sv-card-court {
+  position: absolute;
+  inset: 23% 24%;
+  width: 52%;
+  height: 54%;
 }
 .sv-hand button.sv-card:disabled {
   cursor: default;
+  opacity: 1;
 }
-.sv-hand button.sv-card.is-unplayable {
-  filter: saturate(0.45);
-  opacity: 0.58;
+.sv-hand .is-unplayable {
+  background: var(--sv-card-muted);
 }
-.sv-hand button.sv-card.is-legal {
+.sv-hand .is-legal {
   box-shadow:
     0 2px 0 var(--sv-card-edge),
     0 0 0 2px var(--accent);
 }
-.sv-hand button.sv-card.is-selected {
-  transform: translateY(-6px);
+.sv-hand .is-selected {
+  transform: translateY(-7px);
   box-shadow:
     0 3px 0 var(--accent),
     0 0 0 2px var(--accent);
   background: var(--sv-selection);
+}
+.sv-hand .is-selected::after {
+  content: '✓';
+  position: absolute;
+  right: -4px;
+  top: -8px;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: 800 12px/1 sans-serif;
 }
 .sv-card-back {
   display: grid;
   place-items: center;
   position: absolute;
   inset: 0;
-  border: 3px solid var(--sv-card-paper);
+  border: 3px solid var(--sv-back-paper);
   border-radius: inherit;
-  background: var(--accent);
-  color: var(--accent-ink);
+  background: var(--sv-back-fill);
+  color: var(--sv-back-ink);
   overflow: hidden;
 }
 .sv-card-back svg {
@@ -295,28 +382,27 @@ svg.sv-card-symbol {
   fill: none;
   stroke: currentColor;
   stroke-width: 1;
-  opacity: 0.5;
+  opacity: 0.55;
 }
 .sv-controls {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
 }
 .sv-controls .btn {
-  min-height: 44px;
+  min-height: 46px;
   min-width: 100px;
 }
 .sv-note {
   color: var(--ink-soft);
   font-size: 12px;
-  line-height: 1.4;
+  line-height: 1.5;
   text-align: center;
   margin: 0;
 }
 .sv-event-card {
-  animation: sv-arrive 300ms ease-out both;
+  animation: sv-arrive 340ms ease-out both;
 }
 .sv-tutorial-figure {
   display: flex;
@@ -329,12 +415,8 @@ svg.sv-card-symbol {
   margin: 0 0 20px;
 }
 .sv-tutorial-figure .sv-card {
-  width: 49px;
-  height: 70px;
-  --sv-card-paper: var(--surface);
-  --sv-card-edge: var(--line);
-  --sv-card-black: var(--ink);
-  --sv-card-red: var(--warn);
+  width: 56px;
+  height: 78px;
 }
 .sv-demo-arrow {
   width: 100%;
@@ -344,28 +426,161 @@ svg.sv-card-symbol {
   font-size: 25px;
   margin-bottom: 10px;
 }
+@keyframes sv-arrive {
+  from {
+    transform: translateY(-18px) rotate(-5deg) scale(0.94);
+    opacity: 0.25;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@media (hover: hover) {
+  .sv-hand button.sv-card:not(:disabled):hover {
+    transform: translateY(-5px);
+  }
+  .sv-hand button.sv-card.is-selected:hover {
+    transform: translateY(-9px);
+  }
+}
+@media (min-width: 700px) {
+  .sv-body {
+    margin-top: 16px;
+    padding: 0 24px 24px;
+    gap: 14px;
+  }
+  .sv-arena {
+    padding: 20px 20px 16px;
+  }
+  .sv-seat-fan {
+    height: 52px;
+  }
+  .sv-seat-back {
+    width: 32px;
+    height: 45px;
+  }
+  .sv-table-cards .sv-card {
+    width: 72px;
+    height: 101px;
+  }
+}
+@media (max-height: 720px) {
+  .sv-body {
+    margin-top: 2px;
+    gap: 6px;
+    padding-bottom: 12px;
+  }
+  .sv-arena {
+    padding: 8px 8px 6px;
+    border-radius: 23px;
+  }
+  .sv-opponents {
+    margin-bottom: 2px;
+  }
+  .sv-seat {
+    padding: 3px;
+    gap: 2px;
+  }
+  .sv-seat-fan {
+    height: 28px;
+    margin: 0;
+  }
+  .sv-seat-back {
+    width: 20px;
+    height: 28px;
+  }
+  .sv-seat-name {
+    font-size: 12px;
+  }
+  .sv-seat-cards {
+    font-size: 11px;
+  }
+  .sv-table {
+    min-height: 116px;
+    gap: 5px;
+    padding-top: 6px;
+  }
+  .sv-table-cards {
+    min-height: 67px;
+  }
+  .sv-table-cards .sv-card,
+  .sv-empty-mark {
+    width: 48px;
+    height: 67px;
+  }
+  .sv-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+  .sv-status {
+    min-height: 28px;
+    font-size: 13px;
+    padding: 3px 6px;
+  }
+  .sv-hand {
+    gap: 8px 4px;
+    padding-top: 6px;
+    max-width: 450px;
+  }
+  .sv-note {
+    font-size: 11px;
+    line-height: 1.35;
+  }
+}
+@media (max-width: 350px) {
+  .sv-body {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  .sv-card-corner {
+    left: 3px;
+    top: 3px;
+    font-size: 13px;
+  }
+  .sv-card-corner > span {
+    font-size: 10px;
+  }
+  .sv-card-bottom {
+    top: auto;
+    left: auto;
+    bottom: 3px;
+    right: 3px;
+  }
+  .sv-hand {
+    gap: 8px 3px;
+  }
+}
+
+.sv-sevens-table {
+  padding: 10px 0 0;
+}
 .sv-sevens-grid {
   display: grid;
   grid-template-columns: repeat(13, minmax(0, 1fr));
-  gap: 4px 2px;
+  gap: 5px 2px;
   width: 100%;
 }
 .sv-sevens-grid .sv-card,
 .sv-slot {
   aspect-ratio: 3/5;
-  border-radius: 3px;
-  box-shadow: none;
+  min-height: 32px;
+  border-radius: 4px;
   min-width: 0;
-  min-height: 30px;
+  box-shadow: none;
 }
 .sv-sevens-grid .sv-card-corner {
-  font-size: clamp(9px, 2.7vw, 14px);
+  font-size: clamp(11px, 3vw, 16px);
   top: 3px;
   left: 0;
   width: 100%;
   gap: 3px;
 }
-.sv-sevens-grid .sv-card-symbol,
+.sv-sevens-grid .sv-card-corner > span {
+  font-size: 12px;
+}
+.sv-sevens-grid .sv-card-pips,
+.sv-sevens-grid .sv-card-court,
 .sv-sevens-grid .sv-card-bottom {
   display: none;
 }
@@ -375,6 +590,7 @@ svg.sv-card-symbol {
   padding: 0;
   color: var(--sv-felt-ink);
   font-size: 10px;
+  line-height: 1;
 }
 .sv-slot.is-target {
   background: var(--accent-soft);
@@ -382,149 +598,185 @@ svg.sv-card-symbol {
   color: var(--accent);
   font-weight: 800;
 }
-.sv-sevens-table {
-  padding: 12px 7px;
+.sv-slot.is-target::after {
+  content: '+';
+  display: block;
+  font-size: 14px;
+  margin-top: 3px;
 }
 .sv-pass-track {
   display: flex;
+  flex-wrap: wrap;
   gap: 5px;
   align-items: center;
   justify-content: center;
   font-size: 12px;
   color: var(--ink-soft);
 }
-@keyframes sv-arrive {
-  from {
-    transform: translateY(-12px) rotate(-4deg);
-    opacity: 0.3;
-  }
-  to {
-    transform: none;
-    opacity: 1;
-  }
+.sv-seat-passes,
+.sv-pass-dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
 }
-@media (prefers-reduced-motion: reduce) {
-  .sv-event-card {
-    animation: none;
-  }
-  .sv-card {
-    transition: none;
-  }
+.sv-seat-passes i,
+.sv-pass-dots i {
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--sv-felt-ink);
+  border-radius: 50%;
 }
-[data-reduced-motion='true'] .sv-event-card {
-  animation: none;
+.sv-seat-passes i.is-available,
+.sv-pass-dots i.is-available {
+  background: var(--sv-felt-ink);
 }
-@media (min-width: 700px) {
-  .sv-body {
-    gap: 16px;
-    padding: 12px 24px 20px;
-  }
-  .sv-table {
-    min-height: 190px;
-  }
-  .sv-hand {
-    max-width: 490px;
-    gap: 10px;
-  }
-  .sv-table-cards .sv-card {
-    width: 64px;
-    height: 90px;
-  }
+.sv-pass-dots i {
+  width: 9px;
+  height: 9px;
+}
+.sv-last-card {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 @media (max-height: 720px) {
-  .sv-body {
-    gap: 8px;
-    padding-top: 3px;
+  .sv-sevens-grid {
+    gap: 4px 2px;
   }
-  .sv-table {
-    min-height: 128px;
-    padding: 10px;
-  }
-  .sv-table-cards {
-    min-height: 63px;
-  }
-  .sv-table-cards .sv-card {
-    width: 45px;
-    height: 63px;
-  }
-  .sv-seat {
-    padding: 5px 3px;
-  }
-  .sv-hand {
-    gap: 8px 4px;
-    max-width: 390px;
+  .sv-sevens-grid .sv-card,
+  .sv-slot {
+    min-height: 30px;
+    aspect-ratio: 2/3;
   }
   .sv-sevens-table {
-    min-height: 150px;
-    padding: 9px 6px;
+    gap: 5px;
   }
-}
-@media (max-width: 350px) {
-  .sv-body {
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-  .sv-hand {
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-  }
-  .sv-card-corner {
+  .sv-table-label {
     font-size: 11px;
   }
-  .sv-card-corner > span {
-    font-size: 9px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sv-screen *,
+  .sv-screen *::after {
+    animation: none !important;
+    transition: none !important;
   }
-  .sv-card-bottom {
-    display: none;
+}
+[data-reduced-motion='true'] .sv-screen *,
+[data-reduced-motion='true'] .sv-screen *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Keep all thirteen columns and the pass control in view above a phone banner. */
+@media (max-height: 720px) {
+  .sv-screen .game-topbar {
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+  .sv-body {
+    gap: 4px;
+    margin-top: 0;
+  }
+  .sv-hand .sv-card {
+    aspect-ratio: 4/5;
+  }
+  .sv-controls .btn {
+    min-height: 44px;
+  }
+  .sv-sevens-table {
+    padding-top: 4px;
+  }
+  .sv-seat-fan {
+    height: 20px;
+  }
+  .sv-seat-back {
+    width: 17px;
+    height: 23px;
   }
   .sv-seat {
-    grid-template-columns: 19px 1fr;
-    gap: 2px;
+    gap: 1px;
+    padding: 2px;
   }
-  .sv-avatar {
-    width: 18px;
-    height: 18px;
-    font-size: 8px;
+  .sv-seat-name {
+    font-size: 11px;
   }
   .sv-seat-cards {
     font-size: 10px;
   }
   .sv-sevens-grid {
-    gap: 3px 1px;
+    gap: 3px 2px;
   }
-}
-
-.sv-mini-back {
-  position: relative;
-  border-radius: 2px;
-}
-
-/* Keep the hand and actions above the reserved banner on short phones. */
-@media (max-height: 720px) {
-  .sv-body {
-    gap: 6px;
+  .sv-sevens-grid .sv-card,
+  .sv-slot {
+    height: 28px;
+    min-height: 28px;
+    aspect-ratio: auto;
   }
-  .sv-table {
-    gap: 6px;
-    padding-top: 6px;
-    padding-bottom: 6px;
+  .sv-sevens-grid .sv-card-corner {
+    gap: 1px;
+    top: 2px;
+    font-size: 11px;
   }
-  .sv-empty-mark {
-    width: 40px;
-    height: 56px;
-  }
-  .sv-table-cards {
-    min-height: 56px;
-  }
-  .sv-table-cards .sv-card {
-    width: 40px;
-    height: 56px;
-  }
-  .sv-badge {
-    padding: 3px 8px;
+  .sv-sevens-grid .sv-card-corner > span {
     font-size: 10px;
   }
-  .sv-note {
+  .sv-slot.is-target::after {
     font-size: 11px;
-    line-height: 1.3;
+    margin-top: 1px;
+  }
+}
+
+.sv-seat-passes,
+.sv-seat-state {
+  min-height: 14px;
+}
+
+/* A wide screen puts the hand beside the table instead of stretching the table vertically. */
+@media (min-width: 900px) {
+  .sv-body {
+    max-width: 1120px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    column-gap: 24px;
+    row-gap: 12px;
+    align-items: start;
+  }
+  .sv-arena {
+    grid-column: 1;
+    grid-row: 1 / span 5;
+    align-self: stretch;
+    padding: 16px 12px;
+  }
+  .sv-status {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .sv-hand-heading {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .sv-hand {
+    grid-column: 2;
+    grid-row: 3;
+    padding-top: 6px;
+  }
+  .sv-controls {
+    grid-column: 2;
+    grid-row: 4;
+  }
+  .sv-note {
+    grid-column: 2;
+    grid-row: 5;
+  }
+}
+
+@media (min-width: 700px) {
+  .sv-sevens-grid .sv-card,
+  .sv-slot {
+    height: 44px;
+    min-height: 44px;
+    aspect-ratio: auto;
   }
 }

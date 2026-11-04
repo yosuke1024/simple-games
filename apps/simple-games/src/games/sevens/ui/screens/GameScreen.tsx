@@ -119,48 +119,55 @@ export function GameScreen() {
               hadHandFocus.current = false;
           }}
         >
-          <TableSeats session={session} />
-          <section className="sv-table sv-sevens-table" aria-label={t('sevensField')}>
-            <div className="sv-sevens-grid">
-              {[0, 1, 2, 3].flatMap((suit) =>
-                Array.from({ length: 13 }, (_, r) => {
-                  const card = suit * 13 + r,
-                    laid = session.table.includes(card),
-                    legal = hand.includes(card) && canPlay(card, session.table);
-                  return laid ? (
-                    <span
-                      className={`${cardClass(card)} ${session.event.cards.includes(card) && playback ? 'sv-event-card' : ''}`}
-                      key={card}
-                      role="img"
-                      aria-label={cardLabel(card)}
-                    >
-                      <CardFace card={card} />
-                    </span>
-                  ) : legal ? (
-                    <button
-                      type="button"
-                      className="sv-slot is-target"
-                      key={card}
-                      disabled={!yourTurn || !!playback}
-                      aria-label={t('sevensPlaceCard', { card: cardLabel(card) })}
-                      onClick={() => send({ kind: 'play', card })}
-                    >
-                      {rankText(card)}
-                    </button>
-                  ) : (
-                    <span className="sv-slot" key={card} aria-hidden="true">
-                      {rankText(card)}
-                    </span>
-                  );
-                }),
-              )}
-            </div>
-            <p className="sv-table-label">
-              {session.event.kind === 'deal' ? t('sevensRules') : eventText}
-            </p>
-          </section>
-          <p className={`sv-status ${yourTurn ? 'is-yours' : ''}`} role="status">
-            {yourTurn ? t('sevensYourTurn') : t('sevensTurn', { name: seatName(session.turn) })}
+          <div className="sv-arena">
+            <TableSeats
+              session={session}
+              activeSeat={playback ? session.event.seat : session.turn}
+            />
+            <section className="sv-table sv-sevens-table" aria-label={t('sevensField')}>
+              <div className="sv-sevens-grid">
+                {[0, 1, 2, 3].flatMap((suit) =>
+                  Array.from({ length: 13 }, (_, r) => {
+                    const card = suit * 13 + r,
+                      laid = session.table.includes(card),
+                      legal = hand.includes(card) && canPlay(card, session.table);
+                    return laid ? (
+                      <span
+                        className={`${cardClass(card)} ${session.event.cards.includes(card) ? 'sv-last-card' : ''} ${session.event.cards.includes(card) && playback ? 'sv-event-card' : ''}`}
+                        key={card}
+                        role="img"
+                        aria-label={cardLabel(card)}
+                      >
+                        <CardFace card={card} />
+                      </span>
+                    ) : legal ? (
+                      <button
+                        type="button"
+                        className="sv-slot is-target"
+                        key={card}
+                        disabled={!yourTurn || !!playback}
+                        aria-label={t('sevensPlaceCard', { card: cardLabel(card) })}
+                        onClick={() => send({ kind: 'play', card })}
+                      >
+                        {rankText(card)}
+                      </button>
+                    ) : (
+                      <span className="sv-slot" key={card} aria-hidden="true">
+                        {rankText(card)}
+                      </span>
+                    );
+                  }),
+                )}
+              </div>
+              <p className="sv-table-label">{eventText}</p>
+            </section>
+          </div>
+          <p className={`sv-status ${yourTurn && !playback ? 'is-yours' : ''}`} role="status">
+            {playback
+              ? eventText
+              : yourTurn
+                ? t('sevensYourTurn')
+                : t('sevensTurn', { name: seatName(session.turn) })}
           </p>
           <div className="sv-hand-heading">
             <strong>{t('sevensHand')}</strong>
@@ -182,6 +189,11 @@ export function GameScreen() {
           </div>
           <div className="sv-controls">
             <span className="sv-pass-track">
+              <span className="sv-pass-dots" aria-hidden="true">
+                {[0, 1, 2].map((i) => (
+                  <i key={i} className={i < 3 - session.passes[0]! ? 'is-available' : ''} />
+                ))}
+              </span>
               {t('sevensPasses', { n: Math.max(0, 3 - session.passes[0]!) })}
             </span>
             <button

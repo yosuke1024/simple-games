@@ -10,6 +10,8 @@ import {
   act as move,
   chooseCpuMove,
   cpuView,
+  legalGroups,
+  rankOf,
   type Session,
   type Action,
 } from '../game';
@@ -87,7 +89,64 @@ function clickMove(action: Action) {
     );
   }
 }
+function onPlayableHuman() {
+  for (let seed = 1; seed < 100; seed++) {
+    const s = onHuman(seed);
+    const ranks = new Set(
+      legalGroups(s.hands[0]!, s.table, s.revolution)
+        .flat()
+        .filter((c) => c !== 52)
+        .map(rankOf),
+    );
+    if (ranks.size > 1) return s;
+  }
+  throw new Error('No playable fixture');
+}
 describe('Daifugo UI and lifecycle', () => {
+  it('starts a new selection when a different rank is picked, without playing a card', async () => {
+    timers();
+    const kv = createMemoryKV(),
+      s = onPlayableHuman();
+    await taught(kv, s);
+    launch(kv);
+    await settle();
+    const hand = document.querySelectorAll<HTMLButtonElement>('.df-hand button:not(:disabled)');
+    const first = Array.from(hand).find((b) => b.getAttribute('aria-label') !== 'Joker')!;
+    const rank = first.getAttribute('aria-label')!.split(' ')[0];
+    const other = Array.from(hand).find(
+      (b) =>
+        b.getAttribute('aria-label') !== 'Joker' &&
+        !b.getAttribute('aria-label')!.startsWith(`${rank} `),
+    )!;
+    fireEvent.click(first);
+    fireEvent.click(other);
+    expect(first).toHaveAttribute('aria-pressed', 'false');
+    expect(other).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText('1 selected')).toBeInTheDocument();
+    expect((await loadSavedGame(kv))?.moves).toBe(s.moves);
+  });
+  it('keeps the table owner separate from the player who most recently passed', async () => {
+    timers();
+    let position: Session | undefined;
+    for (let seed = 1; seed < 30 && !position; seed++) {
+      let s = createSession(seed);
+      for (let i = 0; i < 400 && s.status === 'playing'; i++) {
+        s = move(s, chooseCpuMove(cpuView(s)))!;
+        if (s.turn === 0 && s.event.kind === 'pass' && s.table.length) {
+          position = s;
+          break;
+        }
+      }
+    }
+    expect(position).toBeDefined();
+    const kv = createMemoryKV();
+    await taught(kv, position!);
+    launch(kv);
+    await settle();
+    const owner = position!.leader === 0 ? 'You' : `CPU ${position!.leader}`;
+    expect(document.querySelector('.df-table-label')).toHaveTextContent(`${owner} played`);
+    expect(position!.event.seat).not.toBe(position!.leader);
+  });
   it('teaches three steps, starts, and cancels restart without replacing the deal', async () => {
     timers();
     const kv = createMemoryKV();
@@ -231,7 +290,7 @@ it('chooses the outgoing exchange before seeing received cards and preserves 53 
 it('wraps keyboard navigation within the cards even with fewer than seven choices', async () => {
   timers();
   const kv = createMemoryKV();
-  await taught(kv, onHuman());
+  await taught(kv, onPlayableHuman());
   launch(kv);
   await settle();
   const cards = Array.from(

@@ -1,6 +1,9 @@
 import type { DaifugoMessages } from './en';
 // AI authored; no native-speaker review.
 export const zhHant: DaifugoMessages = {
+  daifugoSelected: '已選{n}張',
+  daifugoMatchCount: '出{n}張點數相同、比桌面更大的牌。',
+  daifugoNoGroup: '沒有可出的組合，請跳過。',
   daifugoPlayed: '開始的遊戲',
   daifugoFinished: '完成的遊戲',
   daifugoWins: '勝利',

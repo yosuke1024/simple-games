@@ -1,6 +1,9 @@
 import type { DaifugoMessages } from './en';
 // AI authored; no native-speaker review.
 export const ko: DaifugoMessages = {
+  daifugoSelected: '{n}장 선택',
+  daifugoMatchCount: '같은 숫자의 카드 {n}장을 바닥의 카드보다 강하게 내세요.',
+  daifugoNoGroup: '낼 수 있는 조합이 없습니다. 패스하세요.',
   daifugoPlayed: '시작한 게임',
   daifugoFinished: '완료한 게임',
   daifugoWins: '승리',

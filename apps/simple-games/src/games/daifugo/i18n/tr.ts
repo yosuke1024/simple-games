@@ -1,6 +1,9 @@
 import type { DaifugoMessages } from './en';
 // AI authored; no native-speaker review.
 export const tr: DaifugoMessages = {
+  daifugoSelected: '{n} kart seçildi',
+  daifugoMatchCount: 'Masadakinden güçlü, aynı değerde {n} kart oyna.',
+  daifugoNoGroup: 'Oynanabilir grup yok. Devam etmek için pas geç.',
   daifugoPlayed: 'Başlanan oyunlar',
   daifugoFinished: 'Bitirilen oyunlar',
   daifugoWins: 'Galibiyetler',
