@@ -1,4 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+} from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { sounds } from '@/services/sound';
 import { BannerSlot } from '@/ui/components/BannerSlot';
@@ -117,43 +124,76 @@ export function GameScreen() {
               hadHandFocus.current = false;
           }}
         >
-          <TableSeats session={session} />
-          <section className="om-table om-draw-table" aria-label={t('oldMaidField')}>
-            <p className="om-table-label">
-              {yourTurn ? t('oldMaidDrawFrom', { name: seatName(source) }) : eventText}
-            </p>
-            <div className="om-draw-hand" aria-label={t('oldMaidHiddenHand')} ref={drawRef}>
-              {Array.from({ length: session.hands[source]!.length }, (_, index) => (
-                <button
-                  type="button"
-                  key={index}
-                  className="om-card"
-                  disabled={!yourTurn || !!playback}
-                  aria-label={t('oldMaidHiddenCard', {
-                    n: index + 1,
-                    total: session.hands[source]!.length,
-                  })}
-                  onClick={() => send({ kind: 'draw', index })}
-                >
-                  <CardBack />
-                </button>
-              ))}
-            </div>
-            <div className="om-pair-preview" key={session.moves}>
-              {session.event.cards.map((card) => (
-                <span
-                  key={card}
-                  className={`${cardClass(card)} ${playback ? 'om-event-card' : ''}`}
-                  role="img"
-                  aria-label={cardLabel(card)}
-                >
-                  <CardFace card={card} />
-                </span>
-              ))}
-            </div>
-          </section>
-          <p className={`om-status ${yourTurn ? 'is-yours' : ''}`} role="status">
-            {yourTurn ? t('oldMaidYourTurn') : t('oldMaidTurn', { name: seatName(session.turn) })}
+          <div className="om-arena">
+            <TableSeats
+              session={session}
+              activeSeat={playback ? session.event.seat : session.turn}
+              source={yourTurn && !playback ? source : undefined}
+            />
+            <section className="om-table om-draw-table" aria-label={t('oldMaidField')}>
+              <p className="om-table-label">
+                {yourTurn && !playback
+                  ? t('oldMaidDrawFrom', { name: seatName(source) })
+                  : t('oldMaidTurn', {
+                      name: seatName(playback ? session.event.seat : session.turn),
+                    })}
+              </p>
+              <div
+                className="om-draw-hand"
+                aria-label={t('oldMaidHiddenHand')}
+                ref={drawRef}
+                style={
+                  {
+                    '--draw-columns': Math.max(1, Math.min(7, session.hands[source]!.length)),
+                  } as CSSProperties
+                }
+              >
+                {Array.from({ length: session.hands[source]!.length }, (_, index) => (
+                  <button
+                    type="button"
+                    key={index}
+                    className="om-card"
+                    disabled={!yourTurn || !!playback}
+                    aria-label={t('oldMaidHiddenCard', {
+                      n: index + 1,
+                      total: session.hands[source]!.length,
+                    })}
+                    onClick={() => send({ kind: 'draw', index })}
+                  >
+                    <CardBack />
+                  </button>
+                ))}
+              </div>
+              <div
+                className={`om-pair-preview ${playback ? (session.event.cards.length === 2 ? 'is-pair' : 'is-draw') : ''}`}
+                key={session.moves}
+              >
+                {!session.event.cards.length ? (
+                  <>
+                    <span className="om-pair-placeholder" aria-hidden="true" />
+                    <span className="om-pair-placeholder" aria-hidden="true" />
+                  </>
+                ) : null}
+                {session.event.cards.map((card) => (
+                  <span
+                    key={card}
+                    className={`${cardClass(card)} ${playback ? 'om-event-card' : ''}`}
+                    role="img"
+                    aria-label={cardLabel(card)}
+                  >
+                    <CardFace card={card} />
+                  </span>
+                ))}
+              </div>
+              <p className="om-event-caption">{eventText}</p>
+            </section>
+          </div>
+          <p className={`om-status ${yourTurn && !playback ? 'is-yours' : ''}`} role="status">
+            {playback
+              ? eventText
+              : yourTurn
+                ? t('oldMaidYourTurn')
+                : t('oldMaidTurn', { name: seatName(session.turn) })}
           </p>
           <div className="om-hand-heading">
             <strong>{t('oldMaidHand')}</strong>

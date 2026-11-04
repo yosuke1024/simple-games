@@ -41,7 +41,7 @@ describe('daifugo paper and felt contrast', () => {
     );
     const get = (s: string) => colors.get(s)!;
     for (const ink of ['card-black', 'card-red', 'joker'])
-      for (const paper of ['card-paper', 'selection'])
+      for (const paper of ['card-paper', 'card-muted', 'selection'])
         expect(contrast(get(ink), get(paper)), `${ink} on ${paper}`).toBeGreaterThanOrEqual(4.5);
     expect(contrast(get('felt-ink'), get('felt'))).toBeGreaterThanOrEqual(4.5);
     expect(luminance(get('card-paper'))).toBeGreaterThan(luminance(get('felt')));

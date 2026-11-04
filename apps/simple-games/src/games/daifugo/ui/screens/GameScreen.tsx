@@ -6,7 +6,15 @@ import { RestartDialog } from '@/ui/components/RestartDialog';
 
 import { IconBack, IconRetry } from '@/ui/components/icons';
 import { useGameKeys } from '@/ui/useGameKeys';
-import { beats, legalGroups, sortedHand, exchangeCount, type Action, type Card } from '../../game';
+import {
+  beats,
+  legalGroups,
+  sortedHand,
+  exchangeCount,
+  rankOf,
+  type Action,
+  type Card,
+} from '../../game';
 import { useDaifugo } from '../../state/GameContext';
 import { CardFace, cardClass, rankText, SUITS } from '../components/CardFace';
 import { TableSeats } from '../components/TableSeats';
@@ -18,15 +26,22 @@ export function GameScreen() {
   const [confirmRestart, setConfirmRestart] = useState(false);
   const handRef = useRef<HTMLDivElement>(null),
     drawRef = useRef<HTMLDivElement>(null),
+    passRef = useRef<HTMLButtonElement>(null),
     hadHandFocus = useRef(false);
   const [choice, setChoice] = useState<{ key: string; cards: number[] }>({ key: '', cards: [] });
   const choiceKey = `${session?.seed}:${session?.moves}`;
   const selected = choice.key === choiceKey ? choice.cards : [];
-  const selectCard = (card: number) =>
+  const selectCard = (card: number) => {
+    // A different rank starts a new group; Joker can stay as its substitute.
+    const compatible =
+      session?.phase === 'exchange' || card === 52
+        ? selected
+        : selected.filter((c) => c === 52 || rankOf(c) === rankOf(card));
     setChoice({
       key: choiceKey,
-      cards: selected.includes(card) ? selected.filter((c) => c !== card) : [...selected, card],
+      cards: selected.includes(card) ? selected.filter((c) => c !== card) : [...compatible, card],
     });
+  };
   const blocked = confirmRestart;
   useEffect(() => {
     setPaused(blocked);
@@ -77,7 +92,10 @@ export function GameScreen() {
       !playback &&
       (document.activeElement === document.body || !document.activeElement?.isConnected)
     ) {
-      handRef.current?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
+      (
+        handRef.current?.querySelector<HTMLButtonElement>('button:not(:disabled)') ??
+        passRef.current
+      )?.focus();
     }
   }, [session?.moves, session?.turn, blocked, playback]);
   if (!session) return null;
@@ -135,42 +153,58 @@ export function GameScreen() {
               hadHandFocus.current = false;
           }}
         >
-          <TableSeats session={session} />
-          <section className="df-table" aria-label={t('daifugoField')}>
-            <p className="df-table-label">
-              {exchange
-                ? t('daifugoExchangeCount', { n: count })
-                : session.event.kind === 'deal'
-                  ? t('daifugoTable')
-                  : eventText}
-            </p>
-            <div className="df-table-cards" key={session.moves}>
-              {tableCards.length ? (
-                tableCards.map((card) => (
-                  <span
-                    key={card}
-                    className={`${cardClass(card)} ${playback ? 'df-event-card' : ''}`}
-                    role="img"
-                    aria-label={cardLabel(card)}
-                  >
-                    <CardFace card={card} />
+          <div className="df-arena">
+            <TableSeats
+              session={session}
+              activeSeat={playback ? session.event.seat : session.turn}
+            />
+            <section className="df-table" aria-label={t('daifugoField')}>
+              <p className="df-table-label">
+                {exchange
+                  ? t('daifugoExchangeCount', { n: count })
+                  : tableCards.length
+                    ? t('daifugoEvent_play', { name: seatName(session.leader) })
+                    : session.event.kind === 'deal'
+                      ? t('daifugoTable')
+                      : eventText}
+              </p>
+              <div className="df-table-cards" key={session.moves}>
+                {tableCards.length ? (
+                  tableCards.map((card) => (
+                    <span
+                      key={card}
+                      className={`${cardClass(card)} ${playback && session.event.kind !== 'pass' ? 'df-event-card' : ''}`}
+                      role="img"
+                      aria-label={cardLabel(card)}
+                    >
+                      <CardFace card={card} />
+                    </span>
+                  ))
+                ) : (
+                  <span className="df-empty-mark" aria-hidden="true">
+                    {exchange ? '⇄' : '♧'}
                   </span>
-                ))
-              ) : (
-                <span className="df-empty-mark" aria-hidden="true">
-                  {exchange ? '⇄' : '♧'}
-                </span>
-              )}
-            </div>
-            <span className="df-badge">
-              {t(session.revolution ? 'daifugoReversed' : 'daifugoNormal')}
-            </span>
-          </section>
-          <p className={`df-status ${yourTurn ? 'is-yours' : ''}`} role="status">
-            {yourTurn ? t('daifugoYourTurn') : t('daifugoTurn', { name: seatName(session.turn) })}
+                )}
+              </div>
+              <span className={`df-badge ${session.revolution ? 'is-revolution' : ''}`}>
+                {t(session.revolution ? 'daifugoReversed' : 'daifugoNormal')}
+              </span>
+            </section>
+          </div>
+          <p className={`df-status ${yourTurn && !playback ? 'is-yours' : ''}`} role="status">
+            {playback
+              ? eventText
+              : yourTurn
+                ? t('daifugoYourTurn')
+                : t('daifugoTurn', { name: seatName(session.turn) })}
           </p>
           <div className="df-hand-heading">
             <strong>{t('daifugoHand')}</strong>
+            {selected.length > 0 ? (
+              <span className="df-selection-count">
+                {t('daifugoSelected', { n: selected.length })}
+              </span>
+            ) : null}
             <span>{t('daifugoCards', { n: hand.length })}</span>
           </div>
           <div className="df-hand" ref={handRef} aria-label={t('daifugoHand')}>
@@ -178,8 +212,8 @@ export function GameScreen() {
               <button
                 type="button"
                 key={card}
-                className={`${cardClass(card)} ${selected.includes(card) ? 'is-selected' : ''} ${!exchange && !possible.has(card) ? 'is-unplayable' : ''}`}
-                disabled={!yourTurn || !!playback}
+                className={`${cardClass(card)} ${selected.includes(card) ? 'is-selected' : ''} ${!exchange && !possible.has(card) ? 'is-unplayable' : yourTurn ? 'is-legal' : ''}`}
+                disabled={!yourTurn || !!playback || (!exchange && !possible.has(card))}
                 aria-pressed={selected.includes(card)}
                 aria-label={cardLabel(card)}
                 onClick={() => selectCard(card)}
@@ -206,6 +240,7 @@ export function GameScreen() {
             {!exchange ? (
               <button
                 type="button"
+                ref={passRef}
                 className="btn btn-secondary"
                 disabled={!yourTurn || !!playback || !session.table.length}
                 onClick={() => send({ kind: 'pass' })}
@@ -214,7 +249,15 @@ export function GameScreen() {
               </button>
             ) : null}
           </div>
-          <p className="df-note">{exchange ? t('daifugoExchangeNote') : t('daifugoSelectNote')}</p>
+          <p className="df-note">
+            {exchange
+              ? t('daifugoExchangeNote')
+              : yourTurn && !options.length
+                ? t('daifugoNoGroup')
+                : session.table.length
+                  ? t('daifugoMatchCount', { n: session.table.length })
+                  : t('daifugoSelectNote')}
+          </p>
         </div>
       </div>
       <BannerSlot />

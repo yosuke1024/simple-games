@@ -1,6 +1,9 @@
 import type { DaifugoMessages } from './en';
 // AI authored; no native-speaker review.
 export const zhHans: DaifugoMessages = {
+  daifugoSelected: '已选{n}张',
+  daifugoMatchCount: '出{n}张点数相同、比桌面更大的牌。',
+  daifugoNoGroup: '没有可出的组合，请跳过。',
   daifugoPlayed: '开始的游戏',
   daifugoFinished: '完成的游戏',
   daifugoWins: '胜利',

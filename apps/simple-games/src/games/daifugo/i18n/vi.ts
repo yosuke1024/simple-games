@@ -1,6 +1,9 @@
 import type { DaifugoMessages } from './en';
 // AI authored; no native-speaker review.
 export const vi: DaifugoMessages = {
+  daifugoSelected: 'Đã chọn {n} lá',
+  daifugoMatchCount: 'Đánh {n} lá cùng hạng, mạnh hơn bài trên bàn.',
+  daifugoNoGroup: 'Không có bộ bài hợp lệ. Hãy bỏ lượt.',
   daifugoPlayed: 'Ván đã bắt đầu',
   daifugoFinished: 'Ván đã kết thúc',
   daifugoWins: 'Ván thắng',

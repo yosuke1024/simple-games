@@ -1,6 +1,9 @@
 import type { DaifugoMessages } from './en';
 // AI authored; no native-speaker review.
 export const hi: DaifugoMessages = {
+  daifugoSelected: '{n} चुने गए',
+  daifugoMatchCount: 'एक ही अंक के {n} पत्ते चलें, जो मेज़ के पत्तों से बड़े हों।',
+  daifugoNoGroup: 'कोई समूह नहीं चल सकते। आगे बढ़ने के लिए पास करें।',
   daifugoPlayed: 'शुरू किए खेल',
   daifugoFinished: 'पूरे हुए खेल',
   daifugoWins: 'जीत',

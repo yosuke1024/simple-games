@@ -8,6 +8,7 @@ export const cardClass = (card: Card) =>
   `df-card ${card === 52 ? 'df-joker' : suitOf(card) === 1 || suitOf(card) === 2 ? 'df-red' : 'df-black'}`;
 export function CardFace({ card }: { card: Card }) {
   const joker = card === 52;
+  const rank = rankOf(card);
   return (
     <>
       <span className="df-card-corner" aria-hidden="true">
@@ -25,9 +26,26 @@ export function CardFace({ card }: { card: Card }) {
           <circle cx="20" cy="3" r="2.5" />
           <circle cx="35" cy="7" r="2.5" />
         </svg>
+      ) : rank > 10 ? (
+        <svg className="df-card-court" viewBox="0 0 60 80" aria-hidden="true">
+          <path d="M10 26 6 10l16 9 8-15 8 15 16-9-4 16Z" fill="currentColor" />
+          <path d="M12 32h36v35H12Z M17 72h26" fill="none" stroke="currentColor" strokeWidth="2" />
+          <text
+            x="30"
+            y="59"
+            textAnchor="middle"
+            fill="currentColor"
+            fontSize="25"
+            fontWeight="700"
+          >
+            {rankText(card)}
+          </text>
+        </svg>
       ) : (
-        <span className="df-card-symbol" aria-hidden="true">
-          {SUITS[suitOf(card)]}
+        <span className={`df-card-pips df-pips-${rank}`} aria-hidden="true">
+          {Array.from({ length: rank }, (_, i) => (
+            <span key={i}>{SUITS[suitOf(card)]}</span>
+          ))}
         </span>
       )}
       <span className="df-card-corner df-card-bottom" aria-hidden="true">

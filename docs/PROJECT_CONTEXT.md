@@ -1,6 +1,9 @@
 # Simple Games — Project Context / Source of Truth
 
-Updated: 2026-11-03
+Updated: 2026-11-04
+
+2026-11-04: オーナーの公開後フィードバックで大富豪・七並べ・ババ抜きの対戦卓、カード、手番表示、
+手札操作と小画面での配置を改善。ゲーム規則・保存schemaは維持し、具体的な操作は各RULESに記録。
 
 この文書は、Simple Games を変更・レビュー・説明するときの **共通の入口** である。
 ここに全仕様を複製しない。実装上の事実はコード、恒久的な原則は各 canonical document を正とし、

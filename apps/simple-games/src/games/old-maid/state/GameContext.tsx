@@ -173,7 +173,7 @@ export function OldMaidProvider({
       if (!current || busy.current || screen !== 'game' || paused || !foreground) return false;
       const next = act({ ...current, elapsedSeconds: elapsedRef.current }, action);
       if (!next) return false;
-      startPlayback({ before: current, after: next }, 340);
+      startPlayback({ before: current, after: next }, next.event.cards.length === 2 ? 580 : 440);
       putSession(next);
       bookPlayTime();
       if (next.status === 'playing') void saveGame(next, kv);

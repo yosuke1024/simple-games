@@ -1,6 +1,9 @@
 import type { DaifugoMessages } from './en';
 // AI authored; no native-speaker review.
 export const de: DaifugoMessages = {
+  daifugoSelected: '{n} ausgewählt',
+  daifugoMatchCount: 'Spiele {n} Karten gleichen Rangs, stärker als die Karten auf dem Tisch.',
+  daifugoNoGroup: 'Keine passende Gruppe. Passe, um fortzufahren.',
   daifugoPlayed: 'Begonnene Spiele',
   daifugoFinished: 'Beendete Spiele',
   daifugoWins: 'Siege',

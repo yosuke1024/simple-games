@@ -76,6 +76,21 @@ function clickMove(action: Action) {
   );
 }
 describe('OldMaid UI and lifecycle', () => {
+  it('announces the draw being revealed before handing the turn to the next player', async () => {
+    timers();
+    const kv = createMemoryKV(),
+      s = onHuman();
+    await taught(kv, s);
+    launch(kv);
+    await settle();
+    clickMove({ kind: 'draw', index: 0 });
+    await settle();
+    expect(screen.getByRole('status')).toHaveTextContent(/You (drew a card|made a pair)/);
+    expect(screen.getByRole('status')).not.toHaveTextContent('CPU 1 is playing');
+    expect(document.querySelectorAll('.om-draw-hand button:not(:disabled)')).toHaveLength(0);
+    await act(async () => vi.advanceTimersByTime(600));
+    expect(screen.getByRole('status')).toHaveTextContent('CPU 1 is playing');
+  });
   it('teaches three steps, starts, and cancels restart without replacing the deal', async () => {
     timers();
     const kv = createMemoryKV();

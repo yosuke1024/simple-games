@@ -1,6 +1,9 @@
 import type { DaifugoMessages } from './en';
 // AI authored; no native-speaker review.
 export const ja: DaifugoMessages = {
+  daifugoSelected: '{n}枚選択中',
+  daifugoMatchCount: '同じ数字を{n}枚、場より強い組で出します。',
+  daifugoNoGroup: '出せる組がありません。パスで進みます。',
   daifugoPlayed: '始めたゲーム',
   daifugoFinished: '終えたゲーム',
   daifugoWins: '勝利',
