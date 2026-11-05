@@ -48,7 +48,7 @@ export interface Session {
   event: GameEvent;
 }
 export type Action = { kind: 'bid'; bid: number } | { kind: 'play'; card: Card } | { kind: 'next' };
-export function createSession(seed: number, entropy?: () => number): Session {
+export function createSession(seed: number, entropy?: (upperBound: number) => number): Session {
   const deck = shuffle(DECK, seed, entropy);
   return {
     seed: seed >>> 0,
@@ -111,7 +111,11 @@ export function scoreHand(
   }
   return { bids: [...bids], tricks: [...tricks], delta, bags };
 }
-export function step(s: Session, a: Action, entropy?: () => number): Session | null {
+export function step(
+  s: Session,
+  a: Action,
+  entropy?: (upperBound: number) => number,
+): Session | null {
   if (s.status !== 'playing' || !object(a)) return null;
   const seat = s.turn,
     n: Session = {

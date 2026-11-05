@@ -112,7 +112,7 @@ export function exchanged(
 export function createSession(
   seed: number,
   previousOrder: Seat[] = [],
-  entropy?: () => number,
+  entropy?: (upperBound: number) => number,
   multiplayer = false,
 ): Session {
   const hands = deal(53, seed, entropy),

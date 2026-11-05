@@ -192,7 +192,7 @@ export interface Session {
 }
 export type Action =
   { kind: 'draw'; source: 'stock' | 'discard' } | { kind: 'discard' | 'declare'; card: Card };
-export function createSession(seed: number, entropy?: () => number): Session {
+export function createSession(seed: number, entropy?: (upperBound: number) => number): Session {
   const deck = shuffle(DECK, seed, entropy),
     hands = Array.from({ length: 4 }, () => deck.splice(0, 13)),
     indicator = deck.pop()!,
@@ -270,7 +270,11 @@ export function chooseCpuMove(v: CpuView): Action {
   const choice = bestDiscard(v.hand, v.wildRank, v.picked);
   return { kind: choice.analysis.complete ? 'declare' : 'discard', card: choice.card };
 }
-export function step(s: Session, a: Action, entropy?: () => number): Session | null {
+export function step(
+  s: Session,
+  a: Action,
+  entropy?: (upperBound: number) => number,
+): Session | null {
   if (s.status !== 'playing' || !object(a)) return null;
   const seat = s.turn,
     n: Session = {

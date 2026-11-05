@@ -41,7 +41,7 @@ export type Action =
   | { kind: 'defend'; card: Card }
   | { kind: 'take' }
   | { kind: 'done' };
-export function createSession(seed: number, entropy?: () => number): Session {
+export function createSession(seed: number, entropy?: (upperBound: number) => number): Session {
   const deck = shuffle(DECK, seed, entropy),
     hands = [deck.splice(0, 6), deck.splice(0, 6)],
     trump = deck[0]!;

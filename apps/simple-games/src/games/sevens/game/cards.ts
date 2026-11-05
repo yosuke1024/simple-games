@@ -17,16 +17,24 @@ export function random(seed: number) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-export function shuffled<T>(items: readonly T[], seed: number, entropy?: () => number): T[] {
+export function shuffled<T>(
+  items: readonly T[],
+  seed: number,
+  entropy?: (upperBound: number) => number,
+): T[] {
   const cards = [...items],
-    rng = entropy ?? random(seed);
+    rng = random(seed);
   for (let i = cards.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
+    const j = entropy ? entropy(i + 1) : Math.floor(rng() * (i + 1));
     [cards[i], cards[j]] = [cards[j]!, cards[i]!];
   }
   return cards;
 }
-export function deal(count: number, seed: number, entropy?: () => number): Card[][] {
+export function deal(
+  count: number,
+  seed: number,
+  entropy?: (upperBound: number) => number,
+): Card[][] {
   const hands: Card[][] = [[], [], [], []];
   shuffled(
     Array.from({ length: count }, (_, i) => i),

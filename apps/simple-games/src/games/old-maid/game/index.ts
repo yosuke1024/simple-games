@@ -61,7 +61,11 @@ function settle(s: Session, multiplayer = false): Session {
   }
   return s;
 }
-export function createSession(seed: number, entropy?: () => number, multiplayer = false): Session {
+export function createSession(
+  seed: number,
+  entropy?: (upperBound: number) => number,
+  multiplayer = false,
+): Session {
   const dealt = deal(53, seed, entropy).map(removePairs),
     hands = dealt.map((p) => p.hand);
   return settle(
@@ -82,7 +86,7 @@ export function createSession(seed: number, entropy?: () => number, multiplayer 
 export function act(
   s: Session,
   a: Action,
-  entropy?: () => number,
+  entropy?: (upperBound: number) => number,
   multiplayer = false,
 ): Session | null {
   if (s.status !== 'playing' || !isObject(a) || a.kind !== 'draw') return null;

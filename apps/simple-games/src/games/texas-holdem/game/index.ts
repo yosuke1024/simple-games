@@ -134,7 +134,7 @@ function pay(s: Session, p: number, amount: number): void {
   s.bets[p]! += paid;
   s.contributions[p]! += paid;
 }
-function deal(s: Session, entropy?: () => number): void {
+function deal(s: Session, entropy?: (upperBound: number) => number): void {
   s.deck = shuffle(DECK, (s.seed ^ Math.imul(s.handNumber, 0x9e3779b9)) >>> 0, entropy);
   s.burned = [];
   s.board = [];
@@ -166,7 +166,7 @@ function deal(s: Session, entropy?: () => number): void {
   s.event = { kind: 'deal', seat: s.dealer, cards: [] };
   progress(s, big);
 }
-export function createSession(seed: number, entropy?: () => number): Session {
+export function createSession(seed: number, entropy?: (upperBound: number) => number): Session {
   const s: Session = {
     seed: seed >>> 0,
     hands: [],
@@ -329,7 +329,11 @@ export function canRaise(v: CpuView): boolean {
 }
 export const callAmount = (v: CpuView) =>
   Math.min(v.stacks[v.turn]!, Math.max(0, v.bet - v.bets[v.turn]!));
-export function step(s: Session, a: Action, entropy?: () => number): Session | null {
+export function step(
+  s: Session,
+  a: Action,
+  entropy?: (upperBound: number) => number,
+): Session | null {
   if (s.status !== 'playing' || !object(a)) return null;
   const seat = s.turn,
     v = cpuView(s),

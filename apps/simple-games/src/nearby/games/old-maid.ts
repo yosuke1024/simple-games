@@ -51,7 +51,7 @@ export const game: GroupGame = {
   },
   cpu: (s) => ({
     kind: 'draw',
-    index: Math.floor(hostRandom() * (s as Session).hands[sourceSeat(s as Session)]!.length),
+    index: hostRandom((s as Session).hands[sourceSeat(s as Session)]!.length),
   }),
   result: (s) => (over(s) ? { scores: places((s as Session).order), winner: null } : null),
 };

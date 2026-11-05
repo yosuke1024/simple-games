@@ -33,7 +33,7 @@ export interface Session {
 }
 export type Action =
   { kind: 'play'; card: Card; suit?: number } | { kind: 'draw' } | { kind: 'pass' };
-export function createSession(seed: number, entropy?: () => number): Session {
+export function createSession(seed: number, entropy?: (upperBound: number) => number): Session {
   const deck = shuffle(DECK, seed, entropy),
     hands = Array.from({ length: 4 }, () => deck.splice(0, 5));
   const at = deck.findIndex((c) => rankOf(c) !== 8),
@@ -76,7 +76,11 @@ export const cpuView = (s: Session): CpuView => ({
 export function legalCards(v: CpuView): Card[] {
   return v.hand.filter((c) => canPlay(c, v.top, v.suit));
 }
-export function step(s: Session, a: Action, entropy?: () => number): Session | null {
+export function step(
+  s: Session,
+  a: Action,
+  entropy?: (upperBound: number) => number,
+): Session | null {
   if (s.status !== 'playing' || !object(a)) return null;
   const seat = s.turn,
     hand = s.hands[seat]!,

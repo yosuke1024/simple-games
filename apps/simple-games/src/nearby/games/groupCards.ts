@@ -1,6 +1,18 @@
 import { integer, record } from '../gameTypes';
 import { exactKeys } from './validation';
-export const hostRandom = () => crypto.getRandomValues(new Uint32Array(1))[0]! / 0x100000000;
+/** Uniform integer in [0, upperBound); reject the incomplete final bucket. */
+export function hostRandom(upperBound: number): number {
+  const range = 0x100000000;
+  if (!Number.isSafeInteger(upperBound) || upperBound < 1 || upperBound > range)
+    throw new RangeError('Invalid random bound');
+  const limit = range - (range % upperBound);
+  const word = new Uint32Array(1);
+  for (;;) {
+    const value = crypto.getRandomValues(word)[0]!;
+    if (value >= limit) continue;
+    return value % upperBound;
+  }
+}
 export const cardList = (v: unknown, max = 52): v is number[] =>
   Array.isArray(v) &&
   v.length <= max + 1 &&

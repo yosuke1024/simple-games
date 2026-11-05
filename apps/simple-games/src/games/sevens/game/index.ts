@@ -31,7 +31,7 @@ export interface Session {
   event: GameEvent;
 }
 export type Action = { kind: 'play'; card: Card } | { kind: 'pass' };
-export function createSession(seed: number, entropy?: () => number): Session {
+export function createSession(seed: number, entropy?: (upperBound: number) => number): Session {
   const dealt = deal(52, seed, entropy),
     turn = dealt.findIndex((h) => h.includes(32)) as Seat;
   return {

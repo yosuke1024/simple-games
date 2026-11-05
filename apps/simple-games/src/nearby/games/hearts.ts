@@ -187,8 +187,8 @@ export const game: GroupGame = {
     const s = raw as Full;
     const view = buildCpuView(s.h, s.turn as Seat, 'normal', s.scores);
     return s.h.phase === 'passing'
-      ? { kind: 'pass', cards: chooseCpuPass(view, hostRandom()) }
-      : { kind: 'play', card: chooseCpuPlay(view, hostRandom()) };
+      ? { kind: 'pass', cards: chooseCpuPass(view, hostRandom) }
+      : { kind: 'play', card: chooseCpuPlay(view, hostRandom) };
   },
   result: (raw) => {
     const s = raw as Full;

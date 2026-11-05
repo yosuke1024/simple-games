@@ -24,11 +24,15 @@ export function random(seed: number): () => number {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-export function shuffle(items: readonly Card[], seed: number, entropy?: () => number): Card[] {
+export function shuffle(
+  items: readonly Card[],
+  seed: number,
+  entropy?: (upperBound: number) => number,
+): Card[] {
   const a = [...items],
-    rng = entropy ?? random(seed);
+    rng = random(seed);
   for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
+    const j = entropy ? entropy(i + 1) : Math.floor(rng() * (i + 1));
     [a[i], a[j]] = [a[j]!, a[i]!];
   }
   return a;

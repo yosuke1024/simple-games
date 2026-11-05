@@ -92,7 +92,7 @@ function advance(s: Session): void {
       }
   settle(s);
 }
-export function createSession(seed: number, entropy?: () => number): Session {
+export function createSession(seed: number, entropy?: (upperBound: number) => number): Session {
   const shoe = shuffle(DECK, seed, entropy),
     dealt = Array.from({ length: 4 }, () => [] as Card[]),
     dealer: Card[] = [];
