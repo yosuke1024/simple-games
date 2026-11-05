@@ -113,7 +113,7 @@
 }
 .ir-hand {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--ir-hand-columns, 7), minmax(0, 1fr));
   gap: 10px 5px;
   padding-top: 6px;
 }
@@ -274,4 +274,78 @@ button.ir-card:disabled {
 [data-reduced-motion='true'] .ir-table *::after {
   animation: none !important;
   transition: none !important;
+}
+
+.ir-figure-group {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+.ir-tutorial-figure {
+  flex-wrap: wrap;
+  gap: 18px;
+}
+.ir-figure-group .ir-card {
+  width: 48px;
+  height: 67px;
+  flex-shrink: 0;
+}
+.ir-choice {
+  display: grid;
+  gap: 8px;
+}
+.ir-actions select,
+.ir-actions input {
+  max-width: 150px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--ir-edge);
+  border-radius: 12px;
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+}
+.ir-actions label {
+  font-size: 13px;
+}
+.ir-bidding,
+.ir-raise {
+  display: grid;
+  gap: 8px;
+  text-align: center;
+}
+.ir-score {
+  color: inherit;
+}
+.overlay-result .ir-score {
+  margin-block: 12px;
+}
+.ir-analysis {
+  font-size: 13px;
+}
+.ir-analysis summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding: 12px 0;
+}
+.ir-group {
+  margin-block: 10px;
+  text-align: start;
+  font-size: 12px;
+}
+.ir-group .ir-hand {
+  grid-template-columns: repeat(auto-fit, minmax(32px, 44px));
+  justify-content: start;
+}
+.ir-empty {
+  width: 64px;
+  height: 90px;
+  border: 1px dashed var(--ir-edge);
+  border-radius: 6px;
+}
+
+@media (max-width: 359px) {
+  .ir-panel > .ir-hand {
+    grid-template-columns: repeat(var(--ir-hand-compact-columns, 6), minmax(0, 1fr));
+  }
 }

@@ -101,6 +101,12 @@ import { RG_STORAGE_KEYS } from '../games/river-cargo/storage/keys';
 import { DF_STORAGE_KEYS } from '../games/daifugo/storage/keys';
 import { SV_STORAGE_KEYS } from '../games/sevens/storage/keys';
 import { OM_STORAGE_KEYS } from '../games/old-maid/storage/keys';
+import { CE_STORAGE_KEYS } from '../games/crazy-eights/storage/keys';
+import { DU_STORAGE_KEYS } from '../games/durak/storage/keys';
+import { SA_STORAGE_KEYS } from '../games/spades/storage/keys';
+import { TH_STORAGE_KEYS } from '../games/texas-holdem/storage/keys';
+import { BJ_STORAGE_KEYS } from '../games/blackjack/storage/keys';
+import { IR_STORAGE_KEYS } from '../games/indian-rummy/storage/keys';
 import { SUDOKU_CHALLENGE } from '../games/sudoku/challenge/contract';
 import { MINESWEEPER_CHALLENGE } from '../games/minesweeper/challenge/contract';
 import { WATER_SORT_CHALLENGE } from '../games/water-sort/challenge/contract';
@@ -213,7 +219,13 @@ export type GameId =
   | 'river-cargo'
   | 'daifugo'
   | 'sevens'
-  | 'old-maid';
+  | 'old-maid'
+  | 'crazy-eights'
+  | 'durak'
+  | 'spades'
+  | 'texas-holdem'
+  | 'blackjack'
+  | 'indian-rummy';
 
 /**
  * The genre shelves the collection home is divided into. An id is styling- and
@@ -1714,5 +1726,76 @@ export const GAMES: readonly GameDefinition[] = [
     loadRoot: () =>
       import('../games/old-maid/ui/OldMaidRoot').then((m) => ({ default: m.OldMaidRoot })),
     loadStorageSchemas: () => import('../games/old-maid/storage/schemas'),
+  },
+  {
+    id: 'crazy-eights',
+    title: 'Crazy Eights',
+    category: 'cards',
+    glyph: '8',
+    channel: 'in-development',
+    storageKeys: Object.values(CE_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/crazy-eights/ui/CrazyEightsRoot').then((m) => ({
+        default: m.CrazyEightsRoot,
+      })),
+    loadStorageSchemas: () => import('../games/crazy-eights/storage/schemas'),
+  },
+  {
+    id: 'durak',
+    title: 'Durak',
+    category: 'cards',
+    glyph: '♠',
+    channel: 'in-development',
+    storageKeys: Object.values(DU_STORAGE_KEYS),
+    loadRoot: () => import('../games/durak/ui/DurakRoot').then((m) => ({ default: m.DurakRoot })),
+    loadStorageSchemas: () => import('../games/durak/storage/schemas'),
+  },
+  {
+    id: 'spades',
+    title: 'Spades',
+    category: 'cards',
+    glyph: '♠',
+    channel: 'in-development',
+    storageKeys: Object.values(SA_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/spades/ui/SpadesRoot').then((m) => ({ default: m.SpadesRoot })),
+    loadStorageSchemas: () => import('../games/spades/storage/schemas'),
+  },
+  {
+    id: 'texas-holdem',
+    title: 'Texas Hold\u2019em',
+    category: 'cards',
+    glyph: '♔',
+    channel: 'in-development',
+    storageKeys: Object.values(TH_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/texas-holdem/ui/TexasHoldemRoot').then((m) => ({
+        default: m.TexasHoldemRoot,
+      })),
+    loadStorageSchemas: () => import('../games/texas-holdem/storage/schemas'),
+  },
+  {
+    id: 'blackjack',
+    title: 'Blackjack',
+    category: 'cards',
+    glyph: '21',
+    channel: 'in-development',
+    storageKeys: Object.values(BJ_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/blackjack/ui/BlackjackRoot').then((m) => ({ default: m.BlackjackRoot })),
+    loadStorageSchemas: () => import('../games/blackjack/storage/schemas'),
+  },
+  {
+    id: 'indian-rummy',
+    title: 'Indian Rummy',
+    category: 'cards',
+    glyph: '♧',
+    channel: 'in-development',
+    storageKeys: Object.values(IR_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/indian-rummy/ui/IndianRummyRoot').then((m) => ({
+        default: m.IndianRummyRoot,
+      })),
+    loadStorageSchemas: () => import('../games/indian-rummy/storage/schemas'),
   },
 ];

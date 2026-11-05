@@ -113,7 +113,7 @@
 }
 .bj-hand {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--bj-hand-columns, 7), minmax(0, 1fr));
   gap: 10px 5px;
   padding-top: 6px;
 }
@@ -274,4 +274,98 @@ button.bj-card:disabled {
 [data-reduced-motion='true'] .bj-table *::after {
   animation: none !important;
   transition: none !important;
+}
+
+.bj-figure-group {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+.bj-tutorial-figure {
+  flex-wrap: wrap;
+  gap: 18px;
+}
+.bj-figure-group .bj-card {
+  width: 48px;
+  height: 67px;
+  flex-shrink: 0;
+}
+.bj-choice {
+  display: grid;
+  gap: 8px;
+}
+.bj-actions select,
+.bj-actions input {
+  max-width: 150px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--bj-edge);
+  border-radius: 12px;
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+}
+.bj-actions label {
+  font-size: 13px;
+}
+.bj-bidding,
+.bj-raise {
+  display: grid;
+  gap: 8px;
+  text-align: center;
+}
+.bj-score {
+  color: inherit;
+}
+.overlay-result .bj-score {
+  margin-block: 12px;
+}
+.bj-player-hand {
+  padding: 8px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+}
+.bj-player-hand.is-active {
+  border-color: var(--accent);
+}
+.bj-player-hand .bj-hand {
+  grid-template-columns: repeat(auto-fit, minmax(40px, 64px));
+  justify-content: center;
+}
+.bj-result-seat {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: 10px;
+  border-bottom: 1px solid var(--bj-edge);
+  font-size: 13px;
+}
+.bj-result-hand {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.bj-result-hand .bj-center {
+  min-height: 0;
+  gap: 3px;
+}
+.bj-result-hand .bj-card {
+  width: 32px;
+  height: 45px;
+}
+
+@media (max-width: 359px) {
+  .bj-panel > .bj-hand {
+    grid-template-columns: repeat(var(--bj-hand-compact-columns, 6), minmax(0, 1fr));
+  }
+}
+
+.bj-actions .btn {
+  font-size: 14px;
+  padding: 8px 12px;
 }

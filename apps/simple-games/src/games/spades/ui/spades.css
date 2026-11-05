@@ -113,7 +113,7 @@
 }
 .sa-hand {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--sa-hand-columns, 7), minmax(0, 1fr));
   gap: 10px 5px;
   padding-top: 6px;
 }
@@ -274,4 +274,71 @@ button.sa-card:disabled {
 [data-reduced-motion='true'] .sa-table *::after {
   animation: none !important;
   transition: none !important;
+}
+
+.sa-figure-group {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+.sa-tutorial-figure {
+  flex-wrap: wrap;
+  gap: 18px;
+}
+.sa-figure-group .sa-card {
+  width: 48px;
+  height: 67px;
+  flex-shrink: 0;
+}
+.sa-choice {
+  display: grid;
+  gap: 8px;
+}
+.sa-actions select,
+.sa-actions input {
+  max-width: 150px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--sa-edge);
+  border-radius: 12px;
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+}
+.sa-actions label {
+  font-size: 13px;
+}
+.sa-bidding,
+.sa-raise {
+  display: grid;
+  gap: 8px;
+  text-align: center;
+}
+.sa-score {
+  color: inherit;
+}
+.overlay-result .sa-score {
+  margin-block: 12px;
+}
+
+.sa-center.is-empty {
+  min-height: 40px;
+}
+@media (min-width: 600px) and (orientation: landscape) and (max-height: 600px) {
+  .sa-center {
+    min-height: 90px;
+  }
+  .sa-center .sa-card {
+    width: 48px;
+    height: 67px;
+  }
+  .sa-center.is-empty {
+    min-height: 24px;
+  }
+}
+
+@media (max-width: 359px) {
+  .sa-panel > .sa-hand {
+    grid-template-columns: repeat(var(--sa-hand-compact-columns, 6), minmax(0, 1fr));
+  }
 }

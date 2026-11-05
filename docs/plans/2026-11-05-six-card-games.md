@@ -74,10 +74,11 @@ layer privacy tests, not yet transport/controller integration tests.
 | `blackjack` | `bj` | `Blackjack` |
 | `indian-rummy` | `ir` | `IndianRummy` |
 
-Only providers, card-face adapters and initial per-game layout CSS exist under
-the new UI/state folders. **The six roots/screens/catalogs and registry entries
-are not implemented yet.** The collection still has its previous game inventory.
-New schemas are not yet connected to the registry's backup ownership loader.
+This first checkpoint covered providers, card-face adapters and initial layout
+CSS. The next checkpoint below adds the six playable CPU roots and screens.
+The six titles are now registered as `in-development`, with storage schema
+loaders, and remain hidden from normal entry points until the integration is
+complete. The existing 72 released games and two web-beta games remain offered.
 
 Hold'em tests include side pots, uncalled returns, tied pots and odd chips,
 short all-in reopening, cumulative reopening, heads-up/dead-button progression,
@@ -101,8 +102,9 @@ rooms, ad reservations and the seven older card games remain to be checked.
 
 Integration details to handle next:
 
-- Add the six complete boards/roots, 14-language catalogs, artwork/accent/registry
-  ownership and CPU UI tests. Do not expose a placeholder game as playable.
+- The six boards/roots, 14-language catalogs, artwork/accent/registry ownership
+  and CPU UI tests are now implemented (checkpoint below). Keep them hidden
+  until Nearby integration and remaining checks are complete.
 - Reuse the pure projections in Nearby adapters; keep actions exact-key checked.
   `isGroupGameId` currently means capacity > 2; Durak needs the group controller
   with two seats, so its routing must be explicit and tested.
@@ -116,3 +118,66 @@ Integration details to handle next:
   top card. Its view exposes `top: null`; don't render or enable an absent card.
 - Shared card adoption remains pending for Solitaire, Spider Solitaire,
   FreeCell, Three Peaks, Hearts, Gin Rummy and Scopa. Read their RULES first.
+
+## 2026-11-05 CPU screen integration checkpoint
+
+Validation: app/build-config typecheck, scoped ESLint and Prettier passed.
+All 29 selected test files / 302 tests passed: six complete game folders,
+UI lifecycle/settlement, catalog consistency/wiring/provenance, registry key
+ownership, ref-leading state and dependency boundaries. Full repository and
+production build/native/bundle checks remain for the completed integration.
+
+Added each game's home, three-step illustrated tutorial, statistics, resumable
+CPU game screen, and result overlay. The interactive table takes only its own
+pure `View`; there is no access to hidden opponent cards in the visual layer.
+The same table is intended for the native Nearby adapters next. Hand controls
+support arrows/Home/End and preserve focus after a removed card. Small portrait
+screens use up to six columns; ordinary widths use up to seven, sized to the
+actual hand rather than leaving empty columns for a short hand.
+
+- Crazy Eights has explicit suit selection for an eight, draw and legal pass.
+- Durak shows the face-up trump stock card, attacks/defenses, pickup and the
+  attacker's explicit finish/pickup confirmation.
+- Spades has 0–13 bidding, nil explanation, partnership totals/bags, last trick,
+  per-hand deltas and manual continuation.
+- Hold'em has check/call/fold/all-in, a validated total-raise input, visible
+  blinds/button, community cards and hand ranks. Settlement shows returned
+  uncalled chips, payouts and side pots; only showdown-live hands are revealed.
+- Blackjack has hit/stand/double/split, per-hand totals and independent point
+  settlements for every player. Immediate dealer-natural completion is covered
+  in the CPU UI test as well as the rules. No invented table winner.
+- Indian Rummy has both draw sources, selected discards, declaration validation
+  and suggested pure/impure sequences and sets. An absent discard is supported.
+
+The new catalogs cover all 14 locales. Their translations, including Japanese,
+are AI-written and not approved by a human; I18N_POLICY and the unread catalog
+test record that provenance. New storage keys are added to the registry's key
+ownership test without editing old keys. Title accents also live in the shared
+brand package. Registry entries remain `in-development`.
+
+Browser checks used a temporary local preview that mounted the real roots,
+SettingsProvider and memory-only game storage; the preview files were removed
+before validation. These were CPU browser checks, not native Nearby tests:
+
+- Hold'em: dark Japanese, 844×390 and 390×844; call to flop, same hand retained
+  on viewport change, all betting controls visible. Long blind/button labels
+  became accessible D/SB/BB markers, keeping narrow seat columns legible.
+- Indian Rummy: light Japanese at both sizes; draw to fourteen, choose a
+  discard, legal discard enabled, invalid declaration disabled.
+- Spades: dark German at 844×390; shortened unused table space so both score
+  totals and bag counts remain in view while bidding.
+- Durak: light German at 844×390; legal attack and CPU response.
+- Crazy Eights: dark German at 320×640; legal draw, hand count updates.
+- Blackjack: light Japanese at 320×640 and 844×390; stand through settlement.
+  Long results initially scrolled to the primary button on focus. All six
+  result overlays now focus their heading without scrolling so the result is
+  read from the top, with the remaining hands/actions reachable by scrolling.
+
+These checks do not cover every theme/size combination, reduced motion or
+native banner reservations yet. Hold'em reference screenshots are local QA
+artifacts at `/tmp/simple-games-holdem-landscape.png` and
+`/tmp/simple-games-holdem-portrait.png`; they are not production/store assets.
+
+The next work is the six native Nearby adapters/controller wiring and privacy
+integration tests, followed by the seven remaining existing card-art migrations
+and the full integration/release-preparation checks above.

@@ -1711,9 +1711,28 @@ function Motif({ id }: { id: GameId }): ReactNode {
         </g>
       );
   }
-  if (id === 'daifugo' || id === 'sevens' || id === 'old-maid') {
-    const ranks =
-      id === 'daifugo' ? ['3', '2', '★'] : id === 'sevens' ? ['6', '7', '8'] : ['8', '8', '★'];
+  if (
+    id === 'daifugo' ||
+    id === 'sevens' ||
+    id === 'old-maid' ||
+    id === 'crazy-eights' ||
+    id === 'durak' ||
+    id === 'spades' ||
+    id === 'texas-holdem' ||
+    id === 'blackjack' ||
+    id === 'indian-rummy'
+  ) {
+    const ranks = {
+      daifugo: ['3', '2', '★'],
+      sevens: ['6', '7', '8'],
+      'old-maid': ['8', '8', '★'],
+      'crazy-eights': ['8', '8', '8'],
+      durak: ['6', 'K', 'A'],
+      spades: ['Q', 'K', 'A'],
+      'texas-holdem': ['A', 'K', 'Q'],
+      blackjack: ['A', 'K'],
+      'indian-rummy': ['4', '5', '6'],
+    }[id];
     return (
       <g>
         {ranks.map((rank, i) => (

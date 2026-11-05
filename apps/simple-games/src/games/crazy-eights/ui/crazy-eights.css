@@ -113,7 +113,7 @@
 }
 .ce-hand {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--ce-hand-columns, 7), minmax(0, 1fr));
   gap: 10px 5px;
   padding-top: 6px;
 }
@@ -274,4 +274,55 @@ button.ce-card:disabled {
 [data-reduced-motion='true'] .ce-table *::after {
   animation: none !important;
   transition: none !important;
+}
+
+.ce-figure-group {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+.ce-tutorial-figure {
+  flex-wrap: wrap;
+  gap: 18px;
+}
+.ce-figure-group .ce-card {
+  width: 48px;
+  height: 67px;
+  flex-shrink: 0;
+}
+.ce-choice {
+  display: grid;
+  gap: 8px;
+}
+.ce-actions select,
+.ce-actions input {
+  max-width: 150px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--ce-edge);
+  border-radius: 12px;
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+}
+.ce-actions label {
+  font-size: 13px;
+}
+.ce-bidding,
+.ce-raise {
+  display: grid;
+  gap: 8px;
+  text-align: center;
+}
+.ce-score {
+  color: inherit;
+}
+.overlay-result .ce-score {
+  margin-block: 12px;
+}
+
+@media (max-width: 359px) {
+  .ce-panel > .ce-hand {
+    grid-template-columns: repeat(var(--ce-hand-compact-columns, 6), minmax(0, 1fr));
+  }
 }

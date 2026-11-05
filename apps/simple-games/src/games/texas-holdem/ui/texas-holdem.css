@@ -113,7 +113,7 @@
 }
 .th-hand {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--th-hand-columns, 7), minmax(0, 1fr));
   gap: 10px 5px;
   padding-top: 6px;
 }
@@ -274,4 +274,136 @@ button.th-card:disabled {
 [data-reduced-motion='true'] .th-table *::after {
   animation: none !important;
   transition: none !important;
+}
+
+.th-figure-group {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+.th-tutorial-figure {
+  flex-wrap: wrap;
+  gap: 18px;
+}
+.th-figure-group .th-card {
+  width: 48px;
+  height: 67px;
+  flex-shrink: 0;
+}
+.th-choice {
+  display: grid;
+  gap: 8px;
+}
+.th-actions select,
+.th-actions input {
+  max-width: 150px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--th-edge);
+  border-radius: 12px;
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+}
+.th-actions label {
+  font-size: 13px;
+}
+.th-bidding,
+.th-raise {
+  display: grid;
+  gap: 8px;
+  text-align: center;
+}
+.th-score {
+  color: inherit;
+}
+.overlay-result .th-score {
+  margin-block: 12px;
+}
+.th-panel > .th-hand {
+  grid-template-columns: repeat(2, minmax(0, 70px));
+  justify-content: center;
+}
+.th-community {
+  gap: 6px;
+  flex-wrap: nowrap;
+  min-height: 100px;
+}
+.th-community .th-card {
+  width: min(16%, 64px);
+  height: auto;
+  flex-shrink: 1;
+}
+.th-pot {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 800;
+}
+.th-showdown {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  font-size: 12px;
+}
+.th-showdown .th-center {
+  min-height: 0;
+  gap: 4px;
+}
+.th-showdown .th-card {
+  width: 36px;
+  height: 50px;
+}
+.th-pots {
+  text-align: start;
+  font-size: 12px;
+}
+
+.th-seats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+}
+.th-seat {
+  padding: 5px 2px;
+  font-size: 11px;
+}
+.th-seat strong {
+  font-size: 12px;
+}
+.th-seat .th-marker {
+  display: inline-block;
+  min-width: 22px;
+  margin: 3px 2px 0;
+  padding: 2px 4px;
+  border: 1px solid var(--th-edge);
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 800;
+}
+.th-seat span {
+  overflow-wrap: normal;
+}
+.th-actions .btn {
+  font-size: 14px;
+  padding: 8px 12px;
+}
+@media (min-width: 600px) and (orientation: landscape) and (max-height: 600px) {
+  .th-panel > .th-hand {
+    grid-template-columns: repeat(2, minmax(0, 56px));
+  }
+  .th-screen .game-topbar {
+    min-height: 44px;
+  }
+  .th-pot {
+    margin: 10px 0;
+  }
+  .th-community {
+    min-height: 90px;
+  }
+  .th-raise {
+    gap: 5px;
+  }
 }

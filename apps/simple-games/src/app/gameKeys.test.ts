@@ -241,6 +241,13 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   daifugo: ['df.saveGame', 'df.stats', 'df.flags'],
   sevens: ['sv.saveGame', 'sv.stats', 'sv.flags'],
   'old-maid': ['om.saveGame', 'om.stats', 'om.flags'],
+  // 2026-11-05: new hidden card titles; additive ownership, no released keys changed.
+  'crazy-eights': ['ce.saveGame', 'ce.stats', 'ce.flags'],
+  durak: ['du.saveGame', 'du.stats', 'du.flags'],
+  spades: ['sa.saveGame', 'sa.stats', 'sa.flags'],
+  'texas-holdem': ['th.saveGame', 'th.stats', 'th.flags'],
+  blackjack: ['bj.saveGame', 'bj.stats', 'bj.flags'],
+  'indian-rummy': ['ir.saveGame', 'ir.stats', 'ir.flags'],
 };
 
 const PREFIXES: Record<string, string> = {
@@ -320,6 +327,12 @@ const PREFIXES: Record<string, string> = {
   daifugo: 'df.',
   sevens: 'sv.',
   'old-maid': 'om.',
+  'crazy-eights': 'ce.',
+  durak: 'du.',
+  spades: 'sa.',
+  'texas-holdem': 'th.',
+  blackjack: 'bj.',
+  'indian-rummy': 'ir.',
 };
 
 describe('registry storage keys (released data — do not edit to make green)', () => {

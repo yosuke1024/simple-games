@@ -113,7 +113,7 @@
 }
 .du-hand {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--du-hand-columns, 7), minmax(0, 1fr));
   gap: 10px 5px;
   padding-top: 6px;
 }
@@ -274,4 +274,90 @@ button.du-card:disabled {
 [data-reduced-motion='true'] .du-table *::after {
   animation: none !important;
   transition: none !important;
+}
+
+.du-figure-group {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+.du-tutorial-figure {
+  flex-wrap: wrap;
+  gap: 18px;
+}
+.du-figure-group .du-card {
+  width: 48px;
+  height: 67px;
+  flex-shrink: 0;
+}
+.du-choice {
+  display: grid;
+  gap: 8px;
+}
+.du-actions select,
+.du-actions input {
+  max-width: 150px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--du-edge);
+  border-radius: 12px;
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+}
+.du-actions label {
+  font-size: 13px;
+}
+.du-bidding,
+.du-raise {
+  display: grid;
+  gap: 8px;
+  text-align: center;
+}
+.du-score {
+  color: inherit;
+}
+.overlay-result .du-score {
+  margin-block: 12px;
+}
+.du-trump {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+.du-pair {
+  position: relative;
+  padding: 0 18px 24px 0;
+}
+.du-pair .du-card + .du-card {
+  position: absolute;
+  top: 20px;
+  left: 18px;
+  transform: rotate(8deg);
+}
+.du-center {
+  gap: 12px;
+  padding-block: 16px;
+}
+
+.du-trump {
+  align-items: center;
+}
+.du-trump-card {
+  width: 40px;
+  flex-shrink: 0;
+}
+@media (min-width: 600px) and (orientation: landscape) and (max-height: 600px) {
+  .du-center {
+    min-height: 96px;
+    padding-block: 8px;
+  }
+}
+
+@media (max-width: 359px) {
+  .du-panel > .du-hand {
+    grid-template-columns: repeat(var(--du-hand-compact-columns, 6), minmax(0, 1fr));
+  }
 }
