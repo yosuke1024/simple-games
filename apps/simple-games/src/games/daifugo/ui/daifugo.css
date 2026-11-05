@@ -16,7 +16,8 @@
   --df-card-muted: #f1efe7;
   --df-felt-glow: color-mix(in srgb, var(--df-card-paper) 28%, transparent);
 }
-[data-theme='dark'][data-game='daifugo'] {
+[data-theme='dark'][data-game='daifugo'],
+[data-theme='dark'] [data-game='daifugo'] {
   --df-felt: #1b322c;
   --df-felt-edge: #3e5148;
   --df-felt-ink: #d1e1d6;
@@ -614,7 +615,7 @@
 }
 
 /* A wide screen puts the hand beside the table instead of stretching the table vertically. */
-@media (min-width: 900px) {
+@media (min-width: 900px), (min-width: 600px) and (orientation: landscape) {
   .df-body {
     max-width: 1120px;
     display: grid;
@@ -649,5 +650,26 @@
   .df-note {
     grid-column: 2;
     grid-row: 5;
+  }
+}
+
+/* Nearby uses the same responsive table geometry as CPU play. */
+.nearby-screen[data-game='daifugo'] {
+  max-width: 1120px;
+}
+
+/* Phones in landscape keep the cards and the table visible side by side. */
+@media (min-width: 600px) and (orientation: landscape) and (max-height: 600px) {
+  .df-body {
+    column-gap: 12px;
+    row-gap: 6px;
+    padding-inline: 12px;
+  }
+  .df-arena {
+    padding: 8px;
+    border-radius: 20px;
+  }
+  .df-hand {
+    gap: 7px 4px;
   }
 }

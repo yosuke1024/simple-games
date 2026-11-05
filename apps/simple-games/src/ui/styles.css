@@ -3708,3 +3708,105 @@ button:disabled {
   --accent-ring: rgba(56, 220, 56, 0.38);
   --accent-ring-soft: rgba(56, 220, 56, 0.12);
 }
+
+:root[data-game='crazy-eights'],
+.accent-crazy-eights {
+  --accent: #26694f;
+  --accent-ink: #ffffff;
+  --accent-soft: #d6e9df;
+  --accent-ring: #26694f61;
+  --accent-ring-soft: #26694f1f;
+}
+:root[data-theme='dark'][data-game='crazy-eights'],
+[data-theme='dark'] .accent-crazy-eights {
+  --accent: #9edcbf;
+  --accent-ink: #14171c;
+  --accent-soft: #243c32;
+  --accent-ring: #9edcbf61;
+  --accent-ring-soft: #9edcbf1f;
+}
+
+:root[data-game='durak'],
+.accent-durak {
+  --accent: #755136;
+  --accent-ink: #ffffff;
+  --accent-soft: #eadfd2;
+  --accent-ring: #75513661;
+  --accent-ring-soft: #7551361f;
+}
+:root[data-theme='dark'][data-game='durak'],
+[data-theme='dark'] .accent-durak {
+  --accent: #e1bd94;
+  --accent-ink: #14171c;
+  --accent-soft: #3e3328;
+  --accent-ring: #e1bd9461;
+  --accent-ring-soft: #e1bd941f;
+}
+
+:root[data-game='spades'],
+.accent-spades {
+  --accent: #315b85;
+  --accent-ink: #ffffff;
+  --accent-soft: #d7e4ef;
+  --accent-ring: #315b8561;
+  --accent-ring-soft: #315b851f;
+}
+:root[data-theme='dark'][data-game='spades'],
+[data-theme='dark'] .accent-spades {
+  --accent: #a0c7ed;
+  --accent-ink: #14171c;
+  --accent-soft: #263747;
+  --accent-ring: #a0c7ed61;
+  --accent-ring-soft: #a0c7ed1f;
+}
+
+:root[data-game='texas-holdem'],
+.accent-texas-holdem {
+  --accent: #6b4682;
+  --accent-ink: #ffffff;
+  --accent-soft: #e4daec;
+  --accent-ring: #6b468261;
+  --accent-ring-soft: #6b46821f;
+}
+:root[data-theme='dark'][data-game='texas-holdem'],
+[data-theme='dark'] .accent-texas-holdem {
+  --accent: #ceb1e1;
+  --accent-ink: #14171c;
+  --accent-soft: #382c43;
+  --accent-ring: #ceb1e161;
+  --accent-ring-soft: #ceb1e11f;
+}
+
+:root[data-game='blackjack'],
+.accent-blackjack {
+  --accent: #9a3350;
+  --accent-ink: #ffffff;
+  --accent-soft: #eed9df;
+  --accent-ring: #9a335061;
+  --accent-ring-soft: #9a33501f;
+}
+:root[data-theme='dark'][data-game='blackjack'],
+[data-theme='dark'] .accent-blackjack {
+  --accent: #f0afc1;
+  --accent-ink: #14171c;
+  --accent-soft: #452b35;
+  --accent-ring: #f0afc161;
+  --accent-ring-soft: #f0afc11f;
+}
+
+:root[data-game='indian-rummy'],
+.accent-indian-rummy {
+  --accent: #376b38;
+  --accent-ink: #ffffff;
+  --accent-soft: #dce9d7;
+  --accent-ring: #376b3861;
+  --accent-ring-soft: #376b381f;
+}
+:root[data-theme='dark'][data-game='indian-rummy'],
+[data-theme='dark'] .accent-indian-rummy {
+  --accent: #b3dca2;
+  --accent-ink: #14171c;
+  --accent-soft: #2c3c29;
+  --accent-ring: #b3dca261;
+  --accent-ring-soft: #b3dca21f;
+}

@@ -1,3 +1,4 @@
+import { PlayingCardFace, PlayingCardBack, PLAYING_CARD_SUITS } from '@/ui/cards/PlayingCardFace';
 /**
  * The whole table (docs/SPIDER_SOLITAIRE_RULES.md §1, §3, §12): the stock and
  * the finished runs up top, ten columns below. Every playable spot is a
@@ -51,7 +52,7 @@ import {
   type SpiderBoard,
   type SuitCount,
 } from '../../game';
-import { cardLabel, rankText } from './cardText';
+import { cardLabel } from './cardText';
 import { SuitIcon } from './suits';
 
 /** A card travelling to where it was played. */
@@ -362,25 +363,14 @@ export interface SpiderTableProps {
 
 const SUIT_NAMES = ['spades', 'hearts', 'diamonds', 'clubs'] as const;
 
-/**
- * The printed face: the corner index and one large suit in the middle.
- *
- * The index is a row — rank then suit, side by side — so that both survive in
- * the ~11px strip a covered card shows at ten columns (see the note at the top
- * of this file).
- */
+/** Original shared artwork; this game owns rank and suit mapping. */
 function CardFace({ card, suitCount }: { card: Card; suitCount: SuitCount }) {
-  const suit = suitOf(card, suitCount);
   return (
-    <>
-      <span className="sp-card-index" aria-hidden="true">
-        <span className="sp-card-rank">{rankText(card)}</span>
-        <SuitIcon suit={suit} />
-      </span>
-      <span className="sp-card-middle" aria-hidden="true">
-        <SuitIcon suit={suit} />
-      </span>
-    </>
+    <PlayingCardFace
+      rank={(card % 13) + 1}
+      suit={PLAYING_CARD_SUITS[suitOf(card, suitCount)]}
+      compact
+    />
   );
 }
 
@@ -806,6 +796,7 @@ export const SpiderTable = memo(function SpiderTable({
           aria-label={deals > 0 ? t('spiderStockLabel', { n: deals }) : t('spiderStockEmpty')}
           onClick={(event) => onTap(event, onStockTap)}
         >
+          {deals > 0 && <PlayingCardBack />}
           {deals > 0 ? (
             <span className="sp-stock-count" aria-hidden="true">
               {deals}
@@ -879,7 +870,9 @@ export const SpiderTable = memo(function SpiderTable({
                       className={`sp-card sp-card-back ${i > 0 ? 'sp-overlap-down' : ''}`}
                       role="img"
                       aria-label={t('spiderCardFaceDown')}
-                    />
+                    >
+                      <PlayingCardBack />
+                    </div>
                   ))}
                   {pile.up.map((card, i) => {
                     const source: DragSource = { pile: pileIndex, index: i };

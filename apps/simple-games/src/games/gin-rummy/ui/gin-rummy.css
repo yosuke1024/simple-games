@@ -552,3 +552,8 @@
     --game-shell-max: 560px;
   }
 }
+
+/* Shared original deck; geometry and touch targets remain game-owned. */
+.gr-figure-card {
+  position: relative;
+}

@@ -1,3 +1,4 @@
+import type { PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 import '../i18n';
 import { preferencesKV, type KVStore } from '../../../storage/kv';
 import { loadRecord } from '../../../storage/repo';
@@ -23,12 +24,18 @@ async function load(kv: KVStore) {
   ]);
   return { stats, flags, session };
 }
-export interface OldMaidRootProps {
+export interface OldMaidRootProps extends PlayTogetherProps {
   onExit: () => void;
   entry?: 'collection' | 'shortcut';
   kv?: KVStore;
 }
-export function OldMaidRoot({ onExit, entry, kv = preferencesKV }: OldMaidRootProps) {
+export function OldMaidRoot({
+  onPlayTogether,
+  playTogetherActive,
+  onExit,
+  entry,
+  kv = preferencesKV,
+}: OldMaidRootProps) {
   const data = useLoadedRecords(kv, load, defaults);
   if (!data) return null;
   return (
@@ -40,14 +47,14 @@ export function OldMaidRoot({ onExit, entry, kv = preferencesKV }: OldMaidRootPr
       entry={entry}
       kv={kv}
     >
-      <Screens />
+      <Screens onPlayTogether={onPlayTogether} playTogetherActive={playTogetherActive} />
     </OldMaidProvider>
   );
 }
-function Screens() {
+function Screens(together: PlayTogetherProps = {}) {
   const { screen } = useOldMaid();
   if (screen === 'tutorial') return <TutorialScreen />;
   if (screen === 'game') return <GameScreen />;
   if (screen === 'stats') return <StatsScreen />;
-  return <HomeScreen />;
+  return <HomeScreen {...together} />;
 }

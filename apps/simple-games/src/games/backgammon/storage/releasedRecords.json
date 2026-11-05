@@ -1,0 +1,5 @@
+{
+  "bk.saveGame": "{\"schemaVersion\":1,\"seed\":\"backgammon-mw22l0hw-pqt9h9\",\"difficulty\":\"normal\",\"elapsedSeconds\":11,\"savedAt\":1793793946328,\"rollCount\":1,\"turns\":[[13,2,11,3]]}",
+  "bk.flags": "{\"schemaVersion\":1,\"tutorialCompleted\":true}",
+  "bk.stats": "{\"schemaVersion\":1,\"totalPlaySeconds\":11,\"easy\":{\"played\":0,\"wins\":0,\"losses\":0},\"normal\":{\"played\":1,\"wins\":0,\"losses\":0},\"hard\":{\"played\":0,\"wins\":0,\"losses\":0}}"
+}

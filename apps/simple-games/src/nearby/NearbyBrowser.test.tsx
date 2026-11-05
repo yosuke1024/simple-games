@@ -155,7 +155,7 @@ describe('collection-wide nearby browser', () => {
     render(<Harness />);
     const region = screen.getByRole('region', { name: en.supportedGames });
     const links = within(region).getAllByRole('link');
-    expect(links).toHaveLength(14);
+    expect(links).toHaveLength(Object.keys(NEARBY_GAME_CODES).length);
     expect(links.map((link) => link.getAttribute('href'))).toEqual(
       Object.keys(NEARBY_GAME_CODES).map((id) => `?game=${id}`),
     );

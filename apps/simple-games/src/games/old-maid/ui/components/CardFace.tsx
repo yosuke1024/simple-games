@@ -1,4 +1,5 @@
 import { rankOf, suitOf, type Card } from '../../game';
+import { PlayingCardFace, PlayingCardBack, PLAYING_CARD_SUITS } from '@/ui/cards/PlayingCardFace';
 export const SUITS = ['♠', '♥', '♦', '♣'];
 export const rankText = (card: Card) =>
   card === 52
@@ -7,61 +8,14 @@ export const rankText = (card: Card) =>
 export const cardClass = (card: Card) =>
   `om-card ${card === 52 ? 'om-joker' : suitOf(card) === 1 || suitOf(card) === 2 ? 'om-red' : 'om-black'}`;
 export function CardFace({ card }: { card: Card }) {
-  const joker = card === 52;
-  const rank = rankOf(card);
   return (
-    <>
-      <span className="om-card-corner" aria-hidden="true">
-        <b>{rankText(card)}</b>
-        <span>{joker ? '' : SUITS[suitOf(card)]}</span>
-      </span>
-      {joker ? (
-        <svg className="om-card-symbol" viewBox="0 0 40 48" aria-hidden="true">
-          <path d="M8 22 5 7l11 8 4-12 5 12 10-8-3 15Z" fill="currentColor" />
-          <circle cx="20" cy="31" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
-          <circle cx="16" cy="29" r="1.5" />
-          <circle cx="24" cy="29" r="1.5" />
-          <path d="M15 34q5 5 10 0" fill="none" stroke="currentColor" strokeWidth="2" />
-          <circle cx="5" cy="7" r="2.5" />
-          <circle cx="20" cy="3" r="2.5" />
-          <circle cx="35" cy="7" r="2.5" />
-        </svg>
-      ) : rank > 10 ? (
-        <svg className="om-card-court" viewBox="0 0 60 80" aria-hidden="true">
-          <path d="M10 26 6 10l16 9 8-15 8 15 16-9-4 16Z" fill="currentColor" />
-          <path d="M12 32h36v35H12Z M17 72h26" fill="none" stroke="currentColor" strokeWidth="2" />
-          <text
-            x="30"
-            y="59"
-            textAnchor="middle"
-            fill="currentColor"
-            fontSize="25"
-            fontWeight="700"
-          >
-            {rankText(card)}
-          </text>
-        </svg>
-      ) : (
-        <span className={`om-card-pips om-pips-${rank}`} aria-hidden="true">
-          {Array.from({ length: rank }, (_, i) => (
-            <span key={i}>{SUITS[suitOf(card)]}</span>
-          ))}
-        </span>
-      )}
-      <span className="om-card-corner om-card-bottom" aria-hidden="true">
-        <b>{rankText(card)}</b>
-        <span>{joker ? '' : SUITS[suitOf(card)]}</span>
-      </span>
-    </>
+    <PlayingCardFace
+      rank={rankOf(card)}
+      suit={PLAYING_CARD_SUITS[suitOf(card)]}
+      joker={card === 52}
+    />
   );
 }
 export function CardBack() {
-  return (
-    <span className="om-card-back" aria-hidden="true">
-      <svg viewBox="0 0 40 56">
-        <path d="M20 7 34 28 20 49 6 28Z M20 16 28 28 20 40 12 28Z" />
-        <circle cx="20" cy="28" r="3" />
-      </svg>
-    </span>
-  );
+  return <PlayingCardBack />;
 }

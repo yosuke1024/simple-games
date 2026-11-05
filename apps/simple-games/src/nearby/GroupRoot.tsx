@@ -1,23 +1,27 @@
+import { GAME_TITLES, GAME_NAME_KEYS } from './games';
+import type { NearbyGameId } from './gameTypes';
+import type { NearbyGroupGame } from './groupGames';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { useSettings } from '../state/SettingsContext';
 import { ConfirmDialog } from '../ui/components/ConfirmDialog';
 import { IconBack } from '../ui/components/icons';
-import { GroupController, type GroupSetup } from './groupController';
+import { GroupController, ludoGroupGame, type GroupSetup } from './groupController';
 import type { Control, GroupSeat } from './groupSession';
 import { useNearbyText } from './i18n';
 import { isPlayerName, isRoomName } from './session';
 import { isAllowedNearbyText, filteredNearbyText } from './contentFilter';
 import { clearHistory, deleteGroup, loadHistory, type SavedGroup } from './history';
 import LudoView from './games/ludoView';
-import { isLudoState, ludoResult } from './games/ludo';
+import { isLudoState } from './games/ludo';
 import type { NearbyRootProps } from './NearbyRoot';
 import type { Transport } from './native';
 import { ReportDialog } from './ReportDialog';
 import { listingKey, type ReportTarget } from './report';
 
 export interface GroupSelection {
+  gameId?: NearbyGameId;
   name: string;
   roomName: string;
   label: string;
@@ -29,14 +33,18 @@ export default function GroupRoot({
   onActiveChange,
   onRegisterStop,
   initial,
-}: NearbyRootProps & { initial?: GroupSelection }) {
+  loadedGame,
+}: NearbyRootProps & { initial?: GroupSelection; loadedGame?: NearbyGroupGame }) {
   const n = useNearbyText();
-  const { locale } = useSettings();
+  const game = loadedGame?.game ?? ludoGroupGame;
+  const Board = loadedGame?.Board;
+  const { locale, t } = useSettings();
+  const title = t(GAME_NAME_KEYS[game.id]);
   const [setup, setSetup] = useState<GroupSetup>(() => ({
     host: !initial,
     name: initial?.name ?? '',
     roomName:
-      initial?.roomName ?? `Ludo ${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`,
+      initial?.roomName ?? `${title} ${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`,
     transport: initial?.transport ?? 'ble',
   }));
   const [controller, setController] = useState<GroupController | null>(null);
@@ -66,7 +74,7 @@ export default function GroupRoot({
   const snapshot = controller?.snapshot;
   const host = controller?.hostSession;
   const state = snapshot?.state;
-  const result = isLudoState(state) ? ludoResult(state) : null;
+  const result = state != null ? (game.result?.(state) ?? null) : null;
   const safeName = (name: string) => filteredNearbyText(name, n('contentHidden'));
   const seatName = (seat: GroupSeat, i: number) =>
     seat.control === 'cpu' ? n('groupCpuName', { seat: i + 1 }) : safeName(seat.name);
@@ -102,6 +110,8 @@ export default function GroupRoot({
         () => {
           if (live.current) render((v) => v + 1);
         },
+        undefined,
+        game,
       );
       current.current = next;
       setController(next);
@@ -118,7 +128,7 @@ export default function GroupRoot({
     setHistory(null);
   };
   const reportPerson = (name: string) =>
-    setReport({ title: 'Ludo', content: `${snapshot?.title ?? setup.roomName}\n${name}` });
+    setReport({ title, content: `${snapshot?.title ?? setup.roomName}\n${name}` });
   const personActions = (peer: string, name: string) => (
     <div className="nearby-actions">
       <button className="btn btn-ghost" disabled={busy} onClick={() => reportPerson(name)}>
@@ -259,7 +269,12 @@ export default function GroupRoot({
   }, [visible, leaveView, history, question, report]);
 
   return (
-    <div className="screen nearby-screen" hidden={!visible}>
+    <div
+      className={`screen nearby-screen accent-${game.id}`}
+      data-game={game.id}
+      hidden={!visible}
+      inert={!visible}
+    >
       <header className="screen-header" inert={question !== null || report !== null}>
         <button
           type="button"
@@ -272,7 +287,7 @@ export default function GroupRoot({
         >
           <IconBack />
         </button>
-        <h1 className="nearby-title">{snapshot ? safeName(snapshot.title) : 'Ludo'}</h1>
+        <h1 className="nearby-title">{snapshot ? safeName(snapshot.title) : title}</h1>
       </header>
       <div className="nearby-stack" inert={question !== null || report !== null}>
         {(error || controller?.storageFailed) && <p role="alert">{n('storageError')}</p>}
@@ -283,6 +298,7 @@ export default function GroupRoot({
             {history.map((entry) => (
               <article className="nearby-card" key={entry.id}>
                 <h3>{safeName(entry.roomName)}</h3>
+                <p>{GAME_TITLES[entry.gameId ?? 'ludo']}</p>
                 <p>
                   {new Intl.DateTimeFormat(locale, {
                     dateStyle: 'medium',
@@ -306,7 +322,7 @@ export default function GroupRoot({
                   disabled={busy}
                   onClick={() =>
                     setReport({
-                      title: 'Ludo',
+                      title,
                       content: [
                         entry.roomName,
                         ...entry.rounds.flatMap((round) => round.names),
@@ -341,7 +357,7 @@ export default function GroupRoot({
               void begin();
             }}
           >
-            <p>{n('groupConnection')}</p>
+            <p>{n('groupConnection', { count: game.capacity })}</p>
             <p className="nearby-note">{n('groupHostStops')}</p>
             <fieldset className="nearby-choices">
               <legend>{n('playTogether')}</legend>
@@ -396,7 +412,7 @@ export default function GroupRoot({
                 </label>
               ))}
             </fieldset>
-            <p className="nearby-note">{n('groupNoChat')}</p>
+            <p className="nearby-note">{n('groupNoChat', { game: title })}</p>
             <p className="nearby-note">{n('conduct')}</p>
             <label className="nearby-check">
               <input
@@ -443,7 +459,7 @@ export default function GroupRoot({
                         onClick={() => void controller.join(peer.id)}
                       >
                         <strong>{safeName(peer.roomName)}</strong>
-                        <span>{n('groupFourSeats')}</span>
+                        <span>{n('groupSeatCount', { count: game.capacity })}</span>
                       </button>
                       <div className="nearby-actions nearby-listing-actions">
                         <button
@@ -458,7 +474,7 @@ export default function GroupRoot({
                         <button
                           className="btn btn-ghost"
                           disabled={busy}
-                          onClick={() => setReport({ title: 'Ludo', content: peer.roomName })}
+                          onClick={() => setReport({ title, content: peer.roomName })}
                         >
                           {n('report')}
                         </button>
@@ -586,15 +602,36 @@ export default function GroupRoot({
                   (!state || snapshot.seats.some((s) => s.control === 'human' && !s.connected)) && (
                     <p role="status">{n('groupWaiting')}</p>
                   )}
-                {isLudoState(state) && (
-                  <LudoView
+                {Board && state != null ? (
+                  <Board
                     state={state}
                     seat={snapshot.you}
                     names={names}
-                    canAct={controller.canAct && !question && !report && !busy}
+                    canAct={controller.canAct && visible && !question && !report && !busy}
                     act={(action) => controller.act(action)}
-                    visible={visible}
+                    visible={visible && !question && !report}
+                    revision={snapshot.revision}
                   />
+                ) : (
+                  isLudoState(state) && (
+                    <LudoView
+                      state={state}
+                      seat={snapshot.you}
+                      names={names}
+                      canAct={controller.canAct && !question && !report && !busy}
+                      act={(action) => controller.act(action)}
+                      visible={visible}
+                    />
+                  )
+                )}
+                {result && (
+                  <div>
+                    {result.scores.map((score, i) => (
+                      <p key={i}>
+                        {resultNames[i]} · {score}
+                      </p>
+                    ))}
+                  </div>
                 )}
                 {result && (
                   <p role="status">

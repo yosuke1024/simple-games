@@ -1,3 +1,4 @@
+import type { PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 import '../i18n';
 import { preferencesKV, type KVStore } from '../../../storage/kv';
 import { loadRecord } from '../../../storage/repo';
@@ -25,12 +26,18 @@ async function load(kv: KVStore) {
   ]);
   return { stats, flags, prefs, session };
 }
-export interface RidgeCannonsRootProps {
+export interface RidgeCannonsRootProps extends PlayTogetherProps {
   onExit: () => void;
   entry?: 'collection' | 'shortcut';
   kv?: KVStore;
 }
-export function RidgeCannonsRoot({ onExit, entry, kv = preferencesKV }: RidgeCannonsRootProps) {
+export function RidgeCannonsRoot({
+  onPlayTogether,
+  playTogetherActive,
+  onExit,
+  entry,
+  kv = preferencesKV,
+}: RidgeCannonsRootProps) {
   const data = useLoadedRecords(kv, load, defaults);
   if (!data) return null;
   return (
@@ -43,14 +50,14 @@ export function RidgeCannonsRoot({ onExit, entry, kv = preferencesKV }: RidgeCan
       entry={entry}
       kv={kv}
     >
-      <Screens />
+      <Screens onPlayTogether={onPlayTogether} playTogetherActive={playTogetherActive} />
     </RidgeCannonsProvider>
   );
 }
-function Screens() {
+function Screens(together: PlayTogetherProps = {}) {
   const { screen } = useRidgeCannons();
   if (screen === 'tutorial') return <TutorialScreen />;
   if (screen === 'game') return <GameScreen />;
   if (screen === 'stats') return <StatsScreen />;
-  return <HomeScreen />;
+  return <HomeScreen {...together} />;
 }

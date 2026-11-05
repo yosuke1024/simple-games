@@ -544,3 +544,11 @@ button.sol-card-back {
     --game-shell-max: 940px;
   }
 }
+
+/* Shared original deck; geometry and touch targets remain game-owned. */
+.sol-figure-card {
+  position: relative;
+}
+.sol-card-back::after {
+  content: none;
+}

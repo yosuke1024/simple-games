@@ -188,7 +188,7 @@ export const trickPointsOf = (trick: Trick): number =>
   trick.cards.reduce((total, card) => total + penaltyPointsOf(card), 0);
 
 /** Penalty points taken so far this hand, indexed by seat. */
-export function penaltiesTakenIn(hand: HandState): BySeat<number> {
+export function penaltiesTakenIn(hand: Pick<HandState, 'tricks'>): BySeat<number> {
   const taken: [number, number, number, number] = [0, 0, 0, 0];
   for (const trick of hand.tricks) taken[trickWinnerOf(trick)] += trickPointsOf(trick);
   return taken;

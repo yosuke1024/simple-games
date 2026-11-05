@@ -1,0 +1,368 @@
+[data-game='durak'] {
+  --du-felt: #e7eee7;
+  --du-felt-ink: #294b3f;
+  --du-edge: #b6c8b8;
+  --du-paper: #fffaf0;
+  --du-card-black: #213a36;
+  --du-card-red: #a12a42;
+}
+[data-theme='dark'][data-game='durak'],
+[data-theme='dark'] [data-game='durak'] {
+  --du-felt: #19362f;
+  --du-felt-ink: #e1ebdf;
+  --du-edge: #587164;
+}
+.du-screen .game-content {
+  overflow-y: auto;
+}
+.du-screen .game-topbar {
+  flex-shrink: 0;
+}
+.du-home-content {
+  width: 100%;
+}
+.du-intro,
+.du-rule-summary {
+  margin: 0 0 12px;
+  text-align: center;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+.du-rule-summary {
+  font-size: 12px;
+}
+.du-table {
+  width: 100%;
+  max-width: 760px;
+  margin: 8px auto 0;
+  padding: 0 14px 24px;
+  display: grid;
+  gap: 14px;
+}
+.du-felt {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--du-edge);
+  border-radius: 26px;
+  color: var(--du-felt-ink);
+  background: var(--du-felt);
+  box-shadow: inset 0 0 0 4px #ffffff08;
+}
+.du-panel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.du-seats {
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.du-seat {
+  min-width: 0;
+  padding: 7px 9px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  text-align: center;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.du-seat.is-active {
+  border-color: var(--accent);
+  background: #ffffff12;
+}
+.du-seat strong,
+.du-seat span {
+  display: block;
+}
+.du-seat-back {
+  position: relative;
+  display: block;
+  width: 28px;
+  height: 39px;
+  margin: 0 auto 4px;
+  border-radius: 4px;
+  transform: rotate(-7deg);
+}
+.du-status {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--surface);
+  text-align: center;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.du-status.is-yours {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+.du-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+}
+.du-heading small {
+  color: var(--ink-soft);
+  font-weight: 400;
+}
+.du-hand {
+  display: grid;
+  grid-template-columns: repeat(var(--du-hand-columns, 7), minmax(0, 1fr));
+  gap: 10px 5px;
+  padding-top: 6px;
+}
+.du-card {
+  position: relative;
+  display: block;
+  min-width: 0;
+  width: 100%;
+  aspect-ratio: 5/7;
+  padding: 0;
+  border: 1px solid #b9bbae;
+  border-radius: 6px;
+  color: var(--du-card-black);
+  background: var(--du-paper);
+  box-shadow: 0 2px 3px #00000012;
+}
+.du-card-red {
+  color: var(--du-card-red);
+}
+.du-card-joker {
+  color: #70428d;
+}
+button.du-card:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.du-card.is-legal {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.du-card.is-selected {
+  transform: translateY(-6px);
+  outline: 3px solid var(--accent);
+  outline-offset: 1px;
+}
+.du-card:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+  z-index: 2;
+}
+.du-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  min-height: 120px;
+}
+.du-center .du-card {
+  width: 64px;
+  height: 90px;
+}
+.du-pile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.du-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.du-actions .btn {
+  min-height: 44px;
+}
+.du-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--ink-soft);
+}
+.du-score {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0 0;
+  font-size: 13px;
+}
+.du-score div {
+  text-align: center;
+}
+.du-score dt,
+.du-score dd {
+  margin: 0;
+}
+.du-score dd {
+  font-weight: 700;
+}
+.du-tutorial-figure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 152px;
+  margin: 12px auto 24px;
+}
+.du-tutorial-figure .du-card {
+  width: 72px;
+  height: 101px;
+}
+@media (min-width: 900px), (min-width: 600px) and (orientation: landscape) {
+  .du-table {
+    max-width: 1120px;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  .du-felt {
+    align-self: stretch;
+  }
+}
+@media (min-width: 600px) and (orientation: landscape) and (max-height: 600px) {
+  .du-table {
+    margin-top: 0;
+    gap: 12px;
+    padding-inline: 12px;
+  }
+  .du-felt {
+    padding: 10px;
+    border-radius: 20px;
+  }
+  .du-panel {
+    gap: 7px;
+  }
+  .du-seats {
+    margin-bottom: 8px;
+  }
+  .du-seat {
+    padding: 3px 7px;
+  }
+  .du-seat-back {
+    width: 20px;
+    height: 28px;
+  }
+  .du-hand {
+    gap: 7px 4px;
+  }
+  .du-hand .du-card {
+    aspect-ratio: 4/5;
+  }
+  .du-screen .game-topbar {
+    padding-block: 4px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .du-table *,
+  .du-table *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+[data-reduced-motion='true'] .du-table *,
+[data-reduced-motion='true'] .du-table *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+.du-figure-group {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+.du-tutorial-figure {
+  flex-wrap: wrap;
+  gap: 18px;
+}
+.du-figure-group .du-card {
+  width: 48px;
+  height: 67px;
+  flex-shrink: 0;
+}
+.du-choice {
+  display: grid;
+  gap: 8px;
+}
+.du-actions select,
+.du-actions input {
+  max-width: 150px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--du-edge);
+  border-radius: 12px;
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+}
+.du-actions label {
+  font-size: 13px;
+}
+.du-bidding,
+.du-raise {
+  display: grid;
+  gap: 8px;
+  text-align: center;
+}
+.du-score {
+  color: inherit;
+}
+.overlay-result .du-score {
+  margin-block: 12px;
+}
+.du-trump {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+.du-pair {
+  position: relative;
+  padding: 0 18px 24px 0;
+}
+.du-pair .du-card + .du-card {
+  position: absolute;
+  top: 20px;
+  left: 18px;
+  transform: rotate(8deg);
+}
+.du-center {
+  gap: 12px;
+  padding-block: 16px;
+}
+
+.du-trump {
+  align-items: center;
+}
+.du-trump-card {
+  width: 40px;
+  flex-shrink: 0;
+}
+@media (min-width: 600px) and (orientation: landscape) and (max-height: 600px) {
+  .du-center {
+    min-height: 96px;
+    padding-block: 8px;
+  }
+}
+
+@media (max-width: 359px) {
+  .du-panel > .du-hand {
+    grid-template-columns: repeat(var(--du-hand-compact-columns, 6), minmax(0, 1fr));
+  }
+}
+
+/* The same table can use landscape space inside a nearby room. */
+.nearby-screen[data-game='durak'] {
+  max-width: 1120px;
+}

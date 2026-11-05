@@ -1,0 +1,51 @@
+import type { IndianRummyMessages } from './en';
+export const ptBR: IndianRummyMessages = {
+  indianRummyPlayed: 'Partidas iniciadas',
+  indianRummyFinished: 'Partidas terminadas',
+  indianRummyWins: 'Vitórias',
+  indianRummyYou: 'Você',
+  indianRummyCpu: 'CPU {n}',
+  indianRummyCards: '{n} cartas',
+  indianRummyField: 'Mesa de cartas',
+  indianRummyHand: 'Sua mão',
+  indianRummyYourTurn: 'Sua vez',
+  indianRummyTurn: 'Vez de {name}…',
+  indianRummyJoker: 'Coringa',
+  indianRummyCard: '{rank} {suit}',
+  indianRummyDraws: 'Empates',
+  indianRummyWon: 'Você venceu!',
+  indianRummyLost: 'Partida concluída',
+  indianRummyDraw: 'Empate',
+  indianRummyStock: 'Monte',
+  indianRummyPenalty: 'Penalidade restante · menos é melhor',
+  indianRummyName: 'Rummy indiano',
+  indianRummyIntro: 'Forme sequências e grupos com treze cartas.',
+  indianRummyRules:
+    '4 lugares · 2 baralhos + 2 curingas · Pelo menos 2 sequências, incluindo 1 pura.',
+  indianRummyStep1Title: 'Compre e descarte',
+  indianRummyStep1Body:
+    'Compre do monte ou um descarte que não seja curinga e escolha uma carta para descartar.',
+  indianRummyStep2Title: 'Forme uma sequência pura',
+  indianRummyStep2Body:
+    'Faça cartas consecutivas do mesmo naipe sem substitutos; outras sequências e grupos podem usar curingas.',
+  indianRummyStep3Title: 'Declare sua mão',
+  indianRummyStep3Body:
+    'Escolha o descarte final e declare quando as treze cartas restantes formarem combinações com duas sequências, incluindo uma pura.',
+  indianRummyWild: 'Valor curinga: {rank}',
+  indianRummyDiscardPile: 'Descarte',
+  indianRummyDrawHint: 'Compre uma carta; descartes curingas não podem ser pegos.',
+  indianRummyDiscardHint:
+    'Escolha um descarte; a carta recém-pega do descarte não pode ser devolvida imediatamente.',
+  indianRummyDrawStock: 'Comprar do monte',
+  indianRummyDrawDiscard: 'Pegar descarte',
+  indianRummyDiscard: 'Descartar seleção',
+  indianRummyDeclare: 'Descartar e declarar',
+  indianRummyReady: 'As treze cartas se encaixam: você pode declarar com este descarte.',
+  indianRummyRequirement:
+    'Declarar exige as 13 cartas combinadas, pelo menos 2 sequências e pelo menos 1 pura.',
+  indianRummyGroups: 'Grupos sugeridos',
+  indianRummyUnmatched: 'Cartas sem combinação',
+  indianRummyMeld_pure: 'Sequência pura',
+  indianRummyMeld_sequence: 'Sequência',
+  indianRummyMeld_set: 'Grupo',
+} as const;

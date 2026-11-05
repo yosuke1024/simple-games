@@ -1,0 +1,40 @@
+import type { DurakMessages } from './en';
+export const de: DurakMessages = {
+  durakPlayed: 'Begonnene Spiele',
+  durakFinished: 'Beendete Spiele',
+  durakWins: 'Siege',
+  durakYou: 'Du',
+  durakCpu: 'CPU {n}',
+  durakCards: '{n} Karten',
+  durakField: 'Kartentisch',
+  durakHand: 'Deine Hand',
+  durakYourTurn: 'Du bist dran',
+  durakTurn: '{name} ist dran…',
+  durakJoker: 'Joker',
+  durakCard: '{rank} {suit}',
+  durakDraws: 'Unentschieden',
+  durakWon: 'Du hast gewonnen!',
+  durakLost: 'Spiel beendet',
+  durakDraw: 'Unentschieden',
+  durakName: 'Durak',
+  durakIntro: 'Wehre den Angriff ab und wende das Blatt.',
+  durakRules: '2 Plätze · 36 Karten · Je 6 Karten · Trumpf schlägt andere Farben.',
+  durakStep1Title: 'Mit einer Karte angreifen',
+  durakStep1Body:
+    'Der Angriff beginnt mit einer Karte; danach dürfen Werte auf dem Tisch ergänzt werden.',
+  durakStep2Title: 'Abwehren oder aufnehmen',
+  durakStep2Body:
+    'Schlage jede Angriffskarte mit einer höheren derselben Farbe oder Trumpf, oder nimm die Tischkarten auf.',
+  durakStep3Title: 'Karten loswerden',
+  durakStep3Body:
+    'Fülle nach jedem Angriff auf sechs auf; ist der Stapel leer, bleibe nicht als Letzter mit Karten übrig.',
+  durakTrump: 'Trumpf: {suit}',
+  durakStockCount: 'Stapel: {n}',
+  durakAttackHint:
+    'Greife mit einer umrandeten Karte an; nach der Abwehr ergänze einen passenden Wert oder beende.',
+  durakDefendHint: 'Schlage die offene Angriffskarte oder nimm alle Karten auf.',
+  durakTaking: 'Aufnehmen gewählt; vor dem Ende darf der Angreifer passende Werte ergänzen.',
+  durakConfirmTake: 'Aufnehmen bestätigen',
+  durakDone: 'Angriff beenden',
+  durakTake: 'Aufnehmen',
+} as const;

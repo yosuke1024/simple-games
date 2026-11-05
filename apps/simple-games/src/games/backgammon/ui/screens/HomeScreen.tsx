@@ -1,3 +1,4 @@
+import { PlayTogetherButton, type PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 /**
  * Home (docs/BACKGAMMON_RULES.md §1, §5): three opponents and nothing between
  * the player and the board. There is no side to choose — the opening roll
@@ -18,7 +19,7 @@ import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { DIFFICULTIES, type Difficulty } from '../../game/types';
 import { useBackgammon } from '../../state/GameContext';
 
-export function BackgammonHomeScreen() {
+export function BackgammonHomeScreen(together: PlayTogetherProps = {}) {
   const { navigate, session, stats, canResume, startNewGame, resumeGame, exitToCollection } =
     useBackgammon();
   const { t } = useSettings();
@@ -75,6 +76,7 @@ export function BackgammonHomeScreen() {
           );
         })}
 
+        <PlayTogetherButton {...together} />
         <nav className="home-chips">
           <button type="button" className="home-chip" onClick={() => navigate('stats')}>
             <IconChart className="home-chip-icon" />

@@ -12,7 +12,8 @@ export const th: NearbyMessages = {
   groupLeaveSeat: 'ที่นั่งของคุณจะเปลี่ยนเป็น CPU และคุณจะกลับเข้ามาในเกมนี้ไม่ได้',
   groupCpuName: 'CPU {seat}',
   groupHostStops: 'เมื่อโฮสต์ออก เกมของทุกคนจะจบลง',
-  groupConnection: 'ผู้เล่นสูงสุด 4 คน คนและ CPU เล่นร่วมกันได้ เลือกวิธีเชื่อมต่อแบบเดียวกับโฮสต์',
+  groupConnection:
+    'ผู้เล่นสูงสุด {count} คน คนและ CPU เล่นร่วมกันได้ เลือกวิธีเชื่อมต่อแบบเดียวกับโฮสต์',
   groupSwitch: 'ผู้ควบคุมที่นั่ง {seat}',
   groupWaiting:
     'กำลังรอให้ผู้เล่นพร้อมหรือเชื่อมต่อใหม่ โฮสต์สามารถเปลี่ยนที่นั่งให้ CPU เล่นแทนได้',
@@ -21,9 +22,10 @@ export const th: NearbyMessages = {
   groupHostLeft: 'โฮสต์ขาดการเชื่อมต่อหรือจบกลุ่มแล้ว',
   groupBackToSetup: 'กลับไปตั้งค่า',
   groupFourSeats: 'ที่นั่งผู้เล่น 4 ที่',
+  groupSeatCount: 'ที่นั่งผู้เล่น {count} ที่',
   groupFinished: 'เกมจบแล้ว',
   groupWinner: '{name} ชนะ',
-  groupNoChat: 'ขณะนี้กลุ่ม Ludo ใช้ได้เฉพาะการควบคุมเกมเท่านั้น',
+  groupNoChat: 'ขณะนี้กลุ่ม {game} ใช้ได้เฉพาะการควบคุมเกมเท่านั้น',
   groupRestore: 'คืนการควบคุมให้ผู้เล่น',
   groupTakeover: 'เปลี่ยนเป็น CPU',
   reportReason: 'เหตุผล',

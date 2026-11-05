@@ -1,3 +1,4 @@
+import { PlayingCardFace, PlayingCardBack, PLAYING_CARD_SUITS } from '@/ui/cards/PlayingCardFace';
 /**
  * The whole table: the CPU's seat above, the stock and the discard pile in the
  * middle, and the player's hand fanned along the bottom. Every place a tap can
@@ -47,8 +48,7 @@ import { bestMeldPlan } from '../../game/melds';
 import { isRed, suitOf, type Card } from '../../game/cards';
 import { canDiscard, canKnock } from '../../game/engine';
 import { topDiscard, YOU, CPU, type HandState } from '../../game/types';
-import { cardLabel, rankText } from './cardText';
-import { SuitIcon } from './suits';
+import { cardLabel } from './cardText';
 
 /**
  * The most cards one row may hold. Six is what the arithmetic above allows at
@@ -106,24 +106,9 @@ export function splitIndex(fan: readonly FanCard[]): number {
   return best;
 }
 
-/**
- * The printed face: corner index plus one large suit in the middle. The corner
- * is the only part an overlapped card shows, so it carries the identity — the
- * same split the patience shelf's cards use, for the same reason.
- */
+/** Original shared artwork; this game owns rank and suit mapping. */
 function CardFace({ card }: { card: Card }) {
-  const suit = suitOf(card);
-  return (
-    <>
-      <span className="gr-card-index" aria-hidden="true">
-        <span className="gr-card-rank">{rankText(card)}</span>
-        <SuitIcon suit={suit} />
-      </span>
-      <span className="gr-card-middle" aria-hidden="true">
-        <SuitIcon suit={suit} />
-      </span>
-    </>
-  );
+  return <PlayingCardFace rank={(card % 13) + 1} suit={PLAYING_CARD_SUITS[suitOf(card)]} />;
 }
 
 export interface GinTableView {
@@ -211,7 +196,9 @@ export const GinRummyTable = memo(function GinRummyTable({
         aria-label={opponentLabel ?? t('ginOpponentLabel', { n: shown.opponentCount })}
       >
         {Array.from({ length: shown.opponentCount }, (_, index) => (
-          <span key={index} className="gr-card gr-back gr-seat-card" aria-hidden="true" />
+          <span key={index} className="gr-card gr-back gr-seat-card" aria-hidden="true">
+            <PlayingCardBack />
+          </span>
         ))}
       </div>
 
@@ -222,7 +209,9 @@ export const GinRummyTable = memo(function GinRummyTable({
           aria-label={t('ginStockLabel', { n: shown.stockCount })}
           disabled={!drawing || shown.stockCount === 0}
           onClick={onDrawStock}
-        />
+        >
+          <PlayingCardBack />
+        </button>
 
         {top !== null ? (
           <button

@@ -1,5 +1,12 @@
 # Scopa — 正式ゲームルール
 
+2026-11-05 カード意匠の更新: オーナーの既存トランプも改善する指示により、
+[共通のSVGカード](CARD_DESIGN.md)を採用。比較を見たオーナーが人物画なしのシンプルな方向を選択。
+上下のインデックス、中央のスート1つ、J/Q/Kの大きな文字、模様を抑えた共通裏面を使う。
+この判断が以下の旧来のカード図案の説明より優先する。
+Solitaire・FreeCell・Spider・Three Peaksは縦に重なる列用に横並びインデックスを使う。カードの色、入力、保存規則は維持する。
+
+
 この文書が Scopa の仕様の正本である。実装(`apps/simple-games/src/games/scopa/`)・テスト・Quick Rules は
 ここに従い、コードはここへ `§n` で言及する。挙動を変えるときは、同じコミットでこの文書を直す。着手前の
 計画は [plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md](plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md)

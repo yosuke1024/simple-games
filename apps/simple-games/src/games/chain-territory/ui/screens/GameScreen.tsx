@@ -5,25 +5,10 @@ import { BannerSlot } from '@/ui/components/BannerSlot';
 import { RestartDialog } from '@/ui/components/RestartDialog';
 import { IconBack, IconRetry, IconUndo } from '@/ui/components/icons';
 import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
-import { type Cell } from '../../game';
+import { Cascade } from '../components/Cascade';
 import { useChainTerritory } from '../../state/GameContext';
 import { Board } from '../components/Board';
 import { ResultOverlay } from '../components/ResultOverlay';
-function Cascade({ waves, durationMs }: { waves: Cell[][]; durationMs: number }) {
-  const [step, setStep] = useState(0);
-  useEffect(() => {
-    const timer = window.setInterval(
-      () => setStep((n) => Math.min(n + 1, waves.length - 1)),
-      durationMs / Math.max(1, waves.length),
-    );
-    return () => window.clearInterval(timer);
-  }, [waves, durationMs]);
-  return (
-    <div className="ct-cascade" aria-hidden="true" inert>
-      <Board board={waves[step] ?? waves[0]!} blocked onPlay={() => {}} lastCell={null} />
-    </div>
-  );
-}
 export function GameScreen() {
   const { t } = useSettings();
   const { session, playback, play, applyUndo, goHome, restartCurrent, startNewBoard, setPaused } =

@@ -60,6 +60,12 @@ const UNREAD_JA_GAME_IDS = [
   'daifugo',
   'sevens',
   'old-maid',
+  'crazy-eights',
+  'durak',
+  'spades',
+  'texas-holdem',
+  'blackjack',
+  'indian-rummy',
 ] as const;
 
 const gameModules = import.meta.glob<{ catalogs: Record<Locale, Record<string, string>> }>(

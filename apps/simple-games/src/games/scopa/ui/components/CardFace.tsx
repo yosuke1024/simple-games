@@ -1,3 +1,4 @@
+import { PlayingCardFace, PLAYING_CARD_SUITS } from '@/ui/cards/PlayingCardFace';
 /**
  * The printed parts of a card, shared by the table, the hand, the line, the
  * primiera tally and the Quick Rules figures — so a figure cannot drift from
@@ -11,19 +12,11 @@ import { SuitIcon } from './suits';
 /** The colour class a card prints in — an aid; the suit's shape is the identity. */
 export const inkOf = (card: Card): string => (isRed(card) ? 'sc-red' : 'sc-black');
 
-/** A full card face: the index in the corner and one large suit in the middle. */
+/** Scopa's 8/9/10 values are printed as jack/queen/king. */
 export function CardFace({ card }: { card: Card }) {
-  const suit = suitOf(card);
+  const value = (card % 10) + 1;
   return (
-    <>
-      <span className="sc-card-index" aria-hidden="true">
-        <span className="sc-card-face">{faceOf(card)}</span>
-        <SuitIcon suit={suit} />
-      </span>
-      <span className="sc-card-middle" aria-hidden="true">
-        <SuitIcon suit={suit} />
-      </span>
-    </>
+    <PlayingCardFace rank={value > 7 ? value + 3 : value} suit={PLAYING_CARD_SUITS[suitOf(card)]} />
   );
 }
 

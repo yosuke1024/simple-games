@@ -1,3 +1,4 @@
+import { isGroupGameId, NEARBY_CAPACITY } from '../app/nearbyGameIds';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { useEffect, useRef, useState } from 'react';
@@ -174,10 +175,11 @@ export function NearbyBrowser({
     setBusy(true);
     setFailed(false);
     try {
-      if (selection.gameId === 'ludo') {
+      if (isGroupGameId(selection.gameId)) {
         await controller.stop();
         if (!current()) return;
         onJoinGroup?.({
+          gameId: selection.gameId,
           name: name.trim(),
           roomName: selection.roomName,
           label: selection.name,
@@ -321,14 +323,14 @@ export function NearbyBrowser({
                               <button
                                 type="button"
                                 className="nearby-peer"
-                                aria-label={`${peer.roomName} ${GAME_TITLES[peer.gameId]} ${peer.gameId === 'ludo' ? n('groupFourSeats') : n('participants', { count: 1, capacity: 2 })}`}
+                                aria-label={`${peer.roomName} ${GAME_TITLES[peer.gameId]} ${isGroupGameId(peer.gameId) ? n('groupSeatCount', { count: NEARBY_CAPACITY[peer.gameId] }) : n('participants', { count: 1, capacity: 2 })}`}
                                 onClick={() => setSelection(peer)}
                               >
                                 <strong>{peer.roomName}</strong>
                                 <span>{GAME_TITLES[peer.gameId]}</span>
                                 <span>
-                                  {peer.gameId === 'ludo'
-                                    ? n('groupFourSeats')
+                                  {isGroupGameId(peer.gameId)
+                                    ? n('groupSeatCount', { count: NEARBY_CAPACITY[peer.gameId] })
                                     : n('participants', { count: 1, capacity: 2 })}
                                 </span>
                               </button>

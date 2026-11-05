@@ -1,10 +1,11 @@
+import { loadGroupGame, type NearbyGroupGame } from './groupGames';
 import { StrictMode } from 'react';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { SettingsProvider } from '../state/SettingsContext';
 import { settingsSchema } from '../storage/schemas';
 import type { GroupSetup } from './groupController';
-import type { Control, GroupSession, GroupSnapshot } from './groupSession';
+import type { Control, GroupSession, GroupSnapshot, GroupGame } from './groupSession';
 import type { SavedGroup } from './history';
 import { nearbyText } from './i18n';
 import type { NearbyMessages } from './i18n';
@@ -67,6 +68,7 @@ vi.mock('./groupController', async () => {
     finished: (s: unknown) => isLudoState(s) && ludoResult(s) !== null,
     apply: (s: unknown, seat: number, action: unknown) =>
       isLudoState(s) ? applyLudo(s, seat, action, () => 0) : null,
+    result: (s: unknown) => (isLudoState(s) ? ludoResult(s) : null),
     cpu: (s: unknown) => (isLudoState(s) ? ludoCpuAction(s) : null),
   };
   class FakeController {
@@ -81,6 +83,8 @@ vi.mock('./groupController', async () => {
     constructor(
       readonly setup: GroupSetup,
       private readonly changed: () => void,
+      _plugin?: unknown,
+      readonly adapter: GroupGame = game,
     ) {
       fixture.controllers.push(this);
     }
@@ -90,7 +94,7 @@ vi.mock('./groupController', async () => {
           name: this.setup.name,
           title: this.setup.roomName,
           room: 'a'.repeat(32),
-          game,
+          game: this.adapter,
           send: () => {},
           changed: () => this.notify(),
         });
@@ -145,20 +149,26 @@ vi.mock('./groupController', async () => {
           : !!this.snapshot &&
             this.snapshot.seats[this.snapshot.you]?.control === 'human' &&
             this.snapshot.seats.every((s) => s.control !== 'human' || s.connected) &&
-            game.turn(this.snapshot.state) === this.snapshot.you)
+            this.adapter.turn(this.snapshot.state) === this.snapshot.you)
       );
     }
   }
-  return { GroupController: FakeController };
+  return { GroupController: FakeController, ludoGroupGame: game };
 });
 
 const text = (key: keyof NearbyMessages, vars?: Record<string, string | number>) =>
   nearbyText('en', key, vars);
 const last = () => fixture.controllers.at(-1)!;
-async function mount(initial?: GroupSelection, strict = false) {
+async function mount(initial?: GroupSelection, strict = false, loadedGame?: NearbyGroupGame) {
   const onExit = vi.fn();
   const onActiveChange = vi.fn();
-  const props = { onExit, onActiveChange, initial, gameId: 'ludo' as const };
+  const props = {
+    onExit,
+    onActiveChange,
+    initial,
+    gameId: loadedGame?.game.id ?? ('ludo' as const),
+    loadedGame,
+  };
   let view!: ReturnType<typeof render>;
   await act(async () => {
     const element = (
@@ -859,4 +869,31 @@ describe('Ludo room navigation cleanup', () => {
       expect(fixture.load).toHaveBeenCalledTimes(reads);
     },
   );
+});
+
+it.each([
+  'hearts',
+  'daifugo',
+  'sevens',
+  'old-maid',
+  'crazy-eights',
+  'durak',
+  'spades',
+  'texas-holdem',
+  'blackjack',
+  'indian-rummy',
+] as const)('starts the real %s group board and retains its state while hidden', async (id) => {
+  const loaded = await loadGroupGame(id);
+  const ui = await mount(undefined, false, loaded);
+  fireEvent.change(screen.getByLabelText(text('name')), { target: { value: 'Host' } });
+  fireEvent.click(screen.getByRole('checkbox', { name: text('accept') }));
+  await act(async () => fireEvent.click(screen.getByRole('button', { name: text('create') })));
+  fireEvent.click(screen.getByRole('button', { name: text('ready') }));
+  fireEvent.click(screen.getByRole('button', { name: text('groupStart') }));
+  const state = last().snapshot!.state;
+  expect(loaded.game.valid(state, 0)).toBe(true);
+  expect(ui.container.querySelector(`[data-game="${id}"]`)).toBeInTheDocument();
+  ui.setVisible(false);
+  expect(last().snapshot!.state).toEqual(state);
+  expect(last().stop).not.toHaveBeenCalled();
 });

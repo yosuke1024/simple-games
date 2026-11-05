@@ -45,10 +45,11 @@ export function sourceSeat(s: Pick<Session, 'turn' | 'hands'>): Seat {
   }
   return s.turn;
 }
-function settle(s: Session): Session {
+function settle(s: Session, multiplayer = false): Session {
   const active = SEATS.filter((p) => s.hands[p]!.length);
-  if (!s.hands[0]!.length) return { ...s, status: 'won' };
-  if (active.length === 1) return { ...s, status: 'lost', order: [...s.order, active[0]!] };
+  if (!multiplayer && !s.hands[0]!.length) return { ...s, status: 'won' };
+  if (active.length === 1)
+    return { ...s, status: active[0] === 0 ? 'lost' : 'won', order: [...s.order, active[0]!] };
   if (!s.hands[s.turn]!.length) {
     for (let d = 1; d <= 4; d++) {
       const p = ((s.turn + d) % 4) as Seat;
@@ -60,22 +61,34 @@ function settle(s: Session): Session {
   }
   return s;
 }
-export function createSession(seed: number): Session {
-  const dealt = deal(53, seed).map(removePairs),
+export function createSession(
+  seed: number,
+  entropy?: (upperBound: number) => number,
+  multiplayer = false,
+): Session {
+  const dealt = deal(53, seed, entropy).map(removePairs),
     hands = dealt.map((p) => p.hand);
-  return settle({
-    seed: seed >>> 0,
-    hands,
-    discard: dealt.flatMap((p) => p.pairs),
-    turn: 0,
-    order: SEATS.filter((p) => !hands[p]!.length),
-    status: 'playing',
-    moves: 0,
-    elapsedSeconds: 0,
-    event: { kind: 'deal', seat: 0, cards: [] },
-  });
+  return settle(
+    {
+      seed: seed >>> 0,
+      hands,
+      discard: dealt.flatMap((p) => p.pairs),
+      turn: 0,
+      order: SEATS.filter((p) => !hands[p]!.length),
+      status: 'playing',
+      moves: 0,
+      elapsedSeconds: 0,
+      event: { kind: 'deal', seat: 0, cards: [] },
+    },
+    multiplayer,
+  );
 }
-export function act(s: Session, a: Action): Session | null {
+export function act(
+  s: Session,
+  a: Action,
+  entropy?: (upperBound: number) => number,
+  multiplayer = false,
+): Session | null {
   if (s.status !== 'playing' || !isObject(a) || a.kind !== 'draw') return null;
   const from = sourceSeat(s),
     hand = s.hands[from]!;
@@ -94,6 +107,7 @@ export function act(s: Session, a: Action): Session | null {
     hands[p] = shuffled(
       hands[p]!,
       (s.seed ^ Math.imul(nextMove, 0x9e3779b9) ^ Math.imul(p + 1, 0x85ebca6b)) >>> 0,
+      entropy,
     );
   const next: Session = {
     ...s,
@@ -106,10 +120,10 @@ export function act(s: Session, a: Action): Session | null {
       kind: paired.pairs.length ? 'pair' : 'draw',
       seat,
       from,
-      cards: paired.pairs.length ? paired.pairs : seat === 0 ? [card] : [],
+      cards: paired.pairs.length ? paired.pairs : multiplayer || seat === 0 ? [card] : [],
     },
   };
-  return settle(next);
+  return settle(next, multiplayer);
 }
 /** Only a count and fresh deterministic randomness; no private cards enter the CPU's choice. */
 export interface CpuView {

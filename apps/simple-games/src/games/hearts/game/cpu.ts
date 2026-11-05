@@ -265,10 +265,14 @@ export function passUrgencyOf(card: Card, view: CpuView, lengths: readonly numbe
 
 /**
  * The three cards to pass, ascending. Deterministic: the same hand always
- * gives the same three, and the tie-break float only separates cards this seat
+ * gives the same three, and the seeded fraction or host chooser only separates cards this seat
  * has no reason to choose between.
  */
-export function chooseCpuPass(view: CpuView, tieBreak: number): Card[] {
+type TieBreak = number | ((upperBound: number) => number);
+const tieIndex = (tieBreak: TieBreak, count: number) =>
+  typeof tieBreak === 'function' ? tieBreak(count) : Math.floor(tieBreak * count);
+
+export function chooseCpuPass(view: CpuView, tieBreak: TieBreak): Card[] {
   const lengths = suitLengthsOf(view.hand);
   const urgency = new Map<Card, number>();
   for (const card of view.hand) urgency.set(card, passUrgencyOf(card, view, lengths));
@@ -282,7 +286,7 @@ export function chooseCpuPass(view: CpuView, tieBreak: number): Card[] {
   const tied = sortedCards(ranked.filter((card) => urgency.get(card)! === boundary));
   const room = PASS_SIZE - locked.length;
   const windows = tied.length - room + 1;
-  const start = Math.min(Math.max(Math.floor(tieBreak * windows), 0), windows - 1);
+  const start = Math.min(Math.max(tieIndex(tieBreak, windows), 0), windows - 1);
   return sortedCards([...locked, ...tied.slice(start, start + room)]);
 }
 
@@ -290,9 +294,9 @@ export function chooseCpuPass(view: CpuView, tieBreak: number): Card[] {
 // The play
 // ---------------------------------------------------------------------------
 
-/** Picks from equally-good candidates with the tie-break float. */
-function pick<T>(options: readonly T[], tieBreak: number): T {
-  const index = Math.floor(tieBreak * options.length);
+/** Picks from equally-good candidates with a seeded fraction or bounded host chooser. */
+function pick<T>(options: readonly T[], tieBreak: TieBreak): T {
+  const index = tieIndex(tieBreak, options.length);
   return options[Math.min(Math.max(index, 0), options.length - 1)]!;
 }
 
@@ -300,7 +304,7 @@ function pick<T>(options: readonly T[], tieBreak: number): T {
 function cheapest(
   options: readonly Card[],
   costOf: (card: Card) => number,
-  tieBreak: number,
+  tieBreak: TieBreak,
 ): Card {
   const best = Math.min(...options.map(costOf));
   return pick(sortedCards(options.filter((card) => costOf(card) === best)), tieBreak);
@@ -432,7 +436,7 @@ function blocksMoon(view: CpuView, legal: readonly Card[], shooter: Seat): Card 
  * strength. That is what makes a saved match resume into the game it was
  * suspended from.
  */
-export function chooseCpuPlay(view: CpuView, tieBreak: number): Card | null {
+export function chooseCpuPlay(view: CpuView, tieBreak: TieBreak): Card | null {
   const legal = legalPlaysFor(view);
   if (legal.length === 0) return null;
   if (legal.length === 1) return legal[0]!;
@@ -477,7 +481,7 @@ export function chooseCpuPlay(view: CpuView, tieBreak: number): Card | null {
  * The seat's beat, as an action the session can apply. Null only when there is
  * nothing for this seat to do — a seat whose turn it is always has a card.
  */
-export function chooseCpuAction(view: CpuView, tieBreak: number): CpuAction | null {
+export function chooseCpuAction(view: CpuView, tieBreak: TieBreak): CpuAction | null {
   if (view.phase === 'passing') {
     if (view.passOffset === 0) return null;
     const cards = chooseCpuPass(view, tieBreak);

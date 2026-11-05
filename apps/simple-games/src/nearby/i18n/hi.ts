@@ -13,7 +13,7 @@ export const hi: NearbyMessages = {
   groupCpuName: 'CPU {seat}',
   groupHostStops: 'होस्ट के जाने पर सभी की बाज़ी समाप्त हो जाती है।',
   groupConnection:
-    'अधिकतम 4 खिलाड़ी। इंसान और CPU साथ खेल सकते हैं। होस्ट वाला कनेक्शन विकल्प चुनें।',
+    'अधिकतम {count} खिलाड़ी। इंसान और CPU साथ खेल सकते हैं। होस्ट वाला कनेक्शन विकल्प चुनें।',
   groupSwitch: 'सीट {seat} का नियंत्रण',
   groupWaiting:
     'खिलाड़ियों के तैयार होने या दोबारा जुड़ने का इंतज़ार है। होस्ट किसी सीट को CPU को सौंप सकता है।',
@@ -22,9 +22,10 @@ export const hi: NearbyMessages = {
   groupHostLeft: 'होस्ट का कनेक्शन टूट गया या होस्ट ने समूह समाप्त कर दिया।',
   groupBackToSetup: 'सेटअप पर लौटें',
   groupFourSeats: 'खिलाड़ियों की 4 सीटें',
+  groupSeatCount: 'खिलाड़ियों की {count} सीटें',
   groupFinished: 'बाज़ी समाप्त',
   groupWinner: '{name} जीत गए',
-  groupNoChat: 'अभी Ludo समूहों में केवल खेल की चालें चल सकते हैं।',
+  groupNoChat: 'अभी {game} समूहों में केवल खेल की चालें चल सकते हैं।',
   groupRestore: 'नियंत्रण खिलाड़ी को लौटाएँ',
   groupTakeover: 'CPU को सौंपें',
   reportReason: 'कारण',

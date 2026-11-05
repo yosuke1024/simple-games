@@ -1,3 +1,4 @@
+import { isGroupGameId } from '../app/nearbyGameIds';
 import type { ReactElement } from 'react';
 import type { Match } from './yacht';
 import type { GameAdapter } from './gameTypes';
@@ -426,7 +427,7 @@ describe('Nearby Play user flows', () => {
     expect(screen.getByText('Saved host', { selector: 'strong' })).toBeVisible();
   });
 
-  it.each((Object.keys(NEARBY_GAME_CODES) as NearbyGameId[]).filter((id) => id !== 'ludo'))(
+  it.each((Object.keys(NEARBY_GAME_CODES) as NearbyGameId[]).filter((id) => !isGroupGameId(id)))(
     'prepares and starts %s through its real game adapter and board',
     async (gameId) => {
       await renderNearby(<NearbyRoot gameId={gameId} onExit={() => {}} />);

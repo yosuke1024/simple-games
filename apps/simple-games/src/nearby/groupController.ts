@@ -47,6 +47,7 @@ export const ludoGroupGame: GroupGame = {
   finished: (s) => isLudoState(s) && ludoResult(s) !== null,
   apply: (s, seat, action) => (isLudoState(s) ? applyLudo(s, seat, action, random) : null),
   cpu: (s) => (isLudoState(s) ? ludoCpuAction(s) : null),
+  result: (s) => (isLudoState(s) ? ludoResult(s) : null),
 };
 
 /**
@@ -789,24 +790,27 @@ export class GroupController {
       session.state !== null &&
       session.synchronized &&
       !session.closed &&
-      session.seats[this.game.turn(session.state)]?.control === 'cpu' &&
+      (this.game.automatic?.(session.state) != null ||
+        session.seats[this.game.turn(session.state)]?.control === 'cpu') &&
       !this.game.finished(session.state)
     )
-      this.cpuTimer = setTimeout(() => session.cpuStep(), 450);
+      this.cpuTimer = setTimeout(() => {
+        if (!session.automaticStep()) session.cpuStep();
+      }, 450);
     this.recordHistory();
     this.changed();
   }
   private recordHistory(ended = false) {
     const s = this.snapshot;
-    if (!s || s.state === null || s.round < 1 || !isLudoState(s.state)) return;
-    const result = ludoResult(s.state);
+    if (!s || s.state === null || s.round < 1) return;
+    const result = this.game.result?.(s.state) ?? null;
     // A finished round is history: a later leave or CPU switch must not rename its players.
     const seats =
       result && this.finishedSeats?.round === s.round ? this.finishedSeats.seats : s.seats;
     const round = {
       round: s.round,
       names: seats.map((p, i) => (p.control === 'cpu' ? `CPU ${i + 1}` : p.name)),
-      scores: result?.scores ?? [0, 0, 0, 0],
+      scores: result?.scores ?? Array.from({ length: this.game.capacity }, () => 0),
       winner: result?.winner ?? null,
       finished: result !== null,
     };
@@ -815,6 +819,7 @@ export class GroupController {
     this.savedSignature = signature;
     this.savedGroup ??= {
       id: randomId(),
+      gameId: this.game.id,
       at: Date.now(),
       roomName: s.title,
       transport: this.setup.transport,

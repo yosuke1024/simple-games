@@ -58,8 +58,8 @@ export function validFleet(ships: Ship[]): boolean {
   }
   return true;
 }
-export function generateFleet(seed: number): Ship[] {
-  const rng = random(seed);
+export function generateFleet(seed: number, entropy?: () => number): Ship[] {
+  const rng = entropy ?? random(seed);
   const build = (ships: Ship[]): Ship[] | null => {
     if (ships.length === 4) return ships;
     const options = Array.from({ length: 128 }, (_, i) => ({ cell: i % 64, vertical: i >= 64 }));
