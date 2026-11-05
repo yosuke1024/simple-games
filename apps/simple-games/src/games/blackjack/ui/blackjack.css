@@ -1,0 +1,277 @@
+[data-game='blackjack'] {
+  --bj-felt: #e7eee7;
+  --bj-felt-ink: #294b3f;
+  --bj-edge: #b6c8b8;
+  --bj-paper: #fffaf0;
+  --bj-card-black: #213a36;
+  --bj-card-red: #a12a42;
+}
+[data-theme='dark'][data-game='blackjack'],
+[data-theme='dark'] [data-game='blackjack'] {
+  --bj-felt: #19362f;
+  --bj-felt-ink: #e1ebdf;
+  --bj-edge: #587164;
+}
+.bj-screen .game-content {
+  overflow-y: auto;
+}
+.bj-screen .game-topbar {
+  flex-shrink: 0;
+}
+.bj-home-content {
+  width: 100%;
+}
+.bj-intro,
+.bj-rule-summary {
+  margin: 0 0 12px;
+  text-align: center;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+.bj-rule-summary {
+  font-size: 12px;
+}
+.bj-table {
+  width: 100%;
+  max-width: 760px;
+  margin: 8px auto 0;
+  padding: 0 14px 24px;
+  display: grid;
+  gap: 14px;
+}
+.bj-felt {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--bj-edge);
+  border-radius: 26px;
+  color: var(--bj-felt-ink);
+  background: var(--bj-felt);
+  box-shadow: inset 0 0 0 4px #ffffff08;
+}
+.bj-panel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.bj-seats {
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.bj-seat {
+  min-width: 0;
+  padding: 7px 9px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  text-align: center;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.bj-seat.is-active {
+  border-color: var(--accent);
+  background: #ffffff12;
+}
+.bj-seat strong,
+.bj-seat span {
+  display: block;
+}
+.bj-seat-back {
+  position: relative;
+  display: block;
+  width: 28px;
+  height: 39px;
+  margin: 0 auto 4px;
+  border-radius: 4px;
+  transform: rotate(-7deg);
+}
+.bj-status {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--surface);
+  text-align: center;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.bj-status.is-yours {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+.bj-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+}
+.bj-heading small {
+  color: var(--ink-soft);
+  font-weight: 400;
+}
+.bj-hand {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px 5px;
+  padding-top: 6px;
+}
+.bj-card {
+  position: relative;
+  display: block;
+  min-width: 0;
+  width: 100%;
+  aspect-ratio: 5/7;
+  padding: 0;
+  border: 1px solid #b9bbae;
+  border-radius: 6px;
+  color: var(--bj-card-black);
+  background: var(--bj-paper);
+  box-shadow: 0 2px 3px #00000012;
+}
+.bj-card-red {
+  color: var(--bj-card-red);
+}
+.bj-card-joker {
+  color: #70428d;
+}
+button.bj-card:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.bj-card.is-legal {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.bj-card.is-selected {
+  transform: translateY(-6px);
+  outline: 3px solid var(--accent);
+  outline-offset: 1px;
+}
+.bj-card:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+  z-index: 2;
+}
+.bj-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  min-height: 120px;
+}
+.bj-center .bj-card {
+  width: 64px;
+  height: 90px;
+}
+.bj-pile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.bj-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.bj-actions .btn {
+  min-height: 44px;
+}
+.bj-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--ink-soft);
+}
+.bj-score {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0 0;
+  font-size: 13px;
+}
+.bj-score div {
+  text-align: center;
+}
+.bj-score dt,
+.bj-score dd {
+  margin: 0;
+}
+.bj-score dd {
+  font-weight: 700;
+}
+.bj-tutorial-figure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 152px;
+  margin: 12px auto 24px;
+}
+.bj-tutorial-figure .bj-card {
+  width: 72px;
+  height: 101px;
+}
+@media (min-width: 900px), (min-width: 600px) and (orientation: landscape) {
+  .bj-table {
+    max-width: 1120px;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  .bj-felt {
+    align-self: stretch;
+  }
+}
+@media (min-width: 600px) and (orientation: landscape) and (max-height: 600px) {
+  .bj-table {
+    margin-top: 0;
+    gap: 12px;
+    padding-inline: 12px;
+  }
+  .bj-felt {
+    padding: 10px;
+    border-radius: 20px;
+  }
+  .bj-panel {
+    gap: 7px;
+  }
+  .bj-seats {
+    margin-bottom: 8px;
+  }
+  .bj-seat {
+    padding: 3px 7px;
+  }
+  .bj-seat-back {
+    width: 20px;
+    height: 28px;
+  }
+  .bj-hand {
+    gap: 7px 4px;
+  }
+  .bj-hand .bj-card {
+    aspect-ratio: 4/5;
+  }
+  .bj-screen .game-topbar {
+    padding-block: 4px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bj-table *,
+  .bj-table *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+[data-reduced-motion='true'] .bj-table *,
+[data-reduced-motion='true'] .bj-table *::after {
+  animation: none !important;
+  transition: none !important;
+}

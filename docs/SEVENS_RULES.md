@@ -31,3 +31,9 @@ Webでは無効ボタンとアプリ専用の説明を表示する。通信・�
 4席固定、人間とCPUの混成。全席の上がり／脱落が決まるまで続ける。
 4回目のパスは確認して脱落し、手札を盤面へ公開する。ルール・順位はCPU戦と共通。
 配札はhostの乱数で生成し、各席には自身の手札と公開盤面・枚数・パス回数だけを送る。
+
+## 2026-11-05: Card artwork
+
+Card faces and backs use the original shared vector artwork described in
+[CARD_DESIGN.md](CARD_DESIGN.md). Rules, saved card IDs, accessible labels and
+selection behavior are unchanged. Both CPU and Nearby use this artwork.

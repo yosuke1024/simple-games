@@ -1,0 +1,277 @@
+[data-game='texas-holdem'] {
+  --th-felt: #e7eee7;
+  --th-felt-ink: #294b3f;
+  --th-edge: #b6c8b8;
+  --th-paper: #fffaf0;
+  --th-card-black: #213a36;
+  --th-card-red: #a12a42;
+}
+[data-theme='dark'][data-game='texas-holdem'],
+[data-theme='dark'] [data-game='texas-holdem'] {
+  --th-felt: #19362f;
+  --th-felt-ink: #e1ebdf;
+  --th-edge: #587164;
+}
+.th-screen .game-content {
+  overflow-y: auto;
+}
+.th-screen .game-topbar {
+  flex-shrink: 0;
+}
+.th-home-content {
+  width: 100%;
+}
+.th-intro,
+.th-rule-summary {
+  margin: 0 0 12px;
+  text-align: center;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+.th-rule-summary {
+  font-size: 12px;
+}
+.th-table {
+  width: 100%;
+  max-width: 760px;
+  margin: 8px auto 0;
+  padding: 0 14px 24px;
+  display: grid;
+  gap: 14px;
+}
+.th-felt {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--th-edge);
+  border-radius: 26px;
+  color: var(--th-felt-ink);
+  background: var(--th-felt);
+  box-shadow: inset 0 0 0 4px #ffffff08;
+}
+.th-panel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.th-seats {
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.th-seat {
+  min-width: 0;
+  padding: 7px 9px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  text-align: center;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.th-seat.is-active {
+  border-color: var(--accent);
+  background: #ffffff12;
+}
+.th-seat strong,
+.th-seat span {
+  display: block;
+}
+.th-seat-back {
+  position: relative;
+  display: block;
+  width: 28px;
+  height: 39px;
+  margin: 0 auto 4px;
+  border-radius: 4px;
+  transform: rotate(-7deg);
+}
+.th-status {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--surface);
+  text-align: center;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.th-status.is-yours {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+.th-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+}
+.th-heading small {
+  color: var(--ink-soft);
+  font-weight: 400;
+}
+.th-hand {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px 5px;
+  padding-top: 6px;
+}
+.th-card {
+  position: relative;
+  display: block;
+  min-width: 0;
+  width: 100%;
+  aspect-ratio: 5/7;
+  padding: 0;
+  border: 1px solid #b9bbae;
+  border-radius: 6px;
+  color: var(--th-card-black);
+  background: var(--th-paper);
+  box-shadow: 0 2px 3px #00000012;
+}
+.th-card-red {
+  color: var(--th-card-red);
+}
+.th-card-joker {
+  color: #70428d;
+}
+button.th-card:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.th-card.is-legal {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.th-card.is-selected {
+  transform: translateY(-6px);
+  outline: 3px solid var(--accent);
+  outline-offset: 1px;
+}
+.th-card:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+  z-index: 2;
+}
+.th-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  min-height: 120px;
+}
+.th-center .th-card {
+  width: 64px;
+  height: 90px;
+}
+.th-pile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.th-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.th-actions .btn {
+  min-height: 44px;
+}
+.th-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--ink-soft);
+}
+.th-score {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0 0;
+  font-size: 13px;
+}
+.th-score div {
+  text-align: center;
+}
+.th-score dt,
+.th-score dd {
+  margin: 0;
+}
+.th-score dd {
+  font-weight: 700;
+}
+.th-tutorial-figure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 152px;
+  margin: 12px auto 24px;
+}
+.th-tutorial-figure .th-card {
+  width: 72px;
+  height: 101px;
+}
+@media (min-width: 900px), (min-width: 600px) and (orientation: landscape) {
+  .th-table {
+    max-width: 1120px;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  .th-felt {
+    align-self: stretch;
+  }
+}
+@media (min-width: 600px) and (orientation: landscape) and (max-height: 600px) {
+  .th-table {
+    margin-top: 0;
+    gap: 12px;
+    padding-inline: 12px;
+  }
+  .th-felt {
+    padding: 10px;
+    border-radius: 20px;
+  }
+  .th-panel {
+    gap: 7px;
+  }
+  .th-seats {
+    margin-bottom: 8px;
+  }
+  .th-seat {
+    padding: 3px 7px;
+  }
+  .th-seat-back {
+    width: 20px;
+    height: 28px;
+  }
+  .th-hand {
+    gap: 7px 4px;
+  }
+  .th-hand .th-card {
+    aspect-ratio: 4/5;
+  }
+  .th-screen .game-topbar {
+    padding-block: 4px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .th-table *,
+  .th-table *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+[data-reduced-motion='true'] .th-table *,
+[data-reduced-motion='true'] .th-table *::after {
+  animation: none !important;
+  transition: none !important;
+}

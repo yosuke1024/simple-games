@@ -1,0 +1,277 @@
+[data-game='indian-rummy'] {
+  --ir-felt: #e7eee7;
+  --ir-felt-ink: #294b3f;
+  --ir-edge: #b6c8b8;
+  --ir-paper: #fffaf0;
+  --ir-card-black: #213a36;
+  --ir-card-red: #a12a42;
+}
+[data-theme='dark'][data-game='indian-rummy'],
+[data-theme='dark'] [data-game='indian-rummy'] {
+  --ir-felt: #19362f;
+  --ir-felt-ink: #e1ebdf;
+  --ir-edge: #587164;
+}
+.ir-screen .game-content {
+  overflow-y: auto;
+}
+.ir-screen .game-topbar {
+  flex-shrink: 0;
+}
+.ir-home-content {
+  width: 100%;
+}
+.ir-intro,
+.ir-rule-summary {
+  margin: 0 0 12px;
+  text-align: center;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+.ir-rule-summary {
+  font-size: 12px;
+}
+.ir-table {
+  width: 100%;
+  max-width: 760px;
+  margin: 8px auto 0;
+  padding: 0 14px 24px;
+  display: grid;
+  gap: 14px;
+}
+.ir-felt {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--ir-edge);
+  border-radius: 26px;
+  color: var(--ir-felt-ink);
+  background: var(--ir-felt);
+  box-shadow: inset 0 0 0 4px #ffffff08;
+}
+.ir-panel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ir-seats {
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.ir-seat {
+  min-width: 0;
+  padding: 7px 9px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  text-align: center;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.ir-seat.is-active {
+  border-color: var(--accent);
+  background: #ffffff12;
+}
+.ir-seat strong,
+.ir-seat span {
+  display: block;
+}
+.ir-seat-back {
+  position: relative;
+  display: block;
+  width: 28px;
+  height: 39px;
+  margin: 0 auto 4px;
+  border-radius: 4px;
+  transform: rotate(-7deg);
+}
+.ir-status {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--surface);
+  text-align: center;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.ir-status.is-yours {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+.ir-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+}
+.ir-heading small {
+  color: var(--ink-soft);
+  font-weight: 400;
+}
+.ir-hand {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px 5px;
+  padding-top: 6px;
+}
+.ir-card {
+  position: relative;
+  display: block;
+  min-width: 0;
+  width: 100%;
+  aspect-ratio: 5/7;
+  padding: 0;
+  border: 1px solid #b9bbae;
+  border-radius: 6px;
+  color: var(--ir-card-black);
+  background: var(--ir-paper);
+  box-shadow: 0 2px 3px #00000012;
+}
+.ir-card-red {
+  color: var(--ir-card-red);
+}
+.ir-card-joker {
+  color: #70428d;
+}
+button.ir-card:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.ir-card.is-legal {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.ir-card.is-selected {
+  transform: translateY(-6px);
+  outline: 3px solid var(--accent);
+  outline-offset: 1px;
+}
+.ir-card:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+  z-index: 2;
+}
+.ir-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  min-height: 120px;
+}
+.ir-center .ir-card {
+  width: 64px;
+  height: 90px;
+}
+.ir-pile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.ir-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ir-actions .btn {
+  min-height: 44px;
+}
+.ir-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--ink-soft);
+}
+.ir-score {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0 0;
+  font-size: 13px;
+}
+.ir-score div {
+  text-align: center;
+}
+.ir-score dt,
+.ir-score dd {
+  margin: 0;
+}
+.ir-score dd {
+  font-weight: 700;
+}
+.ir-tutorial-figure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 152px;
+  margin: 12px auto 24px;
+}
+.ir-tutorial-figure .ir-card {
+  width: 72px;
+  height: 101px;
+}
+@media (min-width: 900px), (min-width: 600px) and (orientation: landscape) {
+  .ir-table {
+    max-width: 1120px;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  .ir-felt {
+    align-self: stretch;
+  }
+}
+@media (min-width: 600px) and (orientation: landscape) and (max-height: 600px) {
+  .ir-table {
+    margin-top: 0;
+    gap: 12px;
+    padding-inline: 12px;
+  }
+  .ir-felt {
+    padding: 10px;
+    border-radius: 20px;
+  }
+  .ir-panel {
+    gap: 7px;
+  }
+  .ir-seats {
+    margin-bottom: 8px;
+  }
+  .ir-seat {
+    padding: 3px 7px;
+  }
+  .ir-seat-back {
+    width: 20px;
+    height: 28px;
+  }
+  .ir-hand {
+    gap: 7px 4px;
+  }
+  .ir-hand .ir-card {
+    aspect-ratio: 4/5;
+  }
+  .ir-screen .game-topbar {
+    padding-block: 4px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ir-table *,
+  .ir-table *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+[data-reduced-motion='true'] .ir-table *,
+[data-reduced-motion='true'] .ir-table *::after {
+  animation: none !important;
+  transition: none !important;
+}

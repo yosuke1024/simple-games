@@ -51,3 +51,9 @@ Webでは無効ボタンとアプリ専用の説明を表示する。通信・�
 4席固定、人間とCPUの混成。hostの順位が決まっても全席の順位が決まるまで続ける。
 次の対局は前回順位を引き継ぐ。上位2席が返す札を選び、両者の確定後に同時交換する。
 配札はhostの乱数で生成し、各席には自身の手札と公開された札・枚数・順位だけを送る。
+
+## 2026-11-05: Card artwork
+
+Card faces and backs use the original shared vector artwork described in
+[CARD_DESIGN.md](CARD_DESIGN.md). Rules, saved card IDs, accessible labels and
+selection behavior are unchanged. Both CPU and Nearby use this artwork.

@@ -37,3 +37,9 @@ Webでは無効ボタンとアプリ専用の説明を表示する。通信・�
 結果は全員の順位を表示し、先に上がった1席だけを唯一の勝者とはしない。
 引く操作は相手の札の位置番号だけを送る。毎手の並び替えはhostの新しい乱数で行い、
 受信側には自身の札と相手の枚数、公開したペアだけを送る。他席が引いた単独札は非公開。
+
+## 2026-11-05: Card artwork
+
+Card faces and backs use the original shared vector artwork described in
+[CARD_DESIGN.md](CARD_DESIGN.md). Rules, saved card IDs, accessible labels and
+selection behavior are unchanged. Both CPU and Nearby use this artwork.

@@ -615,7 +615,7 @@
 }
 
 /* A wide screen puts the hand beside the table instead of stretching the table vertically. */
-@media (min-width: 900px) {
+@media (min-width: 900px), (min-width: 600px) and (orientation: landscape) {
   .df-body {
     max-width: 1120px;
     display: grid;
@@ -659,24 +659,18 @@
   flex-direction: column;
 }
 
-/* Size the card ink against the room's cards, not a wider desktop viewport. */
-.nearby-screen .df-card {
-  container-type: inline-size;
-  overflow: hidden;
-}
-.nearby-screen .df-hand .df-card {
-  aspect-ratio: 5 / 7;
-}
-.nearby-screen .df-card-corner {
-  font-size: clamp(12px, 30cqw, 19px);
-}
-.nearby-screen .df-card-corner > span {
-  font-size: clamp(8px, 20cqw, 11px);
-}
-.nearby-screen .df-card-pips {
-  font-size: clamp(6px, 16cqw, 12px);
-  inset: 20% 26%;
-}
-.nearby-screen .df-pips-1 {
-  font-size: clamp(22px, 60cqw, 40px);
+/* Phones in landscape keep the cards and the table visible side by side. */
+@media (min-width: 600px) and (orientation: landscape) and (max-height: 600px) {
+  .df-body {
+    column-gap: 12px;
+    row-gap: 6px;
+    padding-inline: 12px;
+  }
+  .df-arena {
+    padding: 8px;
+    border-radius: 20px;
+  }
+  .df-hand {
+    gap: 7px 4px;
+  }
 }
