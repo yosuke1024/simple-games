@@ -1,3 +1,4 @@
+import type { PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 import '../i18n';
 import { preferencesKV, type KVStore } from '../../../storage/kv';
 import { loadRecord } from '../../../storage/repo';
@@ -23,12 +24,18 @@ async function load(kv: KVStore) {
   ]);
   return { stats, flags, session };
 }
-export interface DaifugoRootProps {
+export interface DaifugoRootProps extends PlayTogetherProps {
   onExit: () => void;
   entry?: 'collection' | 'shortcut';
   kv?: KVStore;
 }
-export function DaifugoRoot({ onExit, entry, kv = preferencesKV }: DaifugoRootProps) {
+export function DaifugoRoot({
+  onPlayTogether,
+  playTogetherActive,
+  onExit,
+  entry,
+  kv = preferencesKV,
+}: DaifugoRootProps) {
   const data = useLoadedRecords(kv, load, defaults);
   if (!data) return null;
   return (
@@ -40,14 +47,14 @@ export function DaifugoRoot({ onExit, entry, kv = preferencesKV }: DaifugoRootPr
       entry={entry}
       kv={kv}
     >
-      <Screens />
+      <Screens onPlayTogether={onPlayTogether} playTogetherActive={playTogetherActive} />
     </DaifugoProvider>
   );
 }
-function Screens() {
+function Screens(together: PlayTogetherProps = {}) {
   const { screen } = useDaifugo();
   if (screen === 'tutorial') return <TutorialScreen />;
   if (screen === 'game') return <GameScreen />;
   if (screen === 'stats') return <StatsScreen />;
-  return <HomeScreen />;
+  return <HomeScreen {...together} />;
 }

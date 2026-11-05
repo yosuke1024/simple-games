@@ -33,17 +33,7 @@ import { GAMES, type GameDefinition } from './registry';
  * tested while this list is empty. Putting a title on the channel, or
  * promoting one off it, edits this list on purpose.
  */
-const WEB_BETA_IDS: string[] = [
-  'backgammon',
-  'ridge-cannons',
-  'fleet-search',
-  'frost-route',
-  'chain-territory',
-  'river-cargo',
-  'daifugo',
-  'sevens',
-  'old-maid',
-];
+const WEB_BETA_IDS: string[] = ['frost-route', 'river-cargo'];
 
 /**
  * The titles in development today, in registry order: Falling Blocks (No. 63),
@@ -130,11 +120,9 @@ describe('the channels', () => {
   it('hold exactly the titles this file says they do', () => {
     const beta = GAMES.filter((game) => game.channel === 'web-beta').map((game) => game.id);
     expect(beta).toEqual(WEB_BETA_IDS);
-    // Nine after adding the three classic card games on 2026-11-03: the twenty before them
-    // graduated on 2026-10-29 and Falling Blocks was withdrawn to
-    // 'in-development' (see above).
-    expect(beta).toHaveLength(9);
-    expect(GAMES.filter((game) => game.channel === undefined)).toHaveLength(65);
+    // Seven Nearby-capable beta games graduated with the owner's approval on 2026-11-04.
+    expect(beta).toHaveLength(2);
+    expect(GAMES.filter((game) => game.channel === undefined)).toHaveLength(72);
     const building = GAMES.filter((game) => game.channel === 'in-development').map(
       (game) => game.id,
     );

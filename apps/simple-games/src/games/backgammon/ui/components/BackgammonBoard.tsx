@@ -22,6 +22,7 @@ const STACK_SHOWN = 5;
 
 export interface BackgammonBoardProps {
   board: Board;
+  opponentName?: string;
   /** The player's checker picked up, as a distance (25 = bar), or null. */
   selected: Dist | null;
   /** Where the picked-up checker may go — empty while nothing is held. */
@@ -76,6 +77,7 @@ function Checkers({
 
 export const BackgammonBoard = memo(function BackgammonBoard({
   board,
+  opponentName,
   selected,
   targets,
   movable,
@@ -112,7 +114,10 @@ export const BackgammonBoard = memo(function BackgammonBoard({
           ? t('backgammonPointEmpty', { point })
           : mine
             ? t('backgammonPointYours', { point, count })
-            : t('backgammonPointCpu', { point, count: -count });
+            : t('backgammonPointCpu', { point, count: -count }).replaceAll(
+                t('backgammonCpu'),
+                opponentName ?? t('backgammonCpu'),
+              );
     return (
       <button
         key={point}
@@ -163,7 +168,10 @@ export const BackgammonBoard = memo(function BackgammonBoard({
     : playerBar > 0
       ? t('backgammonBarYours', { count: playerBar })
       : cpuBar > 0
-        ? t('backgammonBarCpu', { count: cpuBar })
+        ? t('backgammonBarCpu', { count: cpuBar }).replaceAll(
+            t('backgammonCpu'),
+            opponentName ?? t('backgammonCpu'),
+          )
         : t('backgammonBarEmpty');
 
   const offTarget = targetSet.has(OFF);
@@ -231,7 +239,10 @@ export const BackgammonBoard = memo(function BackgammonBoard({
           aria-label={
             offTarget
               ? t('backgammonOffTarget')
-              : t('backgammonOffTray', { you: board.off[0], cpu: board.off[1] })
+              : t('backgammonOffTray', { you: board.off[0], cpu: board.off[1] }).replaceAll(
+                  t('backgammonCpu'),
+                  opponentName ?? t('backgammonCpu'),
+                )
           }
           disabled={!playing || !offTarget}
           onClick={() => onPoint(OFF)}

@@ -52,7 +52,12 @@ const COMPASS = ['south', 'west', 'north', 'east'] as const;
 const CPU_SEATS: readonly Seat[] = [1, 2, 3];
 
 export interface HeartsTableProps {
-  hand: HandState;
+  hand: Pick<HandState, 'tricks' | 'phase' | 'passOffset' | 'played' | 'leader'> & {
+    hands?: HandState['hands'];
+  };
+  counts?: readonly number[];
+  names?: readonly string[];
+  perspective?: number;
   /** Match points, indexed by seat — the standing, not this hand's take. */
   scores: BySeat<number>;
   /** The trick being folded away right now, or null between beats. */
@@ -66,8 +71,14 @@ export const HeartsTable = memo(function HeartsTable({
   scores,
   folding,
   lastTrickWinner,
+  counts,
+  names,
+  perspective = 0,
 }: HeartsTableProps) {
   const { t } = useSettings();
+  const label = (seat: number) => names?.[seat] ?? seatLabel(t, seat);
+  const count = (seat: number) => counts?.[seat] ?? hand.hands?.[seat as Seat].length ?? 0;
+  const position = (seat: number) => COMPASS[(seat - perspective + 4) % 4];
   const taken = penaltiesTakenIn(hand);
   const passing = hand.phase === 'passing';
   const direction: PassDirection = passDirectionOf(hand.passOffset);
@@ -84,33 +95,37 @@ export const HeartsTable = memo(function HeartsTable({
       onTable[seatAt(hand.leader, index)] = card;
     });
   }
-  const foldingTo = folding !== null && hand.played.length === 0 ? COMPASS[folding.winner] : null;
+  const foldingTo = folding !== null && hand.played.length === 0 ? position(folding.winner) : null;
 
   return (
     <div className="ht-table" role="group" aria-label={t('heartsTableLabel')}>
-      {CPU_SEATS.map((seat) => (
+      {CPU_SEATS.map((relative) => ((relative + perspective) % 4) as Seat).map((seat) => (
         <div
           key={seat}
-          className={`ht-seat ht-seat-${COMPASS[seat]} ${
+          className={`ht-seat ht-seat-${position(seat)} ${
             lastTrickWinner === seat ? 'ht-seat-took' : ''
           }`}
           role="group"
-          aria-label={t('heartsSeatLabel', {
-            n: seat,
-            cards: hand.hands[seat].length,
-            hand: taken[seat],
-            total: scores[seat],
-          })}
+          aria-label={
+            names
+              ? `${label(seat)} · ${count(seat)} · ${scores[seat]}`
+              : t('heartsSeatLabel', {
+                  n: seat,
+                  cards: count(seat),
+                  hand: taken[seat],
+                  total: scores[seat],
+                })
+          }
         >
           {/* The chip is compact to the eye and spelled out to a reader: the
               group's label above is the whole of it, so the drawn version is
               hidden rather than read out a second time in pieces. */}
           <span className="ht-seat-name" aria-hidden="true">
-            {seatLabel(t, seat)}
+            {label(seat)}
           </span>
           <span className="ht-seat-holding" aria-hidden="true">
             <span className="ht-seat-back" />
-            <span className="ht-seat-count">{hand.hands[seat].length}</span>
+            <span className="ht-seat-count">{count(seat)}</span>
           </span>
           <span className="ht-seat-scores" aria-hidden="true">
             <span className="ht-seat-total">{scores[seat]}</span>
@@ -144,11 +159,11 @@ export const HeartsTable = memo(function HeartsTable({
               <div
                 key={index}
                 data-card={card}
-                className={faceClass(card, 'ht-trick-card', `ht-at-${COMPASS[index]}`)}
+                className={faceClass(card, 'ht-trick-card', `ht-at-${position(index)}`)}
                 role="img"
                 aria-label={t('heartsTrickCard', {
                   card: cardLabel(t, card),
-                  seat: seatLabel(t, index),
+                  seat: label(index),
                 })}
               >
                 <CardFace card={card} />

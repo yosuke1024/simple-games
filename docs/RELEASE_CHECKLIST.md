@@ -1,5 +1,31 @@
 # Simple Games — リリースチェックリスト
 
+## 2026-11-04: Nearby Playを22本へ拡張
+
+オーナーの「未対応で入れられるゲームに追加、Webベータも対象」と「対象ゲームをアプリにも収録する」の
+指示により、Hearts / Backgammon / Ridge Cannons / Fleet Search / Chain Territory / Daifugo / Sevens / Old Maid の8本を追加。
+2席は17本、4席はLudo / Hearts / Daifugo / Sevens / Old Maidの5本。
+Backgammon / Ridge Cannons / Fleet Search / Chain Territory / Daifugo / Sevens / Old Maid の7本を正式収録へ変更し、正式72本・Webベータ2本
+(Frost Route / River Cargo)・収録見送り2本の全76エントリとする。
+Webには対応22本の無効な「誰かと遊ぶ」とアプリ専用の説明を表示し、通信runtimeを含めない。
+通常のソロ／CPU戦と保存形式は維持し、Nearbyの履歴は専用保存に分離する。
+これはオーナーの明示判断による収録で、2週間の安定稼働・計測の達成を意味しない。
+実機でのBLE/LAN対戦、ストア掲載・配布、landing側の掲載変更はこの実装に含めて完了扱いにしない。
+以下の日付つきの公開経緯は当時の記録で、本節の対象・本数が優先する。
+
+- [x] 公開済みWebビルドの保存24件を7本の `storage/releasedRecords.json` に採取。
+      pixapps-landing `acbab6da` (Simple Games `64b934c`)の成果物をlocalhostでUI操作し、外部通信はCSPで停止。
+      現行コードでfixtureを作っていない。3カードゲームの既存readerは再開時のeventだけを初期化し、盤面・手札・進行は維持する。
+- [x] 型検査・変更ファイルのLint、Native/Webビルド、容量・原則・Nearby隔離・Web専用コード分離チェック。
+- [x] スコープ検証は280ファイル・5193件を実行。保存readerと配色テストの期待値を修正し、
+      失敗ケース28件を単独再実行して成功。保存互換・配色の23件も全件成功。
+      時間制限超過の再確認ではCLIの待ち時間を広げ、製品コードとリポジトリの時間制限は変えていない。
+- [ ] iOS↔Android、BLEと同一LANで追加8本の開始・終了・切断復帰を確認
+- [ ] 4席カードゲームで他人の手札が表示されず、人間↔CPU交代後も同じ席を継続
+- [ ] 7本の既存Web保存の読込・再開を実機で確認。保存schemaの変更は移行を必須とする
+- [ ] 既存の名称確認・翻訳レビューの未実施項目を各RULESに沿って確認
+- [ ] リリース時に72本／Nearby22本のストア掲載、landingのベータ分類を更新
+
 Google Play への公開前に、この順で確認する。
 **チェックが通らない項目を「たぶん大丈夫」で飛ばさない。**
 実施していない検証を成功扱いにしないこと([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))。
@@ -391,6 +417,7 @@ minSdk 24 の方針の判断が先になる。最適化されたリソース削�
       テスト広告のバナー表示を確認。
 - [ ] 課金(購入・復元)、アプリ内レビュー、Club 招待の App Links(本番の署名鍵が要る)、
       Nearby の 2 台での接続と対局を、内部テストの配布版で確認。
+
 ## 2026-10-27: Ludoの4席・人間／CPU混成対局（未配布）
 
 2026-10-26のオーナー指示による追加実装。下の1.6.0公開準備とは別の変更で、

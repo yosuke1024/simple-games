@@ -1,5 +1,39 @@
 # Nearby Multiplayer — 近隣端末間対戦の契約
 
+## 2026-11-04: Nearby Playを22本へ拡張
+
+オーナーの「未対応で入れられるゲームに追加、Webベータも対象」と「対象ゲームをアプリにも収録する」の
+指示により、Hearts / Backgammon / Ridge Cannons / Fleet Search / Chain Territory / Daifugo / Sevens / Old Maid の8本を追加。
+2席は17本、4席はLudo / Hearts / Daifugo / Sevens / Old Maidの5本。
+Backgammon / Ridge Cannons / Fleet Search / Chain Territory / Daifugo / Sevens / Old Maid の7本を正式収録へ変更し、正式72本・Webベータ2本
+(Frost Route / River Cargo)・収録見送り2本の全76エントリとする。
+Webには対応22本の無効な「誰かと遊ぶ」とアプリ専用の説明を表示し、通信runtimeを含めない。
+通常のソロ／CPU戦と保存形式は維持し、Nearbyの履歴は専用保存に分離する。
+これはオーナーの明示判断による収録で、2週間の安定稼働・計測の達成を意味しない。
+実機でのBLE/LAN対戦、ストア掲載・配布、landing側の掲載変更はこの実装に含めて完了扱いにしない。
+以下の日付つきの公開経緯は当時の記録で、本節の対象・本数が優先する。
+
+### 追加ゲームの通信と共通UI
+
+- 2席4本は既存のhost確定・受信確認・再接続・任意チャットを使う。
+  Chain Territoryは合法手列、Ridge Cannonsは地形seedと公開済みの射撃・現在の風だけを同期する。
+  Backgammonの出目、Ridge Cannonsの次ラウンドの風はhostが都度生成する。
+  Fleet Searchは自分の艦・受けた射撃・相手への既知情報だけを送り、終局時のみ相手の全配置を公開する。
+- 4席カードゲームは既存の固定席・承認・Ready・人間/CPU切替・切断中の待機を共有する。
+  hostだけが全配札を持ち、暗号化リンクごとに受信者の手札と公開情報へ投影する。
+  seed、他席の手札、未確定の交換札、Old Maidの他人が引いた単独札は送らない。
+  `GroupGame.project/valid/result`で投影・検証・結果をゲームごとに定義し、共有UIと履歴はgameIdを持つ。
+  旧履歴のgameId省略はLudoとして読む。これらのグループにチャットは追加しない。
+- Heartsは4枚が揃ったトリックを全人間のACK後に自動回収し、ハンド結果を表示してhostが次へ進める。
+  Daifugoは再戦時に前回順位を引き継ぎ、上位2席の選択が揃ってから同時交換する。
+  SevensとOld Maidはhostが上がっても残りの席が最後まで対局する。
+- 追加8本の対局完了・不正手拒否・投影・通信量、4人の実暗号化リンクと復帰を自動検証する。
+  319〜360px幅の各盤面と620px幅のカード表示をブラウザで確認。Native/Webビルドの分離とサイズ検査を行う。
+  無線の実機検証とストア配布は未実施。7本の保存fixtureは上記公開済みWeb成果物からの採取であり、終了結果は未採取。
+- 通常ゲームと共有するのは純粋な規則と表示部品のみ。通常のGameContext、保存、統計、Clubには到達しない。
+  HeartsのCPUは公開情報用viewからのみ選択し、既存のLudoと同じくグループ側で実行する。
+  フォーマットは既存discovery/wireを維持し、新game codeは0F〜16。旧版は未知のcodeを拒否する。
+
 Updated: 2026-10-27 / issue #268
 
 この文書は近隣端末間対戦の製品契約と検証条件の正本であり、旧通信 PoC の記録も分けて保持する。

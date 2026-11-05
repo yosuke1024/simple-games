@@ -1,3 +1,4 @@
+import { SevensGrid } from '../components/SevensGrid';
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { sounds } from '@/services/sound';
@@ -125,40 +126,14 @@ export function GameScreen() {
               activeSeat={playback ? session.event.seat : session.turn}
             />
             <section className="sv-table sv-sevens-table" aria-label={t('sevensField')}>
-              <div className="sv-sevens-grid">
-                {[0, 1, 2, 3].flatMap((suit) =>
-                  Array.from({ length: 13 }, (_, r) => {
-                    const card = suit * 13 + r,
-                      laid = session.table.includes(card),
-                      legal = hand.includes(card) && canPlay(card, session.table);
-                    return laid ? (
-                      <span
-                        className={`${cardClass(card)} ${session.event.cards.includes(card) ? 'sv-last-card' : ''} ${session.event.cards.includes(card) && playback ? 'sv-event-card' : ''}`}
-                        key={card}
-                        role="img"
-                        aria-label={cardLabel(card)}
-                      >
-                        <CardFace card={card} />
-                      </span>
-                    ) : legal ? (
-                      <button
-                        type="button"
-                        className="sv-slot is-target"
-                        key={card}
-                        disabled={!yourTurn || !!playback}
-                        aria-label={t('sevensPlaceCard', { card: cardLabel(card) })}
-                        onClick={() => send({ kind: 'play', card })}
-                      >
-                        {rankText(card)}
-                      </button>
-                    ) : (
-                      <span className="sv-slot" key={card} aria-hidden="true">
-                        {rankText(card)}
-                      </span>
-                    );
-                  }),
-                )}
-              </div>
+              <SevensGrid
+                hand={hand}
+                table={session.table}
+                lastCards={session.event.cards}
+                blocked={!yourTurn || !!playback}
+                animate={!!playback}
+                onPlay={(card) => send({ kind: 'play', card })}
+              />
               <p className="sv-table-label">{eventText}</p>
             </section>
           </div>

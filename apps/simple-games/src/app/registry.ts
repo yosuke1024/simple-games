@@ -1608,7 +1608,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Backgammon',
     category: 'board',
     glyph: '▽',
-    channel: 'web-beta',
     storageKeys: Object.values(BK_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/backgammon/ui/BackgammonRoot').then((m) => ({ default: m.BackgammonRoot })),
@@ -1619,7 +1618,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Ridge Cannons',
     category: 'arcade',
     glyph: '⌁',
-    channel: 'web-beta',
     storageKeys: Object.values(RC_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/ridge-cannons/ui/RidgeCannonsRoot').then((m) => ({
@@ -1632,7 +1630,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Fleet Search',
     category: 'board',
     glyph: '⊞',
-    channel: 'web-beta',
     storageKeys: Object.values(FS_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/fleet-search/ui/FleetSearchRoot').then((m) => ({
@@ -1656,7 +1653,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Chain Territory',
     category: 'board',
     glyph: '✣',
-    channel: 'web-beta',
     storageKeys: Object.values(CT_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/chain-territory/ui/ChainTerritoryRoot').then((m) => ({
@@ -1694,7 +1690,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Daifugo',
     category: 'cards',
     glyph: '♔',
-    channel: 'web-beta',
     storageKeys: Object.values(DF_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/daifugo/ui/DaifugoRoot').then((m) => ({ default: m.DaifugoRoot })),
@@ -1705,7 +1700,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Sevens',
     category: 'cards',
     glyph: '7',
-    channel: 'web-beta',
     storageKeys: Object.values(SV_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/sevens/ui/SevensRoot').then((m) => ({ default: m.SevensRoot })),
@@ -1716,7 +1710,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Old Maid',
     category: 'cards',
     glyph: '♧',
-    channel: 'web-beta',
     storageKeys: Object.values(OM_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/old-maid/ui/OldMaidRoot').then((m) => ({ default: m.OldMaidRoot })),

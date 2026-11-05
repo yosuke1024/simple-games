@@ -1,5 +1,5 @@
 import { nearbyPlugin, randomId, type NearbyPlugin, type Transport } from './native';
-import { isNearbyGameId } from '../app/nearbyGameIds';
+import { isNearbyGameId, isGroupGameId } from '../app/nearbyGameIds';
 import type { GameResult, NearbyGameId } from './gameTypes';
 
 export interface SavedMessage {
@@ -48,6 +48,7 @@ export interface HistoryData {
   groups?: SavedGroup[];
 }
 export interface SavedGroup {
+  gameId?: NearbyGameId; // Absent in legacy Ludo history.
   id: string;
   at: number;
   endedAt?: number;
@@ -104,6 +105,7 @@ export function validateHistory(v: unknown): HistoryData | null {
         (g: unknown) =>
           object(g) &&
           id(g.id) &&
+          (g.gameId === undefined || (typeof g.gameId === 'string' && isGroupGameId(g.gameId))) &&
           integer(g.at) &&
           (g.endedAt === undefined || integer(g.endedAt)) &&
           strictName(g.roomName) &&

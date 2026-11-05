@@ -12,11 +12,14 @@ export interface GroupSeat {
 export interface GroupGame {
   id: NearbyGameId;
   capacity: number;
-  create(): unknown;
-  valid(state: unknown): boolean;
+  create(previous?: unknown): unknown;
+  project?(state: unknown, seat: number): unknown;
+  result?(state: unknown): { scores: number[]; winner: number | null } | null;
+  valid(state: unknown, seat?: number): boolean;
   turn(state: unknown): number;
   finished(state: unknown): boolean;
   apply(state: unknown, seat: number, action: unknown): unknown | null;
+  automatic?(state: unknown): unknown | null;
   cpu(state: unknown): unknown | null;
 }
 export interface GroupSnapshot {
@@ -120,7 +123,18 @@ export class GroupSession {
       round: this.round,
       you: peer === 'host' ? 0 : (this.members.get(peer) ?? -1),
       seats: this.seats.map((s) => ({ ...s })),
-      state: JSON.parse(JSON.stringify(this.state)) as unknown,
+      state: JSON.parse(
+        JSON.stringify(
+          this.state === null
+            ? null
+            : this.options.game.project
+              ? this.options.game.project(
+                  this.state,
+                  peer === 'host' ? 0 : (this.members.get(peer) ?? -1),
+                )
+              : this.state,
+        ),
+      ) as unknown,
       ...(this.finalSeats ? { final: this.finalSeats.map((s) => ({ ...s })) } : {}),
     };
   }
@@ -267,7 +281,7 @@ export class GroupSession {
   }
   start(): boolean {
     if (!this.canStart) return false;
-    this.state = this.options.game.create();
+    this.state = this.options.game.create(this.state);
     this.finalSeats = null;
     this.round++;
     this.publish();
@@ -305,6 +319,17 @@ export class GroupSession {
     }
     this.publish();
     return true;
+  }
+  automaticStep(): boolean {
+    if (
+      this.state === null ||
+      this.closed ||
+      !this.synchronized ||
+      this.options.game.finished(this.state)
+    )
+      return false;
+    const action = this.options.game.automatic?.(this.state);
+    return action != null && this.apply(-1, action);
   }
   cpuStep(): boolean {
     if (this.state === null) return false;
@@ -363,7 +388,7 @@ export function validGroupSnapshot(value: unknown, game: GroupGame): value is Gr
     !integer(value.you, 0, game.capacity - 1) ||
     !Array.isArray(value.seats) ||
     value.seats.length !== game.capacity ||
-    (value.state !== null && !game.valid(value.state)) ||
+    (value.state !== null && !game.valid(value.state, value.you as number)) ||
     (value.final !== undefined &&
       (!Array.isArray(value.final) ||
         value.final.length !== game.capacity ||

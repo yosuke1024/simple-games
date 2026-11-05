@@ -1,3 +1,5 @@
+import { isGroupGameId } from '../app/nearbyGameIds';
+import { loadGroupGame } from './groupGames';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -61,11 +63,23 @@ export function NearbyRoot(props: NearbyRootProps) {
   const changed = useCallback(() => {
     if (live.current) render((value) => value + 1);
   }, []);
-  const gameId = fromBrowser ? (groupJoined ? 'ludo' : (joined?.gameId ?? null)) : props.gameId;
+  const gameId = fromBrowser
+    ? groupJoined
+      ? (groupJoined.gameId ?? 'ludo')
+      : (joined?.gameId ?? null)
+    : props.gameId;
   const Loaded = useMemo(
     () =>
       lazy(async () => {
         if (!gameId) throw new Error('Select a game before loading its board');
+        if (isGroupGameId(gameId)) {
+          const loadedGame = await loadGroupGame(gameId);
+          return {
+            default: (inner: NearbyRootProps & { initial?: GroupSelection }) => (
+              <GroupRoot {...inner} loadedGame={loadedGame} />
+            ),
+          };
+        }
         const game = await loadNearbyGame(gameId);
         return { default: (inner: GameRootProps) => <NearbyGameRoot {...inner} game={game} /> };
       }),
@@ -75,6 +89,12 @@ export function NearbyRoot(props: NearbyRootProps) {
     return (
       <Suspense fallback={<div className="screen" aria-busy="true" />}>
         <GroupRoot {...props} gameId="ludo" initial={groupJoined ?? undefined} />
+      </Suspense>
+    );
+  if (gameId && isGroupGameId(gameId))
+    return (
+      <Suspense fallback={<div className="screen" aria-busy="true" />}>
+        <Loaded {...props} gameId={gameId} initial={groupJoined ?? undefined} />
       </Suspense>
     );
   if (!gameId)
@@ -87,7 +107,7 @@ export function NearbyRoot(props: NearbyRootProps) {
         onChanged={changed}
         onJoinGroup={(selection) => {
           setGroupJoined(selection);
-          props.onGameSelected?.('ludo');
+          props.onGameSelected?.(selection.gameId ?? 'ludo');
         }}
         onJoin={(controller, selectedId, game) => {
           handedOffController.current = controller;
@@ -119,6 +139,7 @@ export function NearbyRoot(props: NearbyRootProps) {
 
 interface GameRootProps extends Omit<NearbyRootProps, 'gameId'> {
   gameId: NearbyGameId;
+  initial?: GroupSelection;
   initialController?: NearbyController;
   onReturnToBrowser?: () => void;
 }
@@ -722,6 +743,7 @@ function NearbyGameRoot({
                     </p>
                     <game.Board
                       key={`${gameId}:${session.match.round}`}
+                      visible={visible && foreground && question === null && report === null}
                       match={session.match}
                       seat={session.host ? 0 : 1}
                       names={session.names}

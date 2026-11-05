@@ -31,7 +31,7 @@ const forbiddenNearbyModule = (id) =>
   /^src\/ui\/(?:clubBridge|components\/ClubResultAction)\.[cm]?[jt]sx?$/.test(id) ||
   /^src\/games\/[^/]+\/(?:storage|state|challenge)\//.test(id) ||
   (/^src\/games\/[^/]+\/game\/(?:[^/]+\/)*(?:cpu|ai)(?:[/.]|$)/i.test(id) &&
-    id !== 'src/games/ludo/game/cpu.ts') ||
+    !['src/games/ludo/game/cpu.ts', 'src/games/hearts/game/cpu.ts'].includes(id)) ||
   /^src\/games\/nim\/game\/index\.ts$/.test(id) ||
   /^src\/games\/[^/]+\/ui\/(?:screens\/|[^/]*Root\.)/.test(id);
 
@@ -75,10 +75,10 @@ function checkBuiltNearby(directory, native) {
   }
   assert.equal(
     gameIds.length,
-    14,
+    22,
     'Update the selected-game evidence when the supported set changes',
   );
-  assert.ok(nearby.length > 14, 'Nearby entries unexpectedly merged into one chunk');
+  assert.ok(nearby.length > 22, 'Nearby entries unexpectedly merged into one chunk');
   const manifest = JSON.parse(readFileSync(join(directory, '.vite/manifest.json'), 'utf8'));
   const initialModules = new Set(
     Object.values(manifest)
@@ -173,5 +173,5 @@ for (const path of web)
 checkBuiltNearby(join(app, 'dist'), true);
 checkBuiltNearby(join(app, 'dist-web'), false);
 console.log(
-  `Nearby isolation: ${files.length} files checked; no prototype in product, no Nearby in Web, 14 selected views stay lazy. Only Ludo's pure CPU is permitted; solo storage/providers/Club remain excluded.`,
+  `Nearby isolation: ${files.length} files checked; no prototype in product, no Nearby in Web, 22 selected views stay lazy. Only Ludo/Hearts pure CPUs is permitted; solo storage/providers/Club remain excluded.`,
 );

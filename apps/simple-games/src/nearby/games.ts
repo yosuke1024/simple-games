@@ -1,3 +1,4 @@
+import { isGroupGameId } from '../app/nearbyGameIds';
 import type { ComponentType } from 'react';
 import type { MessageKey } from '../i18n';
 import type { GameAdapter, NearbyBoardProps, NearbyGameId } from './gameTypes';
@@ -9,6 +10,15 @@ export interface NearbyGame {
 }
 export const GAME_TITLES: Record<NearbyGameId, string> = {
   ludo: 'Ludo',
+  hearts: 'Hearts',
+  backgammon: 'Backgammon',
+  'ridge-cannons': 'Ridge Cannons',
+  'fleet-search': 'Fleet Search',
+  'chain-territory': 'Chain Territory',
+  daifugo: 'Daifugo',
+  sevens: 'Sevens',
+  'old-maid': 'Old Maid',
+
   yacht: 'Yacht',
   reversi: 'Reversi',
   'connect-four': 'Connect Four',
@@ -25,6 +35,15 @@ export const GAME_TITLES: Record<NearbyGameId, string> = {
 };
 export const GAME_NAME_KEYS: Record<NearbyGameId, MessageKey> = {
   ludo: 'ludoName',
+  hearts: 'heartsName',
+  backgammon: 'backgammonName',
+  'ridge-cannons': 'ridgeCannonsName',
+  'fleet-search': 'fleetSearchName',
+  'chain-territory': 'chainTerritoryName',
+  daifugo: 'daifugoName',
+  sevens: 'sevensName',
+  'old-maid': 'oldMaidName',
+
   yacht: 'yachtName',
   reversi: 'reversiName',
   'connect-four': 'fourName',
@@ -39,7 +58,26 @@ export const GAME_NAME_KEYS: Record<NearbyGameId, MessageKey> = {
   scopa: 'scopaName',
   nim: 'nimName',
 };
-const loaders: Record<Exclude<NearbyGameId, 'ludo'>, () => Promise<NearbyGame>> = {
+const loaders: Record<
+  Exclude<NearbyGameId, 'ludo' | 'hearts' | 'daifugo' | 'sevens' | 'old-maid'>,
+  () => Promise<NearbyGame>
+> = {
+  backgammon: async () => {
+    const view = await import('./games/backgammonView');
+    return { adapter: view.adapter, Board: view.default };
+  },
+  'ridge-cannons': async () => {
+    const view = await import('./games/ridge-cannonsView');
+    return { adapter: view.adapter, Board: view.default };
+  },
+  'fleet-search': async () => {
+    const view = await import('./games/fleet-searchView');
+    return { adapter: view.adapter, Board: view.default };
+  },
+  'chain-territory': async () => {
+    const view = await import('./games/chain-territoryView');
+    return { adapter: view.adapter, Board: view.default };
+  },
   yacht: async () => {
     const view = await import('./games/yachtView');
     return { adapter: view.adapter, Board: view.default };
@@ -95,10 +133,10 @@ const loaders: Record<Exclude<NearbyGameId, 'ludo'>, () => Promise<NearbyGame>> 
 };
 const cache = new Map<NearbyGameId, Promise<NearbyGame>>();
 export function loadNearbyGame(id: NearbyGameId): Promise<NearbyGame> {
-  if (id === 'ludo') return Promise.reject(new Error('Ludo uses the four-seat room'));
+  if (isGroupGameId(id)) return Promise.reject(new Error('Ludo uses the four-seat room'));
   let loading = cache.get(id);
   if (!loading) {
-    loading = loaders[id]().catch((error: unknown) => {
+    loading = loaders[id as keyof typeof loaders]().catch((error: unknown) => {
       cache.delete(id);
       throw error;
     });

@@ -58,7 +58,7 @@ export function wind(s: Session) {
     (random(s.seed ^ Math.imul(Math.floor(s.actions.length / 2) + 1, 7919))() - 0.5) * 16,
   );
 }
-export function simulate(s: Session, side: 0 | 1, a: Action): Shot {
+export function simulate(s: Session, side: 0 | 1, a: Action, windValue = wind(s)): Shot {
   const angle = (a.angle * Math.PI) / 180,
     speed = a.power * 3.2,
     sign = side === 0 ? 1 : -1;
@@ -68,7 +68,7 @@ export function simulate(s: Session, side: 0 | 1, a: Action): Shot {
     vy = Math.sin(angle) * speed;
   const path: Point[] = [{ x, y }],
     dt = 0.04,
-    w = wind(s);
+    w = windValue;
   for (let i = 0; i < 500; i++) {
     x += vx * dt;
     y += vy * dt;
@@ -83,7 +83,7 @@ export function simulate(s: Session, side: 0 | 1, a: Action): Shot {
   }) as [number, number];
   return { side, path, damage, action: a };
 }
-export function act(s: Session, a: Action): Session | null {
+export function act(s: Session, a: Action, windValue = wind(s)): Session | null {
   if (
     s.status !== 'playing' ||
     !a ||
@@ -95,7 +95,7 @@ export function act(s: Session, a: Action): Session | null {
     a.power > 100
   )
     return null;
-  const shot = simulate(s, s.phase === 'player' ? 0 : 1, a),
+  const shot = simulate(s, s.phase === 'player' ? 0 : 1, a, windValue),
     hp = s.hp.map((h, i) => Math.max(0, h - shot.damage[i]!)) as [number, number];
   const actions = [...s.actions, { angle: a.angle, power: a.power }];
   const over = hp[0] === 0 || hp[1] === 0 || actions.length === 24;

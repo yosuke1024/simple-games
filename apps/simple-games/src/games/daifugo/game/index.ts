@@ -83,13 +83,19 @@ export function exchangeCount(s: Session): number {
   const position = s.previousOrder.indexOf(0);
   return s.phase === 'exchange' && position >= 0 && position < 2 ? 2 - position : 0;
 }
-function exchanged(s: Session, chosen: Card[] | null): Session {
+export function exchanged(
+  s: Session,
+  chosen: Card[] | null,
+  choices?: Record<number, Card[]>,
+): Session {
   const hands = s.hands.map((h) => [...h]);
   for (let place = 0; place < 2; place++) {
     const high = s.previousOrder[place]!,
       low = s.previousOrder[3 - place]!,
       count = 2 - place;
-    const give = high === 0 && chosen ? chosen : sortedHand(s.hands[high]!).slice(0, count);
+    const give =
+      choices?.[high] ??
+      (high === 0 && chosen ? chosen : sortedHand(s.hands[high]!).slice(0, count));
     const take = sortedHand(s.hands[low]!).slice(-count);
     hands[high] = [...hands[high]!.filter((c) => !give.includes(c)), ...take];
     hands[low] = [...hands[low]!.filter((c) => !take.includes(c)), ...give];
@@ -103,8 +109,13 @@ function exchanged(s: Session, chosen: Card[] | null): Session {
     event: { kind: 'exchange', seat: 0, cards: [] },
   };
 }
-export function createSession(seed: number, previousOrder: Seat[] = []): Session {
-  const hands = deal(53, seed),
+export function createSession(
+  seed: number,
+  previousOrder: Seat[] = [],
+  entropy?: () => number,
+  multiplayer = false,
+): Session {
+  const hands = deal(53, seed, entropy),
     first = hands.findIndex((h) => h.includes(28)) as Seat;
   let s: Session = {
     seed: seed >>> 0,
@@ -124,7 +135,8 @@ export function createSession(seed: number, previousOrder: Seat[] = []): Session
     event: { kind: 'deal', seat: first, cards: [] },
   };
   if (previousOrder.length === 4) {
-    if (previousOrder.indexOf(0) < 2) s = { ...s, phase: 'exchange', turn: 0 };
+    if (multiplayer || previousOrder.indexOf(0) < 2)
+      s = { ...s, phase: 'exchange', turn: multiplayer ? previousOrder[0]! : 0 };
     else s = exchanged(s, null);
   }
   return s;
@@ -147,7 +159,7 @@ export function legalGroups(
   if (hand.includes(52) && beats([52], table, revolution)) groups.push([52]);
   return groups;
 }
-function step(s: Session, action: Action): Session | null {
+export function step(s: Session, action: Action): Session | null {
   if (s.status !== 'playing' || !isObject(action)) return null;
   if (s.phase === 'exchange') {
     const n = exchangeCount(s);

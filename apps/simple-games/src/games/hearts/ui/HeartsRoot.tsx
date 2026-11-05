@@ -1,3 +1,4 @@
+import type { PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 /**
  * Hearts' root: loads the game's own records (local, fast, offline), then
  * mounts the provider and screens. The shell knows nothing beyond this
@@ -32,7 +33,7 @@ import { HeartsHomeScreen } from './screens/HomeScreen';
 import { HeartsStatsScreen } from './screens/StatsScreen';
 import { HeartsTutorialScreen } from './screens/TutorialScreen';
 
-export function HeartsScreens() {
+export function HeartsScreens(together: PlayTogetherProps = {}) {
   const { screen } = useHearts();
   switch (screen) {
     case 'tutorial':
@@ -43,7 +44,7 @@ export function HeartsScreens() {
       return <HeartsStatsScreen />;
     case 'home':
     default:
-      return <HeartsHomeScreen />;
+      return <HeartsHomeScreen {...together} />;
   }
 }
 
@@ -54,7 +55,7 @@ interface LoadedData {
   session: HeartsSession | null;
 }
 
-export interface HeartsRootProps {
+export interface HeartsRootProps extends PlayTogetherProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
   /**
@@ -86,7 +87,13 @@ async function loadRecords(kv: KVStore): Promise<LoadedData> {
   return { stats, flags, prefs, session };
 }
 
-export function HeartsRoot({ onExit, entry, kv = preferencesKV }: HeartsRootProps) {
+export function HeartsRoot({
+  onPlayTogether,
+  playTogetherActive,
+  onExit,
+  entry,
+  kv = preferencesKV,
+}: HeartsRootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
@@ -99,7 +106,7 @@ export function HeartsRoot({ onExit, entry, kv = preferencesKV }: HeartsRootProp
       onExit={onExit}
       entry={entry}
     >
-      <HeartsScreens />
+      <HeartsScreens onPlayTogether={onPlayTogether} playTogetherActive={playTogetherActive} />
     </HeartsProvider>
   );
 }

@@ -1,3 +1,4 @@
+import { PlayTogetherButton, type PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
@@ -6,7 +7,7 @@ import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { IconChart } from '@/ui/components/icons';
 import { useDaifugo } from '../../state/GameContext';
-export function HomeScreen() {
+export function HomeScreen(together: PlayTogetherProps = {}) {
   const { t } = useSettings();
   const { canResume, resumeGame, startBoard, navigate, exitToCollection } = useDaifugo();
   const [pending, setPending] = useState(false);
@@ -37,6 +38,7 @@ export function HomeScreen() {
             {t('newGame')}
           </button>
           <p className="df-rule-summary">{t('daifugoRules')}</p>
+          <PlayTogetherButton {...together} />
           <nav className="home-chips">
             <button type="button" className="home-chip" onClick={() => navigate('stats')}>
               <IconChart className="home-chip-icon" />

@@ -31,8 +31,8 @@ export interface Session {
   event: GameEvent;
 }
 export type Action = { kind: 'play'; card: Card } | { kind: 'pass' };
-export function createSession(seed: number): Session {
-  const dealt = deal(52, seed),
+export function createSession(seed: number, entropy?: () => number): Session {
+  const dealt = deal(52, seed, entropy),
     turn = dealt.findIndex((h) => h.includes(32)) as Seat;
   return {
     seed: seed >>> 0,
@@ -59,7 +59,7 @@ export function canPlay(card: Card, table: readonly Card[]): boolean {
 }
 export const legalCards = (s: Pick<Session, 'hands' | 'turn' | 'table'>) =>
   s.hands[s.turn]!.filter((c) => canPlay(c, s.table));
-function step(s: Session, a: Action): Session | null {
+export function step(s: Session, a: Action): Session | null {
   if (s.status !== 'playing' || !isObject(a)) return null;
   const seat = s.turn,
     hand = s.hands[seat]!;

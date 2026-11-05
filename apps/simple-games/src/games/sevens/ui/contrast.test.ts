@@ -10,10 +10,7 @@ function block(header: string) {
   expect(start).toBeGreaterThan(-1);
   return css.slice(css.indexOf('{', start) + 1, css.indexOf('}', start));
 }
-const blocks = [
-  block("[data-game='sevens'] {"),
-  block("[data-theme='dark'][data-game='sevens'] {"),
-];
+const blocks = [block("[data-game='sevens'] {"), block("[data-theme='dark'][data-game='sevens']")];
 function luminance(hex: string) {
   const c = [1, 3, 5].map((i) => {
     const x = parseInt(hex.slice(i, i + 2), 16) / 255;

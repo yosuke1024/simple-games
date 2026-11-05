@@ -229,6 +229,8 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   'paddle-rally': ['pr.saveGame', 'pr.stats', 'pr.flags', 'pr.prefs'],
   'hanoi-towers': ['hn.saveGame', 'hn.stats', 'hn.flags', 'hn.prefs'],
   'maze-escape': ['me.saveGame', 'me.stats', 'me.flags', 'me.prefs'],
+  // 2026-11-04: Nearby promotion freezes Backgammon, Ridge Cannons, Fleet Search,
+  // Chain Territory and the three card games below; their keys stay unchanged.
   backgammon: ['bk.saveGame', 'bk.stats', 'bk.flags', 'bk.prefs'],
   'ridge-cannons': ['rc.saveGame', 'rc.stats', 'rc.flags', 'rc.prefs'],
   'fleet-search': ['fs.saveGame', 'fs.stats', 'fs.flags', 'fs.prefs'],

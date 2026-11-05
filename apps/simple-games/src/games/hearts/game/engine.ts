@@ -82,8 +82,8 @@ function holderOfTwoOfClubs(hands: BySeat<readonly Card[]>): Seat {
  * A hand whose pass offset is zero skips the pass entirely — there is nothing
  * to sit through when nothing moves (§2.1).
  */
-export function dealHand(seed: string, handNumber: number): HandState {
-  const rng = createRng(`${seed}:deal:${handNumber}`);
+export function dealHand(seed: string, handNumber: number, entropy?: () => number): HandState {
+  const rng = entropy ?? createRng(`${seed}:deal:${handNumber}`);
   const deck: Card[] = [];
   for (let card = 0; card < CARD_COUNT; card++) deck.push(card);
   const shuffledDeck = shuffled(deck, rng);

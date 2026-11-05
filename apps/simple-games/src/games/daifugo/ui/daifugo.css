@@ -16,7 +16,8 @@
   --df-card-muted: #f1efe7;
   --df-felt-glow: color-mix(in srgb, var(--df-card-paper) 28%, transparent);
 }
-[data-theme='dark'][data-game='daifugo'] {
+[data-theme='dark'][data-game='daifugo'],
+[data-theme='dark'] [data-game='daifugo'] {
   --df-felt: #1b322c;
   --df-felt-edge: #3e5148;
   --df-felt-ink: #d1e1d6;
@@ -650,4 +651,32 @@
     grid-column: 2;
     grid-row: 5;
   }
+}
+
+/* Nearby's room stays at most 620px wide, even on a desktop viewport. */
+.nearby-screen .df-body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Size the card ink against the room's cards, not a wider desktop viewport. */
+.nearby-screen .df-card {
+  container-type: inline-size;
+  overflow: hidden;
+}
+.nearby-screen .df-hand .df-card {
+  aspect-ratio: 5 / 7;
+}
+.nearby-screen .df-card-corner {
+  font-size: clamp(12px, 30cqw, 19px);
+}
+.nearby-screen .df-card-corner > span {
+  font-size: clamp(8px, 20cqw, 11px);
+}
+.nearby-screen .df-card-pips {
+  font-size: clamp(6px, 16cqw, 12px);
+  inset: 20% 26%;
+}
+.nearby-screen .df-pips-1 {
+  font-size: clamp(22px, 60cqw, 40px);
 }

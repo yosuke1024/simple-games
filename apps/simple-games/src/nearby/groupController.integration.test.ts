@@ -1,3 +1,7 @@
+import { game as heartsGame } from './games/hearts';
+import { game as daifugoGame } from './games/daifugo';
+import { game as sevensGame } from './games/sevens';
+import { game as oldMaidGame } from './games/old-maid';
 // @vitest-environment node
 import { webcrypto } from 'node:crypto';
 import { setImmediate as nextTurn } from 'node:timers/promises';
@@ -115,9 +119,14 @@ async function encryptedMessage(controller: GroupController, peer: string, value
   ).links;
   await links.get(peer)!.channel.send(JSON.stringify(value));
 }
-async function gathering(guestCount: number, dice: number[] = [1, 6], hostBlocked: string[] = []) {
+async function gathering(
+  guestCount: number,
+  dice: number[] = [1, 6],
+  hostBlocked: string[] = [],
+  customGame?: GroupGame,
+) {
   const network = radio();
-  const game: GroupGame = {
+  const game: GroupGame = customGame ?? {
     ...ludoGroupGame,
     apply: (state, seat, action) =>
       applyLudo(state as State, seat, action, () => ((dice.shift() ?? 1) - 0.5) / 6),
@@ -1003,6 +1012,48 @@ describe('four devices using real WebCrypto group channels', () => {
       expect(guest.participants.size).toBe(0);
       expect(guest.codes.size).toBe(0);
       expect(r.host.status).toBe('room');
+    },
+  );
+});
+
+describe('private four-seat games over encrypted links', () => {
+  it.each([heartsGame, daifugoGame, sevensGame, oldMaidGame])(
+    '$id: gives each approved device only its hand, then keeps it across reconnect',
+    async (game) => {
+      const r = await gathering(3, [], [], game);
+      await r.start();
+      for (let i = 0; i < 3; i++) {
+        const guest = r.guests[i]!.controller;
+        expect(guest.snapshot!.state).toEqual(game.project!(r.host.hostSession!.state, i + 1));
+        expect(guest.snapshot!.state).not.toHaveProperty('hands');
+        expect(guest.snapshot!.state).not.toHaveProperty('seed');
+      }
+      for (let i = 0; i < 8; i++) {
+        const room = r.host.hostSession!,
+          before = room.revision;
+        const turn = game.turn(room.state);
+        if (turn === -1) await vi.advanceTimersByTimeAsync(500);
+        else {
+          const actor = turn === 0 ? r.host : r.guests[turn - 1]!.controller;
+          await r.pump(() => actor.canAct);
+          actor.act(game.cpu(room.state));
+        }
+        await r.pump(() => room.revision > before && room.synchronized);
+        for (let seat = 1; seat < 4; seat++)
+          expect(r.guests[seat - 1]!.controller.snapshot!.state).toEqual(
+            game.project!(room.state, seat),
+          );
+      }
+      const guest = r.guests[0]!;
+      const before = structuredClone(guest.controller.snapshot!.state);
+      await guest.native.plugin.disconnect!({ peerId: 'host' });
+      expect(r.host.hostSession!.synchronized).toBe(false);
+      await r.rediscover(guest);
+      await r.pump(() => r.host.hostSession!.synchronized);
+      expect(guest.controller.snapshot!.state).toEqual(before);
+      const history = JSON.parse((await r.hostNative.plugin.readHistory()).data!);
+      expect(history.groups[0].gameId).toBe(game.id);
+      expect(JSON.stringify(history)).not.toContain('"hand"');
     },
   );
 });
