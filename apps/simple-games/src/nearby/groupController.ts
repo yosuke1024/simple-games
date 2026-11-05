@@ -810,7 +810,7 @@ export class GroupController {
     const round = {
       round: s.round,
       names: seats.map((p, i) => (p.control === 'cpu' ? `CPU ${i + 1}` : p.name)),
-      scores: result?.scores ?? [0, 0, 0, 0],
+      scores: result?.scores ?? Array.from({ length: this.game.capacity }, () => 0),
       winner: result?.winner ?? null,
       finished: result !== null,
     };

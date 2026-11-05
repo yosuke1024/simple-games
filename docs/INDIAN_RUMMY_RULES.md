@@ -1,6 +1,6 @@
 # Indian Rummy
 
-Adopted 2026-11-05; implementation in progress. Four-seat 13-card rummy,
+Adopted 2026-11-05; implemented for CPU and native Nearby play. Four-seat 13-card rummy,
 two standard decks plus two printed jokers (106 individually identified cards).
 One deal is one game. No stakes, drop penalties, betting or reaction timer.
 

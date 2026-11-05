@@ -1,6 +1,6 @@
 # Spades
 
-Adopted 2026-11-05; implementation in progress. Four seats, partners opposite
+Adopted 2026-11-05; implemented for CPU and native Nearby play. Four seats, partners opposite
 (0+2 and 1+3), ordinary 52-card deck. Short match to 200 points; explain the
 target on the home and table. No blind nil or reaction timer.
 

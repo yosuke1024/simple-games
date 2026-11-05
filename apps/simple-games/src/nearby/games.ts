@@ -1,4 +1,4 @@
-import { isGroupGameId } from '../app/nearbyGameIds';
+import { isGroupGameId, type NearbyGroupGameId } from '../app/nearbyGameIds';
 import type { ComponentType } from 'react';
 import type { MessageKey } from '../i18n';
 import type { GameAdapter, NearbyBoardProps, NearbyGameId } from './gameTypes';
@@ -18,6 +18,12 @@ export const GAME_TITLES: Record<NearbyGameId, string> = {
   daifugo: 'Daifugo',
   sevens: 'Sevens',
   'old-maid': 'Old Maid',
+  'crazy-eights': 'Crazy Eights',
+  durak: 'Durak',
+  spades: 'Spades',
+  'texas-holdem': 'Texas Hold\u2019em',
+  blackjack: 'Blackjack',
+  'indian-rummy': 'Indian Rummy',
 
   yacht: 'Yacht',
   reversi: 'Reversi',
@@ -43,6 +49,12 @@ export const GAME_NAME_KEYS: Record<NearbyGameId, MessageKey> = {
   daifugo: 'daifugoName',
   sevens: 'sevensName',
   'old-maid': 'oldMaidName',
+  'crazy-eights': 'crazyEightsName',
+  durak: 'durakName',
+  spades: 'spadesName',
+  'texas-holdem': 'texasHoldemName',
+  blackjack: 'blackjackName',
+  'indian-rummy': 'indianRummyName',
 
   yacht: 'yachtName',
   reversi: 'reversiName',
@@ -58,10 +70,7 @@ export const GAME_NAME_KEYS: Record<NearbyGameId, MessageKey> = {
   scopa: 'scopaName',
   nim: 'nimName',
 };
-const loaders: Record<
-  Exclude<NearbyGameId, 'ludo' | 'hearts' | 'daifugo' | 'sevens' | 'old-maid'>,
-  () => Promise<NearbyGame>
-> = {
+const loaders: Record<Exclude<NearbyGameId, NearbyGroupGameId>, () => Promise<NearbyGame>> = {
   backgammon: async () => {
     const view = await import('./games/backgammonView');
     return { adapter: view.adapter, Board: view.default };
@@ -133,7 +142,7 @@ const loaders: Record<
 };
 const cache = new Map<NearbyGameId, Promise<NearbyGame>>();
 export function loadNearbyGame(id: NearbyGameId): Promise<NearbyGame> {
-  if (isGroupGameId(id)) return Promise.reject(new Error('Ludo uses the four-seat room'));
+  if (isGroupGameId(id)) return Promise.reject(new Error('This game uses the group room'));
   let loading = cache.get(id);
   if (!loading) {
     loading = loaders[id as keyof typeof loaders]().catch((error: unknown) => {

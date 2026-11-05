@@ -1,3 +1,9 @@
+import { game as crazyEightsGame } from './games/crazy-eights';
+import { game as durakGame } from './games/durak';
+import { game as spadesGame } from './games/spades';
+import { game as texasHoldemGame } from './games/texas-holdem';
+import { game as blackjackGame } from './games/blackjack';
+import { game as indianRummyGame } from './games/indian-rummy';
 import { game as heartsGame } from './games/hearts';
 import { game as daifugoGame } from './games/daifugo';
 import { game as sevensGame } from './games/sevens';
@@ -1056,4 +1062,54 @@ describe('private four-seat games over encrypted links', () => {
       expect(JSON.stringify(history)).not.toContain('"hand"');
     },
   );
+  it.each([
+    crazyEightsGame,
+    durakGame,
+    spadesGame,
+    texasHoldemGame,
+    blackjackGame,
+    indianRummyGame,
+  ])('$id: encrypted peers synchronize private cards, actions and reconnect', async (base) => {
+    // Exercise the real host entropy without replacing WebCrypto. Blackjack
+    // may settle on the deal; choose an ongoing round for this action test.
+    const game: GroupGame = {
+      ...base,
+      create: () => {
+        for (let attempt = 0; attempt < 100; attempt++) {
+          const state = base.create();
+          if (!base.finished(state)) return state;
+        }
+        throw new Error('No ongoing opening deal');
+      },
+    };
+    const r = await gathering(game.capacity - 1, [], [], game);
+    await r.start();
+    for (let i = 0; i < 8 && !game.finished(r.host.hostSession!.state); i++) {
+      const room = r.host.hostSession!,
+        before = room.revision;
+      const turn = game.turn(room.state),
+        actor = turn === 0 ? r.host : r.guests[turn - 1]!.controller;
+      await r.pump(() => actor.canAct);
+      actor.act(game.cpu(room.state));
+      await r.pump(() => room.revision > before && room.synchronized);
+      for (let seat = 1; seat < game.capacity; seat++) {
+        const state = r.guests[seat - 1]!.controller.snapshot!.state;
+        expect(state).toEqual(game.project!(room.state, seat));
+        expect(game.valid(state, seat)).toBe(true);
+        expect(state).not.toHaveProperty('seed');
+        expect(state).not.toHaveProperty('shoe');
+      }
+    }
+    const guest = r.guests[0]!,
+      before = structuredClone(guest.controller.snapshot!.state);
+    await guest.native.plugin.disconnect!({ peerId: 'host' });
+    expect(r.host.hostSession!.synchronized).toBe(false);
+    await r.rediscover(guest);
+    await r.pump(() => r.host.hostSession!.synchronized);
+    expect(guest.controller.snapshot!.state).toEqual(before);
+    const history = JSON.parse((await r.hostNative.plugin.readHistory()).data!);
+    expect(history.groups[0].gameId).toBe(game.id);
+    expect(history.groups[0].rounds[0].scores).toHaveLength(game.capacity);
+    expect(JSON.stringify(history)).not.toContain('"hand"');
+  });
 });

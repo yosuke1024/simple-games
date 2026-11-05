@@ -13,7 +13,7 @@ export const de: NearbyMessages = {
   groupCpuName: 'CPU {seat}',
   groupHostStops: 'Wenn der Host die Runde verlässt, endet das Spiel für alle.',
   groupConnection:
-    'Bis zu 4 Spieler. Menschen und CPUs können gemeinsam spielen. Wähle dieselbe Verbindungsart wie der Host.',
+    'Bis zu {count} Spieler. Menschen und CPUs können gemeinsam spielen. Wähle dieselbe Verbindungsart wie der Host.',
   groupSwitch: 'Steuerung für Platz {seat}',
   groupWaiting:
     'Warten, bis die Spieler bereit oder wieder verbunden sind. Der Host kann einen Platz auf CPU umstellen.',
@@ -22,9 +22,10 @@ export const de: NearbyMessages = {
   groupHostLeft: 'Der Host hat die Verbindung getrennt oder die Runde beendet.',
   groupBackToSetup: 'Zurück zur Einrichtung',
   groupFourSeats: '4 Spielerplätze',
+  groupSeatCount: '{count} Spielerplätze',
   groupFinished: 'Spiel beendet',
   groupWinner: '{name} gewinnt',
-  groupNoChat: 'In Ludo-Runden sind derzeit nur Spielaktionen verfügbar.',
+  groupNoChat: 'In {game}-Runden sind derzeit nur Spielaktionen verfügbar.',
   groupRestore: 'Steuerung an Spieler zurückgeben',
   groupTakeover: 'Auf CPU umstellen',
   reportReason: 'Grund',

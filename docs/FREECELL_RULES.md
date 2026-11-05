@@ -1,5 +1,12 @@
 # FreeCell — 正式ゲームルール
 
+2026-11-05 カード意匠の更新: オーナーの既存トランプも改善する指示により、
+[共通のSVGカード](CARD_DESIGN.md)を採用。比較を見たオーナーが人物画なしのシンプルな方向を選択。
+上下のインデックス、中央のスート1つ、J/Q/Kの大きな文字、模様を抑えた共通裏面を使う。
+この判断が以下の旧来のカード図案の説明より優先する。
+Solitaire・FreeCell・Spider・Three Peaksは縦に重なる列用に横並びインデックスを使う。カードの色、入力、保存規則は維持する。
+
+
 この文書は Simple Games 収録の **FreeCell** について、実装が従うべき唯一のルール
 ソースである。実装は `apps/simple-games/src/games/freecell/` にあり、コード中の
 `§n` はこの文書の節番号を指す。[PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md) は

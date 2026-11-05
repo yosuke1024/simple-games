@@ -1,6 +1,6 @@
 # Durak
 
-Adopted 2026-11-05; implementation in progress. Two-player, non-transferable
+Adopted 2026-11-05; implemented for CPU and native Nearby play. Two-player, non-transferable
 throw-in Durak, 36 cards (6–A in each suit), six cards each. No reaction timer.
 
 - The face-up bottom stock card determines trump and is drawn last. The holder

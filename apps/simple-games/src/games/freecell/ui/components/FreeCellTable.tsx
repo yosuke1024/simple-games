@@ -1,3 +1,4 @@
+import { PlayingCardFace, PLAYING_CARD_SUITS } from '@/ui/cards/PlayingCardFace';
 /**
  * The whole table (docs/FREECELL_RULES.md §1, §3, §12): four free cells and
  * four foundations up top, eight columns below. Eight slots over eight
@@ -44,7 +45,7 @@ import {
 import { useSettings } from '@/state/SettingsContext';
 import { useReducedMotion } from '@/ui/useReducedMotion';
 import { SUITS, type Card, type FreeCellBoard, type Suit } from '../../game';
-import { cardLabel, rankText } from './cardText';
+import { cardLabel } from './cardText';
 import { SuitIcon } from './suits';
 
 /** A card travelling to where it was played. */
@@ -383,25 +384,10 @@ const suitIsRed = (card: Card): boolean => {
   return suit === 1 || suit === 2;
 };
 
-/**
- * The printed face: corner index plus one large suit in the middle.
- *
- * Deliberately not a real deck's face. At this size traditional pip layouts
- * turn the card into a dense little thicket, and the density reads as clutter
- * rather than as authenticity (§13).
- */
+/** Original shared artwork; this game owns rank and suit mapping. */
 function CardFace({ card }: { card: Card }) {
-  const suit = suitOfCard(card);
   return (
-    <>
-      <span className="fc-card-index" aria-hidden="true">
-        <span className="fc-card-rank">{rankText(card)}</span>
-        <SuitIcon suit={suit} />
-      </span>
-      <span className="fc-card-middle" aria-hidden="true">
-        <SuitIcon suit={suit} />
-      </span>
-    </>
+    <PlayingCardFace rank={(card % 13) + 1} suit={PLAYING_CARD_SUITS[suitOfCard(card)]} compact />
   );
 }
 

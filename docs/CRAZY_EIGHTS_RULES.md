@@ -1,6 +1,6 @@
 # Crazy Eights
 
-Adopted 2026-11-05; implementation in progress. Four seats, one ordinary
+Adopted 2026-11-05; implemented for CPU and native Nearby play. Four seats, one ordinary
 52-card deck, five cards each. One deal is one game. No reaction timer.
 
 - Match the top discard's rank or the current suit. Any eight may be played;

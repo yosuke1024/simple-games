@@ -1,31 +1,11 @@
-/**
- * One printed card face, and the class list that colours it. Both the trick in
- * the middle of the table and the fan along the bottom draw cards, so the face
- * lives in its own file rather than inside whichever of them happened to need
- * it first.
- *
- * The face is a corner index plus one large suit in the middle. The corner is
- * the only part an overlapped card shows — in this game's fan that is its
- * top-left, covered on the right by the next card and below by the next row —
- * so the corner carries the identity and the middle is what a card that is
- * fully visible gets.
- */
+/** Shared original artwork with the Hearts 2-through-ace encoding. */
 import { isRed, suitOf, type Card } from '../../game';
-import { rankText } from './cardText';
-import { SuitIcon } from './suits';
+import { PlayingCardFace, PLAYING_CARD_SUITS } from '@/ui/cards/PlayingCardFace';
 
 export function CardFace({ card }: { card: Card }) {
-  const suit = suitOf(card);
+  const value = (card % 13) + 2;
   return (
-    <>
-      <span className="ht-card-index" aria-hidden="true">
-        <span className="ht-card-rank">{rankText(card)}</span>
-        <SuitIcon suit={suit} />
-      </span>
-      <span className="ht-card-middle" aria-hidden="true">
-        <SuitIcon suit={suit} />
-      </span>
-    </>
+    <PlayingCardFace rank={value === 14 ? 1 : value} suit={PLAYING_CARD_SUITS[suitOf(card)]} />
   );
 }
 

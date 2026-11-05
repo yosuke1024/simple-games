@@ -1,3 +1,4 @@
+import { PlayingCardBack } from '@/ui/cards/PlayingCardFace';
 /**
  * The table above the hand: the three CPU seats round the outside, and the
  * middle — which is the trick during play, and the pass's direction while the
@@ -124,7 +125,9 @@ export const HeartsTable = memo(function HeartsTable({
             {label(seat)}
           </span>
           <span className="ht-seat-holding" aria-hidden="true">
-            <span className="ht-seat-back" />
+            <span className="ht-seat-back">
+              <PlayingCardBack />
+            </span>
             <span className="ht-seat-count">{count(seat)}</span>
           </span>
           <span className="ht-seat-scores" aria-hidden="true">

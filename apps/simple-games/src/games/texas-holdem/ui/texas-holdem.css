@@ -407,3 +407,8 @@ button.th-card:disabled {
     gap: 5px;
   }
 }
+
+/* The same table can use landscape space inside a nearby room. */
+.nearby-screen[data-game='texas-holdem'] {
+  max-width: 1120px;
+}

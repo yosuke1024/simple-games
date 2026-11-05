@@ -284,6 +284,7 @@ export class GroupSession {
     this.state = this.options.game.create(this.state);
     this.finalSeats = null;
     this.round++;
+    this.settleFinishedSeats();
     this.publish();
     return true;
   }
@@ -313,12 +314,15 @@ export class GroupSession {
     const next = this.options.game.apply(this.state, seat, action);
     if (next === null) return false;
     this.state = next;
-    if (this.options.game.finished(next)) {
-      this.finalSeats = this.seats.map((s) => ({ ...s }));
-      for (const s of this.seats) s.ready = s.control === 'cpu';
-    }
+    this.settleFinishedSeats();
     this.publish();
     return true;
+  }
+  private settleFinishedSeats() {
+    if (this.state !== null && this.options.game.finished(this.state)) {
+      this.finalSeats = this.seats.map((seat) => ({ ...seat }));
+      for (const seat of this.seats) seat.ready = seat.control === 'cpu';
+    }
   }
   automaticStep(): boolean {
     if (

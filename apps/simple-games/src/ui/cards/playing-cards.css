@@ -1,11 +1,9 @@
-/* Original card illustration pigments. Game chrome keeps its existing accent. */
+/* Paper and a quiet green back. Face ink is owned by each game's palette. */
 .sg-playing-card-face,
 .sg-playing-card-back {
-  --playing-card-brass: #b38b45;
-  --playing-card-portrait: #f7eedb;
   --playing-card-back-paper: #fffaf0;
   --playing-card-back-field: #244e4c;
-  --playing-card-back-ink: #d6c59d;
+  --playing-card-back-ink: #bfcfc3;
   position: absolute;
   inset: 0;
   display: block;
@@ -15,23 +13,35 @@
   border-radius: inherit;
   pointer-events: none;
 }
-.sg-card-index {
+.sg-card-index,
+.sg-card-court-rank {
   fill: currentColor;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 26px;
   font-weight: 700;
+}
+.sg-card-index {
+  font-size: 26px;
   letter-spacing: -1px;
 }
-.sg-card-brass {
-  fill: var(--playing-card-brass);
+.sg-playing-card-compact .sg-card-index {
+  font-size: 36px;
 }
-.sg-card-portrait-paper {
-  fill: var(--playing-card-portrait);
+.sg-card-court-rank {
+  font-size: 44px;
 }
-.sg-card-portrait-line {
-  fill: none;
-  stroke: var(--playing-card-portrait);
-  stroke-width: 1;
+.sg-playing-card-compact .sg-card-court-rank {
+  font-size: 38px;
+}
+.sg-card-symbol {
+  fill: currentColor;
+  font-size: 38px;
+}
+.sg-card-joker-label {
+  fill: currentColor;
+  font:
+    700 10px system-ui,
+    sans-serif;
+  letter-spacing: 1px;
 }
 .sg-card-back-paper {
   fill: var(--playing-card-back-paper);
@@ -39,8 +49,8 @@
 .sg-card-back-field {
   fill: var(--playing-card-back-field);
 }
-.sg-card-back-engraving {
+.sg-card-back-frame {
   fill: none;
   stroke: var(--playing-card-back-ink);
-  stroke-width: 0.8;
+  stroke-width: 1;
 }

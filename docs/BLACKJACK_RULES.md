@@ -1,6 +1,6 @@
 # Blackjack
 
-Adopted 2026-11-05; implementation in progress. Four player seats around an
+Adopted 2026-11-05; implemented for CPU and native Nearby play. Four player seats around an
 automatic dealer. Each player plays against the dealer, not against the others.
 One round is one game. Six standard decks, shuffled anew for each game.
 No reaction timer, betting currency, cash stakes, purchases or ad-gated refills.

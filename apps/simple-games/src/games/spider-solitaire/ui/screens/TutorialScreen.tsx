@@ -1,3 +1,4 @@
+import { PlayingCardFace, PlayingCardBack, PLAYING_CARD_SUITS } from '@/ui/cards/PlayingCardFace';
 /**
  * Quick Rules (docs/SPIDER_SOLITAIRE_RULES.md §11): three steps, one sentence
  * each, shown with a figure rather than explained in prose.
@@ -15,8 +16,6 @@ import { gameLandingUrl } from '@/ui/landing';
 import { openExternal } from '@/ui/openExternal';
 import { cardOf, suitOf, type Card } from '../../game';
 import { useSpider } from '../../state/GameContext';
-import { rankText } from '../components/cardText';
-import { SuitIcon } from '../components/suits';
 
 /** One item in a figure: a card, a face-down card, or the arrow between them. */
 type FigureItem = { readonly card: Card } | { readonly down: true } | { readonly arrow: true };
@@ -34,7 +33,9 @@ function CardsFigure({ items }: { items: FigureItem[] }) {
               →
             </span>
           ) : 'down' in item ? (
-            <span key={index} className="sp-figure-card sp-card-back" />
+            <span key={index} className="sp-figure-card sp-card-back">
+              <PlayingCardBack />
+            </span>
           ) : (
             <span
               key={index}
@@ -45,8 +46,11 @@ function CardsFigure({ items }: { items: FigureItem[] }) {
                   : 'sp-card-black',
               ].join(' ')}
             >
-              {rankText(item.card)}
-              <SuitIcon suit={suitOf(item.card, FIGURE_SUITS)} />
+              <PlayingCardFace
+                rank={(item.card % 13) + 1}
+                suit={PLAYING_CARD_SUITS[suitOf(item.card, FIGURE_SUITS)]}
+                compact
+              />
             </span>
           ),
         )}

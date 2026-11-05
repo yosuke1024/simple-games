@@ -1,7 +1,7 @@
 # Texas Hold'em
 
 Adopted 2026-11-05 following the owner's explicit format selection;
-implementation in progress. Four-seat no-limit Hold'em, ordinary 52-card deck.
+implemented for CPU and native Nearby play. Four-seat no-limit Hold'em, ordinary 52-card deck.
 Each new game starts with 1,000 free table chips per seat, fixed blinds 10/20.
 Chips are game state, never purchased, redeemed, replenished by ads or carried
 as currency between games. No ante, rake, timed blinds, reaction timer or rebuy.

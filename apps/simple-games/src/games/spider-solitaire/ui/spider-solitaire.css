@@ -578,3 +578,12 @@ button.sp-card-back {
     --game-shell-max: 1000px;
   }
 }
+
+/* Shared original deck; geometry and touch targets remain game-owned. */
+.sp-figure-card {
+  position: relative;
+}
+.sp-stock-count {
+  position: relative;
+  z-index: 1;
+}

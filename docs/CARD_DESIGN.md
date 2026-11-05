@@ -6,19 +6,24 @@ presentation component, not shared game rules or a game registry.
 
 ## Cards
 
-- Warm paper, dark navy/green ink and burgundy red. Keep paper light in the dark
-  theme; do not invert the suits into neon. Existing per-game contrast palettes
-  continue to control the card surface and selection state.
-- Original vector suits, conventional pip layouts, mirrored corner indices,
-  distinct double-ended jack/queen/king illustrations and a distinct joker.
-  No fetched artwork, fonts or sprite sheets. Decorative brass and cream are
-  part of the illustration, not additional UI accent colours.
-- SVG viewBox scales the entire face against the actual card, including in
-  narrow nearby rooms. It must not size indices using viewport or container
-  query units. Existing card buttons retain their labels, focus, selection and
-  touch targets; artwork is aria-hidden and never supplies interaction semantics.
-- Backs receive no rank/suit/card ID. Hidden hands must never be passed to the
-  artwork layer or leaked through labels, React keys, data attributes or markup.
+The owner reviewed the first illustrated design on 2026-11-05 and explicitly
+chose: no people, a simpler design overall. This is the current direction and
+supersedes the initial pip/court-portrait proposal.
+
+- Paper stays light in both themes. Each game's existing dark ink and red suit
+  tokens remain authoritative; shapes identify suits without colour.
+- Two mirrored corner indices and a single central suit mark on number cards.
+  J/Q/K use a large central letter with a smaller suit below. No people, metallic
+  accents, repeated pips or decorative illustration. Joker uses a star and label.
+- Solitaire, FreeCell, Spider and Three Peaks use a horizontal rank/suit index so
+  both remain visible when cards overlap vertically.
+- Back: a muted green field, paper margin and one thin inner frame. No dense pattern.
+- SVG scales against the actual card. Do not use viewport/container units for the
+  indices. Buttons retain translated labels, keyboard focus and selection semantics.
+- Backs accept no rank, suit or identity. Hidden information never enters artwork
+  props, labels, data attributes or markup.
+- A dev-only comparison with the previous Hearts face is available at
+  `apps/simple-games/prototypes/card-design/index.html` via the local Vite server.
 
 ## Table and orientation
 
@@ -32,5 +37,6 @@ ranks readable. Nearby and CPU play use the same visual components.
 
 Use rendered game screens, not only CSS checks. Inspect small portrait and
 landscape phones, wide screens, light/dark themes and nearby layouts. Record
-the exact scope in the implementation plan. Card artwork adoption and landscape
-work are in progress, not yet collection-wide.
+the exact scope in the implementation plan. Shared artwork is adopted by all 16 playing-card games. Solitaire, FreeCell, Spider and Three Peaks
+use a horizontal rank/suit index for overlapping columns. Visual evidence and its limits
+are recorded in the implementation plan.

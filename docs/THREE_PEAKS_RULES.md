@@ -1,5 +1,12 @@
 # Three Peaks — canonical rules
 
+2026-11-05 カード意匠の更新: オーナーの既存トランプも改善する指示により、
+[共通のSVGカード](CARD_DESIGN.md)を採用。比較を見たオーナーが人物画なしのシンプルな方向を選択。
+上下のインデックス、中央のスート1つ、J/Q/Kの大きな文字、模様を抑えた共通裏面を使う。
+この判断が以下の旧来のカード図案の説明より優先する。
+Solitaire・FreeCell・Spider・Three Peaksは縦に重なる列用に横並びインデックスを使う。カードの色、入力、保存規則は維持する。
+
+
 **2026-10-29 更新(正式収録、v1.7.0):** 製品オーナーの判断で Web 先行公開(ベータ)から正式収録した(registry の `channel` を外した — アプリのホーム・検索・ショートカットにも出る)。保存スキーマはこの収録で凍結し、以後は移行だけで変える — 公開中の Web ビルドが実際に書いた保存を `storage/releasedRecords.test.ts` が今の読み込み経路へ通す([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §0 と 2026-10-29 の節)。以下の「正式収録まで凍結しない」「アプリには出ない」などのベータ段階の記述は当時の記録である。収録は 2 週間の安定稼働・滞在時間の確認・実機での確認を満たしたという意味ではない。
 
 2026-10-23. Web beta, not part of the native released collection or Club House.

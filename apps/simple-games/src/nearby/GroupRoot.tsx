@@ -357,7 +357,7 @@ export default function GroupRoot({
               void begin();
             }}
           >
-            <p>{n('groupConnection')}</p>
+            <p>{n('groupConnection', { count: game.capacity })}</p>
             <p className="nearby-note">{n('groupHostStops')}</p>
             <fieldset className="nearby-choices">
               <legend>{n('playTogether')}</legend>
@@ -412,7 +412,7 @@ export default function GroupRoot({
                 </label>
               ))}
             </fieldset>
-            <p className="nearby-note">{n('groupNoChat')}</p>
+            <p className="nearby-note">{n('groupNoChat', { game: title })}</p>
             <p className="nearby-note">{n('conduct')}</p>
             <label className="nearby-check">
               <input
@@ -459,7 +459,7 @@ export default function GroupRoot({
                         onClick={() => void controller.join(peer.id)}
                       >
                         <strong>{safeName(peer.roomName)}</strong>
-                        <span>{n('groupFourSeats')}</span>
+                        <span>{n('groupSeatCount', { count: game.capacity })}</span>
                       </button>
                       <div className="nearby-actions nearby-listing-actions">
                         <button

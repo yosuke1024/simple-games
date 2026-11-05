@@ -1732,7 +1732,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Crazy Eights',
     category: 'cards',
     glyph: '8',
-    channel: 'in-development',
     storageKeys: Object.values(CE_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/crazy-eights/ui/CrazyEightsRoot').then((m) => ({
@@ -1745,7 +1744,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Durak',
     category: 'cards',
     glyph: '♠',
-    channel: 'in-development',
     storageKeys: Object.values(DU_STORAGE_KEYS),
     loadRoot: () => import('../games/durak/ui/DurakRoot').then((m) => ({ default: m.DurakRoot })),
     loadStorageSchemas: () => import('../games/durak/storage/schemas'),
@@ -1755,7 +1753,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Spades',
     category: 'cards',
     glyph: '♠',
-    channel: 'in-development',
     storageKeys: Object.values(SA_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/spades/ui/SpadesRoot').then((m) => ({ default: m.SpadesRoot })),
@@ -1766,7 +1763,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Texas Hold\u2019em',
     category: 'cards',
     glyph: '♔',
-    channel: 'in-development',
     storageKeys: Object.values(TH_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/texas-holdem/ui/TexasHoldemRoot').then((m) => ({
@@ -1779,7 +1775,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Blackjack',
     category: 'cards',
     glyph: '21',
-    channel: 'in-development',
     storageKeys: Object.values(BJ_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/blackjack/ui/BlackjackRoot').then((m) => ({ default: m.BlackjackRoot })),
@@ -1790,7 +1785,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Indian Rummy',
     category: 'cards',
     glyph: '♧',
-    channel: 'in-development',
     storageKeys: Object.values(IR_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/indian-rummy/ui/IndianRummyRoot').then((m) => ({

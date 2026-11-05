@@ -223,6 +223,12 @@ const nearbyIds = new Set([
   'daifugo',
   'sevens',
   'old-maid',
+  'crazy-eights',
+  'durak',
+  'spades',
+  'texas-holdem',
+  'blackjack',
+  'indian-rummy',
 
   'ludo',
   'yacht',

@@ -729,3 +729,8 @@ Crazy Eights / Durak / Spades / Texas Hold’em / Blackjack / Indian Rummy の
 未読一覧へ追加した。既存の共通確認文を再利用し、価格・購入・削除・保存に関する高リスク
 キーは新設していない。キー・placeholder・構造は自動検査する。自然さの確認と独立逆翻訳
 は未実施であり、この実装や機械チェックを人間の承認として扱わない。
+
+同日のNearby拡張で `groupSeatCount` を追加し、`groupConnection` の人数を `{count}`、
+`groupNoChat` のゲーム名を `{game}` にした。全14言語で既存の訳をAIが調整した。
+2席のDurakと4席の他ゲームを同じ説明で正しく示すための変更で、価格・購入・削除・
+保存の約束は変えない。人間の確認・独立逆翻訳は未実施。キーとplaceholderは自動検査する。

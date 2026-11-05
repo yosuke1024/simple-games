@@ -1,3 +1,4 @@
+import { PlayingCardBack } from '@/ui/cards/PlayingCardFace';
 /**
  * The table and the hand (docs/SCOPA_RULES.md §2.5, §7, §11). Every place a
  * tap can land is a button; the screen owns the lift-and-take machine and these
@@ -82,7 +83,9 @@ export const TableArea = memo(function TableArea({
   return (
     <div className="sc-table-area">
       <p className="sc-stock" role="img" aria-label={t('scopaStockLabel', { n: shown.stockCount })}>
-        <span className="sc-back sc-stock-back" aria-hidden="true" />
+        <span className="sc-back sc-stock-back" aria-hidden="true">
+          <PlayingCardBack />
+        </span>
         <span aria-hidden="true">{shown.stockCount}</span>
       </p>
       <div

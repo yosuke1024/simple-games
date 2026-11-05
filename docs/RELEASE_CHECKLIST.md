@@ -1,5 +1,36 @@
 # Simple Games — リリースチェックリスト
 
+## 2026-11-05: トランプ6本とカード意匠
+
+コード上は正式78本・Nearby28本。実装・検証の記録は
+[作業記録](plans/2026-11-05-six-card-games.md)、規則は新6本のRULES、意匠は
+[CARD_DESIGN](CARD_DESIGN.md)。オーナーは人物画なしのシンプルなカードを選択した。
+今回の依頼は実装で、ストア提出や公開の指示ではない。
+
+- [ ] 追加6本をiOS/Androidの実機でBLEおよび同一LANで開始・完了・切断復帰
+- [ ] 最新成果物で4席/2席、人間/CPU交代、非公開手札、画面回転と広告予約を確認
+- [ ] ストア提出時に掲載を78本/Nearby28本へ更新し、下記年齢質問票を実際の内容で再回答
+- [ ] 実機での表示・音声読み上げ・翻訳の未確認範囲を各RULESに沿って確認
+
+### 年齢区分の準備(公式情報を2026-11-05に確認、設定の送信は未実施)
+
+この実装には現金、購入チップ、換金、賞品がないが、ポーカーとブラックジャックの
+模擬ギャンブル要素は存在する。無料という理由で「なし」と回答しない。
+Appleは質問票から区分を算出し、模擬ギャンブルの頻度と地域によって区分・要件が変わる。
+豪州では模擬ギャンブルにR18+、韓国ではFrequent/Intenseの場合RCNが必要とされている。
+このコレクションへの最終適用は提出時の質問票と審査で確認する。
+[Appleの区分と定義](https://developer.apple.com/help/app-store-connect/reference/app-information/age-ratings-values-and-definitions/)、
+[質問票の設定方法](https://developer.apple.com/help/app-store-connect/manage-app-information/set-an-app-age-rating/)。
+
+Google Playは質問票の回答に影響する内容・機能変更時に再回答を求める。各地域の区分は
+質問票から各評価機関が決める。模擬ギャンブル、既存の任意チャット、広告の事実を反映し、
+算出結果に合わせて対象年齢と広告設定を確認する。特定の年齢区分の維持は約束しない。
+[Google Playのコンテンツレーティング要件](https://support.google.com/googleplay/android-developer/answer/9859655)。
+
+審査向け説明案:「Texas Hold'emは開始時1000チップ、Blackjackは1ハンド10点の独立した
+ラウンドです。点数・チップはゲーム内のみで、購入、換金、現実の賞品への交換はできません。
+CPU戦はオフライン、対人戦は近隣Bluetooth/同一Wi-Fiのみで、新6本にチャットはありません。」
+
 ## 2026-11-04: Nearby Playを22本へ拡張
 
 オーナーの「未対応で入れられるゲームに追加、Webベータも対象」と「対象ゲームをアプリにも収録する」の

@@ -19,6 +19,12 @@ const loaders = {
   daifugo: () => import('./games/daifugoView'),
   sevens: () => import('./games/sevensView'),
   'old-maid': () => import('./games/old-maidView'),
+  'crazy-eights': () => import('./games/crazy-eightsView'),
+  durak: () => import('./games/durakView'),
+  spades: () => import('./games/spadesView'),
+  'texas-holdem': () => import('./games/texas-holdemView'),
+  blackjack: () => import('./games/blackjackView'),
+  'indian-rummy': () => import('./games/indian-rummyView'),
 };
 export async function loadGroupGame(id: NearbyGameId): Promise<NearbyGroupGame> {
   const load = loaders[id as keyof typeof loaders];

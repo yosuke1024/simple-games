@@ -75,10 +75,10 @@ function checkBuiltNearby(directory, native) {
   }
   assert.equal(
     gameIds.length,
-    22,
+    28,
     'Update the selected-game evidence when the supported set changes',
   );
-  assert.ok(nearby.length > 22, 'Nearby entries unexpectedly merged into one chunk');
+  assert.ok(nearby.length > gameIds.length, 'Nearby entries unexpectedly merged into one chunk');
   const manifest = JSON.parse(readFileSync(join(directory, '.vite/manifest.json'), 'utf8'));
   const initialModules = new Set(
     Object.values(manifest)
@@ -173,5 +173,5 @@ for (const path of web)
 checkBuiltNearby(join(app, 'dist'), true);
 checkBuiltNearby(join(app, 'dist-web'), false);
 console.log(
-  `Nearby isolation: ${files.length} files checked; no prototype in product, no Nearby in Web, 22 selected views stay lazy. Only Ludo/Hearts pure CPUs is permitted; solo storage/providers/Club remain excluded.`,
+  `Nearby isolation: ${files.length} files checked; no prototype in product, no Nearby in Web, ${gameIds.length} selected views stay lazy. Only the explicitly permitted standalone pure CPU modules are allowed; solo storage/providers/Club remain excluded.`,
 );

@@ -25,24 +25,24 @@ Blackjack in the 2026-08-08 plan.
 
 - [x] Six documented rule sets with complete legal actions, scoring, end states,
   CPU play, malformed-save rejection and deterministic rule tests.
-- [ ] Six playable roots: collection entry, tutorial, CPU game, saved resumption,
+- [x] Six playable roots: collection entry, tutorial, CPU game, saved resumption,
   statistics, honest results, replay / new game, normal keyboard navigation.
-- [ ] Native nearby entry and discovery for all six; receiver-specific hidden
+- [x] Native nearby entry and discovery for all six; receiver-specific hidden
   hands; legal-action checks; human/CPU seats and interruption/reconnection.
-- [ ] Meaningful complete-game and privacy tests through the existing nearby
+- [x] Meaningful complete-game and privacy tests through the existing nearby
   controller/session infrastructure, including host and guest perspectives.
-- [ ] Registry, storage schemas/backup, title accents, artwork, translations,
+- [x] Registry, storage schemas/backup, title accents, artwork, translations,
   known unread-translation provenance and import boundaries updated.
-- [ ] Shared original card faces/backs adopted by all existing playing-card
+- [x] Shared original card faces/backs adopted by all existing playing-card
   games (Solitaire, Spider, FreeCell, Three Peaks, Hearts, Gin Rummy, Scopa,
   Daifugo, Sevens, Old Maid), as well as the six additions.
-- [ ] Portrait/landscape visual QA for light/dark themes, phone widths, reduced
+- [x] Portrait/landscape visual QA for light/dark themes, phone widths, reduced
   motion, native banner reserve and nearby rooms. No clipped actions/hand ranks.
 - [ ] Scoped tests, full typecheck/lint/tests, production native/web builds and
   bundle/isolation gates pass. Native builds checked where tools are available.
-- [ ] Current canonical docs and release preparation accurately distinguish
+- [x] Current canonical docs and release preparation accurately distinguish
   local verification from physical Bluetooth/LAN and store distribution.
-- [ ] Poker/Blackjack simulated-gambling metadata reviewed against current store
+- [x] Poker/Blackjack simulated-gambling metadata reviewed against current store
   requirements. No claim that free chips avoid age classification.
 
 Implementation is in progress. An unchecked item is not completed or waived.
@@ -181,3 +181,150 @@ artifacts at `/tmp/simple-games-holdem-landscape.png` and
 The next work is the six native Nearby adapters/controller wiring and privacy
 integration tests, followed by the seven remaining existing card-art migrations
 and the full integration/release-preparation checks above.
+
+## 2026-11-05 integrated Nearby and design review checkpoint
+
+All six Nearby adapters and lazy boards are connected. The protocol keeps
+receiver-specific hands, rejects malformed/stale/out-of-turn actions, and uses
+2 seats for Durak and 4 for the other five. Blackjack uses compact wire tuples
+and sends the receiver's own settled hands only once, preserving the 2800-byte
+plain / 4096-byte encrypted limits. Initial-deal settlement now freezes final
+seat names and resets readiness. History validates each game's capacity and
+allows negative scores only for Spades/Blackjack. A 175-test scoped run across
+six Nearby files passed before the subsequent copy and integration-test import
+adjustments. The signed-history cases were added afterwards.
+
+The registry now offers the six games in native and browser builds (78 released,
+28 Nearby); this remains a local implementation, not a publication. The current
+inventory, Nearby contracts, CSS inventory and release preparation have been
+updated. Store rating requirements were checked against official Apple/Google
+sources and recorded in RELEASE_CHECKLIST; no store settings were submitted.
+
+The owner reviewed an actual old/new card comparison and chose **no people and
+a simpler design overall**. The shared face now has a single central suit on
+number cards, a large J/Q/K on court cards, mirrored indices, and a simple green
+back with a thin frame. It is used by all 16 playing-card games. Spider and Three
+Peaks use a larger horizontal corner index. The old portrait/pip proposal above
+is historical. The current authority is CARD_DESIGN.md. A dev-only comparison is
+at `apps/simple-games/prototypes/card-design/index.html` (Vite). Screenshots:
+`/tmp/simple-games-card-simple.png` and `/tmp/simple-games-hearts-simple.png`.
+The owner has selected the direction, not reviewed every game/orientation.
+
+Browser checks since that choice: Hearts dark, 390×844, reduced-motion setting,
+13-card passing hand; Solitaire light 390×844 with a simulated 90px banner
+reservation and 844×390. Portrait ranks/actions are clear. Existing short-screen
+Solitaire uses its scrollable table; the whole deal does not fit above controls
+with a 90px reserve. Spider's earlier 320×640 and 844×390 check verified a legal
+move and rotation retention, but used the pre-simplification artwork.
+
+Verification still underway, not complete:
+
+- App/build-config typecheck completed successfully before the simplification.
+- Full lint found six prohibited direct pure-engine imports in the encrypted
+  integration test. Those imports were removed; the test now uses its adapters'
+  real host entropy and chooses an ongoing opening deal. Lint needs rerunning.
+- Two full-suite attempts encountered widespread existing timing failures under
+  heavy local memory pressure (load average >20), and were cancelled. A serial
+  run is in progress with CLI-only 30s test/hook timeouts; repository timeouts
+  and product timing were not changed. Log `/tmp/cards-full-serial.log`, JSON
+  `/tmp/cards-full-results.json`. Do not claim the full suite passed yet.
+- Actual regressions found during those runs: the discovery test's old 21-peer
+  literal (now derived from supported count), CSS inventory missing six entries,
+  and the direct test imports above. All are edited; reruns pending.
+- Native-mode Vite and web Vite builds are running sequentially, logs
+  `/tmp/cards-native-build.log` and `/tmp/cards-web-build.log`. Bundle, isolation,
+  final types/lint, native compilation and remaining visual checks are pending.
+- Temporary `.qa/cards.html` / `.qa/cards.tsx` inside the app are a local screen
+  harness, outside src. Remove them after QA and before final lint/commit.
+- Do not mark the goal complete or publish while this verification is pending.
+
+## Simplified-card visual pass and build gates
+
+The current shared SVG has no people. Solitaire and FreeCell also use the
+horizontal rank/suit index: the vertical suit was hidden by FreeCell's 36%-width
+cascade strip. The compact index is 36 SVG units at baseline 28, keeping the Q
+tail inside that strip. Spider/Three Peaks share this compact version.
+
+Current artwork was inspected in FreeCell light 390×844, Gin Rummy dark German
+390×844, Scopa light 390×844, Three Peaks dark 390×844, and Spider dark 320×640.
+Spider's 8→9 move succeeded and both the newly exposed J and the covered 9 stayed
+readable. Short landscape FreeCell/Solitaire retain their existing scrollable
+table; the whole deal does not fit above the action bar. No claim of a complete
+physical-device matrix is made.
+
+Hearts CPU play now uses a two-column short-landscape layout (600px+ width,
+600px or less height): table/pass tray left, 280–300px hand right. At 844×390
+the 13-card hand, tray and pass control are visible together. Three cards were
+selected and passed successfully. Minimum card width is 56px and exposed row
+pitch is 50.4px, preserving the documented 48px touch floor. This layout is
+scoped to CPU GameScreen; Nearby Hearts retains its existing layout.
+
+The actual Nearby Board components were inspected through a disposable local
+projection harness (not the native transport or full GroupRoot chrome): all six
+new games, plus Daifugo/Sevens/Old Maid. Hold'em dark, Blackjack light, Durak dark,
+Spades German light, and the three existing games were checked at 844×390.
+Crazy Eights light was checked at 320×640. Indian Rummy dark was checked in both
+orientations, with a successful draw at 320×640; its long portrait content is
+scrollable. All boards use current artwork. The temporary .qa harness was
+removed after inspection. The dev-only comparison remains under prototypes.
+
+Final app/build-config typecheck and src ESLint passed. Both production modes
+built; size gate passed without changing the baseline. Prototype Nearby's 40
+tests, Android Java's 358 checks, and Android artifact guard's 19 tests passed.
+The isolation guard was updated from 22 to 28 selected views and passed for both
+artifacts; it still checks no Nearby in the initial/native entry or Web, no
+provider/storage/Club reachability and no eager loading of other game views.
+Ad separation and brand-principle guards passed; iOS version pair is unchanged
+at 1.7.2 / 10702. These build checks preceded the final compact-index position
+adjustment; final asset rebuild is pending.
+
+The full serial test suite and Android/iOS native compilations are still
+running. Typecheck/lint success does not imply these have passed. Android uses
+installed JDK 21, offline Gradle and one worker. iOS uses the simulator SDK,
+signing disabled and one build job. Initial sandbox cache/network restrictions
+were retried through the approved execution mechanism; no device install or
+store action was performed.
+
+Final-art checkpoint (17:15 JST): both production asset builds, the unchanged
+size baseline, selected-view isolation, ad separation and changed-source
+Prettier checks passed after the compact-index adjustment. I18N gate status
+reports all existing high-risk approval records complete; this does not approve
+the newly drafted game/Nearby translations. Android's first debug compilation
+passed (264 tasks); final assets were then copied and an incremental debug build
+is running. iOS simulator compilation is progressing through its dependencies.
+The 1,011-file full serial suite and full workspace lint are also still running;
+no successful result is claimed for either. Logs remain under /tmp/cards-*.log.
+
+The selected no-people card direction is implemented and visually reviewed.
+Current comparison and example images are also retained under the task's Codex
+visualizations directory. Remaining integration checks must finish before the
+overall six-game goal is marked complete; no commit or publication was made at
+this checkpoint.
+
+## Native compilation and full-room layout verification
+
+Both native compilations now pass with the final web assets copied in:
+Android debug (JDK 21, offline Gradle, 264 tasks; final incremental run 3 executed
+and 261 up-to-date), and iOS Debug simulator arm64/x86_64 with signing disabled.
+Logs: `/tmp/cards-android-build-final.log`, `/tmp/cards-ios-build-final.log`.
+Full workspace lint also completed successfully; app/build-config typecheck,
+changed-source Prettier, final production builds, bundle size, ad separation and
+Nearby isolation are green. No package baseline, app version or signing settings
+were changed.
+
+A second disposable browser harness rendered the actual GroupRoot and
+GroupController, with real host game state and CPU scheduling but an in-memory
+no-radio NativePlugin implementation. Hold'em dark at 844×390 with a simulated
+60px banner reserve was hosted, readied and started through the real controls.
+Native scrolling reached the action panel and a call changed the pot from 70 to
+80. Durak light correctly described and rendered two seats; its host defended
+a club 6 with a club 10, the next bout replenished both hands, and rotation to
+390×844 retained the same round with 22 stock cards. All actions stayed outside
+the reserved banner region. Short full rooms use vertical page scrolling.
+This is not a radio test or a native banner SDK measurement.
+
+The temporary room harness was removed after verification. The full serial
+Vitest suite remains running; it is the remaining automated completion check.
+Its process was observed creating an active worker (CPU work, not only a stale
+log), and canvas warnings are expected from unrelated canvas games under jsdom.
+No full-suite pass is claimed before the JSON result is inspected.

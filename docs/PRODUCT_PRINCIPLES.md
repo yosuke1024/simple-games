@@ -390,30 +390,30 @@ Core の任意モードとして許容する(次節)。インターネット経�
 Club House は記録・ランキング、Nearby Play はその場限りの近隣対戦である。
 
 - Android / iOS の任意機能。対象は **2人・1対1ターン制の17本・任意の短いテキストチャット**に、
-  **4席のLudo / Hearts / Daifugo / Sevens / Old Maid・人間とCPUの混成対局** (2026-11-04拡張)。
+  **固定席の人間とCPUの混成対局11本** (2026-11-05拡張。Durakは2席、Ludo / Hearts / Daifugo / Sevens / Old Maid / Crazy Eights / Spades / Texas Hold'em / Blackjack / Indian Rummyは4席)。
   募集の入口は対応ゲームのトップに置く。コレクションには参加専用の「近くの対戦相手を探す」を加え、
   Club House直下に、Club Houseと同程度の控えめなテキスト行として配置する。
   Bluetooth／同一Wi-Fiを明示選択して全対応ゲームの募集名・ゲーム名・人数を一覧表示する。
   一覧で選ぶと、そのゲームの参加・host承認・双方Readyへ進む。
-  探索画面下部の「対戦サポートゲーム」から全22本の通常トップを開ける。移動前に探索を止める。
-  Club House からも開始しない。対応は Yacht / Reversi / Connect Four / Gomoku / Checkers / Gin Rummy / Mancala / Dominoes / Dots and Boxes / Chess / Nested Tic-Tac-Toe / Scopa / Nim / Ludo / Hearts / Backgammon / Ridge Cannons / Fleet Search / Chain Territory / Daifugo / Sevens / Old Maid。それ以外のゲームに未実装のボタンを置かない。
+  探索画面下部の「対戦サポートゲーム」から全28本の通常トップを開ける。移動前に探索を止める。
+  Club House からも開始しない。対応は Yacht / Reversi / Connect Four / Gomoku / Checkers / Gin Rummy / Mancala / Dominoes / Dots and Boxes / Chess / Nested Tic-Tac-Toe / Scopa / Nim / Ludo / Hearts / Backgammon / Ridge Cannons / Fleet Search / Chain Territory / Daifugo / Sevens / Old Maid / Crazy Eights / Durak / Spades / Texas Hold'em / Blackjack / Indian Rummy。それ以外のゲームに未実装のボタンを置かない。
   ゲーム選択済み → 募集／参加 → host承認 → 双方Ready → 既存と共通のゲーム画面へ進む。
   初回に同じゲームを改めて提案する操作は求めない。内部protocolの提案・確認処理は維持できる。
-- **席数はゲームごとに固定し、席とその操作担当を分ける。** 2席は17本、上記グループ5本は4席。
-  混成対局は上記4席ゲームが対象。hostは残り3席の人間／CPUを開始前・対局中に切り替えられる。
+- **席数はゲームごとに固定し、席とその操作担当を分ける。** 2席は18本、4席は10本。
+  混成対局は上記11本が対象。hostは他の席の人間／CPUを開始前・対局中に切り替えられる。
   人間からCPUへ替えても、その席の駒・手番・出目を引き継ぐ。CPUから人間へ戻すときは接続中の
   本人へ操作を戻す。勝手な振り直しや盤面の初期化はしない。
   操作担当を変更した後に旧担当の入力が届いても適用しない。host本人は対局の管理者として残る。
-  **3席以上の対戦はすべて、離席・退出・復帰・参加の受付について共通の約束に従う**
-  （正本は [architecture/nearby-multiplayer.md](architecture/nearby-multiplayer.md)。現在は上記4席ゲーム5本が使う）。
+  **固定席の混成対戦はすべて、離席・退出・復帰・参加の受付について共通の約束に従う**
+  （正本は [architecture/nearby-multiplayer.md](architecture/nearby-multiplayer.md)。現在はDurakを含む固定席11本が使う）。
   ゲストの明示的な退出は即座にその席をCPUにし、その人はその対局へ戻れない。
   通信が切れただけの離席では席を本人のものとして残し、全員が待つ。CPUへ替えるかはhostが手動で決め、
   システムは自動で替えない。戻るときにhostの承認は要らない。hostが離席しても全員が待ち、
   集まりを終えるのはhostの明示的な退出だけで、host移譲はしない。
   参加は対局と対局の間だけ受け付け、対局中の部屋は探索一覧に出さない。
-  4席ゲームのチャットは対象外。対局履歴は既存のNearby専用保存に分けて追加し、
+  固定席の混成対局11本はチャット対象外。対局履歴は既存のNearby専用保存に分けて追加し、
   ソロの保存・統計・Clubへ混ぜない。4台の実機検証は別途必要で、対応機種の保証にはしない。
-- Web のコレクションには無効な「近くの対戦相手を探す」、対応22本のトップには無効な「誰かと遊ぶ」ボタンと「アプリ専用の機能です」を表示する。
+- Web のコレクションには無効な「近くの対戦相手を探す」、対応28本のトップには無効な「誰かと遊ぶ」ボタンと「アプリ専用の機能です」を表示する。
   英語は “Play with someone” / “Available in the app only.”。接続画面への遷移は無く、
   Web に Nearby の実行コード・探索・権限要求・接続・履歴読取を追加しない。
   ソロ / CPU 戦は従来どおり遊べる。未対応ゲームにはこの案内を置かない。

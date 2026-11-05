@@ -129,6 +129,34 @@ describe('additive four-seat nearby history', () => {
     expect((await io.readHistory()).data).toBe(before);
   });
 
+  it.each(['spades', 'blackjack'] as const)(
+    'preserves signed %s scores without inventing a winner',
+    async (gameId) => {
+      const io = store();
+      const current = {
+        ...group(),
+        gameId,
+        rounds: [{ ...group().rounds[0]!, scores: [-80, 20, 0, -10], winner: null }],
+      };
+      await saveGroup(current, io);
+      expect((await loadHistory(io)).groups?.[0]).toEqual(current);
+    },
+  );
+  it('stores two-seat Durak rounds and rejects the wrong capacity', async () => {
+    const io = store();
+    const current: SavedGroup = {
+      ...group(),
+      gameId: 'durak',
+      rounds: [{ ...group().rounds[0]!, names: ['Alice', 'Bob'], scores: [0, 6], winner: 0 }],
+    };
+    await saveGroup(current, io);
+    expect((await loadHistory(io)).groups?.[0]).toEqual(current);
+    const data = await loadHistory(io);
+    expect(
+      validateHistory({ ...data, groups: [{ ...current, rounds: group().rounds }] }),
+    ).toBeNull();
+  });
+
   it('deletes only the selected group and retains identity, display name, blocks and two-seat records', async () => {
     const io = store();
     await saveDisplayName('Alice', io);

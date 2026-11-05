@@ -1,5 +1,5 @@
 import { nearbyPlugin, randomId, type NearbyPlugin, type Transport } from './native';
-import { isNearbyGameId, isGroupGameId } from '../app/nearbyGameIds';
+import { isNearbyGameId, isGroupGameId, NEARBY_CAPACITY } from '../app/nearbyGameIds';
 import type { GameResult, NearbyGameId } from './gameTypes';
 
 export interface SavedMessage {
@@ -119,12 +119,21 @@ export function validateHistory(v: unknown): HistoryData | null {
               r.round > 0 &&
               typeof r.finished === 'boolean' &&
               Array.isArray(r.names) &&
-              r.names.length === 4 &&
+              r.names.length === NEARBY_CAPACITY[(g.gameId ?? 'ludo') as NearbyGameId] &&
               r.names.every(name) &&
               Array.isArray(r.scores) &&
-              r.scores.length === 4 &&
-              r.scores.every((s: unknown) => integer(s) && s <= 1000000) &&
-              (r.winner === null || (r.finished && integer(r.winner) && r.winner < 4)),
+              r.scores.length === NEARBY_CAPACITY[(g.gameId ?? 'ludo') as NearbyGameId] &&
+              r.scores.every(
+                (s: unknown) =>
+                  typeof s === 'number' &&
+                  Number.isSafeInteger(s) &&
+                  s >= (g.gameId === 'blackjack' || g.gameId === 'spades' ? -1000000 : 0) &&
+                  s <= 1000000,
+              ) &&
+              (r.winner === null ||
+                (r.finished &&
+                  integer(r.winner) &&
+                  r.winner < NEARBY_CAPACITY[(g.gameId ?? 'ludo') as NearbyGameId])),
           ),
       ))
   )

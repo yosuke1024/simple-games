@@ -871,21 +871,29 @@ describe('Ludo room navigation cleanup', () => {
   );
 });
 
-it.each(['hearts', 'daifugo', 'sevens', 'old-maid'] as const)(
-  'starts the real %s group board and retains its state while hidden',
-  async (id) => {
-    const loaded = await loadGroupGame(id);
-    const ui = await mount(undefined, false, loaded);
-    fireEvent.change(screen.getByLabelText(text('name')), { target: { value: 'Host' } });
-    fireEvent.click(screen.getByRole('checkbox', { name: text('accept') }));
-    await act(async () => fireEvent.click(screen.getByRole('button', { name: text('create') })));
-    fireEvent.click(screen.getByRole('button', { name: text('ready') }));
-    fireEvent.click(screen.getByRole('button', { name: text('groupStart') }));
-    const state = last().snapshot!.state;
-    expect(loaded.game.valid(state, 0)).toBe(true);
-    expect(ui.container.querySelector(`[data-game="${id}"]`)).toBeInTheDocument();
-    ui.setVisible(false);
-    expect(last().snapshot!.state).toEqual(state);
-    expect(last().stop).not.toHaveBeenCalled();
-  },
-);
+it.each([
+  'hearts',
+  'daifugo',
+  'sevens',
+  'old-maid',
+  'crazy-eights',
+  'durak',
+  'spades',
+  'texas-holdem',
+  'blackjack',
+  'indian-rummy',
+] as const)('starts the real %s group board and retains its state while hidden', async (id) => {
+  const loaded = await loadGroupGame(id);
+  const ui = await mount(undefined, false, loaded);
+  fireEvent.change(screen.getByLabelText(text('name')), { target: { value: 'Host' } });
+  fireEvent.click(screen.getByRole('checkbox', { name: text('accept') }));
+  await act(async () => fireEvent.click(screen.getByRole('button', { name: text('create') })));
+  fireEvent.click(screen.getByRole('button', { name: text('ready') }));
+  fireEvent.click(screen.getByRole('button', { name: text('groupStart') }));
+  const state = last().snapshot!.state;
+  expect(loaded.game.valid(state, 0)).toBe(true);
+  expect(ui.container.querySelector(`[data-game="${id}"]`)).toBeInTheDocument();
+  ui.setVisible(false);
+  expect(last().snapshot!.state).toEqual(state);
+  expect(last().stop).not.toHaveBeenCalled();
+});

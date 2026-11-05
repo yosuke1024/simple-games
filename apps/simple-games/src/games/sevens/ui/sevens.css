@@ -782,10 +782,9 @@
   }
 }
 
-/* Nearby's room stays at most 620px wide, even on a desktop viewport. */
-.nearby-screen .sv-body {
-  display: flex;
-  flex-direction: column;
+/* Nearby uses the same responsive table geometry as CPU play. */
+.nearby-screen[data-game='sevens'] {
+  max-width: 1120px;
 }
 
 /* Phones in landscape keep the cards and the table visible side by side. */

@@ -122,7 +122,7 @@ describe('the channels', () => {
     expect(beta).toEqual(WEB_BETA_IDS);
     // Seven Nearby-capable beta games graduated with the owner's approval on 2026-11-04.
     expect(beta).toHaveLength(2);
-    expect(GAMES.filter((game) => game.channel === undefined)).toHaveLength(72);
+    expect(GAMES.filter((game) => game.channel === undefined)).toHaveLength(78);
     const building = GAMES.filter((game) => game.channel === 'in-development').map(
       (game) => game.id,
     );

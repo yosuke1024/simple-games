@@ -58,12 +58,12 @@ src/
 レイヤー規則:
 
 - Nearby Play は対応ゲームtopの「誰かと遊ぶ」から、シェル所有のcallback経由で開く。
-  native の対応22本にcallbackを渡す。ゲームからNearbyをimportせず、シェルの
+  native の対応28本にcallbackを渡す。ゲームからNearbyをimportせず、シェルの
   `app/nearbyGate.ts` からのdynamic importだけで `nearby/` を読み込む。
   コレクションの参加専用入口「近くの対戦相手を探す」は、Club House直下に同程度の控えめなテキスト行で置き、
   ゲーム未選択で同じgateを開く。Club Houseの内部からは開始しない。例外として
   `nearby/games/<id>` のadapter/Viewが自身の純粋な規則と表示部品を共有できる。
-  対象22本の境界は `src/test/importBoundaries.test.ts` と成果物のisolation検査で固定する。
+  対象28本の境界は `src/test/importBoundaries.test.ts` と成果物のisolation検査で固定する。
   通常GameContext/storage/Clubへの到達、ゲームからNearbyへの参照は許容しない。
   製品nativeと隔離PoCは別所有・別service識別子とし、製品からPoCへimportしない。
   ゲーム別入口は選択済みゲームを渡し、全体探索は `NearbyBrowser` が候補のgameIdに一致するadapter/Viewだけを

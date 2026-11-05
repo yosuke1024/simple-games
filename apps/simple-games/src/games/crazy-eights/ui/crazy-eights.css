@@ -326,3 +326,8 @@ button.ce-card:disabled {
     grid-template-columns: repeat(var(--ce-hand-compact-columns, 6), minmax(0, 1fr));
   }
 }
+
+/* The same table can use landscape space inside a nearby room. */
+.nearby-screen[data-game='crazy-eights'] {
+  max-width: 1120px;
+}

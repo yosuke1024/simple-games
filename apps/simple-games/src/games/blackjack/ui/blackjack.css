@@ -369,3 +369,8 @@ button.bj-card:disabled {
   font-size: 14px;
   padding: 8px 12px;
 }
+
+/* The same table can use landscape space inside a nearby room. */
+.nearby-screen[data-game='blackjack'] {
+  max-width: 1120px;
+}

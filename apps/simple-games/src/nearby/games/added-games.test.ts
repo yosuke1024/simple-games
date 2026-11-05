@@ -32,8 +32,8 @@ function checkPair(g: GameAdapter, s: unknown) {
   }
 }
 describe('the eight added Nearby games', () => {
-  it('registers 22 games, fixed capacities, native eligibility and safe discovery codes', () => {
-    expect(Object.keys(NEARBY_GAME_CODES)).toHaveLength(22);
+  it('registers 28 games, fixed capacities, native eligibility and safe discovery codes', () => {
+    expect(Object.keys(NEARBY_GAME_CODES)).toHaveLength(28);
     for (const id of [
       'hearts',
       'backgammon',
