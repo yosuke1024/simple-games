@@ -48,8 +48,8 @@ describe('Three Peaks player lifecycle', () => {
     const covered = tableau.querySelectorAll('.tp-covered');
     expect(covered).toHaveLength(18);
     for (const card of covered) {
-      expect(card.querySelector('.tp-card-back')).toBeInTheDocument();
-      expect(card.querySelector('.tp-card-art')).toBeNull();
+      expect(card.querySelector('.sg-playing-card-back')).toBeInTheDocument();
+      expect(card.querySelector('.sg-playing-card-face')).toBeNull();
       expect(card).not.toHaveClass('tp-red');
     }
     expect(await loadSavedGame(kv)).not.toBeNull();

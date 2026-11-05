@@ -6,7 +6,7 @@ import {
   type Session,
   type Action,
   type Hand,
-} from '../../games/blackjack/game';
+} from '../../games/blackjack/game/index';
 import { project, validView, type View } from '../../games/blackjack/game/view';
 import type { GroupGame } from '../groupSession';
 import { record, integer } from '../gameTypes';

@@ -38,14 +38,14 @@ Blackjack in the 2026-08-08 plan.
   Daifugo, Sevens, Old Maid), as well as the six additions.
 - [x] Portrait/landscape visual QA for light/dark themes, phone widths, reduced
   motion, native banner reserve and nearby rooms. No clipped actions/hand ranks.
-- [ ] Scoped tests, full typecheck/lint/tests, production native/web builds and
+- [x] Scoped tests, full typecheck/lint/tests, production native/web builds and
   bundle/isolation gates pass. Native builds checked where tools are available.
 - [x] Current canonical docs and release preparation accurately distinguish
   local verification from physical Bluetooth/LAN and store distribution.
 - [x] Poker/Blackjack simulated-gambling metadata reviewed against current store
   requirements. No claim that free chips avoid age classification.
 
-Implementation is in progress. An unchecked item is not completed or waived.
+Implementation and local verification are complete. An unchecked item is not completed or waived.
 The owner has requested implementation; this document does not authorize an
 unrequested store upload or claim physical-device validation.
 
@@ -328,3 +328,62 @@ Vitest suite remains running; it is the remaining automated completion check.
 Its process was observed creating an active worker (CPU work, not only a stale
 log), and canvas warnings are expected from unrelated canvas games under jsdom.
 No full-suite pass is claimed before the JSON result is inspected.
+
+## Completion audit, 2026-11-05
+
+All six requested games are registered for CPU play and native Nearby play:
+Indian Rummy, Crazy Eights, Spades, Durak, Texas Hold'em (the selected poker
+format), and Blackjack. Their pure engines, receiver-specific views, storage
+schemas, roots and Nearby adapters are present. The six CPU folders passed all
+94 tests in the full run; their lifecycle tests exercise tutorial/start, saved
+resumption, legal human input, CPU pause/resume, once-only settlement and save
+removal. The Nearby tests exercise complete games, wrong-seat/stale/duplicate
+input rejection, private projections, bounded frames, human/CPU ownership,
+disconnection/reconnection and rematches. The final focused run includes the
+current controller, session and history tests, including two-seat Durak and
+Blackjack's initial natural and maximum split-hand payload.
+
+The full serial run finished at 17:48 JST: **1,011 files**, **18,814 passed
+assertions**, **3 failed assertions**, and **8 existing opt-in skips**. The skips
+are unrelated long self-play/benchmark or catalogue-generation jobs; none is a
+new card-game test. All 11 snapshots matched. The three failures were resolved:
+
+- NearbyBrowser still expected 22 links. It now checks the count against the
+  supported-game registry and continues to check every destination and title.
+- Three Peaks' covered-card privacy test still selected the old artwork classes.
+  It now requires the shared back and rejects the shared face inside every
+  covered card; the suit-colour privacy assertion remains.
+- Six adapters and one protocol fixture imported a `game` directory shorthand.
+  They now name `game/index`, following the existing adapter convention and the
+  import-boundary scanner. The boundary policy/test was not weakened.
+
+After these corrections, **11 files / 207 tests passed**: all three failing
+files, the complete Three Peaks folder, six-card Nearby integration, group
+controller, group session and history. Log: `/tmp/cards-final-rerun.log`.
+The other 1,008 full-run files passed; no test assertion remains unresolved.
+This is a full run followed by a focused regression run, not a claim that the
+initial full run was green. Full report: `/tmp/cards-full-results.json`.
+
+App/build-config typecheck, changed-file ESLint and Prettier passed again after
+the import/test corrections. Both production asset builds passed again, and
+SHA-256 comparisons found **no changed files** in either native `dist` (417
+files) or web `dist-web` (328 files). The earlier final size/ad-separation checks
+and successful Android debug/iOS simulator compilations therefore apply to the
+same exact assets. Nearby isolation was also rerun against the final source.
+Full workspace lint, prototype checks, native Java/artifact checks and i18n gate
+status are recorded above. No baseline, timeout in source, native protocol,
+version or signing setting was relaxed to pass verification.
+
+The selected simplified card design is used by all 16 playing-card games.
+The shared face contains corner ranks/suits, one central suit or a J/Q/K letter,
+and no people; the back accepts no identity. Rendered evidence covers the
+phone sizes, themes, rotation, hand overlap, reduced motion and simulated banner
+reserves described above. A real-component comparison remains in
+`apps/simple-games/prototypes/card-design/index.html`; retained screenshots are
+in the task's Codex visualizations directory. Layout is responsive without
+orientation locking or resetting the game.
+
+Local implementation is complete. Physical Bluetooth/LAN tests, independent
+translation review, store age-rating changes, signing/distribution and web
+publication are not claimed. No push, PR merge, deployment or store upload was
+performed. Those are separate from this implementation request.

@@ -7,7 +7,7 @@ import { game as blackjack, projectBlackjack, decodeBlackjack } from './blackjac
 import { game as indianRummy } from './indian-rummy';
 import { GroupSession, validGroupSnapshot, type GroupGame } from '../groupSession';
 import { NEARBY_CAPACITY, NEARBY_GAME_CODES, isGroupGameId } from '../../app/nearbyGameIds';
-import { createSession, total, type Hand, type Session } from '../../games/blackjack/game';
+import { createSession, total, type Hand, type Session } from '../../games/blackjack/game/index';
 import { project } from '../../games/blackjack/game/view';
 
 const games = [crazyEights, durak, spades, texasHoldem, blackjack, indianRummy];

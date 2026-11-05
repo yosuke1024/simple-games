@@ -5,7 +5,7 @@ import {
   chooseCpuMove,
   type Session,
   type Action,
-} from '../../games/durak/game';
+} from '../../games/durak/game/index';
 import { project, validView } from '../../games/durak/game/view';
 import type { GroupGame } from '../groupSession';
 import { record, integer } from '../gameTypes';

@@ -5,7 +5,7 @@ import {
   chooseCpuMove,
   type Session,
   type Action,
-} from '../../games/texas-holdem/game';
+} from '../../games/texas-holdem/game/index';
 import { project, validView } from '../../games/texas-holdem/game/view';
 import type { GroupGame } from '../groupSession';
 import { record, integer } from '../gameTypes';

@@ -5,7 +5,7 @@ import {
   chooseCpuMove,
   type Session,
   type Action,
-} from '../../games/indian-rummy/game';
+} from '../../games/indian-rummy/game/index';
 import { project, validView } from '../../games/indian-rummy/game/view';
 import type { GroupGame } from '../groupSession';
 import { record, integer } from '../gameTypes';

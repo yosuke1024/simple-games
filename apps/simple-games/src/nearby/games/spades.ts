@@ -5,7 +5,7 @@ import {
   chooseCpuMove,
   type Session,
   type Action,
-} from '../../games/spades/game';
+} from '../../games/spades/game/index';
 import { project, validView } from '../../games/spades/game/view';
 import type { GroupGame } from '../groupSession';
 import { record, integer } from '../gameTypes';

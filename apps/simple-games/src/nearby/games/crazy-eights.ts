@@ -5,7 +5,7 @@ import {
   chooseCpuMove,
   type Session,
   type Action,
-} from '../../games/crazy-eights/game';
+} from '../../games/crazy-eights/game/index';
 import { project, validView } from '../../games/crazy-eights/game/view';
 import type { GroupGame } from '../groupSession';
 import { record, integer } from '../gameTypes';
