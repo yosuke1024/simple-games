@@ -23,7 +23,7 @@ export const id: IndianRummyMessages = {
   indianRummyRules: '4 kursi · 2 dek + 2 joker · Minimal 2 urutan, termasuk 1 murni.',
   indianRummyStep1Title: 'Ambil lalu buang',
   indianRummyStep1Body:
-    'Ambil dari tumpukan atau buangan bukan wild, lalu pilih satu kartu untuk dibuang.',
+    'Ambil dari tumpukan atau buangan bukan wild, lalu pilih satu kartu untuk dibuang. Seret kartu untuk menyusun tangan Anda.',
   indianRummyStep2Title: 'Buat urutan murni',
   indianRummyStep2Body:
     'Susun kartu berurutan sejenis tanpa pengganti; urutan dan set lain boleh memakai wild.',
@@ -47,4 +47,8 @@ export const id: IndianRummyMessages = {
   indianRummyMeld_pure: 'Urutan murni',
   indianRummyMeld_sequence: 'Urutan',
   indianRummyMeld_set: 'Set',
+  indianRummySort: 'Urutkan',
+  indianRummyArrangeKeys:
+    'Shift dengan panah kiri atau kanan memindahkan kartu ini di tangan Anda.',
+  indianRummyMoved: '{card}: posisi {n} dari {total}',
 } as const;

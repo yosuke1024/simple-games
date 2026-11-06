@@ -1,6 +1,7 @@
 import type { SchemaDef } from '@/storage/schemas';
 import { asInt, isRecord } from '@/storage/validate';
-import { restore, type Session } from '../game';
+import { restore, type Card, type Session } from '../game';
+import { isArrangementOf, sortHand } from '../game/handOrder';
 import { IR_STORAGE_KEYS } from './keys';
 export { IR_STORAGE_KEYS };
 export interface Flags {
@@ -56,18 +57,32 @@ export const statsSchema: SchemaDef<Stats> = {
   },
 };
 export interface PersistedGame {
-  schemaVersion: 1;
+  schemaVersion: 2;
   savedAt: number;
   session: Session;
+  /**
+   * How the player has arranged seat 0's hand (docs/INDIAN_RUMMY_RULES.md,
+   * "Hand arrangement"): the same cards as `session.hands[0]`, in their order.
+   */
+  handOrder: Card[];
 }
 export const gameSchema: SchemaDef<PersistedGame | null> = {
   key: IR_STORAGE_KEYS.game,
-  version: 1,
+  version: 2,
   defaultValue: () => null,
   validate: (raw) => {
-    if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
+    if (!isRecord(raw) || (raw.schemaVersion !== 1 && raw.schemaVersion !== 2)) return null;
     const savedAt = asInt(raw.savedAt, 0, 1e15),
       session = restore(raw.session);
-    return savedAt !== null && session ? { schemaVersion: 1, savedAt, session } : null;
+    if (savedAt === null || !session) return null;
+    const hand = session.hands[0]!;
+    // v1 had no arrangement: every hand was shown sorted, so that is the order
+    // it resumes in. An arrangement that no longer lists this hand is not worth
+    // the game it rides with, so it falls back the same way.
+    const handOrder =
+      raw.schemaVersion === 2 && isArrangementOf(raw.handOrder, hand)
+        ? [...raw.handOrder]
+        : sortHand(hand);
+    return { schemaVersion: 2, savedAt, session, handOrder };
   },
 };

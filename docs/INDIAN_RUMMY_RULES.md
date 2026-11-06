@@ -22,7 +22,8 @@ One deal is one game. No stakes, drop penalties, betting or reaction timer.
   as substitutes. A meld entirely composed of substitutes is not accepted;
   a sequence or set must contain a natural card. Duplicate suits do not make a valid set. There is no table
   melding or laying off onto opponents. The app suggests a valid grouping;
-  it does not auto-declare on behalf of a human.
+  it does not auto-declare on behalf of a human, and the player's own
+  arrangement of the hand is never asked to match it (see Hand arrangement).
 - Invalid declarations are disabled/rejected with an explanation, without an
   artificial penalty. Winner has zero penalty. For others, unmatched cards
   score A/court=10, number=face value, wild/printed joker=0, capped at 80.
@@ -33,6 +34,26 @@ One deal is one game. No stakes, drop penalties, betting or reaction timer.
   unmatched cards/penalty subject to required sequences, never inspects stock
   order or opposing hands. CPU saves: `ir.*`; Nearby uses separate
   host-authoritative state and per-seat projections, never CPU save/stat writes.
+- Hand arrangement (2026-11-06). The player orders their own hand: drag a card
+  to another place, or move the focused card with Shift + ←/→; Sort puts the
+  hand back in suit order (the order every hand was shown in before). A drawn
+  or picked-up card joins at the right end; a discard closes its gap; a new
+  deal, including Retry same board, starts sorted. Cards can be arranged on any
+  turn, during the CPU's moves too, because the order changes no card:
+  declaring, penalties and the CPU read which cards a hand holds, never where
+  they sit, and Suggested groups stays the engine's own grouping. The CPU save
+  keeps the order (`ir.saveGame` v2, `handOrder`); a v1 save, or an order that
+  no longer lists the hand, resumes sorted. Nearby keeps it on the device for
+  the deal on screen and never sends it; the board stays mounted between
+  rounds, so it starts a deal sorted when a finished deal is followed by a live
+  one, at the deal event, or when the wild indicator changes, never by how many
+  cards two hands share. A drag starts after 8px of travel, so a tap still
+  selects the discard, and a press that once went further than a tap's reach
+  is a drag wherever it is let go, its own place included. During a drag the
+  cards keep their DOM order and take places by CSS `order`, because moving
+  the pressed card's node would end its pointer capture; the places are read
+  with every slide finished, and the card stays under the finger where it was
+  taken.
 - Collection home/tutorial/resume/results contracts and [card art](CARD_DESIGN.md)
   apply. Landscape uses room for thirteen cards; portrait remains playable.
 

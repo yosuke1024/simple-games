@@ -22,7 +22,8 @@ export const ja: IndianRummyMessages = {
   indianRummyIntro: '13枚の手札で、連番と同数の組を作ろう。',
   indianRummyRules: '4人・2組＋ジョーカー2枚・連番は2組以上、うち1組は純粋な連番。',
   indianRummyStep1Title: '引いて、捨てる',
-  indianRummyStep1Body: '山札かワイルドでない捨て札を引き、手札から1枚を選んで捨てます。',
+  indianRummyStep1Body:
+    '山札かワイルドでない捨て札を引き、手札から1枚を選んで捨てます。札はドラッグで並べ替えられます。',
   indianRummyStep2Title: '純粋な連番を作る',
   indianRummyStep2Body:
     '代用札なしで同じマークの連番を作り、他の連番や同数の組にはワイルドも使えます。',
@@ -45,4 +46,7 @@ export const ja: IndianRummyMessages = {
   indianRummyMeld_pure: '純粋な連番',
   indianRummyMeld_sequence: '連番',
   indianRummyMeld_set: '同数の組',
+  indianRummySort: '並べ直す',
+  indianRummyArrangeKeys: 'Shift と左右の矢印キーで、この札を手札の中で動かせます。',
+  indianRummyMoved: '{card}:{total}枚中{n}枚目',
 } as const;

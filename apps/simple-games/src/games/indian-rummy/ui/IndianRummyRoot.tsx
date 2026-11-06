@@ -4,7 +4,7 @@ import { preferencesKV, type KVStore } from '../../../storage/kv';
 import { loadRecord } from '../../../storage/repo';
 import { useLoadedRecords } from '../../../ui/useLoadedRecords';
 import { IndianRummyProvider, useIndianRummy } from '../state/GameContext';
-import { loadSavedGame } from '../storage/gamePersistence';
+import { loadSaved } from '../storage/gamePersistence';
 import { flagsSchema, statsSchema } from '../storage/schemas';
 import { HomeScreen } from './screens/HomeScreen';
 import { TutorialScreen } from './screens/TutorialScreen';
@@ -15,14 +15,15 @@ const defaults = () => ({
   stats: statsSchema.defaultValue(),
   flags: flagsSchema.defaultValue(),
   session: null,
+  handOrder: undefined,
 });
 async function load(kv: KVStore) {
-  const [stats, flags, session] = await Promise.all([
+  const [stats, flags, saved] = await Promise.all([
     loadRecord(statsSchema, kv),
     loadRecord(flagsSchema, kv),
-    loadSavedGame(kv),
+    loadSaved(kv),
   ]);
-  return { stats, flags, session };
+  return { stats, flags, session: saved?.session ?? null, handOrder: saved?.handOrder };
 }
 export interface IndianRummyRootProps extends PlayTogetherProps {
   onExit: () => void;
@@ -43,6 +44,7 @@ export function IndianRummyRoot({
       initialStats={data.stats}
       initialFlags={data.flags}
       initialSession={data.session}
+      initialHandOrder={data.handOrder}
       onExit={onExit}
       entry={entry}
       kv={kv}

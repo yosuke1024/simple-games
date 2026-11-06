@@ -23,7 +23,8 @@ export const th: IndianRummyMessages = {
   indianRummyRules:
     '4 ที่นั่ง · 2 สำรับ + 2 โจ๊กเกอร์ · อย่างน้อย 2 ชุดเรียง โดยมีชุดเรียงแท้ 1 ชุด',
   indianRummyStep1Title: 'จั่วแล้วทิ้ง',
-  indianRummyStep1Body: 'จั่วจากกองหรือหยิบไพ่ทิ้งที่ไม่ใช่ไวลด์ แล้วเลือกทิ้งหนึ่งใบ',
+  indianRummyStep1Body:
+    'จั่วจากกองหรือหยิบไพ่ทิ้งที่ไม่ใช่ไวลด์ แล้วเลือกทิ้งหนึ่งใบ ลากไพ่เพื่อจัดเรียงในมือได้',
   indianRummyStep2Title: 'สร้างชุดเรียงแท้',
   indianRummyStep2Body: 'เรียงแต้มดอกเดียวกันโดยไม่ใช้ตัวแทน ส่วนชุดเรียงและชุดเลขอื่นใช้ไวลด์ได้',
   indianRummyStep3Title: 'ประกาศจบมือ',
@@ -45,4 +46,7 @@ export const th: IndianRummyMessages = {
   indianRummyMeld_pure: 'ชุดเรียงแท้',
   indianRummyMeld_sequence: 'ชุดเรียง',
   indianRummyMeld_set: 'ชุดเลข',
+  indianRummySort: 'เรียงใหม่',
+  indianRummyArrangeKeys: 'กด Shift พร้อมลูกศรซ้ายหรือขวาเพื่อย้ายไพ่ใบนี้ในมือ',
+  indianRummyMoved: '{card}: ตำแหน่งที่ {n} จาก {total}',
 } as const;

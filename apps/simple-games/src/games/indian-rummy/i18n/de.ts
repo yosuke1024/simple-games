@@ -23,7 +23,7 @@ export const de: IndianRummyMessages = {
   indianRummyRules: '4 Plätze · 2 Kartenspiele + 2 Joker · Mindestens 2 Folgen, davon 1 rein.',
   indianRummyStep1Title: 'Ziehen und ablegen',
   indianRummyStep1Body:
-    'Ziehe vom Stapel oder eine Nicht-Joker-Karte der Ablage und wähle eine Karte zum Ablegen.',
+    'Ziehe vom Stapel oder eine Nicht-Joker-Karte der Ablage und wähle eine Karte zum Ablegen. Ziehe Karten, um deine Hand zu ordnen.',
   indianRummyStep2Title: 'Eine reine Folge bilden',
   indianRummyStep2Body:
     'Bilde aufeinanderfolgende Werte derselben Farbe ohne Ersatzkarten; andere Folgen und Sätze dürfen Joker nutzen.',
@@ -47,4 +47,8 @@ export const de: IndianRummyMessages = {
   indianRummyMeld_pure: 'Reine Folge',
   indianRummyMeld_sequence: 'Folge',
   indianRummyMeld_set: 'Satz',
+  indianRummySort: 'Sortieren',
+  indianRummyArrangeKeys:
+    'Umschalt mit Pfeil links oder rechts verschiebt diese Karte in deiner Hand.',
+  indianRummyMoved: '{card}: Position {n} von {total}',
 } as const;
