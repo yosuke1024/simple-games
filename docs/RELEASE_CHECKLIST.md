@@ -1,5 +1,15 @@
 # Simple Games — リリースチェックリスト
 
+## 2026-11-07: 1.8.2(新しい Nearby 14 本の接続修正)
+
+1.8.1 の実機確認で、Hearts〜Indian Rummy の 14 本が Bluetooth / Wi-Fi とも接続できないとオーナーが報告。
+native 側の発見 label の受理範囲が Ludo(0x8E)で止まっていたのを 0x9C へ上げた
+([近隣対戦の契約](architecture/nearby-multiplayer.md) 冒頭の 2026-11-07 節)。1.8.1 の内容はそのまま含む。
+
+- [x] Pixel 9 Pro / iPhone 11(修正版 debug ビルド同士)で Bluetooth・Wi-Fi、両方向の host、2 席・4 席の開始
+- [ ] 1.8.2 の内部テスト / TestFlight ビルドで、14 本のうち数本を両端末で再確認
+- [ ] リリースノート: 新しい 14 本を Bluetooth で遊ぶには両方の端末を 1.8.2 以降へ更新
+
 ## 2026-11-07: 1.8.1(Frost Route / River Cargo の正式収録)
 
 オーナーが次のリリースの実機確認のため、Android内部テストとiOS TestFlightの準備を依頼し、

@@ -28,7 +28,11 @@ enum NearbyPlayListing {
               let code = UInt8(label.dropFirst(2).prefix(2), radix: 16) else { return false }
         // Old Android hosts treat a GATT connection itself as admission. Never
         // probe them; only the new fixed game-code range advertises this ability.
-        return (0x81...0x8e).contains(code)
+        // The upper bound is 0x80 | the highest code in src/app/nearbyGameIds.ts
+        // (Indian Rummy, 0x1C). A game added there must raise it here and in
+        // DiscoveryLabel.java, or its host is refused at start (src/test/
+        // nearbyNativeLabelRange.test.ts holds the three together).
+        return (0x81...0x9c).contains(code)
     }
 
     /// The one recruitment decision shared by Bonjour and BLE. A hidden or full

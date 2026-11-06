@@ -13,7 +13,10 @@ final class DiscoveryLabel {
     static boolean metadataCapable(String label) {
         if (!valid(label)) return false;
         int code = Integer.parseInt(label.substring(2, 4), 16);
-        return code >= 0x81 && code <= 0x8e;
+        // 0x80 | the highest code in src/app/nearbyGameIds.ts (Indian Rummy, 0x1C).
+        // A game added there must raise this bound and iOS supportsProbe, or its
+        // host is refused at start (src/test/nearbyNativeLabelRange.test.ts).
+        return code >= 0x81 && code <= 0x9c;
     }
 
     static String fromBytes(byte[] bytes) {
