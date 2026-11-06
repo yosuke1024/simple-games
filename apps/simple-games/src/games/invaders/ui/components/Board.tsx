@@ -1,7 +1,21 @@
 import { useId, useRef, type PointerEvent } from 'react';
 import { useSettings } from '@/state/SettingsContext';
-import { HEIGHT, PLAYER_Y, WIDTH, type Session } from '../../game';
+import { enemyPosition, HEIGHT, PLAYER_Y, WIDTH, type Enemy, type Session } from '../../game';
 import { Invader, Ship } from './Shapes';
+/**
+ * Where to draw an invader. One in the line sits on its slot; a diver sits on its path and
+ * leans into it — the heading is read from where the next tick puts it. Drawing only: the
+ * simulation never asks for an angle (docs/INVADERS_RULES.md §3).
+ */
+function pose(enemy: Enemy): string {
+  const at = enemyPosition(enemy);
+  if (!enemy.dive) return `translate(${at.x} ${at.y})`;
+  const next = enemyPosition({ ...enemy, dive: { ...enemy.dive, t: enemy.dive.t + 1 } });
+  const dx = next.x - at.x;
+  const dy = next.y - at.y;
+  const lean = dx === 0 && dy === 0 ? 0 : (Math.atan2(dy, dx) * 180) / Math.PI - 90;
+  return `translate(${at.x} ${at.y}) rotate(${lean.toFixed(1)})`;
+}
 export function Board({ session, onAim }: { session: Session; onAim: (x: number) => void }) {
   const { t } = useSettings();
   const fieldId = useId();
@@ -14,6 +28,9 @@ export function Board({ session, onAim }: { session: Session; onAim: (x: number)
       onAim((event.clientX - left) / scale);
     }
   };
+  // Divers are drawn after the line so a swoop passes in front of it, never behind.
+  const inLine = session.enemies.filter((enemy) => !enemy.dive);
+  const diving = session.enemies.filter((enemy) => enemy.dive);
   return (
     <svg
       className="iv-board"
@@ -71,8 +88,12 @@ export function Board({ session, onAim }: { session: Session; onAim: (x: number)
       />
       <path d="M16 412h328" className="iv-defense-line" />
       <path d="M16 23h12m-6-6v12m310-6h12m-6-6v12" className="iv-corner-mark" />
-      {session.enemies.map((enemy) => (
-        <g key={enemy.id} transform={`translate(${enemy.x} ${enemy.y})`} className="iv-enemy">
+      {[...inLine, ...diving].map((enemy) => (
+        <g
+          key={enemy.id}
+          transform={pose(enemy)}
+          className={enemy.dive ? 'iv-enemy iv-enemy-dive' : 'iv-enemy'}
+        >
           <Invader kind={Math.floor(enemy.id / 7)} />
         </g>
       ))}
