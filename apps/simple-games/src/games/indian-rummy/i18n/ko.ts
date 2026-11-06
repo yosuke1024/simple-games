@@ -22,7 +22,8 @@ export const ko: IndianRummyMessages = {
   indianRummyIntro: '열세 장으로 연속패와 같은 숫자 세트를 만드세요.',
   indianRummyRules: '4자리 · 덱 2개 + 조커 2장 · 연속패 2개 이상, 순수 연속패 1개 포함',
   indianRummyStep1Title: '뽑고 버리기',
-  indianRummyStep1Body: '더미나 와일드가 아닌 버린 카드에서 한 장을 받고 한 장을 버리세요.',
+  indianRummyStep1Body:
+    '더미나 와일드가 아닌 버린 카드에서 한 장을 받고 한 장을 버리세요. 카드를 끌어 손패를 정리하세요.',
   indianRummyStep2Title: '순수 연속패 만들기',
   indianRummyStep2Body:
     '대용 카드 없이 같은 무늬의 연속 숫자를 만들고, 다른 연속패나 세트에는 와일드를 쓸 수 있어요.',
@@ -46,4 +47,7 @@ export const ko: IndianRummyMessages = {
   indianRummyMeld_pure: '순수 연속패',
   indianRummyMeld_sequence: '연속패',
   indianRummyMeld_set: '세트',
+  indianRummySort: '정렬',
+  indianRummyArrangeKeys: 'Shift와 왼쪽 또는 오른쪽 화살표로 이 카드를 손패 안에서 옮깁니다.',
+  indianRummyMoved: '{card}: {total}장 중 {n}번째',
 } as const;

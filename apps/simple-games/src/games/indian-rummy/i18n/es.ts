@@ -22,7 +22,8 @@ export const es: IndianRummyMessages = {
   indianRummyIntro: 'Forma escaleras y grupos con trece cartas.',
   indianRummyRules: '4 asientos · 2 mazos + 2 comodines · Al menos 2 escaleras, incluida 1 pura.',
   indianRummyStep1Title: 'Roba y descarta',
-  indianRummyStep1Body: 'Roba del mazo o un descarte no comodín y elige una carta para descartar.',
+  indianRummyStep1Body:
+    'Roba del mazo o un descarte no comodín y elige una carta para descartar. Arrastra las cartas para ordenar tu mano.',
   indianRummyStep2Title: 'Forma una escalera pura',
   indianRummyStep2Body:
     'Haz cartas consecutivas del mismo palo sin sustitutos; otras escaleras y grupos admiten comodines.',
@@ -46,4 +47,7 @@ export const es: IndianRummyMessages = {
   indianRummyMeld_pure: 'Escalera pura',
   indianRummyMeld_sequence: 'Escalera',
   indianRummyMeld_set: 'Grupo',
+  indianRummySort: 'Ordenar',
+  indianRummyArrangeKeys: 'Mayús con la flecha izquierda o derecha mueve esta carta en tu mano.',
+  indianRummyMoved: '{card}: posición {n} de {total}',
 } as const;

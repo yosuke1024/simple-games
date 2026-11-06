@@ -1,22 +1,61 @@
 import { useMemo, useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
-import { analyze, isWild, type Action } from '../../game';
+import { analyze, isWild, type Action, type Card } from '../../game';
+import { arrangeHand, sameOrder, sortHand } from '../../game/handOrder';
 import type { View } from '../../game/view';
 import { rankText } from './CardFace';
 import { Back, Face, Hand, Seats, Status, useTableNames } from './TableParts';
+/**
+ * Where the player's arrangement lives (docs/INDIAN_RUMMY_RULES.md, "Hand
+ * arrangement"): with the saved game for the CPU table. Without one — a Nearby
+ * board — the table keeps it itself, on this device, for as long as it is shown.
+ */
+export interface Arrangement {
+  order: readonly Card[];
+  onArrange: (order: readonly Card[]) => void;
+}
 export function Table({
   view: v,
   canAct,
   act,
   names,
+  arrangement,
 }: {
   view: View;
   canAct: boolean;
   act: (action: Action) => void;
   names?: readonly string[];
+  arrangement?: Arrangement;
 }) {
   const { t } = useSettings(),
     [selected, setSelected] = useState<number | null>(null);
+  // The table's own arrangement follows the hand as it changes, the way the
+  // saved one does in the game context: a draw joins at the right end. A Nearby
+  // board stays mounted from one deal to the next, so the table marks the deal
+  // boundary itself rather than guess it from how many cards two hands share: a
+  // finished deal followed by a live one, the deal event, or a new wild
+  // indicator (drawn once per deal) starts the hand sorted again.
+  const handKey = v.hand.join(','),
+    mark = { key: handKey, over: v.over, indicator: v.indicator };
+  const [own, setOwn] = useState(() => ({ ...mark, order: sortHand(v.hand) }));
+  let ownOrder = own.order;
+  if (
+    !arrangement &&
+    (own.key !== handKey || own.over !== v.over || own.indicator !== v.indicator)
+  ) {
+    const newDeal =
+      (own.over && !v.over) ||
+      own.indicator !== v.indicator ||
+      (own.key !== handKey && v.event.kind === 'deal');
+    ownOrder = newDeal ? sortHand(v.hand) : arrangeHand(own.order, v.hand);
+    setOwn({ ...mark, order: ownOrder });
+  }
+  const hand = arrangeHand(arrangement?.order ?? ownOrder, v.hand),
+    sorted = sortHand(v.hand);
+  const arrange = (order: readonly Card[]) => {
+    if (arrangement) arrangement.onArrange(order);
+    else setOwn({ ...mark, order: arrangeHand(order, v.hand) });
+  };
   const yours = canAct && !v.over && v.turn === v.you;
   const choice =
     selected !== null && v.hand.includes(selected) && selected !== v.picked && v.phase === 'discard'
@@ -57,15 +96,28 @@ export function Table({
         <p className="ir-note">
           {t(v.phase === 'draw' ? 'indianRummyDrawHint' : 'indianRummyDiscardHint')}
         </p>
-        <h2 className="ir-heading">
-          {t('indianRummyHand')}
-          <small>{t('indianRummyCards', { n: v.hand.length })}</small>
-        </h2>
+        <div className="ir-hand-head">
+          <h2 className="ir-heading">
+            {t('indianRummyHand')}
+            <small>{t('indianRummyCards', { n: v.hand.length })}</small>
+          </h2>
+          {v.over ? null : (
+            <button
+              type="button"
+              className="ir-sort"
+              disabled={sameOrder(hand, sorted)}
+              onClick={() => arrange(sorted)}
+            >
+              {t('indianRummySort')}
+            </button>
+          )}
+        </div>
         <Hand
-          cards={[...v.hand].sort((a, b) => (a % 52) - (b % 52) || a - b)}
+          cards={hand}
           selected={choice}
           enabled={yours && v.phase === 'discard' ? v.hand.filter((card) => card !== v.picked) : []}
           onChoose={setSelected}
+          onArrange={v.over ? undefined : arrange}
         />
         <div className="ir-actions">
           {v.phase === 'draw' ? (

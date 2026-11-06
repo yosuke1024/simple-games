@@ -14,7 +14,16 @@ import { preferencesKV, type KVStore } from '@/storage/kv';
 import { saveRecord } from '@/storage/repo';
 import { useOnUnmount } from '../../../ui/useOnUnmount';
 import { useMovePlayback } from '@/ui/useMovePlayback';
-import { createSession, step, chooseCpuMove, cpuView, type Session, type Action } from '../game';
+import {
+  createSession,
+  step,
+  chooseCpuMove,
+  cpuView,
+  type Card,
+  type Session,
+  type Action,
+} from '../game';
+import { arrangeHand, sameOrder, sortHand } from '../game/handOrder';
 import { clearSavedGame, saveGame } from '../storage/gamePersistence';
 import { flagsSchema, statsSchema, type Flags, type Stats } from '../storage/schemas';
 export type Screen = 'home' | 'tutorial' | 'game' | 'stats';
@@ -25,6 +34,9 @@ interface ContextValue {
   canResume: boolean;
   tutorialCompleted: boolean;
   playback: { before: Session; after: Session; durationMs: number } | null;
+  /** The player's arrangement of their hand (docs/INDIAN_RUMMY_RULES.md, "Hand arrangement"). */
+  handOrder: Card[];
+  arrange: (order: readonly Card[]) => void;
   navigate: (screen: Screen) => void;
   setPaused: (paused: boolean) => void;
   startBoard: () => void;
@@ -42,6 +54,8 @@ export interface IndianRummyProviderProps {
   initialStats: Stats;
   initialFlags: Flags;
   initialSession: Session | null;
+  /** The saved arrangement of `initialSession`'s hand; the sorted hand when absent. */
+  initialHandOrder?: readonly Card[];
   onExit: () => void;
   entry?: 'collection' | 'shortcut';
   kv?: KVStore;
@@ -51,6 +65,7 @@ export function IndianRummyProvider({
   initialStats,
   initialFlags,
   initialSession,
+  initialHandOrder,
   onExit,
   entry,
   kv = preferencesKV,
@@ -64,6 +79,9 @@ export function IndianRummyProvider({
         : 'tutorial',
   );
   const [session, setSession] = useState(initialSession);
+  const [handOrder, setHandOrder] = useState<Card[]>(() =>
+    initialSession ? arrangeHand(initialHandOrder ?? [], initialSession.hands[0]!) : [],
+  );
   const [stats, setStats] = useState(initialStats);
   const [flags, setFlags] = useState(initialFlags);
   const [paused, setPaused] = useState(false),
@@ -85,9 +103,17 @@ export function IndianRummyProvider({
   const mountedSeconds = initialSession?.elapsedSeconds ?? 0;
   const elapsedRef = useRef(mountedSeconds);
   const bookedRef = useRef(mountedSeconds);
+  const handOrderRef = useRef(handOrder);
+  handOrderRef.current = handOrder;
   const putSession = useCallback((next: Session | null) => {
     sessionRef.current = next;
     setSession(next);
+  }, []);
+  // Ahead of the state, like `putSession`: a move and an arrangement can land in
+  // one task, and the second must start from the first (simple-games ref rule).
+  const putHandOrder = useCallback((next: Card[]) => {
+    handOrderRef.current = next;
+    setHandOrder(next);
   }, []);
   const persistStats = useCallback(
     (next: Stats) => {
@@ -112,7 +138,7 @@ export function IndianRummyProvider({
     const next = { ...current, elapsedSeconds: elapsedRef.current };
     putSession(next);
     bookPlayTime();
-    void saveGame(next, kv);
+    void saveGame(next, kv, handOrderRef.current);
   }, [bookPlayTime, kv, putSession]);
   const recordResult = useCallback(
     (next: Session) => {
@@ -136,12 +162,16 @@ export function IndianRummyProvider({
       elapsedRef.current = 0;
       bookedRef.current = 0;
       const next = createSession(seed);
+      // A new deal — or the same deal again — is dealt sorted, whatever order
+      // the last one ended in.
+      const order = sortHand(next.hands[0]!);
       putSession(next);
-      if (next.status === 'playing') void saveGame(next, kv);
+      putHandOrder(order);
+      if (next.status === 'playing') void saveGame(next, kv, order);
       else recordResult(next);
       setScreen('game');
     },
-    [finishPlayback, syncActiveGame, persistStats, putSession, kv, recordResult],
+    [finishPlayback, syncActiveGame, persistStats, putSession, putHandOrder, kv, recordResult],
   );
   const startBoard = useCallback(() => {
     let seed = (Date.now() ^ Math.floor(Math.random() * 0x100000000)) >>> 0;
@@ -164,12 +194,43 @@ export function IndianRummyProvider({
       if (!next) return false;
       startPlayback({ before: current, after: next }, 340);
       putSession(next);
+      // The arrangement follows the hand: a discard leaves its gap closed, a
+      // draw joins at the right end.
+      const order = arrangeHand(handOrderRef.current, next.hands[0]!);
+      if (!sameOrder(order, handOrderRef.current)) putHandOrder(order);
       bookPlayTime();
-      if (next.status === 'playing') void saveGame(next, kv);
+      if (next.status === 'playing') void saveGame(next, kv, order);
       else recordResult(next);
       return true;
     },
-    [busy, screen, paused, foreground, startPlayback, putSession, bookPlayTime, kv, recordResult],
+    [
+      busy,
+      screen,
+      paused,
+      foreground,
+      startPlayback,
+      putSession,
+      putHandOrder,
+      bookPlayTime,
+      kv,
+      recordResult,
+    ],
+  );
+  /**
+   * The player put their hand in a new order. Allowed on any turn and during a
+   * replay — it changes no card — and saved straight away, so a resumed game
+   * comes back the way it was left.
+   */
+  const arrange = useCallback(
+    (order: readonly Card[]) => {
+      const current = sessionRef.current;
+      if (!current || current.status !== 'playing') return;
+      const next = arrangeHand(order, current.hands[0]!);
+      if (sameOrder(next, handOrderRef.current)) return;
+      putHandOrder(next);
+      void saveGame(current, kv, next);
+    },
+    [kv, putHandOrder],
   );
   const play = useCallback(
     (action: Action) => sessionRef.current?.turn === 0 && commit(action),
@@ -256,6 +317,8 @@ export function IndianRummyProvider({
         canResume: session?.status === 'playing',
         tutorialCompleted: flags.tutorialCompleted,
         playback,
+        handOrder,
+        arrange,
         navigate: setScreen,
         setPaused,
         startBoard,

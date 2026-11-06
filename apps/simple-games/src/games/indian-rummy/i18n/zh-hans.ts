@@ -22,7 +22,7 @@ export const zhHans: IndianRummyMessages = {
   indianRummyIntro: '用十三张牌组成顺子和同点数组。',
   indianRummyRules: '4席 · 2副牌＋2张鬼牌 · 至少2组顺子，其中1组纯顺子。',
   indianRummyStep1Title: '摸牌再弃牌',
-  indianRummyStep1Body: '从牌堆或非万能弃牌摸一张，再选择一张弃掉。',
+  indianRummyStep1Body: '从牌堆或非万能弃牌摸一张，再选择一张弃掉。拖动手牌即可调整顺序。',
   indianRummyStep2Title: '组成纯顺子',
   indianRummyStep2Body: '不用替代牌组成同花色连续点数，其他顺子和同点数组可用万能牌。',
   indianRummyStep3Title: '宣布完成',
@@ -43,4 +43,7 @@ export const zhHans: IndianRummyMessages = {
   indianRummyMeld_pure: '纯顺子',
   indianRummyMeld_sequence: '顺子',
   indianRummyMeld_set: '同点数组',
+  indianRummySort: '整理',
+  indianRummyArrangeKeys: '按住 Shift 并按左右方向键，可在手牌中移动这张牌。',
+  indianRummyMoved: '{card}：第 {n} 张，共 {total} 张',
 } as const;

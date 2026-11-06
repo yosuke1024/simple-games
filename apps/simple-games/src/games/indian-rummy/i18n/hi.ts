@@ -23,7 +23,7 @@ export const hi: IndianRummyMessages = {
   indianRummyRules: '4 सीटें · 2 गड्डियाँ + 2 जोकर · कम से कम 2 सीक्वेंस, जिनमें 1 प्योर।',
   indianRummyStep1Title: 'उठाएँ, फिर छोड़ें',
   indianRummyStep1Body:
-    'बंद गड्डी या गैर-वाइल्ड खुले पत्ते से एक लें, फिर छोड़ने के लिए एक पत्ता चुनें।',
+    'बंद गड्डी या गैर-वाइल्ड खुले पत्ते से एक लें, फिर छोड़ने के लिए एक पत्ता चुनें। अपने पत्ते खींचकर क्रम बदलें।',
   indianRummyStep2Title: 'प्योर सीक्वेंस बनाएँ',
   indianRummyStep2Body:
     'बिना विकल्प के एक रंग के लगातार पत्ते बनाएँ; दूसरे सीक्वेंस और सेट में वाइल्ड चल सकते हैं।',
@@ -46,4 +46,7 @@ export const hi: IndianRummyMessages = {
   indianRummyMeld_pure: 'प्योर सीक्वेंस',
   indianRummyMeld_sequence: 'सीक्वेंस',
   indianRummyMeld_set: 'सेट',
+  indianRummySort: 'क्रम से लगाएँ',
+  indianRummyArrangeKeys: 'Shift के साथ बाएँ या दाएँ तीर दबाकर यह पत्ता अपने हाथ में खिसकाएँ।',
+  indianRummyMoved: '{card}: {total} में से {n}वाँ स्थान',
 } as const;

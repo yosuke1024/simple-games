@@ -154,6 +154,56 @@ button.ir-card:disabled {
   outline-offset: 3px;
   z-index: 2;
 }
+/* The player's own hand moves under a finger (INDIAN_RUMMY_RULES.md, "Hand
+   arrangement"). `touch-action: none` turns a touch that moves into a drag of
+   the card instead of a scroll of the panel; it is set on these cards only, so
+   the felt and everything below the hand still scroll a short screen. */
+.ir-hand.is-arrangeable > .ir-card {
+  cursor: grab;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.ir-hand > .ir-card.is-lifted {
+  z-index: 4;
+  cursor: grabbing;
+  box-shadow: 0 10px 22px #00000040;
+}
+.ir-hand-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ir-hand-head .ir-heading {
+  justify-content: flex-start;
+}
+/* A quiet text button: it puts the hand back in suit order, and is greyed
+   when the hand already is. Its 44px reach overhangs the heading row instead
+   of growing it, so the hand sits where it always has. */
+.ir-sort {
+  min-height: 44px;
+  margin-block: -12px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ir-sort:disabled {
+  color: var(--ink-soft);
+  opacity: 0.6;
+  cursor: default;
+}
+.ir-sort:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
 .ir-center {
   display: flex;
   align-items: center;

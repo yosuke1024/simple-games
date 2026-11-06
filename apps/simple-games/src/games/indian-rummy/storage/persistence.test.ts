@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { createMemoryKV } from '@/storage/kv';
 import { loadRecord } from '@/storage/repo';
 import { createSession, step, cpuView, chooseCpuMove } from '../game';
-import { loadSavedGame, saveGame, clearSavedGame } from './gamePersistence';
+import { sortHand } from '../game/handOrder';
+import { loadSaved, loadSavedGame, saveGame, clearSavedGame } from './gamePersistence';
 import { gameSchema, statsSchema } from './schemas';
 describe('isolated CPU records', () => {
   it('round trips an interrupted turn and keeps the same legal continuation', async () => {
@@ -35,7 +36,48 @@ describe('isolated CPU records', () => {
       }),
     ).toBeNull();
     expect(
-      gameSchema.validate({ schemaVersion: 2, savedAt: 0, session: createSession(1) }),
+      gameSchema.validate({
+        schemaVersion: 3,
+        savedAt: 0,
+        session: createSession(1),
+        handOrder: createSession(1).hands[0],
+      }),
+    ).toBeNull();
+  });
+  it("keeps the player's arrangement with the game", async () => {
+    const kv = createMemoryKV(),
+      s = createSession(4),
+      order = [...s.hands[0]!].reverse();
+    await saveGame(s, kv, order);
+    expect(await loadSaved(kv)).toEqual({ session: s, handOrder: order });
+    // A stale order is stored as the arrangement the screen shows.
+    await saveGame(s, kv, order.slice(1));
+    expect((await loadSaved(kv))!.handOrder).toEqual([...order.slice(1), order[0]]);
+    // No order is the sorted hand.
+    await saveGame(s, kv);
+    expect((await loadSaved(kv))!.handOrder).toEqual(sortHand(s.hands[0]!));
+  });
+  it('resumes a v1 save in the suit order v1 showed, and a damaged order the same way', () => {
+    const s = createSession(6),
+      sorted = sortHand(s.hands[0]!);
+    expect(gameSchema.validate({ schemaVersion: 1, savedAt: 9, session: s })).toEqual({
+      schemaVersion: 2,
+      savedAt: 9,
+      session: s,
+      handOrder: sorted,
+    });
+    for (const handOrder of [undefined, 'x', [...s.hands[0]!].slice(1), [...sorted, sorted[0]]])
+      expect(
+        gameSchema.validate({ schemaVersion: 2, savedAt: 9, session: s, handOrder })?.handOrder,
+      ).toEqual(sorted);
+    // The game itself is still checked as strictly as before.
+    expect(
+      gameSchema.validate({
+        schemaVersion: 2,
+        savedAt: 9,
+        session: { ...s, seed: -1 },
+        handOrder: sorted,
+      }),
     ).toBeNull();
   });
 });

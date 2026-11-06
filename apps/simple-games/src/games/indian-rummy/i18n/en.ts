@@ -22,7 +22,7 @@ export const en = {
   indianRummyRules: '4 seats · 2 decks + 2 jokers · At least 2 sequences, including 1 pure.',
   indianRummyStep1Title: 'Draw, then discard',
   indianRummyStep1Body:
-    'Draw from the stock or a non-wild discard, then choose one card to throw away.',
+    'Draw from the stock or a non-wild discard, then choose one card to throw away. Drag cards to arrange your hand.',
   indianRummyStep2Title: 'Build a pure sequence',
   indianRummyStep2Body:
     'Make consecutive cards in one suit without substitutes; other sequences and sets may use wilds.',
@@ -46,5 +46,8 @@ export const en = {
   indianRummyMeld_pure: 'Pure sequence',
   indianRummyMeld_sequence: 'Sequence',
   indianRummyMeld_set: 'Set',
+  indianRummySort: 'Sort',
+  indianRummyArrangeKeys: 'Shift with the left or right arrow moves this card in your hand.',
+  indianRummyMoved: '{card}: position {n} of {total}',
 } as const;
 export type IndianRummyMessages = Record<keyof typeof en, string>;

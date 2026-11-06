@@ -23,7 +23,7 @@ export const tr: IndianRummyMessages = {
   indianRummyRules: '4 koltuk · 2 deste + 2 joker · En az 2 seri, biri saf olmalı.',
   indianRummyStep1Title: 'Çekin, sonra atın',
   indianRummyStep1Body:
-    'Desteden veya joker olmayan atık karttan alın, ardından atılacak bir kart seçin.',
+    'Desteden veya joker olmayan atık karttan alın, ardından atılacak bir kart seçin. Elinizi düzenlemek için kartları sürükleyin.',
   indianRummyStep2Title: 'Saf seri oluşturun',
   indianRummyStep2Body:
     'Yerine geçen kart olmadan aynı türde ardışık kartlar oluşturun; diğer seri ve gruplarda joker kullanılabilir.',
@@ -47,4 +47,7 @@ export const tr: IndianRummyMessages = {
   indianRummyMeld_pure: 'Saf seri',
   indianRummyMeld_sequence: 'Seri',
   indianRummyMeld_set: 'Grup',
+  indianRummySort: 'Sırala',
+  indianRummyArrangeKeys: 'Shift ile sol veya sağ ok bu kartı elinizde taşır.',
+  indianRummyMoved: '{card}: {total} karttan {n}. sırada',
 } as const;

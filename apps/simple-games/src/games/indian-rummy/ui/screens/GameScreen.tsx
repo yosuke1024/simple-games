@@ -11,8 +11,17 @@ import { Table } from '../components/Table';
 import { ResultOverlay } from '../components/ResultOverlay';
 export function GameScreen() {
   const { t } = useSettings();
-  const { session, playback, play, goHome, restartCurrent, startNewBoard, setPaused } =
-    useIndianRummy();
+  const {
+    session,
+    playback,
+    play,
+    goHome,
+    restartCurrent,
+    startNewBoard,
+    setPaused,
+    handOrder,
+    arrange,
+  } = useIndianRummy();
   const [confirmRestart, setConfirmRestart] = useState(false);
   useEffect(() => {
     setPaused(confirmRestart);
@@ -53,6 +62,7 @@ export function GameScreen() {
           act={(action) => {
             if (play(action)) sounds.select();
           }}
+          arrangement={{ order: handOrder, onArrange: arrange }}
         />
       </div>
       <BannerSlot />

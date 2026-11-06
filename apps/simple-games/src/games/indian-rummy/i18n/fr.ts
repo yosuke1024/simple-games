@@ -23,7 +23,7 @@ export const fr: IndianRummyMessages = {
   indianRummyRules: '4 places · 2 jeux + 2 jokers · Au moins 2 suites, dont 1 pure.',
   indianRummyStep1Title: 'Piochez puis défaussez',
   indianRummyStep1Body:
-    'Piochez ou prenez une défausse non joker, puis choisissez une carte à défausser.',
+    'Piochez ou prenez une défausse non joker, puis choisissez une carte à défausser. Faites glisser les cartes pour organiser votre main.',
   indianRummyStep2Title: 'Formez une suite pure',
   indianRummyStep2Body:
     'Alignez des valeurs consécutives d’une couleur sans substitut ; les autres suites et groupes acceptent les jokers.',
@@ -47,4 +47,8 @@ export const fr: IndianRummyMessages = {
   indianRummyMeld_pure: 'Suite pure',
   indianRummyMeld_sequence: 'Suite',
   indianRummyMeld_set: 'Groupe',
+  indianRummySort: 'Trier',
+  indianRummyArrangeKeys:
+    'Maj avec la flèche gauche ou droite déplace cette carte dans votre main.',
+  indianRummyMoved: '{card} : position {n} sur {total}',
 } as const;

@@ -23,7 +23,7 @@ export const vi: IndianRummyMessages = {
   indianRummyRules: '4 ghế · 2 bộ bài + 2 joker · Ít nhất 2 dây, gồm 1 dây thuần.',
   indianRummyStep1Title: 'Rút rồi bỏ',
   indianRummyStep1Body:
-    'Rút từ chồng bài hoặc lá bỏ không phải lá thay thế, rồi chọn một lá để bỏ.',
+    'Rút từ chồng bài hoặc lá bỏ không phải lá thay thế, rồi chọn một lá để bỏ. Kéo lá bài để sắp xếp bài trên tay.',
   indianRummyStep2Title: 'Tạo dây thuần',
   indianRummyStep2Body:
     'Tạo các lá liên tiếp cùng chất không dùng lá thay thế; dây và bộ khác có thể dùng lá thay thế.',
@@ -45,4 +45,8 @@ export const vi: IndianRummyMessages = {
   indianRummyMeld_pure: 'Dây thuần',
   indianRummyMeld_sequence: 'Dây',
   indianRummyMeld_set: 'Bộ',
+  indianRummySort: 'Sắp xếp',
+  indianRummyArrangeKeys:
+    'Nhấn Shift cùng mũi tên trái hoặc phải để di chuyển lá bài này trong tay.',
+  indianRummyMoved: '{card}: vị trí {n}/{total}',
 } as const;

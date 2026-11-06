@@ -24,7 +24,7 @@ export const ptBR: IndianRummyMessages = {
     '4 lugares · 2 baralhos + 2 curingas · Pelo menos 2 sequências, incluindo 1 pura.',
   indianRummyStep1Title: 'Compre e descarte',
   indianRummyStep1Body:
-    'Compre do monte ou um descarte que não seja curinga e escolha uma carta para descartar.',
+    'Compre do monte ou um descarte que não seja curinga e escolha uma carta para descartar. Arraste as cartas para organizar sua mão.',
   indianRummyStep2Title: 'Forme uma sequência pura',
   indianRummyStep2Body:
     'Faça cartas consecutivas do mesmo naipe sem substitutos; outras sequências e grupos podem usar curingas.',
@@ -48,4 +48,7 @@ export const ptBR: IndianRummyMessages = {
   indianRummyMeld_pure: 'Sequência pura',
   indianRummyMeld_sequence: 'Sequência',
   indianRummyMeld_set: 'Grupo',
+  indianRummySort: 'Ordenar',
+  indianRummyArrangeKeys: 'Shift com a seta para a esquerda ou direita move esta carta na sua mão.',
+  indianRummyMoved: '{card}: posição {n} de {total}',
 } as const;
