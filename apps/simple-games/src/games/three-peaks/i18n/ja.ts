@@ -4,7 +4,7 @@ export const ja: ThreePeaksMessages = {
   threePeaksName: 'Three Peaks',
   threePeaksStep1Title: '3つの山を片付ける',
   threePeaksStep1Body:
-    '手前に重なるカードがない札を、捨て札より数字が1つ上か下なら取り除けます。すべての山を片付けましょう。',
+    '上に何も重なっていない札は、捨て札と数字が1つ違いなら取れます。取った札が次の捨て札になります。3つの山を片付けましょう。',
   threePeaksStep2Title: 'Aは両端につながる',
   threePeaksStep2Body: 'K–A–2はどちらの方向にもつながります。マークは関係ありません。',
   threePeaksStep3Title: '山札を引く・戻す',
