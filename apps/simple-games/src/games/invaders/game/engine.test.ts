@@ -419,6 +419,40 @@ describe('the diver (§3)', () => {
     expect(away.enemies[0]?.dive).toBeUndefined();
     expect(away.status).toBe('lost');
   });
+  it('is hit before a bunker it is passing beneath', () => {
+    // Gliding home into a slot just above the line, the diver is between the ship and the
+    // bunker block at (56, 381): the shot spends itself on the nearer of the two (Codex
+    // review, 2026-11-06).
+    const base = running({ fireTicks: 5, enemyFireTicks: 50 });
+    const brick = base.covers[3]!;
+    const diver = {
+      id: 24,
+      x: brick.x,
+      y: 400,
+      dive: { t: DIVE_TICKS - 2, px: 180, side: 1 as const },
+    };
+    const where = enemyPosition({ ...diver, dive: { ...diver.dive, t: diver.dive.t + 1 } });
+    expect(where.y).toBeGreaterThan(brick.y);
+    expect(where.y).toBeLessThan(397);
+    const next = step({
+      ...base,
+      enemies: [diver],
+      bullets: [{ id: 0, x: brick.x, y: 397, owner: 'player' }],
+      nextBulletId: 1,
+    });
+    expect(next.enemies).toHaveLength(0);
+    expect(next.covers[3]?.hp).toBe(2);
+    expect(next.score).toBe(10);
+    // With no diver in the way the same shot lands on the block, as it always has.
+    const blocked = step({
+      ...base,
+      enemies: [{ id: 24, x: brick.x, y: 150 }],
+      bullets: [{ id: 0, x: brick.x, y: 397, owner: 'player' }],
+      nextBulletId: 1,
+    });
+    expect(blocked.covers[3]?.hp).toBe(1);
+    expect(blocked.enemies).toHaveLength(1);
+  });
   it('keeps to the stage’s number of divers in the air', () => {
     let a = atStage(16, { diveTicks: 0, fireTicks: 5, enemyFireTicks: 50 });
     const divers = () => a.enemies.filter((enemy) => enemy.dive).length;

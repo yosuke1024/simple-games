@@ -6,6 +6,7 @@ import {
   DIVE_GRACE_TICKS,
   DIVE_MAX,
   DIVE_TICKS,
+  DIVER_SLOT_MAX_Y,
   ENEMY_COUNT,
   ENEMY_FIRE_TICKS_MAX,
   expectedScore,
@@ -163,17 +164,19 @@ export function restore(raw: unknown): Session | null {
   for (const enemy of value.enemies) {
     if (!isRecord(enemy)) return null;
     const id = asInt(enemy.id, 0, ENEMY_COUNT - 1);
+    // A diver's empty slot may have sunk past the defence line while it is away (the run goes
+    // on until it glides back — §3); an invader in the line below the line has landed.
+    const dive = !legacy && enemy.dive !== undefined ? asDive(enemy.dive) : null;
+    if (!legacy && enemy.dive !== undefined && dive === null) return null;
     if (
       id === null ||
       !slots.includes(id) ||
       enemies.some((item) => item.id === id) ||
       !finite(enemy.x, 16, WIDTH - 16) ||
-      !finite(enemy.y, 55, 401.999)
+      !finite(enemy.y, 55, dive ? DIVER_SLOT_MAX_Y : 401.999)
     )
       return null;
-    if (!legacy && enemy.dive !== undefined) {
-      const dive = asDive(enemy.dive);
-      if (dive === null) return null;
+    if (dive) {
       diving += 1;
       enemies.push({ id, x: enemy.x, y: enemy.y, dive });
     } else enemies.push({ id, x: enemy.x, y: enemy.y });

@@ -40,6 +40,13 @@ export const DIVE_SWOOP_TICKS = 72;
 export const DIVE_EXIT_TICKS = 6;
 export const DIVE_RETURN_TICKS = 45;
 export const DIVE_TICKS = DIVE_SWOOP_TICKS + DIVE_EXIT_TICKS + DIVE_RETURN_TICKS;
+/**
+ * How far a diver's slot may have sunk past the defence line while it is away: the line can
+ * reverse about six times in one dive, 18 px each, from just above the line (§3, §7). The save
+ * validator accepts a diver's slot down to here; an invader in the line is still held at the
+ * line, since one below it has already landed.
+ */
+export const DIVER_SLOT_MAX_Y = HEIGHT + 40;
 /** The second shot of a burst pair follows the first this many ticks later (§3). */
 export const BURST_GAP_TICKS = 5;
 /** No wait between enemy shots is ever longer than this; the save validator holds the same line. */
@@ -337,22 +344,27 @@ export function step(s: Session): Session {
         low <= brick.y + 8,
     );
     const hitCover = bricks.sort((a, b) => (bullet.owner === 'player' ? b.y - a.y : a.y - b.y))[0];
-    if (hitCover) {
-      hitCover.hp -= 1;
-      continue;
-    }
     if (bullet.owner === 'player') {
+      // The line is always above the bunkers, but a diver may be passing below one: the
+      // bullet spends itself on whichever it reaches first on its way up.
       const hit = placed
         .filter(
           ({ at }) => Math.abs(at.x - bullet.x) <= 12 && high >= at.y - 10 && low <= at.y + 10,
         )
         .sort((a, b) => b.at.y - a.at.y)[0];
-      if (hit) {
+      if (hit && (!hitCover || hit.at.y > hitCover.y)) {
         enemies = enemies.filter((enemy) => enemy.id !== hit.enemy.id);
         placed.splice(placed.indexOf(hit), 1);
         score += pointsFor(hit.enemy.id);
         continue;
       }
+      if (hitCover) {
+        hitCover.hp -= 1;
+        continue;
+      }
+    } else if (hitCover) {
+      hitCover.hp -= 1;
+      continue;
     } else if (
       Math.abs(bullet.x - s.playerX) <= 12 &&
       high >= PLAYER_Y - 10 &&

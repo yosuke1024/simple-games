@@ -121,6 +121,9 @@ describe('Invaders saved runs', () => {
       score: 1400,
     };
     const dive = { t: 10, px: 180, side: 1 as const };
+    // One invader left (id 0, worth 40), so its score is the stage's 600 less that.
+    const lone = (patch: Record<string, unknown>): Session =>
+      ({ ...run, enemies: [{ ...run.enemies[0]!, ...patch }], score: 1960 }) as Session;
     const bad = [
       { ...run, layout: 'triangle' as Session['layout'] },
       { ...run, enemies: [...run.enemies, { id: 3, x: 180, y: 67 }] },
@@ -128,15 +131,25 @@ describe('Invaders saved runs', () => {
       { ...run, score: 1410 },
       { ...run, diveTicks: 151 },
       { ...run, enemies: run.enemies.map((enemy, i) => (i < 3 ? { ...enemy, dive } : enemy)) },
-      { ...run, enemies: [{ ...run.enemies[0]!, dive: { ...dive, t: DIVE_TICKS } }] },
-      { ...run, enemies: [{ ...run.enemies[0]!, dive: { ...dive, px: 400 } }] },
-      { ...run, enemies: [{ ...run.enemies[0]!, dive: { ...dive, side: 0 } }] },
+      lone({ dive: { ...dive, t: DIVE_TICKS } }),
+      lone({ dive: { ...dive, px: 400 } }),
+      lone({ dive: { ...dive, side: 0 } }),
+      // An invader in the line below the defence line has landed; a diver's slot may be there,
+      // but not past the furthest a slot can sink in one dive.
+      lone({ y: 430 }),
+      lone({ y: 530, dive }),
       { ...createSession(), layout: 'ring' as const },
     ];
     for (const session of bad) {
       const fixed = { ...session, score: session.score };
       expect(restore({ schemaVersion: 2, session: fixed, savedAt: 0 })).toBeNull();
     }
+    // The controls: the same lone invader restores when its dive is in bounds — so the
+    // rejections above failed for their own reason, not for the score.
+    expect(restore({ schemaVersion: 2, session: lone({ dive }), savedAt: 0 })).not.toBeNull();
+    expect(
+      restore({ schemaVersion: 2, session: lone({ y: 430, dive }), savedAt: 0 }),
+    ).not.toBeNull();
     expect(
       restore({
         schemaVersion: 2,
