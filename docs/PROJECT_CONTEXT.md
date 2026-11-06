@@ -1,5 +1,7 @@
 # Simple Games — Project Context / Source of Truth
 
+2026-11-07: オーナーの指示でWeb先行の残り2本(Frost Route / River Cargo)を正式収録へ変更。コード上は正式80本・Web先行0本・収録見送り2本の全82エントリ。Nearbyは28本のまま。配布は1.8.1の内部テスト/TestFlightから。以下の古い日付の対象数より本行を優先する。
+
 2026-11-05: オーナーがインディアンラミー・クレイジーエイト・スペード・デュラック・
 テキサスホールデム・ブラックジャックをCPU戦と近隣対戦込みで追加し、既存トランプも
 カードの意匠と横画面を改善するよう指示した。ポーカーの形式はテキサスホールデムと明示選択。
@@ -60,8 +62,8 @@ Design philosophy:
 ### Collection
 
 - 1つの `Simple Games: Offline Games` として提供する。
-- 現在の正式収録は **78 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ)。
-  `GAMES` は全82エントリで、Web先行公開2本(Frost Route / River Cargo)、収録見送り2本を含む。
+- 現在の正式収録は **80 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ)。
+  `GAMES` は全82エントリで、収録見送り2本を含む。Web先行公開は0本(2026-11-07にFrost Route / River Cargoを正式収録)。
   2026-11-05、オーナーの「対戦込みで一気に導入」の指示により新トランプ6本をアプリへ収録した。
   2026-11-04、Nearbyの対象拡張とオーナーの明示承認により7本をアプリへ収録した。
   収録見送りは Falling Blocks(2026-10-29に取り下げ)とMarble Weave(No. 72、2026-11-03に取り下げ)。

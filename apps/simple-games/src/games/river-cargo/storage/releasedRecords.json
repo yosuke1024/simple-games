@@ -1,0 +1,6 @@
+{
+  "rg.stats": "{\"schemaVersion\":2,\"puzzles\":{\"easy-1\":{\"played\":1,\"completed\":0,\"best\":null}},\"totalPlaySeconds\":8,\"boards\":{\"easy\":{\"played\":0,\"completed\":0,\"best\":null},\"normal\":{\"played\":0,\"completed\":0,\"best\":null},\"hard\":{\"played\":0,\"completed\":0,\"best\":null}}}",
+  "rg.prefs": "{\"schemaVersion\":1,\"mode\":\"easy\"}",
+  "rg.flags": "{\"schemaVersion\":1,\"tutorialCompleted\":true}",
+  "rg.saveGame": "{\"schemaVersion\":2,\"puzzleId\":\"easy-1\",\"seed\":618410795,\"mode\":\"easy\",\"actions\":[2],\"elapsedSeconds\":8,\"savedAt\":1793994002337}"
+}
