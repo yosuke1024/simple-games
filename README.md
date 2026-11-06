@@ -56,7 +56,7 @@ PixApps が運用する Public Club House は
 
 ## アプリと収録ゲーム
 
-アプリは 1 つだけで、現在のコードは 78 本を正式収録し、28 本がNearby Playに対応しています(2026-11-05、追加分のストア配布は別途)。
+アプリは 1 つだけで、現在のコードは 80 本を正式収録し、28 本がNearby Playに対応しています(2026-11-07、追加分のストア配布は別途)。
 
 - appId: `com.pixapps.simplegames`
 - appName: `Simple Games: Offline Games`(ランチャー表示名: `Simple Games`)
@@ -64,7 +64,7 @@ PixApps が運用する Public Club House は
 
 2026-10-25のオーナー判断でChess / Nested Tic-Tac-Toe / Scopa / Nimを正式収録へ変更しました。
 2026-10-29のオーナー判断で、Web先行公開(ベータ)だった残り20本もすべて正式収録へ変更しました(1.7.0)。
-以下のWeb公開経緯は当時の記録です。現在のコードは正式78本＋Web先行公開2本(Frost Route / River Cargo)＋収録見送り2本(Falling Blocks、Marble Weave。後者は2026-11-03のオーナー判断で取り下げ)＝82本です。直近3本の検証・配信記録は [実装記録](docs/plans/2026-11-03-classic-cards-74-76.md) を参照してください。
+以下のWeb公開経緯は当時の記録です。現在のコードは正式80本(2026-11-07にFrost Route / River Cargoを正式収録)＋収録見送り2本(Falling Blocks、Marble Weave。後者は2026-11-03のオーナー判断で取り下げ)＝82エントリです。直近3本の検証・配信記録は [実装記録](docs/plans/2026-11-03-classic-cards-74-76.md) を参照してください。
 Android / iOSでは28本のゲームトップから「誰かと遊ぶ」で近くの相手を募集・検索できます。
 Bluetoothまたは同一Wi-Fiで、hostが参加を承認し、人間全員がReadyにして始めます。
 17本の1対1通信に加え、固定席の11本は人間/CPUの混成対局に対応します(Durakは2席、他10本は4席)。

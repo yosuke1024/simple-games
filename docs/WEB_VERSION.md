@@ -1,5 +1,10 @@
 # Simple Games — Web 版
 
+## 2026-11-07: Frost Route / River Cargoの正式収録
+
+オーナーの指示で先行公開の残り2本を正式収録へ変更。正式収録は80本、Web先行は0本。
+Web版でもBETA表示が外れる(landingの分類更新とWeb公開は別作業)。以下の古い日付の対象数よりこの節を優先する。
+
 ## 2026-11-06: トランプ6本とカード意匠の公開準備
 
 オーナーがカードのデザインを承認し、Web公開と1.8.0の内部テスト/TestFlight配布を依頼した。
@@ -71,7 +76,7 @@ Webでは無効なアプリ専用案内として表示する。
 | 広告       | ディスプレイ広告ほか([ADS_POLICY.md](ADS_POLICY.md)「Web 版」。既定は無効)                                                                                                                                                                               | Anchored Adaptive Banner 1 枠のみ                                                                                                        |
 | 課金       | なし(完全無料)                                                                                                                                                                                                                                           | $3.99 買い切りで広告永久削除                                                                                                             |
 | 計測       | サイト共通のページ解析(下の「計測」節。実装済み・既定は無効)                                                                                                                                                                                             | なし — Analytics を入れないことがアプリの約束([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))                                            |
-| ゲーム内容 | 正式収録の78本と先行公開2本(Frost Route / River Cargo)。registryにはほかに収録見送り2本 — 取り下げたFalling Blocks / Marble Weave。実際の配信版・開始日は下の「先行公開」節とリンク先の公開記録を参照。ソロ / CPU 戦は共通、近隣対戦はアプリ専用表示のみ | 正式収録の78本（registryで`channel`を持たないエントリ）。2026-11-04に7本、2026-11-05にトランプ6本をオーナーの明示判断で追加。実際のストア配布はリリース記録を参照 |
+| ゲーム内容 | 正式収録の80本(2026-11-07にFrost Route / River Cargoを収録し先行公開は0本)。registryにはほかに収録見送り2本 — 取り下げたFalling Blocks / Marble Weave。実際の配信版・開始日は下の「先行公開」節とリンク先の公開記録を参照。ソロ / CPU 戦は共通、近隣対戦はアプリ専用表示のみ | 正式収録の80本（registryで`channel`を持たないエントリ）。2026-11-04に7本、2026-11-05にトランプ6本、2026-11-07に2本をオーナーの明示判断で追加。実際のストア配布はリリース記録を参照 |
 
 **Play instantly on the web. Play quietly and offline in the app.**
 

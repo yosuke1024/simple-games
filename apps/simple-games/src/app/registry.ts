@@ -1654,7 +1654,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Frost Route',
     category: 'puzzle',
     glyph: '◇',
-    channel: 'web-beta',
     storageKeys: Object.values(FR_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/frost-route/ui/FrostRouteRoot').then((m) => ({ default: m.FrostRouteRoot })),
@@ -1691,7 +1690,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'River Cargo',
     category: 'logic',
     glyph: '≈',
-    channel: 'web-beta',
     storageKeys: Object.values(RG_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/river-cargo/ui/RiverCargoRoot').then((m) => ({ default: m.RiverCargoRoot })),

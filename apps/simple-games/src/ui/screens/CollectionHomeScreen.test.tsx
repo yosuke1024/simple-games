@@ -239,9 +239,9 @@ describe('web-beta titles', () => {
   const released = GAMES.filter((game) => !game.channel);
 
   it('exist in this registry (a synthetic one, and the real ones when there are any), so the tests below are not vacuous', () => {
-    // Seven Nearby games graduated on 2026-11-04; two puzzle betas remain.
+    // Frost Route and River Cargo, the last real betas, graduated on 2026-11-07.
     // The synthetic title keeps the beta UI contract independent of that list.
-    expect(beta.map((game) => game.id)).toEqual(['frost-route', 'river-cargo', 'synthetic-beta']);
+    expect(beta.map((game) => game.id)).toEqual(['synthetic-beta']);
     expect(released.length).toBeGreaterThan(20);
   });
 
