@@ -54,17 +54,23 @@ iOS は 1.8.2 が審査待ちのままなので、オーナーの判断で審査
 - [x] リリースノート: Spider の古い途中の局と統計は端末に残るが引き継がれないことを書く(オーナー判断)。
       1.8.4 は共有リンクの 1 行を足す(オーナー判断。Play は 500 字に収めるため「見出しにアイコン」を落とす)
 - [x] App Store: 1.8.2 の審査を取り下げ、版を 1.8.3 / 10803 にして再提出(2026-11-08。1.8.4 で置き換える)
-- [ ] landing #237 を本番へ出し、`/.well-known/assetlinks.json` と `/.well-known/apple-app-site-association` が
+- [x] landing #237 を本番へ出し、`/.well-known/assetlinks.json` と `/.well-known/apple-app-site-association` が
       200・リダイレクトなし・`application/json` で新しい項目を含むこと、ネイティブで遊べる全ゲーム ID の
-      `/simple-games/share/<id>/` が 200 であることを確かめる
-- [ ] Apple の CDN(`https://app-site-association.cdn-apple.com/a/v1/pixapps.ai`)が
+      `/simple-games/share/<id>/` が 200 であることを確かめる(2026-11-08。80 本すべて 200。Google の
+      `assetlinks:check` も pixapps.ai・club.pixapps.ai とも `linked: true`)
+- [x] Apple の CDN(`https://app-site-association.cdn-apple.com/a/v1/pixapps.ai`)が
       `8XR3LLAS54.com.pixapps.simplegames` を返してから iOS 1.8.4 を審査に出す(承認後に自動公開のため)
-- [ ] App Store: 1.8.3 (10803) の審査を取り下げ、同じ枠を 1.8.4 / 10804 にして再提出。Play: 製品版へ 10804
+- [x] App Store: 1.8.3 (10803) の審査を取り下げ、同じ枠を 1.8.4 / 10804 にして再提出(2026-11-08、審査待ち・
+      承認後に自動公開)。Play: 製品版へ 10804(オーナーが公開。リリースノート 17 言語を API で読み戻して一致)
       (10803 は出さない)
-- [ ] 1.8.4 の Web 版を Publish してマージ(landing #237 の後。#236 は閉じる)
+- [x] 1.8.4 の Web 版を Publish してマージ(pixapps-landing#238。最初の Publish は共有ページの生成後に React の
+      後片付けが `window` の消えた後に走って落ちた → 同じ PR で直した。#236 は閉じた)
 - [ ] 実機(Android): Play から入れた 1.8.4 で、メッセージ・メール・Chrome から開いた共有リンクがそのゲームを
       開く(起動中・未起動の両方)。`adb shell pm get-app-links com.pixapps.simplegames`(Android 12 以上)/
       `adb shell dumpsys package d`(11 以下)で pixapps.ai と club.pixapps.ai が verified。Club の招待リンクも開く
+      (2026-11-08、エミュレータ(Android 17)に CI のリリース APK を入れて確認済み: 両ホスト verified、
+      共有リンクの未起動・起動中とも Sudoku / Minesweeper が開く、`/join` はアプリ、`/play/?game=` は Chrome。
+      実機・Play から入れたビルド・メッセージアプリからは未確認)
 - [ ] 実機(iPhone): 1.8.4 で共有リンクがそのゲームを開く。LP の「アプリで開く」。Club の招待リンクも開く
 
 ## 2026-11-07: 1.8.2(新しい Nearby 14 本の接続修正)
