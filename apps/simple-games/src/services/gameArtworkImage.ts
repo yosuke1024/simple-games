@@ -14,9 +14,44 @@ import { ShareGameArtwork } from '../ui/components/ShareGameArtwork';
 const DECODE_TIMEOUT_MS = 2000;
 
 /**
- * Resolve the two palette tokens before an SVG becomes an Image, where the
- * page's inherited CSS is unavailable. Call outside a React lifecycle: the
- * detached renderer commits synchronously and is immediately unmounted.
+ * Every CSS custom property the artwork components paint with, at its value in
+ * the light theme. An SVG decoded as an image sees none of the page's
+ * stylesheet, so a `var()` left in it resolves to nothing: the shape falls back
+ * to the root's `fill="none"` and simply disappears from the share card and the
+ * Android shortcut icon. Both of those images use the fixed light palette (the
+ * card's paper, the shortcut's light field), so the light values are the ones
+ * that belong here, the same choice as `--surface` → `seriesColors.surface`.
+ *
+ * The colours are copied from ui/styles.css (`:root` for `--surface`,
+ * `.accent-chain-territory` for Chain Territory's two sides).
+ * gameArtworkImage.test.tsx checks each copy against the stylesheet, and checks
+ * that no game's serialised drawing keeps a `var(` — a new token in
+ * GameArtwork.tsx fails there until it is listed here.
+ */
+export const ARTWORK_CSS_TOKENS: Readonly<Record<string, string>> = {
+  '--surface': seriesColors.surface,
+  '--ct-you': '#245cc1',
+  '--ct-cpu': '#aa3829',
+};
+
+/** `var(--name)` → its light value, `currentColor` → the title accent; else unchanged. */
+function resolvePaint(value: string, accent: string): string {
+  if (value === 'currentColor') return accent;
+  if (value.startsWith('var(') && value.endsWith(')')) {
+    const name = value.slice(4, -1).trim();
+    const token = Object.prototype.hasOwnProperty.call(ARTWORK_CSS_TOKENS, name)
+      ? ARTWORK_CSS_TOKENS[name]
+      : undefined;
+    if (token !== undefined) return token;
+  }
+  return value;
+}
+
+/**
+ * Resolve the palette (currentColor and the tokens above) before an SVG
+ * becomes an Image, where the page's inherited CSS is unavailable. Call
+ * outside a React lifecycle: the detached renderer commits synchronously and
+ * is immediately unmounted.
  */
 export function gameArtworkSvg(
   gameId: GameId,
@@ -33,11 +68,12 @@ export function gameArtworkSvg(
     const svg = host.querySelector('svg');
     if (!svg) return null;
     const accent = titleAccentOf(gameId).light;
-    for (const node of [svg, ...svg.querySelectorAll('[fill], [stroke]')]) {
-      for (const name of ['fill', 'stroke']) {
-        const value = node.getAttribute(name);
-        if (value === 'currentColor') node.setAttribute(name, accent);
-        if (value === 'var(--surface)') node.setAttribute(name, seriesColors.surface);
+    // Every attribute, not only fill and stroke: a paint in `color` or
+    // `stop-color` would vanish from the image just the same.
+    for (const node of [svg, ...svg.querySelectorAll('*')]) {
+      for (const attribute of Array.from(node.attributes)) {
+        const resolved = resolvePaint(attribute.value, accent);
+        if (resolved !== attribute.value) attribute.value = resolved;
       }
     }
     svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');

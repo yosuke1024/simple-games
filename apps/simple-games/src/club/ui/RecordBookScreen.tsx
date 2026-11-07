@@ -10,7 +10,7 @@ import {
   type RecordDaily,
   type RecordTable,
 } from '../api/ownerRecords';
-import { gameTitle } from '../contract/challenge';
+import { currentTables, gameTitle, isCurrentBoard } from '../contract/challenge';
 import { membershipConnection } from './ManagedScreen';
 import { axisText, errorText, factText, rankingTitle, ScreenFrame, todayLocal } from './common';
 
@@ -170,11 +170,14 @@ export function RecordBookScreen({
   const tables = new Map<string, { read: Read; row: RecordTable }[]>();
   const dailies = new Map<string, { read: Read; row: RecordDaily }[]>();
   for (const read of reads) {
-    for (const row of read.data.tables) {
+    // Not a table the game's contract no longer makes, nor a daily another version of the
+    // game made (104-card Spider): their results are another game's.
+    for (const row of currentTables(read.data.tables)) {
       const key = `${row.gameId}:${row.paramsKey}`;
       tables.set(key, [...(tables.get(key) ?? []), { read, row }]);
     }
     for (const row of read.data.daily) {
+      if (!isCurrentBoard(row.gameId, row.params)) continue;
       const key = dailyComparisonKey(row);
       dailies.set(key, [...(dailies.get(key) ?? []), { read, row }]);
     }

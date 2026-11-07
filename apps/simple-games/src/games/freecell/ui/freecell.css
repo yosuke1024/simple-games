@@ -211,7 +211,8 @@
 /* ---------- stacking ---------- */
 
 /* Use the phone's vertical space for a readable, tappable strip. Long
-   columns keep scrolling inside the felt instead of shrinking the cards. */
+   columns keep scrolling inside the felt instead of shrinking the cards.
+   The wide landscape tier (below) sets its own strip, from the card's width. */
 .fc-overlap {
   margin-top: calc(-140% + clamp(32px, 11vw, 48px));
 }
@@ -453,8 +454,10 @@
    card lines up with the table instead of reading as a narrower column of
    its own.
 
-   Wide also caps the table by height. Longer columns scroll inside the felt
-   while keeping the visible strip large enough to read and select. */
+   Wide also caps the table by height, so the starting deal opens with the
+   felt unscrolled (§12, 2026-11-07). Columns that grow longer than the
+   deal's seven cards scroll inside the felt with the strip kept at its
+   size. */
 
 @media (min-width: 600px) {
   .fc-table,
@@ -486,10 +489,105 @@
     padding: 14px 16px 16px;
   }
 
+  /* The strip, from the card's width (the column's, which a margin's
+     percentage reads): 36% of it, never under 32px. The phone rule above
+     reads the viewport instead, and on a screen this wide it would always
+     be 48px, a third of a small card, so a short landscape screen could
+     only fit the deal with cards smaller than a phone's (§12, 2026-11-07).
+     32–38px here (38px at the 900px table) is inside §12's 32–48px and
+     still shows the shared deck's whole index, which ends at 28/140 of
+     the card's height. */
+  .fc-overlap {
+    margin-top: calc(-140% + max(32px, 36%));
+  }
+
+  /* The height cap. With c the card width and s = max(32px, 0.36c) the
+     strip, this tier's table is
+       width  = 8c + 7 gaps x 7px                     = 8c + 49px
+       height = top row 1.4c + 14px gap + the tallest starting cascade
+                (seven cards: one whole 1.4c face + six strips)
+                                                      = 2.8c + 14px + 6s
+     and around it the column spends 171px (the top bar 64, the action bar
+     77, the felt's padding 14 + 16), the top safe-area inset (.screen's top
+     padding) and --fc-reserve, what holds the bottom of the screen in each
+     state, as the boards in docs/ARCHITECTURE.md「広告と課金」 count it:
+       - the web build with its reservation (`:root[data-sg-web-ads]`):
+         116px and the bottom inset, the room every screen keeps clear for
+         the anchor ad (ui/styles.css `:root[data-sg-web-ads] .screen`);
+       - the app with its banner strip (`:root[data-sg-app-banner]`): the
+         strip's worst case, `--sg-app-banner-reserve` (90px and the bottom
+         inset), so the table keeps its size when an ad taller than the 64px
+         slot grows the slot (docs/ADS_POLICY.md「バナー広告の仕様」);
+       - neither (the app once ads are removed, the web without its
+         reservation): the bottom inset alone, which .game-screen pads in
+         that state (ui/styles.css). The table is larger there, and the web
+         build's moves once when an anchor that came back empty is released.
+     With H = height - 171px - top inset - reserve - 1px of slack (which
+     keeps subpixel rounding from scrolling the felt by one), the deal fits
+     when both halves of s do:
+       s = 32px:     2.8c + 206 <= H  ->  width <= (H - 206px) * 20 / 7 + 49px
+       s = 0.36c:    4.96c + 14 <= H  ->  width <= (H - 14px) * 50 / 31 + 49px
+     so the cap is the smaller of the two, written below with the 172px
+     folded in (378px and 186px). The first binds below 88.9px cards, the
+     second above. The table never goes below 363px (39.3px cards; a 360px
+     phone in portrait shows 39.5px ones): on a screen too short for the
+     deal at that size the felt scrolls instead of the cards going smaller
+     than a phone's. With no insets that is below 604px tall with the web
+     reservation, 578px with the banner, 488px with neither. The strip and
+     both constants are one derivation: change them together.
+
+     The svh line sits under @supports because it holds var() and env(): on
+     Chromium 88 such a declaration parses whatever it holds, wins over the
+     vh line, and then fails to `width: auto` (src/test/styles.test.ts). */
   .fc-table,
   .fc-stuck {
-    width: min(100%, 900px, calc((100vh - 250px) * 1.55));
-    width: min(100%, 900px, calc((100svh - 250px) * 1.55));
+    --fc-reserve: env(safe-area-inset-bottom, 0px);
+  }
+
+  :root[data-sg-web-ads] .fc-table,
+  :root[data-sg-web-ads] .fc-stuck {
+    --fc-reserve: calc(116px + env(safe-area-inset-bottom, 0px));
+  }
+
+  :root[data-sg-app-banner] .fc-table,
+  :root[data-sg-app-banner] .fc-stuck {
+    --fc-reserve: var(--sg-app-banner-reserve);
+  }
+
+  .fc-table,
+  .fc-stuck {
+    width: min(
+      100%,
+      900px,
+      max(
+        363px,
+        min(
+          calc((100vh - 378px - env(safe-area-inset-top, 0px) - var(--fc-reserve)) * 20 / 7 + 49px),
+          calc((100vh - 186px - env(safe-area-inset-top, 0px) - var(--fc-reserve)) * 50 / 31 + 49px)
+        )
+      )
+    );
+  }
+
+  @supports (height: 100svh) {
+    .fc-table,
+    .fc-stuck {
+      width: min(
+        100%,
+        900px,
+        max(
+          363px,
+          min(
+            calc(
+              (100svh - 378px - env(safe-area-inset-top, 0px) - var(--fc-reserve)) * 20 / 7 + 49px
+            ),
+            calc(
+              (100svh - 186px - env(safe-area-inset-top, 0px) - var(--fc-reserve)) * 50 / 31 + 49px
+            )
+          )
+        )
+      );
+    }
   }
 
   .fc-table {

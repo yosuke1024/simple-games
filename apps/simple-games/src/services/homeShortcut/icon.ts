@@ -1,7 +1,8 @@
 /**
  * Android's pinned shortcut uses the same original drawing as the collection
  * tile. Render that existing React SVG once into a detached element, resolve
- * its two palette tokens, then rasterize it locally. No game engine, network,
+ * its palette (currentColor and the CSS tokens gameArtworkImage.ts lists),
+ * then rasterize it locally. No game engine, network,
  * additional font, bundled PNG, or persistent image cache is involved.
  *
  * React's client renderer is already part of the app. The temporary root is

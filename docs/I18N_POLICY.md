@@ -510,6 +510,11 @@ Scopa 65 / Tangram 45)。`src/i18n/unreadCatalogs.test.ts` の一覧にはスキ
 同日の盤面プレビュー追加の `shareCardBoard` / `shareCardPreview` も英語を `source`、
 他 13 言語を AI 執筆の `machine` とした。執筆者以外の AI が 28 文を原文と直接比較し、
 中国語を特定のゲームだけに読めない表現に調整した。独立逆翻訳・ネイティブレビューは未実施。
+同日の 1.8.3 の修正で `shareCardBoard` の英語を 'Your board' から 'This game’s board' に改め
+(受け取った人が自分の盤面と読まないように。BRAND.md の「今回の盤面」)、de / es / fr / hi / id /
+pt-br / th / tr / vi の 9 言語を AI が書き直した(`machine`)。執筆者以外の AI が 9 文を原文と
+直接比較した(意味の一致のみ)。独立逆翻訳・ネイティブレビューは未実施。ja / ko / zh-hans /
+zh-hant は前から「今回の盤面」の意味なので変えていない。
 
 - **文章量の最小化は UI 原則である。** チュートリアルは最大 3 ステップ・各 1 文。
   文章より図とハイライトで示す。ボタンは短い動詞・名詞。

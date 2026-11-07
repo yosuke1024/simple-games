@@ -171,6 +171,7 @@ export const de: ClubMessages = {
   clubTier_suit1: '1 Farbe',
   clubTier_suits2: '2 Farben',
   clubTier_suits4: '4 Farben',
+  clubLegacySpider: '104 Karten',
   clubTier_cpuEasy: 'Leicht',
   clubTier_cpuNormal: 'Normal',
   clubTier_cpuHard: 'Schwer',

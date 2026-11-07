@@ -156,9 +156,24 @@ function toFile(base64: string, name: string): File | null {
  * Every ending here is a normal ending, the same rule share.ts is held to:
  * the caller falls back to a text-only share rather than seeing an error.
  *
+ * The picture is the one optional part, so it is the only part a failure may
+ * cost. The illustration is decoded long before the click, and at click time
+ * WebKit may still refuse it: `drawImage` throws for an image it now treats as
+ * broken, and `toDataURL` throws on a canvas it considers tainted by the SVG.
+ * Either one would otherwise turn a card share into a text-only share, which
+ * is worse than 1.8.2 — that card had no picture and always attached. So a
+ * failed draw that carried a picture is drawn once more, without it, on a
+ * fresh canvas (a tainted canvas stays tainted). Still one synchronous call.
+ *
  * Call it synchronously, right before `shareGame` — see the header for why.
  */
 export function renderShareCard(input: ShareCardInput): ShareCard | null {
+  const card = drawShareCard(input);
+  if (card || (!input.artwork && !input.board)) return card;
+  return drawShareCard({ ...input, artwork: null, board: null });
+}
+
+function drawShareCard(input: ShareCardInput): ShareCard | null {
   try {
     if (typeof document === 'undefined') return null;
     const canvas = document.createElement('canvas');

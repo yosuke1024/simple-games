@@ -166,6 +166,7 @@ export const ja: ClubMessages = {
   clubTier_suit1: '1スート',
   clubTier_suits2: '2スート',
   clubTier_suits4: '4スート',
+  clubLegacySpider: '104枚',
   clubTier_cpuEasy: 'やさしい',
   clubTier_cpuNormal: 'ふつう',
   clubTier_cpuHard: 'つよい',

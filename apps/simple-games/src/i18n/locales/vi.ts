@@ -163,7 +163,7 @@ export const vi: Messages = {
   shareInvite: 'Bạn có thể chơi ngay trong trình duyệt.',
   shareChallenge: 'Đến lượt bạn. Chơi thử ngay trong trình duyệt.',
   shareCardAction: 'Đến lượt bạn',
-  shareCardBoard: 'Bàn chơi của bạn',
+  shareCardBoard: 'Bàn chơi của ván này',
   shareCardPreview: 'Hình minh họa trò chơi',
   shareCardCleared: 'Hoàn thành!',
   shareCopied: 'Đã sao chép liên kết',

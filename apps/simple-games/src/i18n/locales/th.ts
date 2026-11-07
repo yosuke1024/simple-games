@@ -159,7 +159,7 @@ export const th: Messages = {
   shareInvite: 'เล่นได้ทันทีในเบราว์เซอร์',
   shareChallenge: 'ถึงตาคุณแล้ว ลองเล่นในเบราว์เซอร์ได้เลย',
   shareCardAction: 'ตาคุณแล้ว',
-  shareCardBoard: 'กระดานของคุณ',
+  shareCardBoard: 'กระดานของเกมนี้',
   shareCardPreview: 'ตัวอย่างเกม',
   shareCardCleared: 'ผ่านแล้ว!',
   shareCopied: 'คัดลอกลิงก์แล้ว',

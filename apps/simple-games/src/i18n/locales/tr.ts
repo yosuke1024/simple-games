@@ -162,7 +162,7 @@ export const tr: Messages = {
   shareInvite: 'Doğrudan tarayıcıda oynayabilirsin.',
   shareChallenge: 'Sıra sende. Tarayıcında dene.',
   shareCardAction: 'Sıra sende',
-  shareCardBoard: 'Oyun tahtan',
+  shareCardBoard: 'Bu oyunun tahtası',
   shareCardPreview: 'Oyun önizlemesi',
   shareCardCleared: 'Tamamlandı!',
   shareCopied: 'Bağlantı kopyalandı',

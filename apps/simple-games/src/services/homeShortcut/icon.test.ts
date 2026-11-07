@@ -134,6 +134,11 @@ describe('renderHomeShortcutIcon', () => {
     stubCanvas();
     for (const game of GAMES) await expect(render(game), game.id).resolves.toBe('iVBORw0KGgo=');
     expect(blobs).toHaveLength(GAMES.length);
+    // Decoded as an image, the SVG sees no CSS: a var() left in it would
+    // leave that shape out of the icon (Chain Territory's pieces once did).
+    for (const [index, blob] of blobs.entries()) {
+      expect(await blobText(blob), GAMES[index]!.id).not.toMatch(/var\(|currentColor/);
+    }
     expectReleased();
   });
 

@@ -168,6 +168,7 @@ export const vi: ClubMessages = {
   clubTier_suit1: '1 chất',
   clubTier_suits2: '2 chất',
   clubTier_suits4: '4 chất',
+  clubLegacySpider: '104 lá',
   clubTier_cpuEasy: 'Dễ',
   clubTier_cpuNormal: 'Vừa',
   clubTier_cpuHard: 'Khó',

@@ -170,6 +170,9 @@ export const en = {
   clubTier_suit1: '1 suit',
   clubTier_suits2: '2 suits',
   clubTier_suits4: '4 suits',
+  // 104-card Spider's retired tables (club.md「Spiderette への切り替え」): a title part, as
+  // the game's own `spiderLayoutNote` counts Spiderette's 52 cards.
+  clubLegacySpider: '104 cards',
   // Copied word for word from the games' own catalogs, so a Club title never
   // names a mode differently from the game's screen: clubTier_cpu* from
   // ginDifficulty_* (Hearts, Mancala and Reversi say the same), clubTier_normal

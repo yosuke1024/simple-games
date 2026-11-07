@@ -9,7 +9,7 @@ import {
   type RecordAlbum,
 } from '../api/ownerRecords';
 import { operationId } from '../api/managed';
-import { gameTitle } from '../contract/challenge';
+import { currentTables, gameTitle, isCurrentBoard } from '../contract/challenge';
 import { axisText, dateLabel, errorText, rankingTitle, ScreenFrame, todayLocal } from './common';
 
 export function AlbumsScreen({
@@ -115,6 +115,16 @@ export function AlbumsScreen({
           nextDailyAfter: records.nextDailyAfter ? next.nextDailyAfter : null,
         });
     });
+  // A table the game's contract no longer makes, or a daily another version of the game
+  // made (104-card Spider), is another game's record: never offered, and an album that
+  // holds one counts it with the records that are no longer available.
+  const shownTables = current ? currentTables(current.tables) : [];
+  const shownDaily = current ? current.daily.filter((r) => isCurrentBoard(r.gameId, r.params)) : [];
+  const unavailable = current
+    ? current.unavailableCount +
+      (current.tables.length - shownTables.length) +
+      (current.daily.length - shownDaily.length)
+    : 0;
   return (
     <ScreenFrame
       title={current?.title ?? t('clubAlbums')}
@@ -139,7 +149,7 @@ export function AlbumsScreen({
       {current ? (
         <>
           <p className="club-quiet">{dateLabel(current.createdAt, locale)}</p>
-          {current.tables.map((row) => (
+          {shownTables.map((row) => (
             <section className="club-managed-card" key={`${row.gameId}:${row.paramsKey}`}>
               <h2>{rankingTitle(row.gameId, row.paramsKey, t)}</h2>
               <p>
@@ -147,7 +157,7 @@ export function AlbumsScreen({
               </p>
             </section>
           ))}
-          {current.daily.map((row) => (
+          {shownDaily.map((row) => (
             <section className="club-managed-card" key={row.challengeId}>
               <h2>
                 {gameTitle(row.gameId)} · {t('clubDaily')} · {row.daily}
@@ -157,10 +167,8 @@ export function AlbumsScreen({
               </p>
             </section>
           ))}
-          {current.unavailableCount > 0 ? (
-            <p className="club-quiet">
-              {t('clubAlbumUnavailable', { n: current.unavailableCount })}
-            </p>
+          {unavailable > 0 ? (
+            <p className="club-quiet">{t('clubAlbumUnavailable', { n: unavailable })}</p>
           ) : null}
           {connection.role === 'owner' ? (
             <button className="btn btn-ghost" disabled={busy} onClick={() => setConfirm(true)}>
@@ -188,7 +196,7 @@ export function AlbumsScreen({
               }}
             />
           </label>
-          {records.tables
+          {currentTables(records.tables)
             .filter((r) => r.leader !== null)
             .map((row) => {
               const key = `t:${row.gameId}:${row.paramsKey}`;
@@ -200,7 +208,7 @@ export function AlbumsScreen({
               );
             })}
           {records.daily
-            .filter((r) => r.leader !== null)
+            .filter((r) => r.leader !== null && isCurrentBoard(r.gameId, r.params))
             .map((row) => {
               const key = `d:${row.challengeId}`;
               return (

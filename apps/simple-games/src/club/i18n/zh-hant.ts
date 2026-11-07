@@ -154,6 +154,7 @@ export const zhHant: ClubMessages = {
   clubTier_suit1: '1 種花色',
   clubTier_suits2: '2 種花色',
   clubTier_suits4: '4 種花色',
+  clubLegacySpider: '104張',
   clubTier_cpuEasy: '簡單',
   clubTier_cpuNormal: '普通',
   clubTier_cpuHard: '困難',

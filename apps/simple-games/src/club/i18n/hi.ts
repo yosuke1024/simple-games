@@ -168,6 +168,7 @@ export const hi: ClubMessages = {
   clubTier_suit1: '1 रंग',
   clubTier_suits2: '2 रंग',
   clubTier_suits4: '4 रंग',
+  clubLegacySpider: '104 पत्ते',
   clubTier_cpuEasy: 'आसान',
   clubTier_cpuNormal: 'सामान्य',
   clubTier_cpuHard: 'कठिन',

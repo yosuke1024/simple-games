@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { GAMES } from '@/app/registry';
 import type { Challenge } from '../api/types';
-import { contractFor } from '../contract/challenge';
+import { contractFor, isCurrentTable } from '../contract/challenge';
 import { challengeTitle } from './ClubScreen';
 import { axisGap, modeLabel, modeOrder, rankingTitle, sortModes, type T } from './common';
 
@@ -142,6 +142,14 @@ describe('mode words', () => {
     expect(modeLabel('spider-solitaire', '1-suit', t)).toBe('clubTier_suit1');
     expect(modeLabel('spider-solitaire', '2-suits', t)).toBe('clubTier_suits2');
     expect(modeLabel('spider-solitaire', '4-suits', t)).toBe('clubTier_suits4');
+    // A retired 104-card Spider table's title says so; Spiderette's, with the same suit word, does not.
+    expect(rankingTitle('spider-solitaire', '1-suit', t)).toBe(
+      'Spider Solitaire · clubLegacySpider · clubTier_suit1',
+    );
+    expect(rankingTitle('spider-solitaire', 'spiderette-1-suit', t)).toBe(
+      'Spider Solitaire · clubTier_suit1',
+    );
+    expect(rankingTitle('solitaire', 'draw-1', t)).toBe('Solitaire · clubTier_draw1');
     expect(modeLabel('nonogram', '10x10', t)).toBe('10×10');
     expect(modeLabel('takuzu', '8x8', t)).toBe('8×8');
     expect(rankingTitle('hit-and-blow', 'normal', t)).toBe('Hit & Blow · clubTier_normal');
@@ -286,6 +294,8 @@ describe('every mode the contracts can produce reads as a word, never as the raw
         const valid = contract!.validateParams(params);
         expect(valid, `${gameId} accepts ${JSON.stringify(params)}`).not.toBeNull();
         expect(contract!.paramsKey(valid!), `${gameId} ${JSON.stringify(params)}`).toBe(key);
+        // A key the contract makes is never one the Club hides as retired.
+        expect(isCurrentTable(gameId, key), `${gameId} · ${key} is a current table`).toBe(true);
 
         // The ranking table's title and the challenge's, daily or not.
         for (const label of [modeLabel(gameId, key, t), modeLabel(gameId, key, t, true)]) {

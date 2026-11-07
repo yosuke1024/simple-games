@@ -163,7 +163,7 @@ export const id: Messages = {
   shareInvite: 'Bisa langsung dimainkan di browser.',
   shareChallenge: 'Sekarang giliranmu. Coba main di browser.',
   shareCardAction: 'Giliranmu',
-  shareCardBoard: 'Papanmu',
+  shareCardBoard: 'Papan permainan ini',
   shareCardPreview: 'Pratinjau permainan',
   shareCardCleared: 'Selesai!',
   shareCopied: 'Tautan disalin',

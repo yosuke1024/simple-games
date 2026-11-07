@@ -1097,6 +1097,57 @@ describe('the sheet and the keyboard', () => {
     const list = screen.getByRole('navigation', { name: 'Games' });
     expect(document.activeElement).toBe(within(list).getByRole('button', { name: 'Sudoku' }));
   });
+
+  /**
+   * The same unpin with the game's category closed. Its one tile left is still
+   * in the DOM, inside the hidden grid, and a `focus()` there lands nowhere —
+   * so the heading that hides it is where focus goes, still closed.
+   */
+  it("lands on the closed category's heading when the only tile left is behind it", async () => {
+    await initFavoriteGames(createMemoryKV());
+    await initCategoryDisclosure(createMemoryKV());
+    toggleFavoriteGame('solitaire');
+    const user = userEvent.setup();
+    renderHome();
+
+    const cards = screen.getByRole('button', { name: /^Cards \d+$/ });
+    await user.click(cards);
+    expect(cards).toHaveAttribute('aria-expanded', 'false');
+
+    const shelf = screen.getByRole('navigation', { name: 'Favorites' });
+    const shelfTile = within(shelf).getByRole('button', { name: 'Solitaire' });
+    shelfTile.focus();
+    fireEvent.contextMenu(shelfTile);
+    await user.click(screen.getByRole('button', { name: 'Remove from Favorites' }));
+
+    expect(shelfTile.isConnected).toBe(false);
+    expect(screen.queryByRole('navigation', { name: 'Recently played' })).toBeNull();
+    expect(document.activeElement).toBe(cards);
+    expect(cards).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  /** And a tile that is still drawn beats the closed heading, wherever it sits. */
+  it('prefers the recent row to the closed category when the game is in both', async () => {
+    await initFavoriteGames(createMemoryKV());
+    await initRecentGames(createMemoryKV());
+    await initCategoryDisclosure(createMemoryKV());
+    recordGameOpened('solitaire');
+    toggleFavoriteGame('solitaire');
+    const user = userEvent.setup();
+    renderHome();
+
+    await user.click(screen.getByRole('button', { name: /^Cards \d+$/ }));
+    const shelf = screen.getByRole('navigation', { name: 'Favorites' });
+    const shelfTile = within(shelf).getByRole('button', { name: 'Solitaire' });
+    shelfTile.focus();
+    fireEvent.contextMenu(shelfTile);
+    await user.click(screen.getByRole('button', { name: 'Remove from Favorites' }));
+
+    const recentRow = screen.getByRole('navigation', { name: 'Recently played' });
+    expect(document.activeElement).toBe(
+      within(recentRow).getByRole('button', { name: 'Solitaire' }),
+    );
+  });
 });
 
 /**

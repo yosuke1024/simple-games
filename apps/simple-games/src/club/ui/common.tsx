@@ -5,7 +5,7 @@
  */
 import { useLayoutEffect, type ReactNode, type RefObject } from 'react';
 import { ClubApiError } from '../api/errors';
-import { contractFor, gameTitle } from '../contract/challenge';
+import { contractFor, gameTitle, isCurrentTable } from '../contract/challenge';
 import { formatDuration } from '@/ui/format';
 import { IconBack } from '@/ui/components/icons';
 import type { MessageKey, TranslateVars } from '@/i18n';
@@ -231,12 +231,22 @@ export function modeLabel(gameId: string, key: string, t: T, daily = false): str
   return key.replace(/^(\d+)x(\d+)/, '$1×$2');
 }
 
-/** `Sudoku · Hard`; a game with one table (`standard`) is its title alone, a daily table says Daily. */
+/**
+ * `Sudoku · Hard`; a game with one table (`standard`) is its title alone, a daily table says Daily.
+ * A Spider table the contract no longer makes (`isCurrentTable`) is 104-card Spider's (club.md
+ * 「Spiderette への切り替え」) and says so — `Spider Solitaire · 104 cards · 1 suit` — so it never
+ * reads as Spiderette's `1 suit`.
+ */
 export function rankingTitle(gameId: string, paramsKey: string, t: T): string {
   const game = gameTitle(gameId) ?? gameId;
   if (paramsKey === 'daily') return `${game} · ${t('clubDaily')}`;
-  const mode = modeLabel(gameId, paramsKey, t);
-  return mode === null ? game : `${game} · ${mode}`;
+  const legacy =
+    gameId === 'spider-solitaire' && !isCurrentTable(gameId, paramsKey)
+      ? t('clubLegacySpider')
+      : null;
+  return [game, legacy, modeLabel(gameId, paramsKey, t)]
+    .filter((part): part is string => part !== null)
+    .join(' · ');
 }
 
 export function dateLabel(iso: string, locale: string): string {

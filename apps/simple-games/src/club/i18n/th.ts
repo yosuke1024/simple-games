@@ -163,6 +163,7 @@ export const th: ClubMessages = {
   clubTier_suit1: '1 ดอก',
   clubTier_suits2: '2 ดอก',
   clubTier_suits4: '4 ดอก',
+  clubLegacySpider: '104 ใบ',
   clubTier_cpuEasy: 'ง่าย',
   clubTier_cpuNormal: 'ปานกลาง',
   clubTier_cpuHard: 'ยาก',

@@ -164,7 +164,7 @@ export const fr: Messages = {
   shareInvite: 'Vous pouvez y jouer directement dans le navigateur.',
   shareChallenge: 'À vous de jouer. Essayez dans votre navigateur.',
   shareCardAction: 'À vous de jouer',
-  shareCardBoard: 'Votre plateau',
+  shareCardBoard: 'Plateau de cette partie',
   shareCardPreview: 'Aperçu du jeu',
   shareCardCleared: 'Terminé !',
   shareCopied: 'Lien copié',

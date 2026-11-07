@@ -15,7 +15,7 @@ import { ClubApiError } from '../api/errors';
 import type { Challenge, Member, RankingMine, RankingSummary, ReportedMember } from '../api/types';
 import type { ClubSettings } from '../api/managementTypes';
 import { updateClubGames } from '../storage/connections';
-import { contractFor, gameTitle } from '../contract/challenge';
+import { contractFor, currentTables, gameTitle, isCurrentBoard } from '../contract/challenge';
 import { PUBLIC_CLUB_ENDPOINT } from '../public';
 import { flushOutbox, type FlushReport } from '../storage/outbox';
 import { GAME_CATEGORIES } from '@/app/registry';
@@ -35,15 +35,19 @@ import {
   todayLocal,
   type T,
 } from './common';
-import { shelfGames, sortByShelf, StandingRow } from './standings';
+import { retiredByShelf, shelfGames, sortByShelf, StandingRow } from './standings';
 
 export interface ClubData {
   /** Challenges tagged with today's daily date (everyone's daily meets here). */
   today: Challenge[];
   /** The local date `today` was asked for, so the answer can be held to it. */
   todayDate: string;
+  /** `GET /rankings`, only the tables this build's contracts make (`currentTables`). */
   rankings: RankingSummary[];
-  /** The tables the viewer is in (`GET /rankings/mine`); empty from a server without the route. */
+  /**
+   * The tables the viewer is in (`GET /rankings/mine`), a retired one included (the screen
+   * splits them: `sortByShelf` / `retiredByShelf`); empty from a server without the route.
+   */
   mine: RankingMine[];
   /** The newest page of members, and the older pages the Members screen has read since. */
   members: Member[];
@@ -221,7 +225,10 @@ export function ClubScreen({
           reported,
           today,
           todayDate,
-          rankings,
+          // Only the tables this build's contracts make: a retired one (104-card Spider)
+          // is another game's, so no shelf or chip shows it and no tile opens it. The
+          // viewer's own rows in one stay, for "Your rankings" to offer their deletion.
+          rankings: currentTables(rankings),
           mine,
           ...(settings ? { settings } : {}),
           ...(waiting !== undefined ? { waitingRequests: waiting } : {}),
@@ -259,19 +266,29 @@ export function ClubScreen({
   }, [data]);
 
   // Held to the date asked for: a server that predates `?daily=` ignores the
-  // parameter and answers with its ordinary list, which is not today's.
+  // parameter and answers with its ordinary list, which is not today's. A daily
+  // another version of the game made is not this build's board (club.md §6-0):
+  // listed only when it is `mine` — the viewer has a result in it (or withdrew
+  // from it) — so their own result can still be deleted there; it opens with no Play.
   const allowed = (id: string) =>
     data?.settings?.allowedGameIds == null || data.settings.allowedGameIds.includes(id);
   const todays = (data?.today ?? []).filter(
-    (c) => allowed(c.gameId) && contractFor(c.gameId) !== null && c.daily === data?.todayDate,
+    (c) =>
+      allowed(c.gameId) &&
+      contractFor(c.gameId) !== null &&
+      (isCurrentBoard(c.gameId, c.params) || c.mine) &&
+      c.daily === data?.todayDate,
   );
 
   const games = shelfGames();
   for (const id of games.keys()) if (!allowed(id)) games.delete(id);
   const rankings = (data?.rankings ?? []).filter((r) => games.has(r.gameId));
   const tablesOf = (gameId: string) => rankings.filter((r) => r.gameId === gameId);
-  // The shelves' order, fixed (club.md §9): never by rank, never by recency.
+  // The shelves' order, fixed (club.md §9): never by rank, never by recency. A retired
+  // table the viewer is in comes after the current ones, under its own name, and never
+  // chooses the mode a tile opens.
   const mine = sortByShelf(data?.mine ?? [], games);
+  const retiredMine = retiredByShelf(data?.mine ?? [], games);
   const shelves = GAME_CATEGORIES.map((category) => ({
     category,
     games: [...games.values()]
@@ -421,7 +438,7 @@ export function ClubScreen({
               ) : null}
             </div>
           ) : null}
-          {mine.length > 0 ? (
+          {mine.length + retiredMine.length > 0 ? (
             <>
               <h2 className="home-section-label club-section">{t('clubMyRankings')}</h2>
               {mine.map((row) => (
@@ -431,6 +448,17 @@ export function ClubScreen({
                   game={games.get(row.gameId)!.game}
                   t={t}
                   onOpen={() => onOpenRanking(row.gameId, row.paramsKey, tablesOf(row.gameId))}
+                />
+              ))}
+              {/* A retired table opens alone, with no chips of the current tables beside it:
+                  its rows are read, and the viewer's deleted, there (RankingScreen). */}
+              {retiredMine.map((row) => (
+                <StandingRow
+                  key={`${row.gameId}:${row.paramsKey}`}
+                  row={row}
+                  game={games.get(row.gameId)!.game}
+                  t={t}
+                  onOpen={() => onOpenRanking(row.gameId, row.paramsKey, [])}
                 />
               ))}
             </>
