@@ -8,7 +8,17 @@ native 側の発見 label の受理範囲が Ludo(0x8E)で止まっていたの�
 
 - [x] Pixel 9 Pro / iPhone 11(修正版 debug ビルド同士)で Bluetooth・Wi-Fi、両方向の host、2 席・4 席の開始
 - [ ] 1.8.2 の内部テスト / TestFlight ビルドで、14 本のうち数本を両端末で再確認
-- [ ] リリースノート: 新しい 14 本を Bluetooth で遊ぶには両方の端末を 1.8.2 以降へ更新
+- [x] リリースノート: 新しい 14 本を Bluetooth で遊ぶには両方の端末を 1.8.2 以降へ更新(新機能・説明文に記載)
+- [x] オーナーの動作確認(1.8.2 の内部テスト / TestFlight、2026-11-07)→ 本番リリースの指示
+- [x] ストア文面: オーナーの依頼で Codex(xhigh)が改稿し、照合後にオーナーが確定(サブタイトルは数独・ソリティアを残しトランプを足す、
+      Texas Hold'em は冒頭に出さない)。英語の正文は store/listing.md。en / ja と 12 言語を ASC の 1.8.2 下書きへ書き込み、読み戻しで一致を確認
+- [x] 題名 5 本(Ridge Cannons / Fleet Search / Chain Territory / Frost Route / River Cargo)の商標DB・両ストア調査: すべてそのまま(各 RULES「名称」)
+- [x] 年齢区分(Apple): オーナー判断「正直に申告」。`gamblingSimulated` を NONE → INFREQUENT_OR_MILD(ASC 上の区分は 12+ のまま。
+      新方式では 13+、オーストラリアは R 18+)。現金の賭け・景品・ルートボックスは「なし」のまま
+- [ ] 年齢区分(Google Play): IARC 質問票を再回答し、模擬ギャンブル「はい」(現金・景品「いいえ」)。PEGI 18 見込み・オーストラリア R 18+。
+      EEA・英国・オーストラリア・ブラジルなどで未成年に届かなくなる可能性をオーナーは承知の上で採った。算出結果で対象年齢と広告設定を確認(オーナー)
+- [ ] AdMob: Gambling & betting の広告カテゴリを除外していることを管理画面で確認(Play のポリシー上、模擬ギャンブルを含むアプリには出せない。オーナー)
+- [ ] App Store の審査提出、Play 製品版への公開(オーナー)、landing の Publish とマージ(ストア公開と同時)
 
 ## 2026-11-07: 1.8.1(Frost Route / River Cargo の正式収録)
 
