@@ -117,7 +117,7 @@ describe('CrownGridResultOverlay', () => {
     renderOverlay(solvedSession(125), null);
     await userEvent.click(screen.getByRole('button', { name: 'Share' }));
     const [{ text, url }] = share.mock.calls[0] as [{ text: string; url: string }];
-    expect(url).toBe('https://pixapps.ai/simple-games/play/?game=crown-grid');
+    expect(url).toBe('https://pixapps.ai/simple-games/share/crown-grid/');
     expect(text).toContain('I cleared Crown Grid');
     expect(text).toContain('Time 2:05');
     expect(text).toContain('Hints used 1');
