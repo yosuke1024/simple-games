@@ -51,40 +51,30 @@ const tutorialDone = {
   [SS_STORAGE_KEYS.flags]: JSON.stringify({ schemaVersion: 1, tutorialCompleted: true }),
 };
 
-/**
- * The golden deal at one suit (compatibility.test.ts). Its ten face-up cards
- * are 4 A 10 7 4 9 6 7 2 Q of spades, so the 9 onto the 10 is a legal move and
- * both of those ranks appear exactly once.
- */
+/** A fixed Spiderette deal with one exposed 9 and 10, and hidden cards under the 9. */
 const savedGoldenGame = {
   ...tutorialDone,
-  [SS_STORAGE_KEYS.game]: JSON.stringify(toPersisted(createFreeSession(1, 'ss-free-golden'), 1)),
+  [SS_STORAGE_KEYS.game]: JSON.stringify(
+    toPersisted(createFreeSession(1, 'ss-spiderette-free-ui-5'), 1),
+  ),
 };
 
-/**
- * A crafted one-suit save whose only sound move is the ace of column 1 onto
- * the 2 of column 2 (a card is `copy * 13 + rank - 1`, types.ts). Kings and
- * jacks land nowhere and take nothing, three completed runs and the stock
- * absorb the rest of the 104, and — the point of the fixture — both columns
- * of the move hold cards the move does not touch: the 5 and 9 above the ace,
- * the 8 under the 2.
- */
+/** A full 52-card save whose hint joins the ace in column 1 to column 2's two. */
 const hintTableau = [
-  { down: [], up: [4, 8, 0] }, // 5♠ 9♠ A♠ — only the ace moves
-  { down: [], up: [7, 1] }, // 8♠ 2♠ — the ace lands on the 2
-  { down: [], up: [55, 12] }, // 4♠ under a king
-  { down: [], up: [57, 64] }, // 6♠ under a king
-  { down: [], up: [77] },
-  { down: [], up: [90] },
-  { down: [], up: [103] },
-  { down: [], up: [62] },
-  { down: [], up: [75] },
-  { down: [], up: [88] },
+  { down: [], up: [4, 8, 0] },
+  { down: [], up: [7, 1] },
+  { down: [], up: [12] },
+  { down: [], up: [25] },
+  { down: [], up: [38] },
+  { down: [], up: [51] },
+  { down: [] as number[], up: [23] },
 ];
-const hintCompleted = [1, 2, 3].map((copy) =>
-  Array.from({ length: 13 }, (_, i) => copy * 13 + 12 - i),
+const hintCompleted: number[][] = [];
+const hintDealt = new Set(hintTableau.flatMap((pile) => pile.up));
+const hintRemaining = Array.from({ length: 52 }, (_, card) => card).filter(
+  (card) => !hintDealt.has(card),
 );
-const hintDealt = new Set([...hintTableau.flatMap((pile) => pile.up), ...hintCompleted.flat()]);
+hintTableau[6]!.down = hintRemaining.slice(24);
 const savedHintGame = {
   ...tutorialDone,
   [SS_STORAGE_KEYS.game]: JSON.stringify({
@@ -93,7 +83,7 @@ const savedHintGame = {
     seed: 'ss-free-hint-marks',
     suitCount: 1,
     dailyDate: null,
-    stock: Array.from({ length: 104 }, (_, card) => card).filter((card) => !hintDealt.has(card)),
+    stock: hintRemaining.slice(0, 24),
     tableau: hintTableau,
     completed: hintCompleted,
     moveCount: 0,
@@ -103,49 +93,28 @@ const savedHintGame = {
   }),
 };
 
-/**
- * A crafted one-suit save with one of every drag the issue names (issue
- * #119), each with a legal destination and an illegal one within reach.
- * A card is `copy * 13 + rank - 1` (types.ts); suit does not matter here
- * (suitCount 1), only rank and identity.
- *
- * - column 1: 9♠ 8♠ over a hidden king — the multi-card run that moves onto
- *   column 2's 10♠, freeing the flip
- * - column 2: 10♠ alone — receives the run from column 1
- * - column 3: 5♠ over a hidden card — the single card that moves onto
- *   column 4's 6♠
- * - column 4: 6♠ alone — receives column 3's 5♠
- * - column 5: empty — any card may land here
- * - column 6: J♠ alone — a spare single card, dragged to the empty column 5
- * - column 7: J♠ over 7♠, not a run (11 is not one more than 7) — lifting
- *   from its own bottom carries a mixed stack that lights nothing
- * - column 8: A♠ alone — completes column 9's run when dragged there
- * - column 9: K♠ down to 2♠, twelve cards, one card short of a finished run —
- *   receiving column 8's ace takes the whole thirteen off the table
- * - column 10: Q♠ over a very deep hidden stock (every card not spoken for
- *   above), so the fixture accounts for all 104 cards with none in the stock
- */
+/** Seven-column fixtures for runs, single cards, empty columns, and mixed stacks. */
 const dragTableau = [
-  { down: [25], up: [8, 7] }, // K♠(hidden) / 9♠ 8♠
-  { down: [], up: [9] }, // 10♠
-  { down: [73], up: [4] }, // (hidden) / 5♠
-  { down: [], up: [5] }, // 6♠
-  { down: [], up: [] }, // empty
-  { down: [], up: [10] }, // J♠
-  { down: [], up: [23, 19] }, // J♠ / 7♠ — not a run
-  { down: [], up: [26] }, // A♠
-  { down: [], up: [51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41, 40] }, // K♠..2♠
-  {
-    down: [
-      0, 1, 2, 3, 6, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 24, 27, 28, 29, 30, 31, 32, 33, 34,
-      35, 36, 37, 38, 39, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 64, 65, 66, 67, 68, 69, 70,
-      71, 72, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94,
-      95, 96, 97, 98, 99, 100, 101, 102, 103,
-    ],
-    up: [63],
-  }, // (very deep hidden) / Q♠
+  { down: [25], up: [8, 7] },
+  { down: [], up: [9] },
+  { down: [34], up: [4] },
+  { down: [], up: [5] },
+  { down: [], up: [] },
+  { down: [], up: [10] },
+  { down: [] as number[], up: [23, 19] },
 ];
-function savedDragGame() {
+const dragUsed = new Set(dragTableau.flatMap((p) => [...p.down, ...p.up]));
+dragTableau[6]!.down = Array.from({ length: 52 }, (_, c) => c).filter((c) => !dragUsed.has(c));
+const finishTableau = [
+  { down: Array.from({ length: 38 }, (_, i) => i + 1), up: [0] },
+  { down: [], up: [] },
+  { down: [], up: [] },
+  { down: [], up: [] },
+  { down: [], up: [39] },
+  { down: [], up: Array.from({ length: 12 }, (_, i) => 51 - i) },
+  { down: [], up: [] },
+];
+function savedDragGame(tableau = dragTableau) {
   return {
     ...tutorialDone,
     [SS_STORAGE_KEYS.game]: JSON.stringify({
@@ -155,7 +124,7 @@ function savedDragGame() {
       suitCount: 1,
       dailyDate: null,
       stock: [],
-      tableau: dragTableau,
+      tableau,
       completed: [],
       moveCount: 0,
       hintCount: 0,
@@ -279,7 +248,7 @@ describe('a home-screen shortcut', () => {
    * table and goes home.
    *
    * The move is the point. An untouched deal is indistinguishable from the one
-   * a launch would hand out by itself — same ten columns, same five deals in
+   * a launch would hand out by itself — same seven columns, same four deals in
    * hand, same zero moves — so a test that suspends without playing cannot
    * tell a resumed board from a fresh one, and would keep passing if the
    * shortcut silently started a new deal (spending a play, §9).
@@ -288,7 +257,7 @@ describe('a home-screen shortcut', () => {
     await user.click(await screen.findByRole('button', { name: /New deal/ }));
     await user.click(
       await within(table()).findByRole('button', {
-        name: 'Stock, 5 deals left — tap to deal a row',
+        name: 'Stock, 4 deals left — tap to deal a row',
       }),
     );
     await user.click(screen.getByRole('button', { name: 'Home' }));
@@ -299,7 +268,7 @@ describe('a home-screen shortcut', () => {
     await user.click(await screen.findByRole('button', { name: /Daily Challenge/ }));
     await user.click(
       await within(table()).findByRole('button', {
-        name: 'Stock, 5 deals left — tap to deal a row',
+        name: 'Stock, 4 deals left — tap to deal a row',
       }),
     );
     await user.click(screen.getByRole('button', { name: 'Home' }));
@@ -318,10 +287,10 @@ describe('a home-screen shortcut', () => {
 
     // The deal that was waiting, and not a new one: a row already off the
     // stock and the move that took it. A launch that dealt its own game would
-    // show five deals in hand and no moves.
+    // show four deals in hand and no moves.
     expect(board()).toBeInTheDocument();
     expect(
-      within(table()).getByRole('button', { name: 'Stock, 4 deals left — tap to deal a row' }),
+      within(table()).getByRole('button', { name: 'Stock, 3 deals left — tap to deal a row' }),
     ).toBeInTheDocument();
     expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
     expect(home()).not.toBeInTheDocument();
@@ -345,7 +314,7 @@ describe('a home-screen shortcut', () => {
     expect(board()).toBeInTheDocument();
     expect(screen.getByText('Daily')).toBeInTheDocument();
     expect(
-      within(table()).getByRole('button', { name: 'Stock, 4 deals left — tap to deal a row' }),
+      within(table()).getByRole('button', { name: 'Stock, 3 deals left — tap to deal a row' }),
     ).toBeInTheDocument();
     expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
   });
@@ -506,13 +475,13 @@ describe('first run', () => {
     expect(screen.getByText('Deal when you are stuck')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Start Playing' }));
 
-    // A fresh Spider layout (§1): 54 cards over ten columns, one face up per
-    // column, and five deals still in hand.
+    // A fresh Spider layout (§1): 28 cards over seven columns, one face up per
+    // column, and four deals still in hand.
     expect(
-      within(table()).getByRole('button', { name: 'Stock, 5 deals left — tap to deal a row' }),
+      within(table()).getByRole('button', { name: 'Stock, 4 deals left — tap to deal a row' }),
     ).toBeInTheDocument();
-    expect(within(table()).getAllByRole('img', { name: 'Face down' })).toHaveLength(44);
-    expect(table().querySelectorAll('[data-card]')).toHaveLength(10);
+    expect(within(table()).getAllByRole('img', { name: 'Face down' })).toHaveLength(21);
+    expect(table().querySelectorAll('[data-card]')).toHaveLength(7);
     expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
   });
 });
@@ -522,7 +491,7 @@ describe('Quick Rules shown again over a suspended deal (§10)', () => {
     const user = userEvent.setup();
     // The flags record is gone while a free deal is suspended: the golden
     // deal, one row already dealt off the stock.
-    const played = doDeal(createFreeSession(1, 'ss-free-golden'))!;
+    const played = doDeal(createFreeSession(1, 'ss-spiderette-free-ui-5'))!;
     renderGame({ [SS_STORAGE_KEYS.game]: JSON.stringify(toPersisted(played, 1)) });
 
     expect(await screen.findByText('Stack down by rank')).toBeInTheDocument();
@@ -532,9 +501,9 @@ describe('Quick Rules shown again over a suspended deal (§10)', () => {
     await settle();
 
     expect(
-      within(table()).getByRole('button', { name: 'Stock, 4 deals left — tap to deal a row' }),
+      within(table()).getByRole('button', { name: 'Stock, 3 deals left — tap to deal a row' }),
     ).toBeInTheDocument();
-    expect(table().querySelectorAll('[data-card]')).toHaveLength(20);
+    expect(table().querySelectorAll('[data-card]')).toHaveLength(14);
     expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
     // Resumed, not dealt: no deal counted, and no new deal written over the slot.
     expect(deviceStore.get(SS_STORAGE_KEYS.stats)).toBeUndefined();
@@ -548,15 +517,15 @@ describe('playing', () => {
     renderGame(savedGoldenGame);
     await resumeSavedGame(user);
 
-    expect(within(table()).getAllByRole('img', { name: 'Face down' })).toHaveLength(44);
+    expect(within(table()).getAllByRole('img', { name: 'Face down' })).toHaveLength(21);
 
     await user.click(within(table()).getByRole('button', { name: '9 of spades' }));
     await user.click(within(table()).getByRole('button', { name: '10 of spades' }));
 
     expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
     // The column the 9 left had four hidden cards; one has turned over.
-    expect(within(table()).getAllByRole('img', { name: 'Face down' })).toHaveLength(43);
-    expect(table().querySelectorAll('[data-card]')).toHaveLength(11);
+    expect(within(table()).getAllByRole('img', { name: 'Face down' })).toHaveLength(20);
+    expect(table().querySelectorAll('[data-card]')).toHaveLength(8);
   });
 
   it('deals a row from the stock and undoes it whole (§3, §8)', async () => {
@@ -566,21 +535,21 @@ describe('playing', () => {
 
     expect(screen.getByRole('button', { name: /Undo/ })).toBeDisabled();
     await user.click(
-      within(table()).getByRole('button', { name: 'Stock, 5 deals left — tap to deal a row' }),
+      within(table()).getByRole('button', { name: 'Stock, 4 deals left — tap to deal a row' }),
     );
 
     expect(
-      within(table()).getByRole('button', { name: 'Stock, 4 deals left — tap to deal a row' }),
+      within(table()).getByRole('button', { name: 'Stock, 3 deals left — tap to deal a row' }),
     ).toBeInTheDocument();
-    expect(table().querySelectorAll('[data-card]')).toHaveLength(20);
+    expect(table().querySelectorAll('[data-card]')).toHaveLength(14);
     expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
 
-    // One undo takes the whole row back — ten cards, one step.
+    // One undo takes the whole row back — seven cards, one step.
     await user.click(screen.getByRole('button', { name: /Undo/ }));
     expect(
-      within(table()).getByRole('button', { name: 'Stock, 5 deals left — tap to deal a row' }),
+      within(table()).getByRole('button', { name: 'Stock, 4 deals left — tap to deal a row' }),
     ).toBeInTheDocument();
-    expect(table().querySelectorAll('[data-card]')).toHaveLength(10);
+    expect(table().querySelectorAll('[data-card]')).toHaveLength(7);
     expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
   });
 
@@ -691,14 +660,14 @@ describe('keyboard (issue #93)', () => {
     await resumeSavedGame(user);
 
     await user.click(
-      within(table()).getByRole('button', { name: 'Stock, 5 deals left — tap to deal a row' }),
+      within(table()).getByRole('button', { name: 'Stock, 4 deals left — tap to deal a row' }),
     );
     expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
 
     fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
     expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
     expect(
-      within(table()).getByRole('button', { name: 'Stock, 5 deals left — tap to deal a row' }),
+      within(table()).getByRole('button', { name: 'Stock, 4 deals left — tap to deal a row' }),
     ).toBeInTheDocument();
   });
 });
@@ -751,7 +720,7 @@ describe('the drag fixture (issue #119)', () => {
 });
 
 describe('drag (issue #119)', () => {
-  /** The pretend table, in CSS pixels: ten 45px columns on a 50px pitch. */
+  /** The pretend table, in CSS pixels: seven 45px columns on a 50px pitch. */
   const COL = 50;
   const CARD_W = 45;
   const ROW = { top: 0, height: 63 };
@@ -781,7 +750,7 @@ describe('drag (issue #119)', () => {
     ) {
       const el = this as HTMLElement;
       if (el.dataset.topRow !== undefined)
-        return rect(0, ROW.top, COL * 10 - (COL - CARD_W), ROW.height);
+        return rect(0, ROW.top, COL * 7 - (COL - CARD_W), ROW.height);
       if (el.dataset.pile !== undefined) {
         return rect(Number(el.dataset.pile) * COL, TABLEAU_TOP, CARD_W, 200);
       }
@@ -809,8 +778,8 @@ describe('drag (issue #119)', () => {
     fireEvent.pointerUp(el, { pointerId: 1, button: 0, ...to });
   }
 
-  async function resumeDragGame(user: ReturnType<typeof userEvent.setup>) {
-    renderGame(savedDragGame());
+  async function resumeDragGame(user: ReturnType<typeof userEvent.setup>, tableau = dragTableau) {
+    renderGame(savedDragGame(tableau));
     await resumeSavedGame(user);
     giveTableALayout();
   }
@@ -1082,25 +1051,25 @@ describe('drag (issue #119)', () => {
 
   it('takes a completed run off the table when a drag finishes it', async () => {
     const user = userEvent.setup();
-    await resumeDragGame(user);
+    await resumeDragGame(user, finishTableau);
 
-    // Column 9 holds K♠ down to 2♠, one card short of a finished run; column
-    // 8's lone A♠ is the missing card. The drag that lands it there finishes
+    // Column 6 holds K♠ down to 2♠, one card short of a finished run; column
+    // 5's lone A♠ is the missing card. The drag that lands it there finishes
     // and removes the whole thirteen, the same as a tap would (§2, §4).
-    expect(screen.getAllByRole('img', { name: 'Run not finished yet' })).toHaveLength(8);
+    expect(screen.getAllByRole('img', { name: 'Run not finished yet' })).toHaveLength(4);
 
-    drag(within(column(8)).getByRole('button', { name: 'A of spades' }), overColumn(8));
+    drag(within(column(5)).getByRole('button', { name: 'A of spades' }), overColumn(5));
 
     expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
     expect(screen.getAllByRole('img', { name: 'Completed run, spades' })).toHaveLength(1);
-    expect(screen.getAllByRole('img', { name: 'Run not finished yet' })).toHaveLength(7);
-    // Both columns the move touched are empty now: the run left column 9
-    // whole, and column 8 had nothing else in it.
+    expect(screen.getAllByRole('img', { name: 'Run not finished yet' })).toHaveLength(3);
+    // Both columns the move touched are empty now: the run left column 6
+    // whole, and column 5 had nothing else in it.
     expect(
-      within(column(8)).getByRole('button', { name: 'Column 8, empty — any card can move here' }),
+      within(column(5)).getByRole('button', { name: 'Column 5, empty — any card can move here' }),
     ).toBeInTheDocument();
     expect(
-      within(column(9)).getByRole('button', { name: 'Column 9, empty — any card can move here' }),
+      within(column(6)).getByRole('button', { name: 'Column 6, empty — any card can move here' }),
     ).toBeInTheDocument();
   });
 

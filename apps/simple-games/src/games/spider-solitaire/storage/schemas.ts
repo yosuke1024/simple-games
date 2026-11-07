@@ -5,7 +5,7 @@
  *
  * Validators never throw: corrupt data yields null and callers fall back to
  * safe defaults (docs/SPIDER_SOLITAIRE_RULES.md §10). The saved board is
- * checked as a whole — 104 cards exactly once, ten columns, completed piles
+ * checked as a whole — 52 cards exactly once, seven columns, completed piles
  * that really are king-to-ace runs — because a board that breaks those rules
  * cannot have come from play.
  *
@@ -21,6 +21,7 @@ import {
   COLUMNS,
   isValidBoard,
   RUNS_TO_WIN,
+  validateBoardShape,
   type GameMode,
   type Pile,
   type SpiderBoard,
@@ -207,11 +208,11 @@ export interface PersistedGame {
   savedAt: number;
 }
 
-const asCardArray = (value: unknown): number[] | null => {
-  if (!Array.isArray(value) || value.length > CARD_COUNT) return null;
+const asCardArray = (value: unknown, cardCount: number): number[] | null => {
+  if (!Array.isArray(value) || value.length > cardCount) return null;
   const out: number[] = [];
   for (const item of value) {
-    const card = asInt(item, 0, CARD_COUNT - 1);
+    const card = asInt(item, 0, cardCount - 1);
     if (card === null) return null;
     out.push(card);
   }
@@ -219,39 +220,53 @@ const asCardArray = (value: unknown): number[] | null => {
 };
 
 /** Rebuilds and rule-checks the whole board; null when it cannot be real. */
-function validateBoard(raw: Record<string, unknown>, suitCount: SuitCount): SpiderBoard | null {
-  const stock = asCardArray(raw.stock);
+function validateBoard(
+  raw: Record<string, unknown>,
+  suitCount: SuitCount,
+  legacy: boolean,
+): SpiderBoard | null {
+  const cardCount = legacy ? 104 : CARD_COUNT;
+  const stock = asCardArray(raw.stock, cardCount);
   if (stock === null) return null;
 
-  if (!Array.isArray(raw.tableau) || raw.tableau.length !== COLUMNS) return null;
+  if (!Array.isArray(raw.tableau) || raw.tableau.length !== (legacy ? 10 : COLUMNS)) return null;
   const tableau: Pile[] = [];
   for (const pile of raw.tableau) {
     if (!isRecord(pile)) return null;
-    const down = asCardArray(pile.down);
-    const up = asCardArray(pile.up);
+    const down = asCardArray(pile.down, cardCount);
+    const up = asCardArray(pile.up, cardCount);
     if (down === null || up === null) return null;
     tableau.push({ down, up });
   }
 
-  if (!Array.isArray(raw.completed) || raw.completed.length > RUNS_TO_WIN) return null;
+  if (!Array.isArray(raw.completed) || raw.completed.length > (legacy ? 8 : RUNS_TO_WIN))
+    return null;
   const completed: number[][] = [];
   for (const run of raw.completed) {
-    const cards = asCardArray(run);
+    const cards = asCardArray(run, cardCount);
     if (cards === null) return null;
     completed.push(cards);
   }
 
   const board: SpiderBoard = { suitCount, stock, tableau, completed };
-  return isValidBoard(board) ? board : null;
+  const valid = legacy
+    ? validateBoardShape(
+        board,
+        104,
+        10,
+        (n) => Number.isInteger(n) && n >= 0 && n <= 50 && n % 10 === 0,
+      )
+    : isValidBoard(board);
+  return valid ? board : null;
 }
 
-const validatePersistedGame = (raw: unknown): PersistedGame | null => {
+const validatePersistedGame = (raw: unknown, legacy: boolean): PersistedGame | null => {
   if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
   const mode = raw.mode === 'free' || raw.mode === 'daily' ? raw.mode : null;
   const seed = asString(raw.seed);
   const suitCount = asSuitCount(raw.suitCount);
   const dailyDate = raw.dailyDate === null ? null : asDateString(raw.dailyDate);
-  const board = suitCount === null ? null : validateBoard(raw, suitCount);
+  const board = suitCount === null ? null : validateBoard(raw, suitCount, legacy);
   const moveCount = asInt(raw.moveCount, 0, 1e9);
   const hintCount = asInt(raw.hintCount, 0, 1e9);
   const elapsedSeconds = asInt(raw.elapsedSeconds, 0, 1e9);
@@ -300,13 +315,17 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
  * it switches the app to the daily slot: the player asks for one game and
  * is shown the other one, or a blank screen where the other one isn't.
  */
-function gameSlotSchema(key: string, expectedMode: GameMode): SchemaDef<PersistedGame | null> {
+function gameSlotSchema(
+  key: string,
+  expectedMode: GameMode,
+  legacy = false,
+): SchemaDef<PersistedGame | null> {
   return {
     key,
     version: 1,
     defaultValue: () => null,
     validate: (raw) => {
-      const parsed = validatePersistedGame(raw);
+      const parsed = validatePersistedGame(raw, legacy);
       return parsed !== null && parsed.mode === expectedMode ? parsed : null;
     },
   };
@@ -316,3 +335,11 @@ function gameSlotSchema(key: string, expectedMode: GameMode): SchemaDef<Persiste
 export const gameSchema = gameSlotSchema(SS_STORAGE_KEYS.game, 'free');
 /** Suspended daily deal, kept separately so neither mode evicts the other. */
 export const dailyGameSchema = gameSlotSchema(SS_STORAGE_KEYS.dailyGame, 'daily');
+
+/** Original 104-card records remain exportable/restorable, without a classic play mode. */
+export const legacyGameSchema = gameSlotSchema(SS_STORAGE_KEYS.legacyGame, 'free', true);
+export const legacyDailyGameSchema = gameSlotSchema(SS_STORAGE_KEYS.legacyDailyGame, 'daily', true);
+export const legacyStatsSchema: SchemaDef<Stats> = {
+  ...statsSchema,
+  key: SS_STORAGE_KEYS.legacyStats,
+};

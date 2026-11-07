@@ -2,6 +2,7 @@ import type { SpiderMessages } from './en';
 
 export const zhHant: SpiderMessages = {
   spiderName: 'Spider Solitaire',
+  spiderLayoutNote: '小蜘蛛紙牌 · 7欄 · 52張',
   spiderNewDeal: '新發牌',
   spiderTableLabel: 'Spider Solitaire 牌桌',
   spiderCardLabel: '{suit}{rank}',
@@ -28,7 +29,7 @@ export const zhHant: SpiderMessages = {
   spiderStuckTitle: '沒有可走的步了',
   spiderStuckBody: '牌庫已用完，也沒有能放的地方。復原一步，或者重新發牌。',
   spiderWonTitle: '你贏了！',
-  spiderWonBody: '八組牌全部完成。',
+  spiderWonBody: '四組牌全部完成。',
   spiderNewBestMoves: '你的最少步數紀錄。',
   spiderNewBestTime: '你的最快紀錄。',
   spiderBestMoves: '最少步數',
@@ -41,5 +42,5 @@ export const zhHant: SpiderMessages = {
   spiderStep2Title: '同花色一起搬',
   spiderStep2Body: '同花色又連號的牌可以一起搬。從 K 排到 A，這組牌就離開桌面。',
   spiderStep3Title: '走不動就發牌',
-  spiderStep3Body: '牌庫會給每一欄各發一張——但只有在沒有空欄時才行。',
+  spiderStep3Body: '填滿所有空欄後可發7張牌，最後一次只向最左邊的3欄各發一張。',
 };

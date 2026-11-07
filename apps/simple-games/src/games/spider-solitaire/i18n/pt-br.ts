@@ -2,6 +2,7 @@ import type { SpiderMessages } from './en';
 
 export const ptBR: SpiderMessages = {
   spiderName: 'Spider Solitaire',
+  spiderLayoutNote: 'Spiderette · 7 colunas · 52 cartas',
   spiderNewDeal: 'Nova distribuição',
   spiderTableLabel: 'Mesa de Spider Solitaire',
   spiderCardLabel: '{rank} de {suit}',
@@ -28,7 +29,7 @@ export const ptBR: SpiderMessages = {
   spiderStuckTitle: 'Sem jogadas',
   spiderStuckBody: 'O monte acabou e nada cabe. Desfaça uma jogada ou peça nova distribuição.',
   spiderWonTitle: 'Você venceu!',
-  spiderWonBody: 'As oito sequências estão completas.',
+  spiderWonBody: 'As quatro sequências estão completas.',
   spiderNewBestMoves: 'Seu recorde de menos jogadas.',
   spiderNewBestTime: 'Seu tempo mais rápido até agora.',
   spiderBestMoves: 'Menos jogadas',
@@ -44,5 +45,5 @@ export const ptBR: SpiderMessages = {
     'Cartas do mesmo naipe em ordem se movem juntas. Monte do rei ao ás e a sequência sai da mesa.',
   spiderStep3Title: 'Distribua quando travar',
   spiderStep3Body:
-    'O monte dá uma carta para cada coluna — mas só quando nenhuma coluna está vazia.',
+    'Preencha todas as colunas antes de distribuir 7 cartas; na última distribuição, apenas as 3 colunas da esquerda recebem uma carta cada.',
 };

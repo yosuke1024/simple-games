@@ -2,6 +2,7 @@ import type { SpiderMessages } from './en';
 
 export const de: SpiderMessages = {
   spiderName: 'Spider Solitaire',
+  spiderLayoutNote: 'Spiderette · 7 Spalten · 52 Karten',
   spiderNewDeal: 'Neues Blatt',
   spiderTableLabel: 'Spider-Solitaire-Tisch',
   spiderCardLabel: '{rank} {suit}',
@@ -29,7 +30,7 @@ export const de: SpiderMessages = {
   spiderStuckBody:
     'Der Talon ist aufgebraucht und nichts passt. Mach einen Zug rückgängig oder nimm ein neues Blatt.',
   spiderWonTitle: 'Gewonnen!',
-  spiderWonBody: 'Alle acht Folgen sind vollständig.',
+  spiderWonBody: 'Alle vier Folgen sind vollständig.',
   spiderNewBestMoves: 'Deine wenigsten Züge bisher.',
   spiderNewBestTime: 'Deine schnellste Zeit bisher.',
   spiderBestMoves: 'Wenigste Züge',
@@ -44,5 +45,6 @@ export const de: SpiderMessages = {
   spiderStep2Body:
     'Karten derselben Farbe in Reihenfolge ziehen zusammen um. Baue vom König bis zum Ass, dann verlässt die Folge den Tisch.',
   spiderStep3Title: 'Gib, wenn nichts mehr geht',
-  spiderStep3Body: 'Der Talon gibt jeder Spalte eine Karte — aber nur, wenn keine Spalte leer ist.',
+  spiderStep3Body:
+    'Fülle alle Spalten, bevor du 7 Karten gibst; beim letzten Mal erhalten nur die 3 linken Spalten je eine Karte.',
 };

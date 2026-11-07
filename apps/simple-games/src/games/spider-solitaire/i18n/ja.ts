@@ -2,6 +2,7 @@ import type { SpiderMessages } from './en';
 
 export const ja: SpiderMessages = {
   spiderName: 'Spider Solitaire',
+  spiderLayoutNote: 'スパイダレット · 7列・52枚',
   spiderNewDeal: '新しい配札',
   spiderTableLabel: 'Spider Solitaire の盤面',
   spiderCardLabel: '{suit}の{rank}',
@@ -28,7 +29,7 @@ export const ja: SpiderMessages = {
   spiderStuckTitle: '動かせる手がありません',
   spiderStuckBody: '山札を使い切り、どこにも置けません。手を戻すか、新しい配札にしてください。',
   spiderWonTitle: 'クリア!',
-  spiderWonBody: '8 つの組がすべて完成しました。',
+  spiderWonBody: '4つの組がすべて完成しました。',
   spiderNewBestMoves: '自己最少手数です。',
   spiderNewBestTime: '自己最速です。',
   spiderBestMoves: '最少手数',
@@ -43,5 +44,5 @@ export const ja: SpiderMessages = {
   spiderStep2Body:
     '同じスートが順に並んでいれば、まとめて運べます。K から A までつながると、その組は盤面から消えます。',
   spiderStep3Title: '詰まったら配る',
-  spiderStep3Body: '山札は各列に 1 枚ずつ配ります。ただし空の列があると配れません。',
+  spiderStep3Body: '空の列を埋めると7枚配れますが、最後だけ左の3列に1枚ずつ配ります。',
 };

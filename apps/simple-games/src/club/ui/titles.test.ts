@@ -228,9 +228,9 @@ const EVERY_KEY: Readonly<Record<string, readonly { params: unknown; key: string
     { params: { drawThree: true }, key: 'draw-3' },
   ],
   'spider-solitaire': [
-    { params: { suitCount: 1 }, key: '1-suit' },
-    { params: { suitCount: 2 }, key: '2-suits' },
-    { params: { suitCount: 4 }, key: '4-suits' },
+    { params: { layout: 'spiderette', suitCount: 1 }, key: 'spiderette-1-suit' },
+    { params: { layout: 'spiderette', suitCount: 2 }, key: 'spiderette-2-suits' },
+    { params: { layout: 'spiderette', suitCount: 4 }, key: 'spiderette-4-suits' },
   ],
   'sudoku-6x6': difficulties(EASY_MEDIUM_HARD),
   sudoku: difficulties(EASY_MEDIUM_HARD),

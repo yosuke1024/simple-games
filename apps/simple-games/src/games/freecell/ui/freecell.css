@@ -210,16 +210,16 @@
 
 /* ---------- stacking ---------- */
 
-/* Every card in FreeCell is face up, so every covered card keeps its whole
-   corner readable — there is no face-down sliver as in Klondike (§1).
-   Negative top margins do the overlap: margin percentages resolve against the
-   column width, and a card is 140% of its width tall (aspect 5/7), so -104%
-   leaves the ~36%-of-width corner strip.
-
-   A cascade can hold well over a dozen cards here, deeper than any Klondike
-   pile, which is why the strip is a shade tighter than Klondike's -102%. */
+/* Use the phone's vertical space for a readable, tappable strip. Long
+   columns keep scrolling inside the felt instead of shrinking the cards. */
 .fc-overlap {
-  margin-top: -104%;
+  margin-top: calc(-140% + clamp(32px, 11vw, 48px));
+}
+
+/* Keep the shared deck's top index visible without exposing half of its
+   central artwork. Lifted cards show the whole face again. */
+.fc-pile > .fc-card:not(:last-child):not(.fc-dragging):not(.fc-selected) .sg-playing-card-face {
+  clip-path: inset(0 0 75% 0);
 }
 
 /* ---------- selection and destinations (§3, §12) ---------- */
@@ -453,15 +453,8 @@
    card lines up with the table instead of reading as a narrower column of
    its own.
 
-   Wide caps the table by height too, the same way Solitaire's does: sized by
-   width alone, the tallest starting cascade would push under the fold of a
-   1366x768 PC. Every card here is face up (§ the .fc-overlap comment above),
-   so there is no face-down sliver to shrink the sum — the tallest starting
-   cascade is seven cards: one full face plus six overlapped strips at ~0.36
-   card-widths each, and the top row above it is another full card. Table-
-   height ≈ (top row 1.4 + cascade 1.4 + six strips ~2.16) card-widths, solved
-   for width against eight columns of that card-width gives the 1.55 factor
-   below. */
+   Wide also caps the table by height. Longer columns scroll inside the felt
+   while keeping the visible strip large enough to read and select. */
 
 @media (min-width: 600px) {
   .fc-table,

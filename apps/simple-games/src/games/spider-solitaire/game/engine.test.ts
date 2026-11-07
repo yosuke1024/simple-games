@@ -24,7 +24,7 @@ import {
   type SuitCount,
 } from './types';
 
-/** The card of `copy` (0..7) at `rank`. Suits are read off the difficulty. */
+/** The card of `copy` (0..3) at `rank`. Suits are read off the difficulty. */
 const card = (copy: number, rank: number): Card => copy * RANKS + (rank - 1);
 
 function board(partial: Partial<SpiderBoard> = {}): SpiderBoard {
@@ -41,7 +41,7 @@ const piles = (...up: Card[][]): Pile[] =>
   Array.from({ length: COLUMNS }, (_, i) => ({ down: [], up: up[i] ?? [] }));
 
 /**
- * A real deal — 104 cards, each exactly once, every column occupied — whose
+ * A real deal — 52 cards, each exactly once, every column occupied — whose
  * stock has been given a length no deal could produce. Cards are shifted
  * between the stock and the face-down parts, so nothing is invented or lost:
  * the only thing wrong with the board is the one thing under test.
@@ -69,14 +69,12 @@ function allCards(board: SpiderBoard): Card[] {
 }
 
 describe('dealBoard', () => {
-  it('lays 54 cards into ten columns of 6,6,6,6,5,5,5,5,5,5 with 50 in stock', () => {
+  it('lays 28 cards into seven columns of 1..7 with 24 in stock', () => {
     const dealt = dealBoard('ss-daily-2026-08-07', 1);
-    expect(dealt.tableau.map((p) => p.down.length + p.up.length)).toEqual([
-      6, 6, 6, 6, 5, 5, 5, 5, 5, 5,
-    ]);
+    expect(dealt.tableau.map((p) => p.down.length + p.up.length)).toEqual([1, 2, 3, 4, 5, 6, 7]);
     expect(dealt.tableau.every((p) => p.up.length === 1)).toBe(true);
-    expect(dealt.stock).toHaveLength(50);
-    expect(dealsLeft(dealt)).toBe(5);
+    expect(dealt.stock).toHaveLength(24);
+    expect(dealsLeft(dealt)).toBe(4);
     expect(dealt.completed).toEqual([]);
     expect(isValidBoard(dealt)).toBe(true);
   });
@@ -87,7 +85,7 @@ describe('dealBoard', () => {
   });
 
   /**
-   * The point of the unique 0..103 encoding: difficulty changes what a card
+   * The point of the unique 0..51 encoding: difficulty changes what a card
    * reads as, never where it lies. One daily deal serves all three settings.
    */
   it('puts the same cards in the same places at every difficulty', () => {
@@ -123,10 +121,10 @@ describe('placement (§3)', () => {
 
 describe('movable runs (§3)', () => {
   it('only carries a tail that is one suit descending', () => {
-    // copies 0 and 4 are both spades at four suits (0 % 4 === 4 % 4).
+    // copy 0 is spades at four suits.
     const spades = board({
       suitCount: 4,
-      tableau: piles([card(1, 10), card(0, 9), card(4, 8), card(0, 7)]),
+      tableau: piles([card(1, 10), card(0, 9), card(0, 8), card(0, 7)]),
     });
     expect(movableRunStart(spades, 0)).toBe(1); // 9,8,7 all spades; the 10 is a heart
 
@@ -139,7 +137,7 @@ describe('movable runs (§3)', () => {
     // At one suit every card is a spade, so the whole descending tail travels.
     const one = board({
       suitCount: 1,
-      tableau: piles([card(1, 10), card(0, 9), card(4, 8), card(0, 7)]),
+      tableau: piles([card(1, 10), card(0, 9), card(0, 8), card(0, 7)]),
     });
     expect(movableRunStart(one, 0)).toBe(0);
   });
@@ -213,10 +211,10 @@ describe('completing a run (§2)', () => {
     expect(moveRun(b, 0, 12, 1)!.completed).toHaveLength(0);
   });
 
-  it('is won at eight runs', () => {
+  it('is won at four runs', () => {
     const run = Array.from({ length: RANKS }, (_, i) => card(0, RANKS - i));
-    expect(isWon(board({ completed: Array.from({ length: 8 }, () => run) }))).toBe(true);
-    expect(isWon(board({ completed: Array.from({ length: 7 }, () => run) }))).toBe(false);
+    expect(isWon(board({ completed: Array.from({ length: 4 }, () => run) }))).toBe(true);
+    expect(isWon(board({ completed: Array.from({ length: 3 }, () => run) }))).toBe(false);
   });
 });
 
@@ -224,8 +222,8 @@ describe('the stock (§3)', () => {
   it('deals one card to every column and counts down the deals', () => {
     const dealt = dealBoard('ss-free-stock', 1);
     const after = dealRow(dealt)!;
-    expect(after.stock).toHaveLength(40);
-    expect(dealsLeft(after)).toBe(4);
+    expect(after.stock).toHaveLength(17);
+    expect(dealsLeft(after)).toBe(3);
     for (let i = 0; i < COLUMNS; i++) {
       expect(after.tableau[i]!.up.length).toBe(dealt.tableau[i]!.up.length + 1);
     }
@@ -252,9 +250,9 @@ describe('the stock (§3)', () => {
     expect(dealRow(spent)).toBeNull();
   });
 
-  it('refuses a stock that is not whole undealt rows', () => {
-    // 50, 40, 30, 20, 10, 0 are the only lengths a stock can reach (§3).
-    for (const count of [5, 15, 60]) {
+  it('refuses an unreachable stock size', () => {
+    // 24, 17, 10, 3, 0 are the only lengths a stock can reach (§3).
+    for (const count of [5, 15, 30]) {
       const b = boardWithStockOf(count);
       // The fixture is a whole pack: only the stock's length is impossible.
       expect(allCards(b)).toHaveLength(CARD_COUNT);
@@ -262,25 +260,24 @@ describe('the stock (§3)', () => {
       expect(b.stock).toHaveLength(count);
       expect(isValidBoard(b)).toBe(false);
     }
-    expect(isValidBoard(boardWithStockOf(40))).toBe(true);
+    expect(isValidBoard(boardWithStockOf(17))).toBe(true);
   });
 
-  it('will not deal a short row, even from a stock long enough to fill one', () => {
-    // Five would hand `undefined` to the last five columns. Fifteen is the
-    // one that hides: it can fill all ten and would leave a stock of five
-    // behind for the next press.
-    for (const count of [5, 15]) {
-      const b = boardWithStockOf(count);
-      // Not the empty-column rule doing the refusing — every column is occupied.
-      expect(b.tableau.every((pile) => pile.up.length > 0)).toBe(true);
-      expect(canDeal(b)).toBe(false);
-      expect(dealRow(b)).toBeNull();
+  it('deals the final three cards only to the leftmost columns', () => {
+    const before = boardWithStockOf(3);
+    const after = dealRow(before)!;
+    expect(after.stock).toEqual([]);
+    expect(after.tableau.slice(3)).toEqual(before.tableau.slice(3));
+    for (let i = 0; i < 3; i++) {
+      expect(after.tableau[i]!.up).toEqual([...before.tableau[i]!.up, before.stock[i]]);
     }
+    expect(isValidBoard(after)).toBe(true);
+    expect(dealsLeft(after)).toBe(0);
   });
 
-  it('runs the deal out in exactly five rows', () => {
+  it('runs the deal out in three full rows and one final partial row', () => {
     let current = dealBoard('ss-free-five', 1);
-    for (let i = 5; i > 0; i--) {
+    for (let i = 4; i > 0; i--) {
       expect(dealsLeft(current)).toBe(i);
       current = dealRow(current)!;
     }
@@ -298,14 +295,14 @@ describe('hasAnyMove (§2)', () => {
   });
 
   it('is false with the stock spent and no card fitting anywhere', () => {
-    // Ten columns, each a lone king: nothing is one rank higher than a king,
+    // Seven columns, each a lone king: nothing is one rank higher than a king,
     // no column is empty, and the stock is gone.
     const dead = board({
       suitCount: 4,
       stock: [],
       tableau: Array.from({ length: COLUMNS }, (_, i): Pile => ({
         down: [],
-        up: [card(i % 8, RANKS)],
+        up: [card(i % 4, RANKS)],
       })),
     });
     expect(hasAnyMove(dead)).toBe(false);
@@ -318,7 +315,7 @@ describe('hasAnyMove (§2)', () => {
       tableau: Array.from({ length: COLUMNS }, (_, i): Pile => {
         if (i === 0) return { down: [], up: [card(0, RANKS)] };
         if (i === 1) return { down: [], up: [] };
-        return { down: [], up: [card(i % 8, RANKS)] };
+        return { down: [], up: [card(i % 4, RANKS)] };
       }),
     });
     // Column 1 is empty, so the stock cannot be dealt either — and sliding the

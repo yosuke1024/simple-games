@@ -28,7 +28,19 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
     'sd.prefs',
   ],
   solitaire: ['so.saveGame', 'so.saveDaily', 'so.stats', 'so.flags', 'so.prefs'],
-  'spider-solitaire': ['ss.saveGame', 'ss.saveDaily', 'ss.stats', 'ss.flags', 'ss.prefs'],
+  // Spiderette transition (2026-11-07, docs/SPIDER_SOLITAIRE_RULES.md §10):
+  // add separate 52-card slots; retain all released 104-card records under
+  // their original keys for backup/restore. No existing key changes meaning.
+  'spider-solitaire': [
+    'ss.spiderette.saveGame',
+    'ss.spiderette.saveDaily',
+    'ss.spiderette.stats',
+    'ss.flags',
+    'ss.prefs',
+    'ss.saveGame',
+    'ss.saveDaily',
+    'ss.stats',
+  ],
   freecell: ['fc.saveGame', 'fc.saveDaily', 'fc.stats', 'fc.flags'],
   hearts: ['ht.saveGame', 'ht.stats', 'ht.flags', 'ht.prefs'],
   'gin-rummy': ['gr.saveGame', 'gr.stats', 'gr.flags', 'gr.prefs'],

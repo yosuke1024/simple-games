@@ -17,7 +17,7 @@ export function localDateString(date: Date): string {
 }
 
 export function dailySeed(dateString: string): string {
-  return `ss-daily-${dateString}`;
+  return `ss-spiderette-daily-${dateString}`;
 }
 
 /** Shifts a local YYYY-MM-DD string by whole days. */

@@ -2069,3 +2069,11 @@ rankings: [{ gameId, paramsKey, entryCount, leader: { nickname, facts } }] }`。
   文面は、ランキングが**遊び終えた結果の並び(2026-10-10 から結果ごとに 1 行。盤面は人ごとに違う)**であり、デイリーだけが全員同じ盤面で
   あることを正しく言う(「同じ盤面」を一般の約束として書かない)。
 - プライバシーページに Club House の節(何を、どこへ、誰の管理下で、消し方)を足す(§13-6)。
+
+### Spiderette への切り替え (2026-11-07)
+
+Spider Solitaire は 7 列・52 枚に統一する。新しい結果の params は
+`{ layout: 'spiderette', suitCount: 1 | 2 | 4 }` とし、paramsKey は
+`spiderette-1-suit` / `spiderette-2-suits` / `spiderette-4-suits`。旧 104 枚版の
+順位と比較しない。新しい配札は `ss2:` の digest を使い、旧版の params は新しい
+ゲームの契約で受け付けない。表示上のモード語は既存のスート数の訳を使う。

@@ -54,7 +54,7 @@ export function SpiderHomeScreen() {
           <GameArtwork id="spider-solitaire" />
         </span>
         <h1 className="home-title">{t('spiderName')}</h1>
-        <p className="home-tagline">{t('tagline')}</p>
+        <p className="home-tagline">{t('spiderLayoutNote')}</p>
       </div>
 
       <div className="home-actions">

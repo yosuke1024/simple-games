@@ -9,16 +9,33 @@ describe('spider-solitaire challenge contract', () => {
   });
 
   it('accepts the params that name a table and drops anything else', () => {
-    for (const raw of [{ suitCount: 1 }, { suitCount: 2 }, { suitCount: 4 }]) {
+    for (const raw of [
+      { layout: 'spiderette', suitCount: 1 },
+      { layout: 'spiderette', suitCount: 2 },
+      { layout: 'spiderette', suitCount: 4 },
+    ]) {
       expect(SPIDER_SOLITAIRE_CHALLENGE.validateParams(raw)).toEqual(raw);
     }
-    for (const raw of [{ suitCount: 3 }, { suitCount: '1' }, {}, null]) {
+    for (const raw of [
+      { suitCount: 1 },
+      { layout: 'classic', suitCount: 1 },
+      { suitCount: 3 },
+      { suitCount: '1' },
+      {},
+      null,
+    ]) {
       expect(SPIDER_SOLITAIRE_CHALLENGE.validateParams(raw)).toBeNull();
     }
   });
 
   it('keeps only the known params', () => {
-    expect(SPIDER_SOLITAIRE_CHALLENGE.validateParams({ ...{ suitCount: 2 }, extra: 1 })).toEqual({
+    expect(
+      SPIDER_SOLITAIRE_CHALLENGE.validateParams({
+        ...{ layout: 'spiderette', suitCount: 2 },
+        extra: 1,
+      }),
+    ).toEqual({
+      layout: 'spiderette',
       suitCount: 2,
     });
   });
@@ -62,11 +79,23 @@ describe('spider-solitaire challenge contract', () => {
   });
 
   it('names the table by paramsKey', () => {
-    expect(SPIDER_SOLITAIRE_CHALLENGE.paramsKey({ suitCount: 1 })).toBe('1-suit');
-    expect(SPIDER_SOLITAIRE_CHALLENGE.paramsKey({ suitCount: 1 })).toMatch(/^[a-z0-9-]{1,40}$/);
-    expect(SPIDER_SOLITAIRE_CHALLENGE.paramsKey({ suitCount: 2 })).toBe('2-suits');
-    expect(SPIDER_SOLITAIRE_CHALLENGE.paramsKey({ suitCount: 2 })).toMatch(/^[a-z0-9-]{1,40}$/);
-    expect(SPIDER_SOLITAIRE_CHALLENGE.paramsKey({ suitCount: 4 })).toBe('4-suits');
-    expect(SPIDER_SOLITAIRE_CHALLENGE.paramsKey({ suitCount: 4 })).toMatch(/^[a-z0-9-]{1,40}$/);
+    expect(SPIDER_SOLITAIRE_CHALLENGE.paramsKey({ layout: 'spiderette', suitCount: 1 })).toBe(
+      'spiderette-1-suit',
+    );
+    expect(SPIDER_SOLITAIRE_CHALLENGE.paramsKey({ layout: 'spiderette', suitCount: 1 })).toMatch(
+      /^[a-z0-9-]{1,40}$/,
+    );
+    expect(SPIDER_SOLITAIRE_CHALLENGE.paramsKey({ layout: 'spiderette', suitCount: 2 })).toBe(
+      'spiderette-2-suits',
+    );
+    expect(SPIDER_SOLITAIRE_CHALLENGE.paramsKey({ layout: 'spiderette', suitCount: 2 })).toMatch(
+      /^[a-z0-9-]{1,40}$/,
+    );
+    expect(SPIDER_SOLITAIRE_CHALLENGE.paramsKey({ layout: 'spiderette', suitCount: 4 })).toBe(
+      'spiderette-4-suits',
+    );
+    expect(SPIDER_SOLITAIRE_CHALLENGE.paramsKey({ layout: 'spiderette', suitCount: 4 })).toMatch(
+      /^[a-z0-9-]{1,40}$/,
+    );
   });
 });

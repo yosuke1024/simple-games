@@ -2,6 +2,7 @@ import type { SpiderMessages } from './en';
 
 export const hi: SpiderMessages = {
   spiderName: 'Spider Solitaire',
+  spiderLayoutNote: 'स्पाइडरेट · 7 स्तंभ · 52 पत्ते',
   spiderNewDeal: 'नई बाज़ी',
   spiderTableLabel: 'Spider Solitaire की मेज़',
   spiderCardLabel: '{suit} का {rank}',
@@ -28,7 +29,7 @@ export const hi: SpiderMessages = {
   spiderStuckTitle: 'कोई चाल बाकी नहीं',
   spiderStuckBody: 'गड्डी खत्म हो गई और कहीं जगह नहीं। एक चाल वापस लें, या नई बाज़ी लगाएँ।',
   spiderWonTitle: 'आप जीत गए!',
-  spiderWonBody: 'आठों क्रम पूरे हो गए।',
+  spiderWonBody: 'चारों क्रम पूरे हो गए।',
   spiderNewBestMoves: 'अब तक की सबसे कम चालें।',
   spiderNewBestTime: 'अब तक का सबसे तेज़ समय।',
   spiderBestMoves: 'सबसे कम चालें',
@@ -43,5 +44,6 @@ export const hi: SpiderMessages = {
   spiderStep2Body:
     'एक ही रंग के पत्ते क्रम में हों तो एक साथ चलते हैं। बादशाह से इक्के तक बन जाए, तो वह क्रम मेज़ से हट जाता है।',
   spiderStep3Title: 'फँस जाएँ तो बाँटें',
-  spiderStep3Body: 'गड्डी हर स्तंभ पर एक पत्ता डालती है — पर तभी, जब कोई स्तंभ खाली न हो।',
+  spiderStep3Body:
+    '7 पत्ते बाँटने से पहले सभी स्तंभ भरें; आखिरी बार केवल बाएँ के 3 स्तंभों में एक-एक पत्ता बाँटा जाता है।',
 };
