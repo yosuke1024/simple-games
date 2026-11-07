@@ -65,12 +65,13 @@ iOS は 1.8.2 が審査待ちのままなので、オーナーの判断で審査
       (10803 は出さない)
 - [x] 1.8.4 の Web 版を Publish してマージ(pixapps-landing#238。最初の Publish は共有ページの生成後に React の
       後片付けが `window` の消えた後に走って落ちた → 同じ PR で直した。#236 は閉じた)
-- [ ] 実機(Android): Play から入れた 1.8.4 で、メッセージ・メール・Chrome から開いた共有リンクがそのゲームを
-      開く(起動中・未起動の両方)。`adb shell pm get-app-links com.pixapps.simplegames`(Android 12 以上)/
+- [x] 実機(Android): Play から入れた 1.8.4 で、メッセージアプリから開いた共有リンクがそのゲームを開く
+      (2026-11-08、オーナーが確認。端末の機種・OS の版と、アプリが起動中だったかは記録していない)
+- [ ] 実機(Android): 残り — メール・Chrome から開いた共有リンク、起動中・未起動の両方、
+      `adb shell pm get-app-links com.pixapps.simplegames`(Android 12 以上)/
       `adb shell dumpsys package d`(11 以下)で pixapps.ai と club.pixapps.ai が verified。Club の招待リンクも開く
       (2026-11-08、エミュレータ(Android 17)に CI のリリース APK を入れて確認済み: 両ホスト verified、
-      共有リンクの未起動・起動中とも Sudoku / Minesweeper が開く、`/join` はアプリ、`/play/?game=` は Chrome。
-      実機・Play から入れたビルド・メッセージアプリからは未確認)
+      共有リンクの未起動・起動中とも Sudoku / Minesweeper が開く、`/join` はアプリ、`/play/?game=` は Chrome)
 - [ ] 実機(iPhone): 1.8.4 で共有リンクがそのゲームを開く。LP の「アプリで開く」。Club の招待リンクも開く
 
 ## 2026-11-07: 1.8.2(新しい Nearby 14 本の接続修正)
