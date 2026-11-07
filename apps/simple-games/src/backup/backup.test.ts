@@ -724,3 +724,22 @@ describe('the outbox a restore reads (2026-10-24)', () => {
     expect(outbox.items).toEqual([]);
   });
 });
+
+describe('category layout backup', () => {
+  it('round-trips the layout and defaults to open for backups predating it', async () => {
+    const layout = { schemaVersion: 1, collapsed: [{ id: 'cards', gameIds: ['solitaire'] }] };
+    const source = createMemoryKV({ [STORAGE_KEYS.categoryDisclosure]: JSON.stringify(layout) });
+    const backup = await createBackup(META, source);
+    expect(backup.data[STORAGE_KEYS.categoryDisclosure]).toEqual(layout);
+    const target = createMemoryKV();
+    const read = await readBackup(JSON.stringify(backup));
+    expect(read.ok).toBe(true);
+    if (!read.ok) throw new Error('backup rejected');
+    expect(await applyBackup(read.prepared, target)).toBe('restored');
+    expect(JSON.parse((await target.get(STORAGE_KEYS.categoryDisclosure))!)).toEqual(layout);
+    const old = await readBackup(JSON.stringify({ ...backup, data: {} }));
+    if (!old.ok) throw new Error('old backup rejected');
+    expect(await applyBackup(old.prepared, target)).toBe('restored');
+    expect(await target.get(STORAGE_KEYS.categoryDisclosure)).toBeNull();
+  });
+});

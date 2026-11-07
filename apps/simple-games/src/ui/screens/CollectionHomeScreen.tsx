@@ -57,11 +57,21 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { SERIES_NAME } from '@simple-games/brand';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  getCollapsedCategories,
+  toggleCategory,
+  setAllCategoriesCollapsed,
+} from '../../app/categoryDisclosure';
 import { getFavoriteGames, toggleFavoriteGame } from '../../app/favoriteGames';
 import { availableGames, findAvailableGame } from '../../app/gameChannel';
 import { searchGames } from '../../app/gameSearch';
 import { getRecentGames } from '../../app/recentGames';
-import { GAME_CATEGORIES, type GameId, type GameDefinition } from '../../app/registry';
+import {
+  GAME_CATEGORIES,
+  type GameId,
+  type GameDefinition,
+  type GameCategoryId,
+} from '../../app/registry';
 import {
   homeShortcutsAvailable,
   requestHomeShortcut,
@@ -71,12 +81,34 @@ import { BrandFooter } from '../components/BrandFooter';
 import { GameActionSheet } from '../components/GameActionSheet';
 import { GameTile } from '../components/GameTile';
 import { FindOpponentButton } from '../components/FindOpponentButton';
-import { IconBack, IconChevronRight, IconGear, IconPeople, IconSearch } from '../components/icons';
+import {
+  IconBack,
+  IconChevronRight,
+  IconGear,
+  IconPeople,
+  IconSearch,
+  IconLogic,
+  IconCards,
+  IconPuzzle,
+  IconBoard,
+  IconGamepad,
+  IconPencil,
+  IconHistory,
+} from '../components/icons';
 import { GameBetaBadge } from '../components/GameBetaBadge';
 import { MoreFromPixApps } from '../components/MoreFromPixApps';
 import { WebAdSlot } from '../components/WebAdSlot';
 import { WebAppStoreCard } from '../components/WebAppStoreCard';
 import { WebChromeSlot } from '../components/WebChromeSlot';
+
+const CATEGORY_ICONS = {
+  logic: IconLogic,
+  cards: IconCards,
+  puzzle: IconPuzzle,
+  board: IconBoard,
+  arcade: IconGamepad,
+  drills: IconPencil,
+} satisfies Record<GameCategoryId, typeof IconLogic>;
 
 /**
  * How long a press has to last before it means "the menu" instead of "open
@@ -332,6 +364,7 @@ export function CollectionHomeScreen({
    * recent row this one changes while the screen is open: the sheet below
    * pins and unpins, and the shelf has to move under it.
    */
+  const [collapsedCategories, setCollapsedCategories] = useState(getCollapsedCategories);
   const [favoriteIds, setFavoriteIds] = useState<readonly GameId[]>(getFavoriteGames);
   const [menuGame, setMenuGame] = useState<GameDefinition | null>(null);
   /** Where the sheet was opened from, so closing it hands focus back. */
@@ -716,7 +749,8 @@ export function CollectionHomeScreen({
 
           {recent.length > 0 ? (
             <nav className="game-recent" aria-labelledby="home-recent-heading">
-              <h2 className="home-section-label" id="home-recent-heading">
+              <h2 className="home-section-label home-heading-with-icon" id="home-recent-heading">
+                <IconHistory className="home-heading-icon" />
                 {t('recentHeading')}
               </h2>
               {recent.map((game) => (
@@ -791,13 +825,51 @@ export function CollectionHomeScreen({
               Sections come from GAME_CATEGORIES; a game is listed under the one
               category it names in the registry, in registry order. */}
           <nav className="game-sections" aria-label={t('gamesHeading')}>
+            <div className="category-actions">
+              <button
+                type="button"
+                onClick={() => setCollapsedCategories(setAllCategoriesCollapsed(false))}
+              >
+                {t('expandAllCategories')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setCollapsedCategories(setAllCategoriesCollapsed(true))}
+              >
+                {t('collapseAllCategories')}
+              </button>
+            </div>
             {GAME_CATEGORIES.map((category) => {
               const shelf = games.filter((game) => game.category === category.id);
               if (shelf.length === 0) return null;
+              const collapsed = collapsedCategories.find((entry) => entry.id === category.id);
+              const hasNewGames =
+                collapsed && shelf.some((game) => !collapsed.gameIds.includes(game.id));
+              const gridId = `category-${category.id}-games`;
+              const CategoryIcon = CATEGORY_ICONS[category.id];
               return (
-                <div key={category.id} className="game-category">
-                  <h2 className="home-section-label">{t(category.headingKey)}</h2>
-                  <div className="game-grid">
+                <div
+                  key={category.id}
+                  className={`game-category${collapsed ? ' is-collapsed' : ''}`}
+                >
+                  <h2 className="home-section-label category-heading">
+                    <button
+                      type="button"
+                      className="category-toggle"
+                      aria-label={`${t(category.headingKey)} ${shelf.length}${hasNewGames ? ` ${t('categoryNewGames')}` : ''}`}
+                      aria-expanded={!collapsed}
+                      aria-controls={gridId}
+                      onClick={() => setCollapsedCategories(toggleCategory(category.id))}
+                    >
+                      <CategoryIcon className="home-heading-icon" />
+                      <span className="category-name">{t(category.headingKey)}</span>
+                      <span className="category-count">{shelf.length}</span>
+                      {hasNewGames && <span className="category-new">{t('categoryNewGames')}</span>}
+                      <span className="category-rule" aria-hidden="true" />
+                      <IconChevronRight className="category-chevron" />
+                    </button>
+                  </h2>
+                  <div id={gridId} className="game-grid" hidden={!!collapsed}>
                     {shelf.map((game) => (
                       <GameButton
                         key={game.id}

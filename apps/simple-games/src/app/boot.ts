@@ -17,6 +17,7 @@ import { initNetwork } from '../services/network';
 import { initReview } from '../services/review';
 import { loadRecord } from '../storage/repo';
 import { settingsSchema, type Settings } from '../storage/schemas';
+import { initCategoryDisclosure } from './categoryDisclosure';
 import { initClubGate } from './clubGate';
 import { initFavoriteGames } from './favoriteGames';
 import { initRecentGames } from './recentGames';
@@ -56,6 +57,7 @@ export async function initShellState(): Promise<Settings> {
   await bootStep(initReview);
   await bootStep(initRecentGames);
   await bootStep(initFavoriteGames);
+  await bootStep(initCategoryDisclosure);
   await bootStep(initShortcutLaunch);
   await bootStep(initHomeShortcuts);
   await bootStep(initQuickActions);

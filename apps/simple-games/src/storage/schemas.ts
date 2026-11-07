@@ -17,6 +17,7 @@ export const STORAGE_KEYS = {
   review: 'sg.review',
   recent: 'sg.recent',
   favorites: 'sg.favorites',
+  categoryDisclosure: 'sg.categoryDisclosure',
   club: 'sg.club',
   clubOutbox: 'sg.clubOutbox',
 } as const;
@@ -32,6 +33,40 @@ export interface SchemaDef<T> {
    */
   readonly validate: (raw: unknown) => T | null;
 }
+
+// ---------- collection category layout ----------
+
+export interface CollapsedCategory {
+  id: string;
+  /** Games present when the shelf was closed; new arrivals remain discoverable. */
+  gameIds: string[];
+}
+
+export interface CategoryDisclosure {
+  schemaVersion: 1;
+  collapsed: CollapsedCategory[];
+}
+
+export const categoryDisclosureSchema: SchemaDef<CategoryDisclosure> = {
+  key: STORAGE_KEYS.categoryDisclosure,
+  version: 1,
+  defaultValue: () => ({ schemaVersion: 1, collapsed: [] }),
+  validate: (raw) => {
+    if (!isRecord(raw) || raw.schemaVersion !== 1 || !Array.isArray(raw.collapsed)) return null;
+    if (raw.collapsed.length > 100) return null;
+    const collapsed: CollapsedCategory[] = [];
+    for (const entry of raw.collapsed) {
+      if (!isRecord(entry) || typeof entry.id !== 'string' || !Array.isArray(entry.gameIds))
+        return null;
+      if (entry.gameIds.length > 1000 || !entry.gameIds.every((id) => typeof id === 'string'))
+        return null;
+      if (!collapsed.some((category) => category.id === entry.id)) {
+        collapsed.push({ id: entry.id, gameIds: [...new Set(entry.gameIds as string[])] });
+      }
+    }
+    return { schemaVersion: 1, collapsed };
+  },
+};
 
 // ---------- settings ----------
 

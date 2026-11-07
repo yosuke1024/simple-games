@@ -255,3 +255,66 @@ export function IconAddToHome(props: SVGProps<SVGSVGElement>) {
     </Icon>
   );
 }
+
+/** Collection headings use the same quiet line weight as the app controls. */
+export function IconLogic(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M12 3v18M3 12h18M6.5 6l1-.5V9M15 15.5c0-1 3-1 3 .5 0 1-3 1.5-3 3h3" />
+    </Icon>
+  );
+}
+
+export function IconCards(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="m7 17-2 .5a2 2 0 0 1-2.4-1.4L.8 7.5a2 2 0 0 1 1.5-2.4L7 4" />
+      <rect x="7" y="3" width="14" height="18" rx="2" />
+      <path d="m14 7 3 5-3 5-3-5z" />
+    </Icon>
+  );
+}
+
+export function IconPuzzle(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M4 4h5a3 3 0 1 1 6 0h5v5a3 3 0 1 0 0 6v5h-5a3 3 0 1 0-6 0H4v-5a3 3 0 1 1 0-6z" />
+    </Icon>
+  );
+}
+
+export function IconBoard(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M4 10H3v11h18v-5M3 15h7M8 10v11M3 10h7" />
+      <circle cx="16" cy="5" r="3" />
+      <path d="M14 8v3l-2 4h8l-2-4V8" />
+    </Icon>
+  );
+}
+
+export function IconGamepad(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M7 6h10c2 0 3 2 3.5 4l1 7c.3 2-2 3-3.5 1l-2-3H8l-2 3c-1.5 2-3.8 1-3.5-1l1-7C4 8 5 6 7 6Z" />
+      <path d="M7 9v4M5 11h4M16 10h.01M18 12h.01" />
+    </Icon>
+  );
+}
+
+export function IconPencil(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="m4 15-1 6 6-1L21 8a2 2 0 0 0 0-3l-2-2a2 2 0 0 0-3 0ZM14 5l5 5M4 15l5 5" />
+    </Icon>
+  );
+}
+
+export function IconHistory(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M3 4v5h5M3.5 9a9 9 0 1 1 .5 7M12 7v5l3 2" />
+    </Icon>
+  );
+}

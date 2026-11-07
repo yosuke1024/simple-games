@@ -32,6 +32,7 @@ import { GAMES } from '../app/registry';
 import {
   clubConnectionsSchema,
   favoriteGamesSchema,
+  categoryDisclosureSchema,
   recentGamesSchema,
   settingsSchema,
   type ClubConnections,
@@ -59,6 +60,7 @@ export interface RecordOwner {
 const SHELL_VALIDATORS: readonly SchemaDef<unknown>[] = [
   settingsSchema,
   favoriteGamesSchema,
+  categoryDisclosureSchema,
   recentGamesSchema,
 ];
 

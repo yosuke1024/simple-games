@@ -1873,6 +1873,101 @@ button:disabled {
   background: var(--line);
 }
 
+.game-category > .category-heading {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.game-category > .category-heading::after {
+  display: none;
+}
+
+.category-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.category-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.category-count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+}
+
+.category-rule {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.category-chevron {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.category-toggle[aria-expanded='true'] .category-chevron {
+  transform: rotate(90deg);
+}
+
+.category-new {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.game-grid[hidden] {
+  display: none;
+}
+
+.game-category.is-collapsed:not(:last-child) {
+  margin-bottom: -16px;
+}
+
+.category-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px 16px;
+  margin-bottom: -24px;
+}
+
+.category-actions button {
+  min-height: 44px;
+  padding: 6px 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.category-toggle:hover,
+.category-actions button:hover {
+  color: var(--ink);
+}
+
+.category-toggle:focus-visible,
+.category-actions button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
 /* The Club House's one slot on the home (docs/architecture/club.md §2-2,
    §2-3). Quieter than every shelf around it: no card, no tile, no accent —
    soft ink on the paper, the size of a caption. Joined, a heading over one
@@ -3809,4 +3904,17 @@ button:disabled {
   --accent-soft: #2c3c29;
   --accent-ring: #b3dca261;
   --accent-ring-soft: #b3dca21f;
+}
+
+/* Fixed icon slots keep translated headings aligned; all inherit the heading ink. */
+.home-heading-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+}
+
+.home-heading-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }

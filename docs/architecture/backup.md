@@ -69,7 +69,7 @@ Simple Games はアカウント・クラウドセーブ・バックエンドを�
 
 **入れる**: `app/registry.ts` が宣言する全ゲームの全キー(レベル進行・統計・記録・
 デイリー履歴・中断中の局・ゲーム固有設定)と、シェル側の `sg.settings` /
-`sg.favorites` / `sg.recent`。
+`sg.favorites` / `sg.recent` / `sg.categoryDisclosure`。カテゴリ開閉のキーを持たない旧ファイルでは全開へ戻す。
 
 **入れない**(`src/backup/keys.ts` の `SHELL_KEYS_LEFT_BEHIND` に理由ごと書いてある):
 
