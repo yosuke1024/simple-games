@@ -18,9 +18,13 @@ export function gameTitle(gameId: string): string | null {
  * The tables a game's contract makes now, for a game whose contract once made
  * others (club.md「Spiderette への切り替え」, 2026-11-07). The server keeps
  * every table it was ever sent, and an older build still sends to its own, but
- * their results were played on another game: this build neither lists nor
- * opens them. A game not here has never retired a table. `titles.test.ts`
- * holds every key of every contract to this.
+ * their results were played on another game: this build offers them nowhere —
+ * no shelf, chip, default mode or other member's row — except the viewer's own
+ * rows in "Your rankings", after the current ones and under a name of their own
+ * (`rankingTitle`), so a member can still delete them (PRODUCT_PRINCIPLES
+ * 「自分の記録は、本人が自分で、1 件ずつ消せる」). A game not here has never
+ * retired a table; one added here needs that name too. `titles.test.ts` holds
+ * every key of every contract to this.
  */
 const CURRENT_KEYS: Readonly<Record<string, (paramsKey: string) => boolean>> = {
   // 52-card Spiderette from 1.8.3; `1-suit` / `2-suits` / `4-suits` are 104-card Spider's.

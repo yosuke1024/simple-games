@@ -4,8 +4,9 @@
  * screen shows another member's, and both are the same row in the same order
  * (the shelves': category, registry, the mode's place — never by rank, never by
  * recency) and filtered by the same rule (a game this device can open, a table
- * its contract still makes). Pure drawing and ordering; the screens decide what
- * a press does.
+ * its contract still makes). Only on the Club screen, the viewer's own rows in
+ * a retired table follow the current ones (`retiredByShelf`). Pure drawing and
+ * ordering; the screens decide what a press does.
  */
 import { availableGames } from '@/app/gameChannel';
 import { GAME_CATEGORIES, type GameDefinition } from '@/app/registry';
@@ -38,12 +39,27 @@ export function shelfGames(): ShelfGames {
  * A new array; the server's order (the spelling of the keys) is left as it came.
  */
 export function sortByShelf(rows: readonly RankingMine[], games: ShelfGames): RankingMine[] {
+  return byShelf(rows, games, true);
+}
+
+/**
+ * The other half of `sortByShelf`: the tables of games this device can open
+ * that the game's contract no longer makes (104-card Spider's), in the same
+ * order. Only "Your rankings" draws them, after the current ones, so the
+ * viewer can still open them and delete their own rows (PRODUCT_PRINCIPLES
+ * 「自分の記録は、本人が自分で、1 件ずつ消せる」); another member's view does not.
+ */
+export function retiredByShelf(rows: readonly RankingMine[], games: ShelfGames): RankingMine[] {
+  return byShelf(rows, games, false);
+}
+
+function byShelf(rows: readonly RankingMine[], games: ShelfGames, current: boolean) {
   const categoryOf = (gameId: string) => {
     const game = games.get(gameId)?.game;
     return game ? GAME_CATEGORIES.findIndex((c) => c.id === game.category) : -1;
   };
   return rows
-    .filter((row) => games.has(row.gameId) && isCurrentTable(row.gameId, row.paramsKey))
+    .filter((row) => games.has(row.gameId) && isCurrentTable(row.gameId, row.paramsKey) === current)
     .sort(
       (a, b) =>
         categoryOf(a.gameId) - categoryOf(b.gameId) ||

@@ -132,7 +132,8 @@ export function ChallengeScreen({
   const gameId = challenge ? (findAvailableGame(challenge.gameId)?.id ?? null) : null;
   // ...and only a board this build deals (club.md §6-0, 2026-11-07): a daily another version
   // of the game made (104-card Spider) would be played as this build's daily, whose result
-  // goes to another challenge, so it offers no Play and says why.
+  // goes to another challenge, so it offers no Play and says why. Its results, and the
+  // delete on the viewer's own (Today lists it while it is `mine`), stay as on any other.
   const playable =
     challenge !== null &&
     gameId !== null &&

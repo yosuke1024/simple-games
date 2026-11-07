@@ -165,6 +165,7 @@ export const tr: ClubMessages = {
   clubTier_suit1: '1 tür',
   clubTier_suits2: '2 tür',
   clubTier_suits4: '4 tür',
+  clubLegacySpider: '104 kart',
   clubTier_cpuEasy: 'Kolay',
   clubTier_cpuNormal: 'Normal',
   clubTier_cpuHard: 'Zor',

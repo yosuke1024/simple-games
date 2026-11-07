@@ -3,10 +3,15 @@
  * 「Spiderette への切り替え」, 2026-11-07): Spider Solitaire's 104-card tables
  * (`1-suit` / `2-suits` / `4-suits`) and 104-card dailies (params without
  * `layout`) stay on the server — 1.8.2 still sends to them — but this build
- * neither lists nor opens them, and offers no Play for such a daily. Other
- * games are untouched. Rendered against a stubbed server, as ClubRoot.test.tsx.
+ * offers them nowhere as Spiderette's and offers no Play for such a daily.
+ * The one way in that stays is to the viewer's own records there, so they can
+ * still delete them one at a time (PRODUCT_PRINCIPLES「自分の記録は、本人が
+ * 自分で、1 件ずつ消せる」): their rows in a 104-card table under "Your
+ * rankings" (named `104 cards`), and a 104-card daily of today they have a
+ * result in. Other games are untouched. Rendered against a stubbed server, as
+ * ClubRoot.test.tsx.
  */
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../i18n';
@@ -106,8 +111,17 @@ const SUDOKU_DAILY = challenge(
 const CHALLENGES = [OLD_SPIDER_DAILY, SPIDERETTE_DAILY, SUDOKU_DAILY];
 
 let rankingList: unknown[] = [];
-let mineList: unknown[] = [];
+let mineList: { gameId: string; paramsKey: string }[] = [];
 let memberRankings: unknown[] = [];
+/** Today's dailies as the server lists them for the viewer (`mine` is theirs). */
+let challengeList: (typeof OLD_SPIDER_DAILY)[] = CHALLENGES;
+/** The viewer's rows in a table, by `<game>/<key>`: on the table's page, and what a DELETE takes off. */
+let ownEntries: Record<string, { id: string | null }[]> = {};
+/** The challenges the viewer has a result in: their result is in the list until a DELETE. */
+let ownResultIn = new Set<string>();
+
+const notFound = () => reply({ error: { code: 'not_found', message: 'no' } }, 404);
+const noContent = () => new Response(null, { status: 204, headers: { 'X-Club-Api': '1' } });
 
 function reply(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -116,51 +130,82 @@ function reply(body: unknown, status = 200): Response {
   });
 }
 
+/** A row of the viewer's in a table, as `GET /rankings/<game>/<key>` sends it. */
+const ownEntry = (id: string | null) => ({ ...ENTRY, id, memberId: 'm_7', nickname: 'Ken' });
+
 function stubServer() {
+  /** One of the viewer's rows went; a table with none left leaves `GET /rankings/mine`. */
+  const dropOwn = (table: string, keep: (row: { id: string | null }) => boolean) => {
+    const rows = ownEntries[table];
+    if (!rows || !rows.some((row) => !keep(row))) return notFound();
+    ownEntries[table] = rows.filter(keep);
+    if (ownEntries[table].length === 0) {
+      mineList = mineList.filter((m) => `${m.gameId}/${m.paramsKey}` !== table);
+    }
+    return noContent();
+  };
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = new URL(String(input));
     const path = url.pathname.replace('/api/v1', '');
-    if ((init?.method ?? 'GET') !== 'GET') {
-      return reply({ error: { code: 'not_found', message: 'no' } }, 404);
+    const method = init?.method ?? 'GET';
+    if (method === 'DELETE') {
+      const entry = /^\/rankings\/([^/]+\/[^/]+)\/entries\/([^/]+)$/.exec(path);
+      if (entry) return dropOwn(entry[1]!, (row) => row.id !== entry[2]);
+      const all = /^\/rankings\/([^/]+\/[^/]+)\/me$/.exec(path);
+      if (all) return dropOwn(all[1]!, () => false);
+      const result = /^\/challenges\/([^/]+)\/results\/me$/.exec(path);
+      if (result && ownResultIn.delete(result[1]!)) return noContent();
+      return notFound();
     }
+    if (method !== 'GET') return notFound();
     if (path === '/club') return reply({ club: CLUB, me: ME, members: [ME, YOH] });
     if (path === '/challenges') {
-      return reply(url.searchParams.get('daily') === TODAY ? CHALLENGES : []);
+      return reply(url.searchParams.get('daily') === TODAY ? challengeList : []);
     }
     const one = /^\/challenges\/([^/]+)$/.exec(path);
     if (one) {
-      const found = CHALLENGES.find((c) => c.id === one[1]);
-      return found ? reply(found) : reply({ error: { code: 'not_found', message: 'no' } }, 404);
+      const found = challengeList.find((c) => c.id === one[1]);
+      return found ? reply(found) : notFound();
     }
-    if (/^\/challenges\/[^/]+\/results$/.test(path)) {
+    const results = /^\/challenges\/([^/]+)\/results$/.exec(path);
+    if (results) {
+      const result = (memberId: string, nickname: string) => ({
+        memberId,
+        nickname,
+        submittedAt: '2026-11-07T00:00:00.000Z',
+        outcome: 'completed',
+        facts: SPIDER_FACTS,
+      });
       return reply([
-        {
-          memberId: 'm_1',
-          nickname: 'Yoh',
-          submittedAt: '2026-11-07T00:00:00.000Z',
-          outcome: 'completed',
-          facts: SPIDER_FACTS,
-        },
+        result('m_1', 'Yoh'),
+        ...(ownResultIn.has(results[1]!) ? [result('m_7', 'Ken')] : []),
       ]);
     }
     if (path === '/rankings') return reply(rankingList);
     if (path === '/rankings/mine') return reply(mineList);
     const ranking = /^\/rankings\/([^/]+)\/([^/]+)$/.exec(path);
     if (ranking) {
+      const own = (ownEntries[`${ranking[1]}/${ranking[2]}`] ?? []).map((row) => ownEntry(row.id));
       return reply({
         gameId: ranking[1],
         paramsKey: ranking[2],
-        entryCount: 1,
-        entries: [ENTRY],
+        entryCount: 1 + own.length,
+        entries: [ENTRY, ...own],
         me: null,
       });
     }
     if (path === '/members/m_1') return reply({ member: YOH, rankings: memberRankings });
-    return reply({ error: { code: 'not_found', message: 'no' } }, 404);
+    return notFound();
   });
   vi.stubGlobal('fetch', fetchMock);
   return fetchMock;
 }
+
+/** The DELETE requests made so far, as their paths under the API. */
+const deletes = (fetchMock: ReturnType<typeof stubServer>) =>
+  fetchMock.mock.calls
+    .filter(([, init]) => init?.method === 'DELETE')
+    .map(([input]) => new URL(String(input)).pathname.replace('/api/v1', ''));
 
 /** The `GET /rankings/<game>/<key>` reads made so far, as `<game>/<key>`. */
 const tableReads = (fetchMock: ReturnType<typeof stubServer>) =>
@@ -205,6 +250,9 @@ beforeEach(() => {
   rankingList = BOTH_DECKS;
   mineList = [];
   memberRankings = [];
+  challengeList = CHALLENGES;
+  ownEntries = {};
+  ownResultIn = new Set();
   clearWithdrawnChallenges();
   localStorage.clear();
 });
@@ -258,7 +306,7 @@ describe('the Club screen and a game’s tables leave the 104-card Spider tables
     );
   });
 
-  it('a 104-card row of yours is not in Your rankings, and does not choose the mode a tile opens', async () => {
+  it('a 104-card row of yours comes last in Your rankings, named so, and does not choose the mode a tile opens', async () => {
     const fetchMock = stubServer();
     mineList = [
       standing('spider-solitaire', '1-suit'),
@@ -269,26 +317,36 @@ describe('the Club screen and a game’s tables leave the 104-card Spider tables
     await joined();
     renderRoot();
     expect(await screen.findByRole('heading', { name: 'Your rankings' })).toBeInTheDocument();
-    expect(myRows()).toEqual(['Sudoku · Hard', 'Spider Solitaire · 2 suits']);
+    // Never a second "Spider Solitaire · 1 suit": the 104-card table says what it was.
+    expect(myRows()).toEqual([
+      'Sudoku · Hard',
+      'Spider Solitaire · 2 suits',
+      'Spider Solitaire · 104 cards · 1 suit',
+    ]);
 
     await user.click(screen.getByRole('button', { name: 'Spider Solitaire' }));
     await screen.findByRole('heading', { name: 'Spider Solitaire' });
+    expect(chips()).toEqual(['1 suit', '2 suits']);
     expect(selectedChip()).toBe('2 suits');
     await waitFor(() =>
       expect(tableReads(fetchMock)).toEqual(['spider-solitaire/spiderette-2-suits']),
     );
   });
 
-  it('with only 104-card rows of yours, the section is gone and the tile opens Spiderette', async () => {
+  it('with only 104-card rows of yours, the section lists them and the tile still opens Spiderette', async () => {
     const fetchMock = stubServer();
-    mineList = [standing('spider-solitaire', '1-suit'), standing('spider-solitaire', '4-suits')];
+    mineList = [standing('spider-solitaire', '4-suits'), standing('spider-solitaire', '1-suit')];
     const user = userEvent.setup();
     await joined();
     renderRoot();
-    await screen.findByRole('heading', { name: 'Rankings' });
-    expect(screen.queryByRole('heading', { name: 'Your rankings' })).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Your rankings' })).toBeInTheDocument();
+    expect(myRows()).toEqual([
+      'Spider Solitaire · 104 cards · 1 suit',
+      'Spider Solitaire · 104 cards · 4 suits',
+    ]);
     await user.click(screen.getByRole('button', { name: 'Spider Solitaire' }));
     await screen.findByRole('heading', { name: 'Spider Solitaire' });
+    expect(chips()).toEqual(['1 suit', '2 suits']);
     await waitFor(() =>
       expect(tableReads(fetchMock)).toEqual(['spider-solitaire/spiderette-1-suit']),
     );
@@ -326,8 +384,78 @@ describe('the Club screen and a game’s tables leave the 104-card Spider tables
   });
 });
 
+describe('your own rows in a 104-card table can still be deleted, one at a time', () => {
+  const deleteButtons = () => screen.queryAllByRole('button', { name: 'Delete my record' });
+  const LEGACY_1 = 'Spider Solitaire · 104 cards · 1 suit';
+
+  it('opens the 104-card table alone, under its own name, with Delete on your row and no Play', async () => {
+    const fetchMock = stubServer();
+    mineList = [
+      standing('spider-solitaire', '1-suit'),
+      standing('spider-solitaire', 'spiderette-1-suit'),
+    ];
+    ownEntries = { 'spider-solitaire/1-suit': [{ id: 'r_own' }] };
+    const user = userEvent.setup();
+    await joined();
+    renderRoot();
+    await screen.findByRole('heading', { name: 'Your rankings' });
+    await user.click(screen.getByRole('button', { name: new RegExp(`^${LEGACY_1} · `) }));
+
+    expect(await screen.findByRole('heading', { name: LEGACY_1 })).toBeInTheDocument();
+    // Alone: no chips, so never a "1 suit" chip beside Spiderette's "1 suit".
+    expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
+    expect(chips()).toEqual([]);
+    await waitFor(() => expect(tableReads(fetchMock)).toEqual(['spider-solitaire/1-suit']));
+    await screen.findByText('You');
+    expect(deleteButtons()).toHaveLength(1);
+    // Nothing on this screen opens the game.
+    expect(screen.queryByRole('button', { name: 'Play' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Play again' })).not.toBeInTheDocument();
+
+    await user.click(deleteButtons()[0]!);
+    await user.click(
+      within(screen.getByRole('alertdialog', { name: 'Delete this result?' })).getByRole('button', {
+        name: 'Delete',
+      }),
+    );
+    await waitFor(() => expect(deleteButtons()).toHaveLength(0));
+    expect(deletes(fetchMock)).toEqual(['/rankings/spider-solitaire/1-suit/entries/r_own']);
+    // The table is read again, still alone.
+    expect(tableReads(fetchMock)).toEqual(['spider-solitaire/1-suit', 'spider-solitaire/1-suit']);
+    expect(chips()).toEqual([]);
+
+    // Back on the Club, read again: the row is gone, and the tile still opens Spiderette alone.
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    await screen.findByRole('heading', { name: 'Your rankings' });
+    await waitFor(() => expect(myRows()).toEqual(['Spider Solitaire · 1 suit']));
+    await user.click(screen.getByRole('button', { name: 'Spider Solitaire' }));
+    await screen.findByRole('heading', { name: 'Spider Solitaire' });
+    expect(chips()).toEqual(['1 suit', '2 suits']);
+  });
+
+  it('a row from a server without row ids goes through the compatibility route', async () => {
+    const fetchMock = stubServer();
+    mineList = [standing('spider-solitaire', '4-suits')];
+    ownEntries = { 'spider-solitaire/4-suits': [{ id: null }] };
+    const user = userEvent.setup();
+    await joined();
+    renderRoot();
+    await user.click(
+      await screen.findByRole('button', { name: /^Spider Solitaire · 104 cards · 4 suits · / }),
+    );
+    await screen.findByRole('heading', { name: 'Spider Solitaire · 104 cards · 4 suits' });
+    await screen.findByText('You');
+    await user.click(deleteButtons()[0]!);
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete' }),
+    );
+    await waitFor(() => expect(deleteButtons()).toHaveLength(0));
+    expect(deletes(fetchMock)).toEqual(['/rankings/spider-solitaire/4-suits/me']);
+  });
+});
+
 describe('a daily another version of the game made is not offered to play', () => {
-  it('Today lists the Spiderette and Sudoku dailies, not the 104-card one', async () => {
+  it('Today lists the Spiderette and Sudoku dailies, not a 104-card one with no result of yours', async () => {
     stubServer();
     await joined();
     renderRoot();
@@ -354,6 +482,46 @@ describe('a daily another version of the game made is not offered to play', () =
     expect(screen.queryByText(/your result is sent to/)).not.toBeInTheDocument();
     // Its results are still there to read.
     expect(await screen.findByRole('button', { name: 'Yoh' })).toBeInTheDocument();
+    expect(handlers.onPlayChallenge).not.toHaveBeenCalled();
+  });
+
+  it('a 104-card daily you have a result in is listed, opens with no Play, and your result can be deleted', async () => {
+    const fetchMock = stubServer();
+    challengeList = [{ ...OLD_SPIDER_DAILY, mine: true }, SPIDERETTE_DAILY, SUDOKU_DAILY];
+    ownResultIn = new Set([OLD_SPIDER_DAILY.id]);
+    const deleteButtons = () => screen.queryAllByRole('button', { name: 'Delete my record' });
+    const user = userEvent.setup();
+    await joined();
+    const handlers = renderRoot();
+    expect(await screen.findByRole('heading', { name: 'Today' })).toBeInTheDocument();
+    const today = Array.from(document.querySelectorAll('.club-line'))
+      .map((row) => row.getAttribute('aria-label'))
+      .filter((label) => label?.includes('Daily'));
+    expect(today).toEqual([
+      'Spider Solitaire · Daily · by Yoh',
+      'Spider Solitaire · 1 suit · Daily · by Yoh',
+      'Sudoku · Hard · Daily · by Yoh',
+    ]);
+
+    await user.click(screen.getByRole('button', { name: 'Spider Solitaire · Daily · by Yoh' }));
+    expect(await screen.findByText(DIFFERENT_VERSION)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Play' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Play again' })).not.toBeInTheDocument();
+    await screen.findByText('You');
+    expect(deleteButtons()).toHaveLength(1);
+
+    await user.click(deleteButtons()[0]!);
+    await user.click(
+      within(
+        screen.getByRole('alertdialog', { name: 'Remove your result from this challenge?' }),
+      ).getByRole('button', { name: 'Delete' }),
+    );
+    await waitFor(() => expect(deleteButtons()).toHaveLength(0));
+    expect(deletes(fetchMock)).toEqual([`/challenges/${OLD_SPIDER_DAILY.id}/results/me`]);
+    // Still no Play once withdrawn, and the others' results stay to read.
+    expect(screen.getByText(DIFFERENT_VERSION)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Play again' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Yoh' })).toBeInTheDocument();
     expect(handlers.onPlayChallenge).not.toHaveBeenCalled();
   });
 

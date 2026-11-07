@@ -8,7 +8,9 @@
  * follows after a separator with its own rank. Another member's name opens that
  * member's view (§9「Member」) — on every device, the owner's too. The table it
  * last read is handed up (`onRead`) and back (`cached`), with where it was
- * scrolled to, so closing that view shows the table where it was left.
+ * scrolled to, so closing that view shows the table where it was left. A
+ * retired table (104-card Spider's) is shown alone, without chips, under its
+ * own name — the viewer reaches it only from their own row, to delete it.
  */
 import { useEffect, useRef, useState } from 'react';
 import { GAMES } from '@/app/registry';
@@ -19,7 +21,7 @@ import { GameTile } from '@/ui/components/GameTile';
 import { createClient } from '../api/client';
 import { ClubApiError } from '../api/errors';
 import type { RankingEntry, RankingSummary, RankingTable } from '../api/types';
-import { gameTitle } from '../contract/challenge';
+import { gameTitle, isCurrentTable } from '../contract/challenge';
 import {
   axisGap,
   axisText,
@@ -86,14 +88,23 @@ export function RankingScreen({
   onBack: () => void;
 }) {
   const { t } = useSettings();
+  // A table the game's contract no longer makes (104-card Spider's), opened from the
+  // viewer's own row in "Your rankings" so they can delete it (PRODUCT_PRINCIPLES): it
+  // stands alone — no chips, so it is never a chip beside a current mode of the same word —
+  // and its title names it (`rankingTitle`). The current modes' chips never carry it.
+  const retired = paramsKey !== null && !isCurrentTable(gameId, paramsKey);
   // The mode on screen is always among the chips, even if the list it came from lacked it.
-  const modes = sortModes(gameId, [
-    ...tables.filter((r) => r.gameId === gameId).map((r) => r.paramsKey),
-    ...(paramsKey === null ? [] : [paramsKey]),
-  ]);
+  const modes = retired
+    ? [paramsKey]
+    : sortModes(gameId, [
+        ...tables
+          .filter((r) => r.gameId === gameId && isCurrentTable(r.gameId, r.paramsKey))
+          .map((r) => r.paramsKey),
+        ...(paramsKey === null ? [] : [paramsKey]),
+      ]);
   const key = paramsKey ?? modes[0] ?? 'standard';
   // A game with one table and no modes (`standard`) needs no chip to say which it is.
-  const chips = modes.length > 1 || (modes.length === 1 && modes[0] !== 'standard');
+  const chips = !retired && (modes.length > 1 || (modes.length === 1 && modes[0] !== 'standard'));
   const game = GAMES.find((g) => g.id === gameId);
 
   // The table the step kept, when it is the mode on screen: shown at once, with no request

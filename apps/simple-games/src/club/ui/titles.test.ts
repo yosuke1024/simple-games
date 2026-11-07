@@ -142,6 +142,14 @@ describe('mode words', () => {
     expect(modeLabel('spider-solitaire', '1-suit', t)).toBe('clubTier_suit1');
     expect(modeLabel('spider-solitaire', '2-suits', t)).toBe('clubTier_suits2');
     expect(modeLabel('spider-solitaire', '4-suits', t)).toBe('clubTier_suits4');
+    // A retired 104-card Spider table's title says so; Spiderette's, with the same suit word, does not.
+    expect(rankingTitle('spider-solitaire', '1-suit', t)).toBe(
+      'Spider Solitaire · clubLegacySpider · clubTier_suit1',
+    );
+    expect(rankingTitle('spider-solitaire', 'spiderette-1-suit', t)).toBe(
+      'Spider Solitaire · clubTier_suit1',
+    );
+    expect(rankingTitle('solitaire', 'draw-1', t)).toBe('Solitaire · clubTier_draw1');
     expect(modeLabel('nonogram', '10x10', t)).toBe('10×10');
     expect(modeLabel('takuzu', '8x8', t)).toBe('8×8');
     expect(rankingTitle('hit-and-blow', 'normal', t)).toBe('Hit & Blow · clubTier_normal');

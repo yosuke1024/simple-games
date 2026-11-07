@@ -166,6 +166,7 @@ export const ko: ClubMessages = {
   clubTier_suit1: '무늬 1개',
   clubTier_suits2: '무늬 2개',
   clubTier_suits4: '무늬 4개',
+  clubLegacySpider: '104장',
   clubTier_cpuEasy: '쉬움',
   clubTier_cpuNormal: '보통',
   clubTier_cpuHard: '어려움',

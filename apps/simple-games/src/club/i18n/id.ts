@@ -169,6 +169,7 @@ export const id: ClubMessages = {
   clubTier_suit1: '1 jenis',
   clubTier_suits2: '2 jenis',
   clubTier_suits4: '4 jenis',
+  clubLegacySpider: '104 kartu',
   clubTier_cpuEasy: 'Mudah',
   clubTier_cpuNormal: 'Sedang',
   clubTier_cpuHard: 'Sulit',

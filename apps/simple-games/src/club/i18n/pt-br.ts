@@ -168,6 +168,7 @@ export const ptBR: ClubMessages = {
   clubTier_suit1: '1 naipe',
   clubTier_suits2: '2 naipes',
   clubTier_suits4: '4 naipes',
+  clubLegacySpider: '104 cartas',
   clubTier_cpuEasy: 'Fácil',
   clubTier_cpuNormal: 'Normal',
   clubTier_cpuHard: 'Difícil',

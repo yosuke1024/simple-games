@@ -171,6 +171,7 @@ export const fr: ClubMessages = {
   clubTier_suit1: '1 famille',
   clubTier_suits2: '2 familles',
   clubTier_suits4: '4 familles',
+  clubLegacySpider: '104 cartes',
   clubTier_cpuEasy: 'Facile',
   clubTier_cpuNormal: 'Normal',
   clubTier_cpuHard: 'Difficile',

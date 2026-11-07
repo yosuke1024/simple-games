@@ -168,6 +168,7 @@ export const es: ClubMessages = {
   clubTier_suit1: '1 palo',
   clubTier_suits2: '2 palos',
   clubTier_suits4: '4 palos',
+  clubLegacySpider: '104 cartas',
   clubTier_cpuEasy: 'Fácil',
   clubTier_cpuNormal: 'Normal',
   clubTier_cpuHard: 'Difícil',
