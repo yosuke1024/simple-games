@@ -9,6 +9,18 @@ Web-only share destination, not the browser version or its ordinary links.
 - Shared URL: `https://pixapps.ai/simple-games/share/<game-id>/`.
 - Installed, supported app: iOS Universal Links / Android verified App Links
   deliver it to the app. An unavailable or retired game opens the collection.
+  The site matches: it keeps a page for every id it ever published, and a
+  retired id renders as the collection landing at its own address, without
+  the game's name or artwork. An id that never had a page gets the same
+  collection landing as `share/404.html` (HTTP 404). The landing repository's
+  `docs/current/simple-games-share.md` owns those rules (pixapps-landing#239).
+- A Web-only game (registry `channel: 'web-beta'`) is not in the app, and only
+  the browser version can share it. Its share keeps the browser address
+  `https://pixapps.ai/simple-games/play/?game=<game-id>` and the browser
+  invitation (`shareInviteBrowser` / `shareChallengeBrowser`, the wording every
+  share used until 1.8.3). The app's address would open an install landing for
+  a game the app does not have. When the game graduates to the app, its shares
+  switch to the share URL in the same build that offers it in the app.
 - Otherwise: pixapps-landing serves a static install landing. Game names come
   from the registry, illustrations from the app's existing collection artwork,
   and one template generates the HTML and QR codes. The initial language is
@@ -77,11 +89,54 @@ The site PR adds the following to existing files, preserving PixWork entries:
    House; the new entitlement adds `pixapps.ai`.
 4. Build and release updated iOS/Android apps through the existing release gates.
    Existing app binaries cannot gain these registrations from a website change.
+   That includes the share landing gate below, for every release, not only this one.
 5. After the landing is available, sync the updated Web build to change browser
    sharing too. The landing publish workflow refreshes its share catalog from
    the same source checkout. Do not ship new share URLs before their pages exist.
 
 PR creation does not merge, publish, rotate signing keys or release a store build.
+
+## Release gate
+
+A native build shares the share URL for every registry game without a
+`channel`. The site gets its pages from the landing's sync of the registry at
+the ref the web was last published from, which can trail a release tag: a
+game graduating from Web-only to the app is the usual case. Before a build is
+installed anywhere (internal tracks and TestFlight included), run
+
+```bash
+pnpm --filter simple-games share:check --ref v<version>
+```
+
+`apps/simple-games/scripts/share-landing-check.mjs` reads `registry.ts` at the
+tag with git and requests each game's production address as a recipient would.
+Each must answer 200 itself, with no redirect, with that game's own page: HTML
+carrying `data-game="<id>"` and no `class="availability"` sentence (the
+landing's mark for "not in the app"). If it fails, publish the web build from
+that tag first. It is release tooling outside `apps/*/src`, so the app's
+no-network rule does not cover it, and the app never runs it.
+`docs/RELEASE_CHECKLIST.md` §7 lists it.
+
+## Coupling with the landing
+
+The landing repository's `scripts/sync-simple-games-share.js` reads two things
+in this repository at the published ref that no import graph shows:
+
+- `apps/simple-games/src/app/registry.ts`, parsed with the TypeScript compiler
+  and never executed. `GAMES` must be initialized with an array literal of
+  object literals, and each entry's `id`, `title`, `glyph` and optional
+  `channel` must be plain string literals. A spread, a computed title or a
+  helper that builds entries would make the sync fail, or read a Web-only
+  game as an app game.
+- `apps/simple-games/src/services/gameArtworkImage.ts`, loaded through Vite with
+  jsdom globals. It calls `gameArtworkSvg(id)` for every game that is not
+  `in-development` and keeps the SVG only when it is self-contained: no
+  `var(`, `currentColor`, scripts, `foreignObject`, event handlers or `href`.
+
+`apps/simple-games/src/test/shareLanding.test.ts` pins both. It parses the
+registry with the release gate's reader and compares the result with the
+running `GAMES`, and it checks every published game's artwork against the
+landing's rules. Change the landing's sync before changing either shape here.
 
 ## Verification boundaries
 

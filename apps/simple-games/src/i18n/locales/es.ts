@@ -163,6 +163,8 @@ export const es: Messages = {
   sharePlayed: 'Jugué a {game} en Simple Games.',
   shareInvite: 'Descarga la app Simple Games.',
   shareChallenge: 'Te toca. Juega en la app Simple Games.',
+  shareInviteBrowser: 'Puedes jugarlo directamente en el navegador.',
+  shareChallengeBrowser: 'Te toca. Pruébalo en tu navegador.',
   shareCardAction: 'Te toca',
   shareCardBoard: 'Tablero de esta partida',
   shareCardPreview: 'Vista previa del juego',

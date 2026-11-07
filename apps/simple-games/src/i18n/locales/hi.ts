@@ -161,6 +161,8 @@ export const hi: Messages = {
   sharePlayed: 'मैंने Simple Games पर {game} खेला।',
   shareInvite: 'Simple Games ऐप डाउनलोड करें।',
   shareChallenge: 'अब आपकी बारी। Simple Games ऐप में खेलें।',
+  shareInviteBrowser: 'इसे सीधे ब्राउज़र में खेला जा सकता है।',
+  shareChallengeBrowser: 'अब आपकी बारी। अपने ब्राउज़र में खेलकर देखें।',
   shareCardAction: 'अब आपकी बारी',
   shareCardBoard: 'इस गेम का बोर्ड',
   shareCardPreview: 'खेल की झलक',
