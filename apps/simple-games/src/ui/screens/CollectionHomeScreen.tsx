@@ -148,6 +148,29 @@ export const GAME_MENU_MOVE_PX = 24;
  */
 export const GAME_MENU_SCROLL_PX = 8;
 
+/**
+ * The door to a game that can take the focus right now, for `closeMenu`'s
+ * effect when the tile the sheet was opened from has gone. A game has its tile
+ * in its own category and at most one more (its shelf tile when pinned, else
+ * its recent row), and the category tile stays in the DOM while its category
+ * is closed (`.game-grid[hidden]` is `display: none`). A `focus()` on it does
+ * nothing, and the focus falls to `<body>`.
+ *
+ * So a tile that is drawn wins, wherever it is. When the only one left is
+ * behind a closed heading, the heading is the door: its toggle is one Enter
+ * away from that tile, and it is in the reading order where the tile would be.
+ * Closed is read from the `hidden` attribute, not from layout, which is also
+ * what lets jsdom see it.
+ */
+function doorTo(gameId: GameId): HTMLElement | null {
+  const tiles = Array.from(document.querySelectorAll<HTMLElement>(`[data-game-id="${gameId}"]`));
+  const drawn = tiles.find((tile) => tile.closest('[hidden]') === null);
+  if (drawn) return drawn;
+  const closed = tiles[0]?.closest('[hidden]');
+  if (!closed?.id) return null;
+  return document.querySelector<HTMLElement>(`[aria-controls="${closed.id}"]`);
+}
+
 interface GameButtonProps {
   game: GameDefinition;
   className: string;
@@ -255,7 +278,7 @@ function GameButton({ game, className, onOpen, onMenu, children }: GameButtonPro
       type="button"
       className={className}
       // Which game this door leads to, for the one caller that has to find a
-      // door again after the one it was holding disappeared (`closeMenu`).
+      // door again after the one it was holding disappeared (`doorTo`).
       data-game-id={game.id}
       onPointerDown={(event) => {
         // Only the primary button arms the press. A right-click has its own
@@ -516,16 +539,17 @@ export function CollectionHomeScreen({
    * where they were, in the one flow this sheet exists to support.
    *
    * When the tile really is gone, the game still has its tile in its own
-   * category — the same door, one section down — so focus lands there.
+   * category — the same door, one section down — so focus lands there, or on
+   * that category's heading while the category is closed (`doorTo`).
    */
   useEffect(() => {
     if (menuGame !== null) return;
     const from = menuTriggerRef.current;
     if (from === null) return;
     menuTriggerRef.current = null;
-    const target = from.element?.isConnected
-      ? from.element
-      : document.querySelector<HTMLElement>(`[data-game-id="${from.gameId}"]`);
+    const trigger = from.element;
+    const target =
+      trigger?.isConnected && trigger.closest('[hidden]') === null ? trigger : doorTo(from.gameId);
     target?.focus();
   }, [menuGame]);
 
