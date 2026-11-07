@@ -1,3 +1,4 @@
+import type { PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 /**
  * Backgammon's root: loads the game's own records (local, fast, offline), then
  * mounts the provider and routes its screens. The shell knows nothing beyond
@@ -32,7 +33,7 @@ import { BackgammonHomeScreen } from './screens/HomeScreen';
 import { BackgammonStatsScreen } from './screens/StatsScreen';
 import { BackgammonTutorialScreen } from './screens/TutorialScreen';
 
-export function BackgammonScreens() {
+export function BackgammonScreens(together: PlayTogetherProps = {}) {
   const { screen } = useBackgammon();
   switch (screen) {
     case 'tutorial':
@@ -43,7 +44,7 @@ export function BackgammonScreens() {
       return <BackgammonStatsScreen />;
     case 'home':
     default:
-      return <BackgammonHomeScreen />;
+      return <BackgammonHomeScreen {...together} />;
   }
 }
 
@@ -55,7 +56,7 @@ interface LoadedData {
 }
 
 /** What the shell hands a root (app/registry.ts `GameRootProps`). */
-export interface BackgammonRootProps {
+export interface BackgammonRootProps extends PlayTogetherProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
   /** Which door this launch came through (issue #113). Absent means the ordinary one. */
@@ -83,7 +84,13 @@ async function loadRecords(kv: KVStore): Promise<LoadedData> {
   return { stats, flags, prefs, session };
 }
 
-export function BackgammonRoot({ onExit, entry, kv = preferencesKV }: BackgammonRootProps) {
+export function BackgammonRoot({
+  onPlayTogether,
+  playTogetherActive,
+  onExit,
+  entry,
+  kv = preferencesKV,
+}: BackgammonRootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
@@ -96,7 +103,7 @@ export function BackgammonRoot({ onExit, entry, kv = preferencesKV }: Backgammon
       onExit={onExit}
       entry={entry}
     >
-      <BackgammonScreens />
+      <BackgammonScreens onPlayTogether={onPlayTogether} playTogetherActive={playTogetherActive} />
     </BackgammonProvider>
   );
 }

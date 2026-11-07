@@ -2,6 +2,7 @@ import type { SpiderMessages } from './en';
 
 export const vi: SpiderMessages = {
   spiderName: 'Spider Solitaire',
+  spiderLayoutNote: 'Spiderette · 7 cột · 52 lá',
   spiderNewDeal: 'Chia bài mới',
   spiderTableLabel: 'Bàn Spider Solitaire',
   spiderCardLabel: '{rank} {suit}',
@@ -28,7 +29,7 @@ export const vi: SpiderMessages = {
   spiderStuckTitle: 'Hết nước đi',
   spiderStuckBody: 'Bộ bài đã hết và không lá nào đặt được. Hãy hoàn tác, hoặc chia bài mới.',
   spiderWonTitle: 'Bạn thắng!',
-  spiderWonBody: 'Cả tám dãy đã hoàn thành.',
+  spiderWonBody: 'Cả bốn dãy đã hoàn thành.',
   spiderNewBestMoves: 'Số nước ít nhất của bạn.',
   spiderNewBestTime: 'Thời gian nhanh nhất của bạn.',
   spiderBestMoves: 'Ít nước nhất',
@@ -43,5 +44,6 @@ export const vi: SpiderMessages = {
   spiderStep2Body:
     'Các lá cùng chất xếp liền nhau sẽ đi cùng lúc. Xếp từ Già xuống Át, dãy đó rời khỏi bàn.',
   spiderStep3Title: 'Bí thì chia thêm',
-  spiderStep3Body: 'Bộ bài chia mỗi cột một lá — nhưng chỉ khi không còn cột nào trống.',
+  spiderStep3Body:
+    'Lấp đầy mọi cột trước khi chia 7 lá; lượt chia cuối chỉ thêm một lá vào mỗi cột trong 3 cột ngoài cùng bên trái.',
 };

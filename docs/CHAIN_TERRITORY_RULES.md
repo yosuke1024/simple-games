@@ -1,5 +1,7 @@
 # Chain Territory (No. 71)
 
+2026-11-04: オーナーの承認によりアプリに正式収録し、Nearby Playに対応。現在の契約は末尾のNearby節が優先する。
+
 ## ルール
 
 5列×6行でプレイヤーとCPUが交互に1個置く。空マスまたは自分のマスだけに置ける。
@@ -19,7 +21,7 @@ CPUは同じ公開盤面だけを見る。待ったは自分の直前手まで(�
 ## 共通契約
 
 2026-11-03、製品オーナーの追加3本とWeb公開の依頼、および候補3本への承認による。
-Web先行公開のみ。正式収録65本・Club House・Nearbyには加えない。
+2026-11-04に正式収録・Nearbyへ追加。Club Houseには加えない。
 純粋TypeScriptのゲーム層、ゲームごとの保存、14言語、図解3ステップを持つ。
 GameHomeHeader / GameArtwork / WebBetaNotice / BannerSlot / ResultAdSlot / ShareActionを使う。
 操作中の確認は背景をinertにし、キー入力・CPU・再生を停止する。非表示・退出時は保存する。
@@ -33,6 +35,16 @@ GameHomeHeader / GameArtwork / WebBetaNotice / BannerSlot / ResultAdSlot / Share
 
 2026-11-03、公開Webの完全一致検索でChain Territory / Marble Weave / River Cargoという
 同名ゲームは確認できなかった。Prism LinesとRiver Passageは同名アプリがあったため採用しない。
-検索は商標クリアランスではなく、商標DB・両ストアの全件調査は正式収録前に行う。
+検索は商標クリアランスではなく、商標DB・両ストアの全件調査は正式収録前に行う。2026-11-07: 1.8.2 の本番公開前に商標DB・両ストアを調べた(両ストアの検索、USPTO、J-PlatPat、TMview、WIPO は一部。各DBは既知の名前で検索が効くことを確かめてから0件と判断)。同名・紛らわしい名前のアプリ・ゲーム・商標は見つからず、題はそのまま使う(低リスク。法的クリアランスではない。WIPO の完全一致検索・EUIPO の直接検索など、エラーで実行できなかったものがある)。
 盤面・キャラクター・図は自作SVG/CSS、音は既存サービスのみ。既存作品の素材・コードは使わない。
 検証・公開記録は docs/plans/2026-11-03-three-more-games-71-73.md に残す。
+
+## Nearby Play (2026-11-04)
+
+2026-11-04、オーナーの指示によりNearby Playに対応。アプリの「誰かと遊ぶ」から開始し、
+Webでは無効ボタンとアプリ専用の説明を表示する。通信・履歴はNearby専用で、通常のCPU戦・保存・統計を変えない。
+正式収録へ変更し、既存保存schema v1を凍結する。収録はオーナー判断で、安定稼働期間の達成ではない。
+接続・承認・再接続の共通契約は [近隣対戦の契約](architecture/nearby-multiplayer.md) を正とする。
+
+2席。hostから交互に置き、純粋なルールで連鎖後の盤面を確定する。
+各端末は自分を青／丸、相手をコーラル／菱形で表示。合法手列だけを同期する。NearbyではUndoなし。

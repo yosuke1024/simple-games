@@ -12,7 +12,7 @@ function block(header: string) {
 }
 const blocks = [
   block("[data-game='daifugo'] {"),
-  block("[data-theme='dark'][data-game='daifugo'] {"),
+  block("[data-theme='dark'][data-game='daifugo']"),
 ];
 function luminance(hex: string) {
   const c = [1, 3, 5].map((i) => {

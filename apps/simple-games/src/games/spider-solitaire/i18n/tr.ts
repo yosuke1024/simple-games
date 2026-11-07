@@ -2,6 +2,7 @@ import type { SpiderMessages } from './en';
 
 export const tr: SpiderMessages = {
   spiderName: 'Spider Solitaire',
+  spiderLayoutNote: 'Spiderette · 7 sütun · 52 kart',
   spiderNewDeal: 'Yeni el',
   spiderTableLabel: 'Spider Solitaire masası',
   spiderCardLabel: '{suit} {rank}',
@@ -28,7 +29,7 @@ export const tr: SpiderMessages = {
   spiderStuckTitle: 'Hamle kalmadı',
   spiderStuckBody: 'Deste tükendi ve hiçbir kart sığmıyor. Bir hamle geri al ya da yeni el dağıt.',
   spiderWonTitle: 'Kazandın!',
-  spiderWonBody: 'Sekiz dizinin hepsi tamamlandı.',
+  spiderWonBody: 'Dört dizinin hepsi tamamlandı.',
   spiderNewBestMoves: 'Şimdiye kadarki en az hamlen.',
   spiderNewBestTime: 'Şimdiye kadarki en hızlı süren.',
   spiderBestMoves: 'En az hamle',
@@ -43,5 +44,6 @@ export const tr: SpiderMessages = {
   spiderStep2Body:
     'Aynı türden sıralı kartlar birlikte taşınır. Papazdan asa dizersen o dizi masadan kalkar.',
   spiderStep3Title: 'Tıkandığında dağıt',
-  spiderStep3Body: 'Deste her sütuna birer kart dağıtır — ama hiçbir sütun boş değilse.',
+  spiderStep3Body:
+    '7 kart dağıtmadan önce tüm sütunları doldurun; son dağıtımda yalnızca en soldaki 3 sütuna birer kart verilir.',
 };

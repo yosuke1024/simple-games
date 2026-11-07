@@ -1,5 +1,7 @@
 # Sevens / 七並べ — rules
 
+2026-11-04: オーナーの承認によりアプリに正式収録し、Nearby Playに対応。現在の契約は末尾のNearby節が優先する。
+
 No. 75、`sevens`、保存 `sv.*`、Web先行公開。オーナー選定2026-11-03。
 4人（あなた＋CPU3人）、52枚、ジョーカーなし。最初に全員の7を場へ出す。
 ♦7の持ち主から時計回り。自分の番に、同じスートの7から連続する列を1枚伸ばす。
@@ -18,3 +20,20 @@ CPUは自分の札と公開された列のみで判断。難易度は1つ、手�
 Undoなし。3ステップの図付き説明、結果・統計・共有、途中再開、同じ配札の再挑戦。
 CPUの拍・時計は背景化・ダイアログ・退出中停止し、動きを減らす設定を尊重する。
 保存schema v1、カード52枚の完全な分割と一意性、7、手番、パス、終了順位を検査。
+
+## Nearby Play (2026-11-04)
+
+2026-11-04、オーナーの指示によりNearby Playに対応。アプリの「誰かと遊ぶ」から開始し、
+Webでは無効ボタンとアプリ専用の説明を表示する。通信・履歴はNearby専用で、通常のCPU戦・保存・統計を変えない。
+正式収録へ変更し、既存保存schema v1を凍結する。収録はオーナー判断で、安定稼働期間の達成ではない。
+接続・承認・再接続の共通契約は [近隣対戦の契約](architecture/nearby-multiplayer.md) を正とする。
+
+4席固定、人間とCPUの混成。全席の上がり／脱落が決まるまで続ける。
+4回目のパスは確認して脱落し、手札を盤面へ公開する。ルール・順位はCPU戦と共通。
+配札はhostの乱数で生成し、各席には自身の手札と公開盤面・枚数・パス回数だけを送る。
+
+## 2026-11-05: Card artwork
+
+Card faces and backs use the original shared vector artwork described in
+[CARD_DESIGN.md](CARD_DESIGN.md). Rules, saved card IDs, accessible labels and
+selection behavior are unchanged. Both CPU and Nearby use this artwork.

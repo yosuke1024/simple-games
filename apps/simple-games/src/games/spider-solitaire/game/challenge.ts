@@ -13,7 +13,7 @@ import { hashSeed } from './rng';
 import type { SuitCount } from './types';
 
 /** `ss` + the digest's contract version. */
-export const BOARD_DIGEST_PREFIX = 'ss1:';
+export const BOARD_DIGEST_PREFIX = 'ss2:';
 
 export function boardDigest(seed: string, suitCount: SuitCount): string {
   return (

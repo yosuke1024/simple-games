@@ -28,7 +28,19 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
     'sd.prefs',
   ],
   solitaire: ['so.saveGame', 'so.saveDaily', 'so.stats', 'so.flags', 'so.prefs'],
-  'spider-solitaire': ['ss.saveGame', 'ss.saveDaily', 'ss.stats', 'ss.flags', 'ss.prefs'],
+  // Spiderette transition (2026-11-07, docs/SPIDER_SOLITAIRE_RULES.md §10):
+  // add separate 52-card slots; retain all released 104-card records under
+  // their original keys for backup/restore. No existing key changes meaning.
+  'spider-solitaire': [
+    'ss.spiderette.saveGame',
+    'ss.spiderette.saveDaily',
+    'ss.spiderette.stats',
+    'ss.flags',
+    'ss.prefs',
+    'ss.saveGame',
+    'ss.saveDaily',
+    'ss.stats',
+  ],
   freecell: ['fc.saveGame', 'fc.saveDaily', 'fc.stats', 'fc.flags'],
   hearts: ['ht.saveGame', 'ht.stats', 'ht.flags', 'ht.prefs'],
   'gin-rummy': ['gr.saveGame', 'gr.stats', 'gr.flags', 'gr.prefs'],
@@ -229,6 +241,8 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   'paddle-rally': ['pr.saveGame', 'pr.stats', 'pr.flags', 'pr.prefs'],
   'hanoi-towers': ['hn.saveGame', 'hn.stats', 'hn.flags', 'hn.prefs'],
   'maze-escape': ['me.saveGame', 'me.stats', 'me.flags', 'me.prefs'],
+  // 2026-11-04: Nearby promotion freezes Backgammon, Ridge Cannons, Fleet Search,
+  // Chain Territory and the three card games below; their keys stay unchanged.
   backgammon: ['bk.saveGame', 'bk.stats', 'bk.flags', 'bk.prefs'],
   'ridge-cannons': ['rc.saveGame', 'rc.stats', 'rc.flags', 'rc.prefs'],
   'fleet-search': ['fs.saveGame', 'fs.stats', 'fs.flags', 'fs.prefs'],
@@ -239,6 +253,13 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   daifugo: ['df.saveGame', 'df.stats', 'df.flags'],
   sevens: ['sv.saveGame', 'sv.stats', 'sv.flags'],
   'old-maid': ['om.saveGame', 'om.stats', 'om.flags'],
+  // 2026-11-05: new hidden card titles; additive ownership, no released keys changed.
+  'crazy-eights': ['ce.saveGame', 'ce.stats', 'ce.flags'],
+  durak: ['du.saveGame', 'du.stats', 'du.flags'],
+  spades: ['sa.saveGame', 'sa.stats', 'sa.flags'],
+  'texas-holdem': ['th.saveGame', 'th.stats', 'th.flags'],
+  blackjack: ['bj.saveGame', 'bj.stats', 'bj.flags'],
+  'indian-rummy': ['ir.saveGame', 'ir.stats', 'ir.flags'],
 };
 
 const PREFIXES: Record<string, string> = {
@@ -318,6 +339,12 @@ const PREFIXES: Record<string, string> = {
   daifugo: 'df.',
   sevens: 'sv.',
   'old-maid': 'om.',
+  'crazy-eights': 'ce.',
+  durak: 'du.',
+  spades: 'sa.',
+  'texas-holdem': 'th.',
+  blackjack: 'bj.',
+  'indian-rummy': 'ir.',
 };
 
 describe('registry storage keys (released data — do not edit to make green)', () => {

@@ -31,7 +31,9 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
   `backgammon.css`(No. 67、2026-11-02 に着手)、
   `ridge-cannons.css` / `fleet-search.css` / `frost-route.css`(No. 68〜70、2026-11-03)、
   `chain-territory.css` / `marble-weave.css` / `river-cargo.css`(No. 71〜73、2026-11-03)、
-  `daifugo.css` / `sevens.css` / `old-maid.css`(No. 74〜76、2026-11-03)。
+  `daifugo.css` / `sevens.css` / `old-maid.css`(No. 74〜76、2026-11-03)、
+  `crazy-eights.css` / `durak.css` / `spades.css` / `texas-holdem.css` / `blackjack.css` /
+  `indian-rummy.css`(No. 77〜82、2026-11-05)。
   アーケード 2 本が共有する実況行(レベル / 残り / ライフ)だけは `ui/styles.css` に
   `.game-status*` として置いてある — 2 本が同じものを必要とした時点で共有クロムに
   なるのであって、`games/A/` の CSS を `games/B/` が読むことはない。
@@ -92,3 +94,9 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 No. 71〜73: Chain Territory は人とCPUの駒を形でも分ける。Marble Weave の7色の玉は色と記号を併用する。River Cargo の動物・野菜・荷物はオリジナルSVGで、毛・葉・木材の色をゲーム固有CSS冒頭の `--rg-*` に置く。クロムは共有アクセントのまま。
 
 No. 74–76: `daifugo/ui/daifugo.css`, `sevens/ui/sevens.css`, `old-maid/ui/old-maid.css` は各Rootだけが読む。
+
+2026-11-05: 16本のトランプの装飾SVGだけは`ui/cards/PlayingCardFace.tsx`と
+`playing-cards.css`を共有する。規則・保存・画面レイアウトは共有しない。
+オーナーの比較後の選択により人物画と細かい模様は使わず、数字・スートを主役にする
+([CARD_DESIGN](../CARD_DESIGN.md))。面の紙・赤/黒のインクは既存のゲームごとのトークン、
+共通の裏面の紙・緑・枠の3顔料は`playing-cards.css`冒頭に置く。

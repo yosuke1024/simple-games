@@ -802,3 +802,60 @@
     --game-shell-max: 560px;
   }
 }
+
+/* Shared original deck; geometry and touch targets remain game-owned. */
+.ht-figure-card {
+  position: relative;
+}
+.ht-seat-back {
+  position: relative;
+}
+
+/* On a short landscape screen, keep the three-row hand beside the table.
+   Its 280px minimum leaves a 56px card width and 50.4px exposed row pitch,
+   both above the 48px touch floor. The pass tray uses the space below the
+   table, so choosing cards cannot push the hand under the action bar. */
+@media (min-width: 600px) and (orientation: landscape) and (max-height: 600px) {
+  :root[data-game='hearts'] .game-content {
+    --game-shell-max: 1120px;
+  }
+
+  .game-content > .ht-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 300px);
+    grid-template-rows: minmax(204px, auto) auto;
+    align-content: start;
+    align-items: start;
+    justify-items: center;
+    column-gap: 12px;
+    row-gap: 4px;
+  }
+
+  .game-content > .ht-body > .ht-table {
+    grid-area: 1 / 1;
+    width: min(100%, 320px);
+  }
+
+  .game-content > .ht-body > .ht-fan {
+    display: contents;
+  }
+
+  .game-content > .ht-body .ht-hand {
+    grid-area: 1 / 2;
+  }
+
+  .game-content > .ht-body .ht-tray {
+    grid-area: 1 / 1;
+    align-self: end;
+  }
+
+  .game-content > .ht-body .ht-tray-card,
+  .game-content > .ht-body .ht-tray-slot {
+    width: 48px;
+  }
+
+  .game-content > .ht-body > .ht-line {
+    grid-area: 2 / 2;
+    margin-top: 0;
+  }
+}

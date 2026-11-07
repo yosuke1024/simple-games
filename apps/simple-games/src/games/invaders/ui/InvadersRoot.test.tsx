@@ -4,7 +4,7 @@ import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV, type KVStore } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
 import { loadRecord, saveRecord } from '@/storage/repo';
-import { createSession, start, type Session } from '../game';
+import { createSession, MAX_SCORE, start, type Session } from '../game';
 import { loadSavedGame, saveGame } from '../storage/gamePersistence';
 import { flagsSchema, statsSchema } from '../storage/schemas';
 import { InvadersRoot } from './InvadersRoot';
@@ -135,10 +135,13 @@ describe('Invaders playable flow', () => {
     const kv = createMemoryKV();
     await taught(kv);
     await saveRecord(statsSchema, { ...statsSchema.defaultValue(), played: 1 }, kv);
+    // Stage 20 is the full block, so the run's last ten points are its last invader.
     const final: Session = {
       ...start(createSession()),
       stage: 20,
-      score: 13990,
+      layout: 'full',
+      stageScoreBase: MAX_SCORE - 700,
+      score: MAX_SCORE - 10,
       enemies: [{ id: 27, x: 180, y: 140 }],
       bullets: [{ id: 0, x: 180, y: 157, owner: 'player' }],
       nextBulletId: 1,
@@ -152,7 +155,7 @@ describe('Invaders playable flow', () => {
     animation.tick(40);
     await settle();
     const dialog = screen.getByRole('alertdialog', { name: 'All clear!' });
-    expect(within(dialog).getAllByText('14000')).toHaveLength(2);
+    expect(within(dialog).getAllByText(String(MAX_SCORE))).toHaveLength(2);
     expect(within(dialog).getByRole('button', { name: 'Share' })).toBeInTheDocument();
     expect(document.querySelector('.game-content')).toHaveAttribute('inert');
     expect(animation.pending.size).toBe(0);

@@ -56,7 +56,7 @@ PixApps が運用する Public Club House は
 
 ## アプリと収録ゲーム
 
-アプリは 1 つだけで、現在 65 本のゲームを収録しています。
+アプリは 1 つだけで、現在のコードは 80 本を正式収録し、28 本がNearby Playに対応しています(2026-11-07、追加分のストア配布は別途)。
 
 - appId: `com.pixapps.simplegames`
 - appName: `Simple Games: Offline Games`(ランチャー表示名: `Simple Games`)
@@ -64,12 +64,16 @@ PixApps が運用する Public Club House は
 
 2026-10-25のオーナー判断でChess / Nested Tic-Tac-Toe / Scopa / Nimを正式収録へ変更しました。
 2026-10-29のオーナー判断で、Web先行公開(ベータ)だった残り20本もすべて正式収録へ変更しました(1.7.0)。
-以下のWeb公開経緯は当時の記録です。現在のコードは正式65本＋Web先行公開9本(Backgammon / Ridge Cannons / Fleet Search / Frost Route / Chain Territory / River Cargo / Daifugo / Sevens / Old Maid)＋収録見送り2本(Falling Blocks、Marble Weave。後者は2026-11-03のオーナー判断で取り下げ)＝76本です。直近3本の検証・配信記録は [実装記録](docs/plans/2026-11-03-classic-cards-74-76.md) を参照してください。
-Android / iOSでは1対1ターン制13本の各ゲームtopから「誰かと遊ぶ」で近くの相手を募集・検索できます。
-Bluetoothまたは同一Wi-Fi、host承認と双方Readyで元のゲーム画面を使います。募集時のチャットは既定OFF、ONなら任意の会話と端末内履歴を使えます。
-対象: Yacht / Reversi / Connect Four / Gomoku / Checkers / Gin Rummy / Mancala / Dominoes /
-Dots and Boxes / Chess / Nested Tic-Tac-Toe / Scopa / Nim。Web版は引き続きCPU戦です。
-今回のストア配布と13本の実機確認は未完了です。
+以下のWeb公開経緯は当時の記録です。現在のコードは正式80本(2026-11-07にFrost Route / River Cargoを正式収録)＋収録見送り2本(Falling Blocks、Marble Weave。後者は2026-11-03のオーナー判断で取り下げ)＝82エントリです。直近3本の検証・配信記録は [実装記録](docs/plans/2026-11-03-classic-cards-74-76.md) を参照してください。
+Android / iOSでは28本のゲームトップから「誰かと遊ぶ」で近くの相手を募集・検索できます。
+Bluetoothまたは同一Wi-Fiで、hostが参加を承認し、人間全員がReadyにして始めます。
+17本の1対1通信に加え、固定席の11本は人間/CPUの混成対局に対応します(Durakは2席、他10本は4席)。
+Web版はCPU戦で、近隣対戦の実行コードを含めません。今回のストア配布と追加6本の実機通信は未確認です。
+
+追加6本: Indian Rummy / Crazy Eights / Spades / Durak / Texas Hold'em / Blackjack。
+すべてターン制。ホールデムのチップとブラックジャックの点数はゲーム内だけで、購入・換金はできません。
+既存10本を含む16本のトランプにオリジナルSVGカードを採用しています。
+[仕様・検証記録](docs/plans/2026-11-05-six-card-games.md)に各ゲームのルールと確認範囲を記載しています。
 
 並び順はコレクションホームの表示順(`apps/simple-games/src/app/registry.ts`)です。
 フォルダはすべて `apps/simple-games/src/games/` 以下にあります。
@@ -141,6 +145,12 @@ Dots and Boxes / Chess / Nested Tic-Tac-Toe / Scopa / Nim。Web版は引き続�
 | Paddle Rally                         | `paddle-rally/`       | CPU 対戦・難易度 3 種                    | なし(即時の再戦)                                   | [ルール](docs/PADDLE_RALLY_RULES.md)                               |
 | Hanoi Towers                         | `hanoi-towers/`       | 円盤 3 / 4 / 5 枚                        | Undo(Hint なし)                                    | [ルール](docs/HANOI_TOWERS_RULES.md)                               |
 | Maze Escape                          | `maze-escape/`        | 迷路 3 サイズ                            | Undo / Hint(次の 1 歩)                             | [ルール](docs/MAZE_ESCAPE_RULES.md)                                |
+| Crazy Eights | `crazy-eights/` | 4席・CPU / Nearby | 出せる札とスート選択 | [ルール](docs/CRAZY_EIGHTS_RULES.md) |
+| Durak | `durak/` | 2席・CPU / Nearby | 合法な攻撃・防御の表示 | [ルール](docs/DURAK_RULES.md) |
+| Spades | `spades/` | 4席・チーム戦・CPU / Nearby | ビッドと出せる札の表示 | [ルール](docs/SPADES_RULES.md) |
+| Texas Hold’em | `texas-holdem/` | 4席・CPU / Nearby | 選べるアクションとレイズ範囲 | [ルール](docs/TEXAS_HOLDEM_RULES.md) |
+| Blackjack | `blackjack/` | 4席・共通ディーラー・CPU / Nearby | 合法なヒット・スタンド・ダブル・スプリット | [ルール](docs/BLACKJACK_RULES.md) |
+| Indian Rummy | `indian-rummy/` | 4席・CPU / Nearby | グループ分け・宣言条件の確認 | [ルール](docs/INDIAN_RUMMY_RULES.md) |
 
 「フリープレイ」は、レベルの坂とデイリーの隣にある**ティアを選んで新しい盤面を引く入口**です
 (2026-09-03 追加)。ティアはレベル 10 / 50 / 95 と同じ生成条件で seed だけが違い、レベル進行にも

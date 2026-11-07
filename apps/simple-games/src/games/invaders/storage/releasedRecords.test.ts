@@ -19,10 +19,18 @@
  * harness only clicked, pressed keys and moved the pointer (a script read positions from the
  * DOM to decide where). Only the Web Preferences key prefix `CapacitorStorage.` is removed
  * below; payload strings are verbatim. Never regenerate them from today's serializer.
+ *
+ * 2026-11-06: the saved run moved to schemaVersion 2 (docs/INVADERS_RULES.md §7). A version 1
+ * record is read as the one thing that build could have meant — the full formation, every
+ * earlier stage worth 700, no dive in flight — so each record below still loads with its
+ * formation, shots, cover and clock intact, and is written back as that same run in the new
+ * shape. `migrated()` spells out exactly which three fields the migration adds; nothing else
+ * about the record changes.
  */
 import { describe, expect, it } from 'vitest';
 import { createMemoryKV } from '../../../storage/kv';
 import { loadRecord } from '../../../storage/repo';
+import { DIVE_GRACE_TICKS } from '../game';
 import { loadSavedGame } from './gamePersistence';
 import { flagsSchema, gameSchema, statsSchema, toPersisted } from './schemas';
 
@@ -112,15 +120,34 @@ const SAVE_TIMES = {
   paused: 1793269046304,
 };
 
+/**
+ * The version 1 record as this build reads it: the same run, with the three fields version 2
+ * carries and version 1 could only have meant one way — the full formation, every earlier stage
+ * worth 700, and the dive clock at its grace value. Nothing is removed or re-dealt.
+ */
+function migrated(raw: string): unknown {
+  const record = JSON.parse(raw) as { session: { stage: number } };
+  return {
+    ...record,
+    schemaVersion: 2,
+    session: {
+      ...record.session,
+      layout: 'full',
+      stageScoreBase: (record.session.stage - 1) * 700,
+      diveTicks: DIVE_GRACE_TICKS,
+    },
+  };
+}
+
 describe('records written by the published Invaders build', () => {
   it('loads every captured record without replacing it with a default', async () => {
     const kv = createMemoryKV(RELEASED);
     expect(await loadRecord(flagsSchema, kv)).toEqual(JSON.parse(RELEASED['iv.flags']));
     expect(await loadRecord(statsSchema, kv)).toEqual(JSON.parse(RELEASED['iv.stats']));
-    expect(await loadRecord(gameSchema, kv)).toEqual(JSON.parse(RELEASED['iv.saveGame']));
+    expect(await loadRecord(gameSchema, kv)).toEqual(migrated(RELEASED['iv.saveGame']));
     for (const raw of [SAVED_READY, SAVED_BETWEEN, SAVED_STAGE_2_READY]) {
       const other = createMemoryKV({ 'iv.saveGame': raw });
-      expect(await loadRecord(gameSchema, other)).toEqual(JSON.parse(raw));
+      expect(await loadRecord(gameSchema, other)).toEqual(migrated(raw));
     }
   });
 
@@ -163,6 +190,11 @@ describe('records written by the published Invaders build', () => {
     expect(session!.direction).toBe(1);
     expect(session!.shotIndex).toBe(18);
     expect(session!.nextBulletId).toBe(101);
+    // The published build dealt only the full block: the run keeps that formation at stage 2
+    // even though a new run is dealt the stage's own shape (§7).
+    expect(session!.layout).toBe('full');
+    expect(session!.stageScoreBase).toBe(700);
+    expect(session!.enemies.every((enemy) => enemy.dive === undefined)).toBe(true);
   });
 
   it('restores the ready screen before the first Start', async () => {
@@ -205,9 +237,10 @@ describe('records written by the published Invaders build', () => {
     expect(session!.shotIndex).toBe(11);
   });
 
-  it('writes each restored run back at its original save time', async () => {
+  it('writes each restored run back at its original save time, in the new shape', async () => {
     // restore() lists `direction` before `enemies`, the build listed it after `covers`, so the
-    // text is compared as data rather than byte for byte.
+    // text is compared as data rather than byte for byte. The written record is version 2:
+    // the same run plus the three fields the migration spells out above.
     const cases = [
       [RELEASED['iv.saveGame'], SAVE_TIMES.paused],
       [SAVED_READY, SAVE_TIMES.ready],
@@ -217,7 +250,7 @@ describe('records written by the published Invaders build', () => {
     for (const [raw, savedAt] of cases) {
       const session = await loadSavedGame(createMemoryKV({ 'iv.saveGame': raw }));
       expect(session).not.toBeNull();
-      expect(JSON.parse(JSON.stringify(toPersisted(session!, savedAt)))).toEqual(JSON.parse(raw));
+      expect(JSON.parse(JSON.stringify(toPersisted(session!, savedAt)))).toEqual(migrated(raw));
     }
   });
 });

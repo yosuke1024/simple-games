@@ -1,0 +1,56 @@
+/* Paper and a quiet green back. Face ink is owned by each game's palette. */
+.sg-playing-card-face,
+.sg-playing-card-back {
+  --playing-card-back-paper: #fffaf0;
+  --playing-card-back-field: #244e4c;
+  --playing-card-back-ink: #bfcfc3;
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.sg-card-index,
+.sg-card-court-rank {
+  fill: currentColor;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+}
+.sg-card-index {
+  font-size: 26px;
+  letter-spacing: -1px;
+}
+.sg-playing-card-compact .sg-card-index {
+  font-size: 36px;
+}
+.sg-card-court-rank {
+  font-size: 44px;
+}
+.sg-playing-card-compact .sg-card-court-rank {
+  font-size: 38px;
+}
+.sg-card-symbol {
+  fill: currentColor;
+  font-size: 38px;
+}
+.sg-card-joker-label {
+  fill: currentColor;
+  font:
+    700 10px system-ui,
+    sans-serif;
+  letter-spacing: 1px;
+}
+.sg-card-back-paper {
+  fill: var(--playing-card-back-paper);
+}
+.sg-card-back-field {
+  fill: var(--playing-card-back-field);
+}
+.sg-card-back-frame {
+  fill: none;
+  stroke: var(--playing-card-back-ink);
+  stroke-width: 1;
+}

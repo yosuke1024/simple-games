@@ -1,5 +1,77 @@
 # Nearby Multiplayer — 近隣端末間対戦の契約
 
+## 2026-11-07: 新しい14本が接続できなかった件(1.8.2)
+
+1.8.0/1.8.1の実機で、Hearts(0F)〜Indian Rummy(1C)の14本はBluetooth・Wi-Fiとも
+「接続できませんでした」になり、Ludo(0E)までは接続できた。新codeを`nearbyGameIds.ts`へ足したとき、
+native側の受理範囲(Android `DiscoveryLabel.metadataCapable`、iOS `NearbyPlayListing.supportsProbe`)を
+`0x8E`のまま上げなかったため、hostの`start()`がlisting付きの募集を拒否し、guestも該当hostをprobeしなかった。
+1.8.2で両方を`0x81`〜`0x9C`(= `0x80` | 最大code)へ上げた。**ゲームを足すときはこの上限も上げる**。
+`src/test/nearbyNativeLabelRange.test.ts`が表とnative 2か所の一致を検査する。
+範囲は「上位bitが立っていれば可」には広げない(下記、最初期のランダムlabelのhostをprobeしないため)。
+Pixel 9 Pro / iPhone 11で、Bluetooth・同じWi-Fi、両方向のhost、2席(Backgammon)・4席(Sevens / Hearts /
+Indian Rummy)の対局開始まで確認した(2026-11-07、修正版のdebugビルド同士)。
+1.8.1のままのguestはBluetoothでは修正版のhostを見つけられない(probeの判断が旧版のnative側にあるため)。
+Wi-FiはTXTを範囲で絞らないので見つかる。Bluetoothで遊ぶには両端末の更新が要る。
+
+## 2026-11-05: トランプ6本を追加し28本へ
+
+オーナーの明示指示でCrazy Eights / Durak / Spades / Texas Hold'em / Blackjack / Indian Rummyを
+CPU戦と近隣対戦込みで収録する。コード上は正式78本・Web先行2本・取り下げ2本の全82エントリ(2026-11-07にWeb先行2本を正式収録し正式80本。Nearbyの対象は変わらない)。
+Nearbyは2席18本、4席10本。以下の古い日付の対象数より本節を優先する。配布済みという意味ではない。
+
+- 新6本は固定席のグループ層を使う。Durakは2席、他5本は4席。席数とグループ通信経路は別の概念。
+  Durakでも人間/CPU交代、切断中の席確保、復帰、host終了、明示退出の共通契約に従う。チャットは付けない。
+- hostのみが全配札・山札を保持し、各端末へ本人の手札と公開情報だけを送る。新codeは17〜1C。
+  CPUは本人の手札と公開情報だけを使う。未知codeを旧版が拒否する既存仕様は維持。
+  native側のlabel範囲の更新が漏れ、1.8.2まで接続できなかった(冒頭の2026-11-07節)。
+- Spadesのペアは席0+2と1+3。ハンド間はhostの明示操作で進める。Hold'emも同様で、
+  ホストの持ち点がなくなっても次のハンドを開始できる。公開するホールカードはショーダウンの参加者のみ。
+- Blackjackは各席対自動ディーラー。複数人の勝利・負の得点を保持し、唯一の勝者を捏造しない。
+  配札時のナチュラルで即終了しても結果の席名を固定し、人間のReadyをリセットする。
+  最大16スプリット手札を4KiB暗号化frameに収めるため手札をtuple化し、本人の公開手札の重複を除く。
+  UIには検証済みの通常viewへ復号し、4096-byte上限は拡大しない。
+- 履歴v1はgameIdごとの席数を検証する。省略gameIdは従来どおり4席Ludo。
+  負の得点はSpades/Blackjackだけに許可。通常のCPU保存と対戦履歴は分離。
+- Webは全28本に無効な対戦ボタンとアプリ専用説明を表示する。Nearby runtimeを含めない。
+- 規則・試験・ブラウザ確認は各RULESと[実装記録](../plans/2026-11-05-six-card-games.md)。
+  実機のBluetooth/LAN試験、ストア年齢区分の反映と公開は別途であり、今回の実装完了と混同しない。
+
+## 2026-11-04: Nearby Playを22本へ拡張
+
+オーナーの「未対応で入れられるゲームに追加、Webベータも対象」と「対象ゲームをアプリにも収録する」の
+指示により、Hearts / Backgammon / Ridge Cannons / Fleet Search / Chain Territory / Daifugo / Sevens / Old Maid の8本を追加。
+2席は17本、4席はLudo / Hearts / Daifugo / Sevens / Old Maidの5本。
+Backgammon / Ridge Cannons / Fleet Search / Chain Territory / Daifugo / Sevens / Old Maid の7本を正式収録へ変更し、正式72本・Webベータ2本
+(Frost Route / River Cargo)・収録見送り2本の全76エントリとする。
+Webには対応22本の無効な「誰かと遊ぶ」とアプリ専用の説明を表示し、通信runtimeを含めない。
+通常のソロ／CPU戦と保存形式は維持し、Nearbyの履歴は専用保存に分離する。
+これはオーナーの明示判断による収録で、2週間の安定稼働・計測の達成を意味しない。
+実機でのBLE/LAN対戦、ストア掲載・配布、landing側の掲載変更はこの実装に含めて完了扱いにしない。
+以下の日付つきの公開経緯は当時の記録で、本節の対象・本数が優先する。
+
+### 追加ゲームの通信と共通UI
+
+- 2席4本は既存のhost確定・受信確認・再接続・任意チャットを使う。
+  Chain Territoryは合法手列、Ridge Cannonsは地形seedと公開済みの射撃・現在の風だけを同期する。
+  Backgammonの出目、Ridge Cannonsの次ラウンドの風はhostが都度生成する。
+  Fleet Searchは自分の艦・受けた射撃・相手への既知情報だけを送り、終局時のみ相手の全配置を公開する。
+- 4席カードゲームは既存の固定席・承認・Ready・人間/CPU切替・切断中の待機を共有する。
+  hostだけが全配札を持ち、暗号化リンクごとに受信者の手札と公開情報へ投影する。
+  seed、他席の手札、未確定の交換札、Old Maidの他人が引いた単独札は送らない。
+  `GroupGame.project/valid/result`で投影・検証・結果をゲームごとに定義し、共有UIと履歴はgameIdを持つ。
+  旧履歴のgameId省略はLudoとして読む。これらのグループにチャットは追加しない。
+- Heartsは4枚が揃ったトリックを全人間のACK後に自動回収し、ハンド結果を表示してhostが次へ進める。
+  Daifugoは再戦時に前回順位を引き継ぎ、上位2席の選択が揃ってから同時交換する。
+  SevensとOld Maidはhostが上がっても残りの席が最後まで対局する。
+- 追加8本の対局完了・不正手拒否・投影・通信量、4人の実暗号化リンクと復帰を自動検証する。
+  319〜360px幅の各盤面と620px幅のカード表示をブラウザで確認。Native/Webビルドの分離とサイズ検査を行う。
+  無線の実機検証とストア配布は未実施。7本の保存fixtureは上記公開済みWeb成果物からの採取であり、終了結果は未採取。
+- 通常ゲームと共有するのは純粋な規則と表示部品のみ。通常のGameContext、保存、統計、Clubには到達しない。
+  HeartsのCPUは公開情報用viewからのみ選択し、既存のLudoと同じくグループ側で実行する。
+  フォーマットは既存discovery/wireを維持し、新game codeは0F〜16。旧版は未知のcodeを拒否する。
+  native側のlabel範囲も上げる必要があったが漏れていた(冒頭の2026-11-07節。1.8.2で修正)。
+
 Updated: 2026-10-27 / issue #268
 
 この文書は近隣端末間対戦の製品契約と検証条件の正本であり、旧通信 PoC の記録も分けて保持する。
@@ -184,7 +256,8 @@ backgroundではBLE scanを止め、接続・広告・対局を維持し、必�
   受信で会話を自動表示しない。終局後は結果と再戦を主にし、接続を保持して双方Readyで再戦する。
   集まりは開始時のゲームに固定し、別ゲームへ続ける切替機能は含めない。
 - 新規募集の発見labelは共通の `P-` + ゲーム識別2桁hex + ランダム4桁hex。ゲーム識別に
-  `0x80`を加えた `81`〜`8D` を使い、公開募集metadataのreadが部屋を占有しない実装だと示す。
+  `0x80`を加えた `81`〜`9C`(2026-11-07時点。上限は `0x80` | `nearbyGameIds.ts` の最大code)を使い、
+  公開募集metadataのreadが部屋を占有しない実装だと示す。
   従来の`01`〜`0D`にBLE metadata probeを行うと旧ホストを終了させるため、決してprobeしない。
   discovery v1／metadata無し／非対応protocolの募集はゲーム別・全体探索の両方で表示しない。
   募集名を交換する両端末を1.5.4へ更新する。1.5.3以前との混在対戦は提供しない。

@@ -60,10 +60,7 @@
   box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
-/* Width resolves against the column's content box, never the viewport.
-   The cap is wider than the other card games' 420px because ten columns split
-   that into postage stamps on a large phone; at 460px a card is still under
-   46px, which is well inside the series' card size. */
+/* Seven columns share the full available width, capped for larger screens. */
 .sp-table {
   width: min(100%, 460px);
   display: flex;
@@ -71,25 +68,24 @@
   gap: 10px;
 }
 
-/* The stock sits in the first column's place and the eight run slots fill the
-   rest, so the top row lines up with the ten columns below (§1). */
+/* The stock and four completed runs align with the seven columns below. */
 .sp-top-row {
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 3px;
   align-items: start;
 }
 
 .sp-runs {
-  grid-column: 3 / -1;
+  grid-column: 4 / -1;
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 3px;
 }
 
 .sp-cascades {
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 3px;
   align-content: start;
 }
@@ -132,12 +128,7 @@
   color: var(--sp-ink);
 }
 
-/* The index is a ROW — rank beside suit — not the stacked column the other two
-   card games use. At ten columns a covered card shows roughly 11px, and a
-   stacked index needs about 22px: the rank comes out cut in half. Measured at
-   320 / 360 / 420px before this file was written (§12). Both halves have to
-   survive, because at four suits a run only travels if every card shares a
-   suit, and colour alone cannot separate a spade from a club. */
+/* Keep the larger rank and suit together in the visible corner of each card. */
 .sp-card-index {
   position: absolute;
   top: 1px;
@@ -234,16 +225,9 @@ button.sp-card-back {
 
 /* ---------- stacking ---------- */
 
-/* Margin percentages resolve against the column width, and a card is 140% of
-   its width tall (aspect 5/7). -94% leaves a 46%-of-width strip; -118% leaves
-   the face-down sliver.
-
-   The strip has to clear the index's DESCENDERS, not just its line box. At
-   -100% the strip came to 11.1px on a 320px screen against an 11px rank, and
-   a covered queen lost its tail and read as an O — caught in the browser, not
-   in a test. A Spider column can hold twenty cards after five deals, so every
-   percent here is paid for twenty times over; -94% is the least that clears a
-   Q. */
+/* Margin percentages resolve against column width. A card is 140% as tall:
+   -94% leaves a 46% strip for the larger rank and suit; -118% leaves a
+   smaller face-down sliver. Long columns scroll within the felt. */
 .sp-overlap {
   margin-top: -94%;
 }
@@ -473,26 +457,10 @@ button.sp-card-back {
 
 /* ---------- wide viewports (issue #93) ----------
 
-   Tiers are defined in src/ui/styles.css「wide viewports」. Ten columns leave
-   less width per card than the other two Klondike-family tables, which is
-   why the corner index here is already a row rather than a stack (see the
-   comment on .sp-card-index above) — every tier below restates its clamp to
-   keep the rank legible in that row without it outgrowing the column.
-   .sp-stuck shares .sp-table's own cap in every tier (it already does at the
-   Compact size above) so the dead-end card lines up with the table rather
-   than reading as a narrower, separate column.
-
-   Wide caps the table by height too, the same way Solitaire's does: sized by
-   width alone, the tallest starting column would push under the fold of a
-   1366x768 PC. Every card is a full column-width wide (§ the .sp-runs rule
-   below keeps its own gap equal to the tableau's so the stock/foundation row
-   still lines up with the columns beneath it once that gap changes). The
-   starting deal's tallest column is six cards — five face-down slivers at
-   ~0.22 card-widths each plus one face-up card at 1.4 — so table-height ≈
-   (top row 1.4 + five slivers ~1.1 + one face 1.4 + the row gap) card-widths,
-   solved for width against ten columns of that card-width gives the 1.9
-   factor below; it lands well short of the tight algebraic solve on purpose,
-   the same margin Solitaire's own 1.7 keeps over its own tighter number. */
+   Keep the table and dead-end message aligned at every tier. Seven columns
+   and a tallest starting pile of seven cards need a lower width-to-height
+   cap than the old ten-column layout. The 1.5 factor leaves room for the
+   stock row, six face-down slivers, the face-up card and gaps. */
 
 @media (min-width: 600px) {
   .sp-table,
@@ -500,8 +468,8 @@ button.sp-card-back {
     width: min(100%, 620px);
   }
 
-  /* .sp-runs is a sub-grid inside .sp-top-row (grid-column: 3 / -1): its own
-     gap has to match the tableau's for the eight run slots to stay aligned
+  /* .sp-runs is a sub-grid inside .sp-top-row (grid-column: 4 / -1): its own
+     gap has to match the tableau's for the four run slots to stay aligned
      with the columns below them, so it moves with .sp-top-row and
      .sp-cascades rather than being listed with the unrelated gaps above. */
   .sp-top-row,
@@ -535,8 +503,8 @@ button.sp-card-back {
 
   .sp-table,
   .sp-stuck {
-    width: min(100%, 1000px, calc((100vh - 250px) * 1.9));
-    width: min(100%, 1000px, calc((100svh - 250px) * 1.9));
+    width: min(100%, 1000px, calc((100vh - 250px) * 1.5));
+    width: min(100%, 1000px, calc((100svh - 250px) * 1.5));
   }
 
   .sp-table {
@@ -577,4 +545,13 @@ button.sp-card-back {
   :root[data-game='spider-solitaire'] .game-content {
     --game-shell-max: 1000px;
   }
+}
+
+/* Shared original deck; geometry and touch targets remain game-owned. */
+.sp-figure-card {
+  position: relative;
+}
+.sp-stock-count {
+  position: relative;
+  z-index: 1;
 }

@@ -58,20 +58,20 @@ src/
 レイヤー規則:
 
 - Nearby Play は対応ゲームtopの「誰かと遊ぶ」から、シェル所有のcallback経由で開く。
-  native の対応13本にcallbackを渡す。ゲームからNearbyをimportせず、シェルの
+  native の対応28本にcallbackを渡す。ゲームからNearbyをimportせず、シェルの
   `app/nearbyGate.ts` からのdynamic importだけで `nearby/` を読み込む。
   コレクションの参加専用入口「近くの対戦相手を探す」は、Club House直下に同程度の控えめなテキスト行で置き、
   ゲーム未選択で同じgateを開く。Club Houseの内部からは開始しない。例外として
-  `nearby/yacht.ts` のみが `games/yacht/game/{engine,types}` の純粋な採点／型を参照できる。
-  `nearby/NearbyRoot.tsx` は `games/yacht/ui/components/YachtPlaySurface` の純粋なUIも共有する。
-  この2境界以外のゲーム内部参照、通常GameContext/storage/Clubへの到達、ゲームからNearbyへの参照は許容しない。
+  `nearby/games/<id>` のadapter/Viewが自身の純粋な規則と表示部品を共有できる。
+  対象28本の境界は `src/test/importBoundaries.test.ts` と成果物のisolation検査で固定する。
+  通常GameContext/storage/Clubへの到達、ゲームからNearbyへの参照は許容しない。
   製品nativeと隔離PoCは別所有・別service識別子とし、製品からPoCへimportしない。
   ゲーム別入口は選択済みゲームを渡し、全体探索は `NearbyBrowser` が候補のgameIdに一致するadapter/Viewだけを
   遅延読み込みする。探索controller/native peerの所有権を保って既存のゲームUIへ引き継ぎ、
   初回の重複ゲーム提案操作を省く。host承認と双方Readyは省かない。
   募集名と個人の表示名は別フィールドで扱う。discovery v2／wire v7では募集名だけを近隣一覧へ公開し、
   個人の表示名は接続後に交換する。一覧・待合・新履歴の見出しは募集名とし、参加者名は別に示す。
-  募集の公開範囲を選ぶ2択は無く、すべてhost承認制・定員2人。新しい募集には両端末1.5.4を用いる。
+  募集の公開範囲を選ぶ2択は無く、すべてhost承認制・定員はゲームごとの2席または4席。新しい募集には両端末1.5.4を用いる。
   Nearby専用history v1に任意の `displayName` と各履歴の `roomName` を追加し、既存データも読む。
   次回入力用の表示名はこの端末だけで再利用し、Nearby全削除／ローカルデータ削除の対象に含める。
   個別の履歴削除では再利用用表示名を消さない。通常ゲームの保存・バックアップ・Clubの所有には移さない。
@@ -418,6 +418,12 @@ confirmRestart}`)。背景の `.overlay` はポインタを遮るがフォーカ
   CI がフルを回す(「CI / リリース」)。
 
 ## 将来の共通化
+
+2026-11-05: `ui/cards/PlayingCardFace.tsx` にトランプの表と裏のSVG描画を置く。
+大富豪・七並べ・ババ抜きの同一描画の重複から抽出した表示専用部品である。
+ゲーム側がrank/suit/jokerへ変換し、ボタン・ラベル・選択・卓の配置はゲーム側が所有する。
+裏面はカードIDを受け取らない。ルール・保存・CPU・ゲームIDを共有部品へ持ち込まない。
+意匠の正本は [CARD_DESIGN.md](CARD_DESIGN.md)。全カードゲームへの適用は作業中。
 
 設定 / ストレージ基盤 / 広告 / i18n はアプリ内のシェルとして共有しており、
 これ以上の共通化(`packages/` への抽出)は実際に重複が確認されてから行う。

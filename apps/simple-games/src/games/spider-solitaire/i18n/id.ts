@@ -2,6 +2,7 @@ import type { SpiderMessages } from './en';
 
 export const id: SpiderMessages = {
   spiderName: 'Spider Solitaire',
+  spiderLayoutNote: 'Spiderette · 7 kolom · 52 kartu',
   spiderNewDeal: 'Bagi ulang',
   spiderTableLabel: 'Meja Spider Solitaire',
   spiderCardLabel: '{rank} {suit}',
@@ -29,7 +30,7 @@ export const id: SpiderMessages = {
   spiderStuckBody:
     'Tumpukan habis dan tidak ada yang muat. Urungkan satu langkah, atau bagi ulang.',
   spiderWonTitle: 'Menang!',
-  spiderWonBody: 'Kedelapan rangkaian lengkap.',
+  spiderWonBody: 'Keempat rangkaian lengkap.',
   spiderNewBestMoves: 'Langkah paling sedikit sejauh ini.',
   spiderNewBestTime: 'Waktu tercepat sejauh ini.',
   spiderBestMoves: 'Langkah paling sedikit',
@@ -45,5 +46,5 @@ export const id: SpiderMessages = {
     'Kartu sejenis yang berurutan pindah sekaligus. Susun dari raja sampai as, dan rangkaian itu keluar dari meja.',
   spiderStep3Title: 'Bagikan saat buntu',
   spiderStep3Body:
-    'Tumpukan membagi satu kartu ke tiap kolom — tapi hanya kalau tidak ada kolom kosong.',
+    'Isi semua kolom sebelum membagikan 7 kartu; pembagian terakhir memberi satu kartu ke masing-masing dari 3 kolom paling kiri.',
 };

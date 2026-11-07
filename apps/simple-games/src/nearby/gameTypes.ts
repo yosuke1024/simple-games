@@ -1,5 +1,19 @@
 /** Serializable game views cross the wire; full state and randomness stay on the host. */
 export type NearbyGameId =
+  | 'hearts'
+  | 'backgammon'
+  | 'ridge-cannons'
+  | 'fleet-search'
+  | 'chain-territory'
+  | 'daifugo'
+  | 'sevens'
+  | 'old-maid'
+  | 'crazy-eights'
+  | 'durak'
+  | 'spades'
+  | 'texas-holdem'
+  | 'blackjack'
+  | 'indian-rummy'
   | 'ludo'
   | 'yacht'
   | 'reversi'
@@ -37,6 +51,7 @@ export const isGameResult = (value: unknown): value is GameResult =>
   value.scores.every((score: unknown) => integer(score, 0, 1000000)) &&
   (value.winner === null || value.winner === 0 || value.winner === 1 || value.winner === 'draw');
 export interface NearbyBoardProps {
+  visible?: boolean;
   match: NearbyMatch;
   seat: Seat;
   names: readonly string[];

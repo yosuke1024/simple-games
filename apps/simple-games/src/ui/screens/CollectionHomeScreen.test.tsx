@@ -239,24 +239,9 @@ describe('web-beta titles', () => {
   const released = GAMES.filter((game) => !game.channel);
 
   it('exist in this registry (a synthetic one, and the real ones when there are any), so the tests below are not vacuous', () => {
-    // The real list is app/gameChannel.test.ts's golden — empty since
-    // 2026-10-29, when all twenty graduated into the app (v1.7.0). The
-    // synthetic title appended by the mock above keeps the tests below
-    // walking a beta door.
-    // Backgammon (No. 67) has been on the beta channel since 2026-11-03; the
-    // synthetic title is appended by the mock above.
-    expect(beta.map((game) => game.id)).toEqual([
-      'backgammon',
-      'ridge-cannons',
-      'fleet-search',
-      'frost-route',
-      'chain-territory',
-      'river-cargo',
-      'daifugo',
-      'sevens',
-      'old-maid',
-      'synthetic-beta',
-    ]);
+    // Frost Route and River Cargo, the last real betas, graduated on 2026-11-07.
+    // The synthetic title keeps the beta UI contract independent of that list.
+    expect(beta.map((game) => game.id)).toEqual(['synthetic-beta']);
     expect(released.length).toBeGreaterThan(20);
   });
 

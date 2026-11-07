@@ -13,7 +13,7 @@ export const vi: NearbyMessages = {
   groupCpuName: 'CPU {seat}',
   groupHostStops: 'Khi chủ phòng rời đi, ván chơi của tất cả mọi người sẽ kết thúc.',
   groupConnection:
-    'Tối đa 4 người chơi. Người và CPU có thể chơi cùng nhau. Chọn cùng kiểu kết nối với chủ phòng.',
+    'Tối đa {count} người chơi. Người và CPU có thể chơi cùng nhau. Chọn cùng kiểu kết nối với chủ phòng.',
   groupSwitch: 'Điều khiển vị trí {seat}',
   groupWaiting:
     'Đang chờ người chơi sẵn sàng hoặc kết nối lại. Chủ phòng có thể chuyển một vị trí sang CPU.',
@@ -22,9 +22,10 @@ export const vi: NearbyMessages = {
   groupHostLeft: 'Chủ phòng đã mất kết nối hoặc kết thúc nhóm.',
   groupBackToSetup: 'Quay lại thiết lập',
   groupFourSeats: '4 vị trí người chơi',
+  groupSeatCount: '{count} vị trí người chơi',
   groupFinished: 'Ván chơi kết thúc',
   groupWinner: '{name} thắng',
-  groupNoChat: 'Hiện tại, nhóm Ludo chỉ hỗ trợ các thao tác chơi.',
+  groupNoChat: 'Hiện tại, nhóm {game} chỉ hỗ trợ các thao tác chơi.',
   groupRestore: 'Trả quyền điều khiển cho người chơi',
   groupTakeover: 'Chuyển sang CPU',
   reportReason: 'Lý do',

@@ -6,6 +6,7 @@
  */
 import type { ReactNode } from 'react';
 import type { GameId } from '../../app/registry';
+import { CardGameArtwork } from './CardGameArtwork';
 
 const PAPER = 'var(--surface)';
 
@@ -158,84 +159,6 @@ function Card({
       <Suit kind={suit} />
       <path d="M21 36h3" stroke="currentColor" strokeOpacity=".5" strokeLinecap="round" />
     </g>
-  );
-}
-
-function Cards({
-  kind,
-}: {
-  kind:
-    | 'solitaire'
-    | 'spider-solitaire'
-    | 'freecell'
-    | 'hearts'
-    | 'gin-rummy'
-    | 'scopa'
-    | 'three-peaks';
-}) {
-  if (kind === 'three-peaks')
-    return (
-      <>
-        {[29, 47, 65].map((x) => (
-          <g key={x} transform={`translate(${x} 13) scale(.6)`}>
-            <Card x={0} y={0} rank="K" />
-          </g>
-        ))}
-        <Card x={27} y={34} angle={-9} rank="5" />
-        <Card x={47} y={30} rank="6" />
-        <Card x={67} y={34} angle={9} rank="7" />
-      </>
-    );
-  if (kind === 'freecell')
-    return (
-      <>
-        {[27, 45, 63, 81].map((x) => (
-          <rect
-            key={x}
-            x={x}
-            y="14"
-            width="13"
-            height="17"
-            rx="3"
-            fill="none"
-            stroke="currentColor"
-            strokeOpacity=".3"
-          />
-        ))}
-        <Card x={30} y={31} angle={-9} />
-        <Card x={48} y={27} suit="diamond" />
-        <Card x={67} y={32} angle={10} suit="club" />
-      </>
-    );
-  const ranks =
-    kind === 'gin-rummy' ? ['7', '8', '9'] : kind === 'scopa' ? ['3', '6', '7'] : ['K', 'Q', 'A'];
-  return (
-    <>
-      <Card x={27} y={23} angle={-16} suit={kind === 'scopa' ? 'coin' : 'club'} rank={ranks[0]} />
-      <Card
-        x={46}
-        y={18}
-        angle={-1}
-        suit={kind === 'hearts' ? 'heart' : kind === 'scopa' ? 'coin' : 'diamond'}
-        rank={ranks[1]}
-      />
-      <Card
-        x={65}
-        y={24}
-        angle={14}
-        suit={kind === 'hearts' ? 'heart' : kind === 'scopa' ? 'coin' : 'spade'}
-        rank={ranks[2]}
-      />
-      {kind === 'spider-solitaire' && (
-        <path
-          d="M16 19h14m-7-7v14m-5-12 10 10m0-10L18 24"
-          stroke="currentColor"
-          strokeWidth="1.3"
-          strokeLinecap="round"
-          opacity=".55"
-        />
-      )}
-    </>
   );
 }
 
@@ -963,7 +886,16 @@ function Motif({ id }: { id: GameId }): ReactNode {
     case 'gin-rummy':
     case 'scopa':
     case 'three-peaks':
-      return <Cards kind={id} />;
+    case 'daifugo':
+    case 'sevens':
+    case 'old-maid':
+    case 'crazy-eights':
+    case 'durak':
+    case 'spades':
+    case 'texas-holdem':
+    case 'blackjack':
+    case 'indian-rummy':
+      return <CardGameArtwork id={id} />;
     case 'memory-match':
       return (
         <>
@@ -1710,38 +1642,6 @@ function Motif({ id }: { id: GameId }): ReactNode {
           ))}
         </g>
       );
-  }
-  if (id === 'daifugo' || id === 'sevens' || id === 'old-maid') {
-    const ranks =
-      id === 'daifugo' ? ['3', '2', '★'] : id === 'sevens' ? ['6', '7', '8'] : ['8', '8', '★'];
-    return (
-      <g>
-        {ranks.map((rank, i) => (
-          <g
-            key={i}
-            transform={`translate(${20 + i * 26} ${19 + (i === 1 ? 0 : 6)}) rotate(${(i - 1) * 9} 14 23)`}
-          >
-            <rect
-              width="30"
-              height="46"
-              rx="4"
-              fill={PAPER}
-              stroke="currentColor"
-              strokeWidth="1.8"
-            />
-            <Number x={8} y={9} size={9}>
-              {rank}
-            </Number>
-            <Number x={15} y={29} size={17}>
-              {id === 'sevens' ? '♥' : rank === '★' ? '★' : '♠'}
-            </Number>
-          </g>
-        ))}
-        {id === 'daifugo' ? (
-          <path d="m47 9 5-6 8 5 8-5 5 6" stroke="currentColor" strokeWidth="2" />
-        ) : null}
-      </g>
-    );
   }
   // A newly registered game needs artwork too; keep that omission a type error.
   const unhandled: never = id;

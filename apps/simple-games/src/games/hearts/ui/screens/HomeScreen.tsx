@@ -1,3 +1,4 @@
+import { PlayTogetherButton, type PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 /**
  * Home: three opponents, and nothing between the player and the deal. There is
  * no level list — the game has no progression to walk through; every match
@@ -22,7 +23,7 @@ import { IconChart } from '@/ui/components/icons';
 import { DIFFICULTIES, type Difficulty } from '../../game';
 import { useHearts } from '../../state/GameContext';
 
-export function HeartsHomeScreen() {
+export function HeartsHomeScreen(together: PlayTogetherProps = {}) {
   const {
     navigate,
     session,
@@ -93,6 +94,7 @@ export function HeartsHomeScreen() {
           );
         })}
 
+        <PlayTogetherButton {...together} />
         <nav className="home-chips">
           <button type="button" className="home-chip" onClick={() => navigate('stats')}>
             <IconChart className="home-chip-icon" />

@@ -13,7 +13,7 @@ export const tr: NearbyMessages = {
   groupCpuName: 'CPU {seat}',
   groupHostStops: 'Ev sahibi ayrılırsa oyun herkes için sona erer.',
   groupConnection:
-    'En fazla 4 oyuncu. İnsanlar ve CPU’lar birlikte oynayabilir. Ev sahibiyle aynı bağlantı seçeneğini seçin.',
+    'En fazla {count} oyuncu. İnsanlar ve CPU’lar birlikte oynayabilir. Ev sahibiyle aynı bağlantı seçeneğini seçin.',
   groupSwitch: '{seat}. yerin kontrolü',
   groupWaiting:
     'Oyuncuların hazır olması veya yeniden bağlanması bekleniyor. Ev sahibi bir yeri CPU’ya devredebilir.',
@@ -22,9 +22,10 @@ export const tr: NearbyMessages = {
   groupHostLeft: 'Ev sahibinin bağlantısı kesildi veya buluşmayı sonlandırdı.',
   groupBackToSetup: 'Kuruluma dön',
   groupFourSeats: '4 oyuncu yeri',
+  groupSeatCount: '{count} oyuncu yeri',
   groupFinished: 'Oyun bitti',
   groupWinner: '{name} kazandı',
-  groupNoChat: 'Ludo buluşmalarında şu anda yalnızca oyun kontrolleri kullanılabilir.',
+  groupNoChat: '{game} buluşmalarında şu anda yalnızca oyun kontrolleri kullanılabilir.',
   groupRestore: 'Kontrolü oyuncuya geri ver',
   groupTakeover: 'CPU’ya devret',
   reportReason: 'Neden',

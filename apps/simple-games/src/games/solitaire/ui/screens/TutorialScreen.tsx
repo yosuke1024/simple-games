@@ -1,3 +1,4 @@
+import { PlayingCardFace, PlayingCardBack, PLAYING_CARD_SUITS } from '@/ui/cards/PlayingCardFace';
 /**
  * Quick Rules (docs/SOLITAIRE_RULES.md §11): three steps, one sentence each,
  * shown with a figure rather than explained in prose.
@@ -11,8 +12,6 @@ import { gameLandingUrl } from '@/ui/landing';
 import { openExternal } from '@/ui/openExternal';
 import { cardOf, type Card } from '../../game';
 import { useSolitaire } from '../../state/GameContext';
-import { rankText } from '../components/cardText';
-import { SuitIcon } from '../components/suits';
 
 interface FigureCard {
   /** A card, or null for a face-down card. */
@@ -27,7 +26,9 @@ function CardsFigure({ cards }: { cards: FigureCard[] }) {
       <div className="sol-figure">
         {cards.map((item, index) =>
           item.card === null ? (
-            <span key={index} className="sol-figure-card sol-card-back" />
+            <span key={index} className="sol-figure-card sol-card-back">
+              <PlayingCardBack />
+            </span>
           ) : (
             <span
               key={index}
@@ -41,8 +42,11 @@ function CardsFigure({ cards }: { cards: FigureCard[] }) {
                 .filter(Boolean)
                 .join(' ')}
             >
-              {rankText(item.card)}
-              <SuitIcon suit={Math.floor(item.card / 13) as 0 | 1 | 2 | 3} />
+              <PlayingCardFace
+                compact
+                rank={(item.card % 13) + 1}
+                suit={PLAYING_CARD_SUITS[Math.floor(item.card / 13)]}
+              />
             </span>
           ),
         )}

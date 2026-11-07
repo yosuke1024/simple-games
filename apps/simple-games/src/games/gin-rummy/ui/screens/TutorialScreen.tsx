@@ -1,3 +1,4 @@
+import { PlayingCardFace, PlayingCardBack, PLAYING_CARD_SUITS } from '@/ui/cards/PlayingCardFace';
 /**
  * Quick Rules: three steps, one sentence each, shown with a figure rather than
  * explained in prose. The long-form rules live on the game's landing page
@@ -17,8 +18,6 @@ import { gameLandingUrl } from '@/ui/landing';
 import { openExternal } from '@/ui/openExternal';
 import { cardOf, isRed, suitOf, type Card } from '../../game';
 import { useGinRummy } from '../../state/GameContext';
-import { rankText } from '../components/cardText';
-import { SuitIcon } from '../components/suits';
 
 /** One item in a figure: a card, the face-down stock, or an arrow between them. */
 type FigureItem = { readonly card: Card } | { readonly back: true } | { readonly arrow: true };
@@ -33,14 +32,18 @@ function CardsFigure({ items }: { items: readonly FigureItem[] }) {
               →
             </span>
           ) : 'back' in item ? (
-            <span key={index} className="gr-figure-card gr-figure-back" />
+            <span key={index} className="gr-figure-card gr-figure-back">
+              <PlayingCardBack />
+            </span>
           ) : (
             <span
               key={index}
               className={`gr-figure-card ${isRed(item.card) ? 'gr-card-red' : 'gr-card-black'}`}
             >
-              {rankText(item.card)}
-              <SuitIcon suit={suitOf(item.card)} />
+              <PlayingCardFace
+                rank={(item.card % 13) + 1}
+                suit={PLAYING_CARD_SUITS[suitOf(item.card)]}
+              />
             </span>
           ),
         )}
@@ -81,8 +84,7 @@ export function GinRummyTutorialScreen() {
         <div className="tutorial-example" aria-hidden="true">
           <div className="gr-figure">
             <span className="gr-figure-card gr-card-black">
-              {rankText(cardOf(0, 8))}
-              <SuitIcon suit={0} />
+              <PlayingCardFace rank={8} suit="spades" />
             </span>
             <span className="gr-figure-note">{t('ginDeadwood')} 8</span>
           </div>

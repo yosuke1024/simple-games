@@ -1,5 +1,7 @@
 # Old Maid / ババ抜き — rules
 
+2026-11-04: オーナーの承認によりアプリに正式収録し、Nearby Playに対応。現在の契約は末尾のNearby節が優先する。
+
 No. 76、`old-maid`、保存 `om.*`、Web先行公開。オーナー選定2026-11-03。
 4人（あなた＋CPU3人）。通常52枚とジョーカー1枚。同じ数字の2枚を組にして捨て、
 自分の番に、次のまだ札を持つ人から伏せ札を1枚引く。引いた札と同じ数字があれば
@@ -23,3 +25,21 @@ No. 76、`old-maid`、保存 `om.*`、Web先行公開。オーナー選定2026-1
 CPUの拍、移動・ペア成立演出は停止とReduced Motionに対応。保存schema v1では
 53枚の完全な分割、一意性、ペアの偶数性、手札内の重複ランク不在、手番、上がり順を検査。
 検証・公開記録は docs/plans/2026-11-03-classic-cards-74-76.md。実機・母語話者確認は未実施。
+
+## Nearby Play (2026-11-04)
+
+2026-11-04、オーナーの指示によりNearby Playに対応。アプリの「誰かと遊ぶ」から開始し、
+Webでは無効ボタンとアプリ専用の説明を表示する。通信・履歴はNearby専用で、通常のCPU戦・保存・統計を変えない。
+正式収録へ変更し、既存保存schema v1を凍結する。収録はオーナー判断で、安定稼働期間の達成ではない。
+接続・承認・再接続の共通契約は [近隣対戦の契約](architecture/nearby-multiplayer.md) を正とする。
+
+4席固定、人間とCPUの混成。hostが上がっても最後の1席にジョーカーが残るまで続ける。
+結果は全員の順位を表示し、先に上がった1席だけを唯一の勝者とはしない。
+引く操作は相手の札の位置番号だけを送る。毎手の並び替えはhostの新しい乱数で行い、
+受信側には自身の札と相手の枚数、公開したペアだけを送る。他席が引いた単独札は非公開。
+
+## 2026-11-05: Card artwork
+
+Card faces and backs use the original shared vector artwork described in
+[CARD_DESIGN.md](CARD_DESIGN.md). Rules, saved card IDs, accessible labels and
+selection behavior are unchanged. Both CPU and Nearby use this artwork.

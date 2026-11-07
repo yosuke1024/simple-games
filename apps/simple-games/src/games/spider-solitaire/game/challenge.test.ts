@@ -12,13 +12,13 @@ import { createDailySession, restartSession } from './session';
 
 describe('board digest', () => {
   it('the 2026-10-02 and 2026-08-07 dailies hash to their pinned digests', () => {
-    expect(boardDigestOf(createDailySession('2026-10-02', 4))).toBe('ss1:74f86bbf');
-    expect(boardDigestOf(createDailySession('2026-08-07', 4))).toBe('ss1:89a9ccfa');
-    expect(boardDigestOf(createDailySession('2026-10-02', 1))).toBe('ss1:fd510c99');
+    expect(boardDigestOf(createDailySession('2026-10-02', 4))).toBe('ss2:251e4b9c');
+    expect(boardDigestOf(createDailySession('2026-08-07', 4))).toBe('ss2:9ed40573');
+    expect(boardDigestOf(createDailySession('2026-10-02', 1))).toBe('ss2:5c203be8');
   });
 
   it('is the prefix and eight lowercase hex digits', () => {
-    expect(boardDigestOf(createDailySession('2026-10-02', 2))).toMatch(/^ss1:[0-9a-f]{8}$/);
+    expect(boardDigestOf(createDailySession('2026-10-02', 2))).toMatch(/^ss2:[0-9a-f]{8}$/);
   });
 
   it('the same date gives the same digest, on a retry too', () => {

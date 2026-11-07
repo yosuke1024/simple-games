@@ -1,3 +1,4 @@
+import { PlayingCardFace, PlayingCardBack, PLAYING_CARD_SUITS } from '@/ui/cards/PlayingCardFace';
 /**
  * The whole table (docs/SOLITAIRE_RULES.md §1, §3, §12): stock, waste, and
  * foundations up top, seven tableau columns below. Every playable spot is a
@@ -43,7 +44,7 @@ import {
 import { useSettings } from '@/state/SettingsContext';
 import { useReducedMotion } from '@/ui/useReducedMotion';
 import { SUITS, wasteTop, type Card, type SolitaireBoard, type Suit } from '../../game';
-import { cardLabel, rankText } from './cardText';
+import { cardLabel } from './cardText';
 import { SuitIcon } from './suits';
 
 /** A card travelling to where it was played. */
@@ -393,28 +394,10 @@ export interface SolitaireTableProps {
   onDragEnd: (source: DragSource, target: DropTarget | null, tapFollows: boolean) => boolean;
 }
 
-/**
- * The printed face: corner index plus one large suit in the middle.
- *
- * Deliberately not a real deck's face. Traditional pip layouts (a seven
- * showing seven spades) and court figures were both built and both removed:
- * at 47x66 CSS pixels they turn the card into a dense little thicket, and
- * the density reads as clutter rather than as authenticity (§13). One rank,
- * one suit, one large mark — the card is legible at a glance, which is what
- * a player actually needs from it.
- */
+/** Original shared artwork; this game owns rank and suit mapping. */
 function CardFace({ card }: { card: Card }) {
-  const suit = suitOfCard(card);
   return (
-    <>
-      <span className="sol-card-index" aria-hidden="true">
-        <span className="sol-card-rank">{rankText(card)}</span>
-        <SuitIcon suit={suit} />
-      </span>
-      <span className="sol-card-middle" aria-hidden="true">
-        <SuitIcon suit={suit} />
-      </span>
-    </>
+    <PlayingCardFace rank={(card % 13) + 1} suit={PLAYING_CARD_SUITS[suitOfCard(card)]} compact />
   );
 }
 
@@ -942,7 +925,9 @@ export const SolitaireTable = memo(function SolitaireTable({
             <span className="sol-slot-mark" aria-hidden="true">
               ↻
             </span>
-          ) : null}
+          ) : (
+            <PlayingCardBack />
+          )}
         </button>
 
         {/* Waste: only the top card is playable (§1). */}
@@ -1041,7 +1026,9 @@ export const SolitaireTable = memo(function SolitaireTable({
                       className={`sol-card sol-card-back ${i > 0 ? 'sol-overlap-down' : ''}`}
                       role="img"
                       aria-label={t('solCardFaceDown')}
-                    />
+                    >
+                      <PlayingCardBack />
+                    </div>
                   ))}
                   {pile.up.map((card, i) => {
                     // Hinted cards mirror a selection's reach: the run from its

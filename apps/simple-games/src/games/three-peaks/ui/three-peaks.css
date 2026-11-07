@@ -429,6 +429,13 @@
 }
 .tp-example {
   display: flex;
+  /* The shared .tutorial-example stacks its children (flex-direction: column).
+     This figure is a row: three cards with arrows between them. Without the
+     row, the flex-basis that gives a card its width lands on its height and
+     the card collapses to its 2px of border (the artwork inside is absolutely
+     positioned) - the figure shipped as three slanted lines from 2026-10-23
+     until 2026-11-06 (docs/THREE_PEAKS_RULES.md, 2026-11-06 note). */
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: 10px;

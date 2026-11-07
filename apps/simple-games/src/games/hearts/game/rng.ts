@@ -40,10 +40,14 @@ export function createRng(seed: string): () => number {
 }
 
 /** Fisher-Yates using the given rng. Returns a new array. */
-export function shuffled<T>(items: readonly T[], rng: () => number): T[] {
+export function shuffled<T>(
+  items: readonly T[],
+  rng: () => number,
+  entropy?: (upperBound: number) => number,
+): T[] {
   const out = [...items];
   for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
+    const j = entropy ? entropy(i + 1) : Math.floor(rng() * (i + 1));
     const a = out[i]!;
     out[i] = out[j]!;
     out[j] = a;

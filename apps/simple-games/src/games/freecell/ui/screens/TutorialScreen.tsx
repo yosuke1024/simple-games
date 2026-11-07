@@ -1,3 +1,4 @@
+import { PlayingCardFace, PLAYING_CARD_SUITS } from '@/ui/cards/PlayingCardFace';
 /**
  * Quick Rules (docs/FREECELL_RULES.md §11): three steps, one sentence each,
  * shown with a figure rather than explained in prose.
@@ -15,8 +16,6 @@ import { gameLandingUrl } from '@/ui/landing';
 import { openExternal } from '@/ui/openExternal';
 import { cardOf, type Card } from '../../game';
 import { useFreeCell } from '../../state/GameContext';
-import { rankText } from '../components/cardText';
-import { SuitIcon } from '../components/suits';
 
 /** One item in a figure: a card, an empty free cell, or the arrow between them. */
 type FigureCard = { readonly card: Card } | { readonly card: null } | { readonly arrow: true };
@@ -43,8 +42,11 @@ function CardsFigure({ cards }: { cards: FigureCard[] }) {
                   : 'fc-card-black',
               ].join(' ')}
             >
-              {rankText(item.card)}
-              <SuitIcon suit={Math.floor(item.card / 13) as 0 | 1 | 2 | 3} />
+              <PlayingCardFace
+                compact
+                rank={(item.card % 13) + 1}
+                suit={PLAYING_CARD_SUITS[Math.floor(item.card / 13)]}
+              />
             </span>
           ),
         )}

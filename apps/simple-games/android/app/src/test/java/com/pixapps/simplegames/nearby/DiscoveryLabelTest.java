@@ -22,11 +22,14 @@ public final class DiscoveryLabelTest {
         assertNull(DiscoveryLabel.fromBytes(new byte[] {'P', '-', '1', '2', '3', '4', '5', (byte) 0xff}));
     }
 
-    @Test public void ludoMetadataCanBeProbedWithoutEnablingUnknownGames() {
+    @Test public void everyNearbyGameCanBeProbedWithoutEnablingUnknownGames() {
         assertTrue(DiscoveryLabel.metadataCapable("P-8E1234"));
         assertTrue(DiscoveryLabel.metadataCapable("P-8eabcd"));
+        // Hearts (0x0F) through Indian Rummy (0x1C), added 2026-11-04/05.
+        assertTrue(DiscoveryLabel.metadataCapable("P-8F1234"));
+        assertTrue(DiscoveryLabel.metadataCapable("P-9C1234"));
         assertFalse(DiscoveryLabel.metadataCapable("P-0E1234"));
-        assertFalse(DiscoveryLabel.metadataCapable("P-8F1234"));
+        assertFalse(DiscoveryLabel.metadataCapable("P-9D1234"));
     }
 
     @Test public void acceptsOnlyKnownBonjourCollisionSuffixes() {

@@ -2,30 +2,10 @@
  * Core Spider Solitaire types. See docs/SPIDER_SOLITAIRE_RULES.md — the single
  * source of truth for the rules these shapes serve.
  *
- * THE CARD ENCODING IS THE ONE THING TO READ BEFORE CHANGING ANYTHING HERE.
- *
- * Spider is played with two decks, so the naive encoding the other card games
- * use — suit × 13 + (rank − 1), 0..51 — would put two identical numbers on the
- * table. That breaks two things at once: `isValidBoard` could no longer tell
- * "every card exactly once" from "one card twice and another missing", and the
- * table's move animation, which finds a card again by its number after the
- * board has changed, would animate one of the pair to the other's seat.
- *
- * So a card here is a unique 0..103:
- *
- *   rank = card % 13 + 1        1 (ace) .. 13 (king)
- *   copy = Math.floor(card / 13)   0..7 — which of the eight thirteens it is
- *
- * and the SUIT IS DERIVED FROM THE DIFFICULTY, not stored:
- *
- *   1 suit  → every card is a spade
- *   2 suits → copy % 2          spades and hearts
- *   4 suits → copy % 4          all four
- *
- * The deal shuffles 104 numbers once, so the same seed lays the same cards in
- * the same places at every difficulty — only what suit they read as changes.
- * That is what lets the daily be one deal rather than three, and what lets the
- * golden test pin the shuffle and the suit mapping separately.
+ * Spiderette uses 52 unique card IDs (0..51). Rank is card % 13 + 1;
+ * copy is floor(card / 13), 0..3. At one suit every copy is spades,
+ * at two suits copy % 2 gives spades/hearts, and at four suits copy % 4
+ * gives all four. Difficulty changes suits, never the seeded layout.
  */
 
 /** 0 spades, 1 hearts, 2 diamonds, 3 clubs — the same numbering the other card games use. */
@@ -36,19 +16,20 @@ export const SUITS: readonly Suit[] = [0, 1, 2, 3];
 export type SuitCount = 1 | 2 | 4;
 export const SUIT_COUNTS: readonly SuitCount[] = [1, 2, 4];
 
-export const CARD_COUNT = 104;
+export const CARD_COUNT = 52;
 export const RANKS = 13;
-export const COLUMNS = 10;
-/** Eight complete king-to-ace runs win the game (§2). */
-export const RUNS_TO_WIN = 8;
-/** Ten cards per deal, five deals (§3). */
-export const STOCK_DEALS = 5;
+export const COLUMNS = 7;
+/** Four complete king-to-ace runs win Spiderette (§2). */
+export const RUNS_TO_WIN = 4;
+export const INITIAL_STOCK = 24;
+/** Three full rows, then three cards to the leftmost columns (§3). */
+export const STOCK_DEALS = 4;
 
 export type Card = number;
 
 /** 1 (ace) .. 13 (king). */
 export const rankOf = (card: Card): number => (card % RANKS) + 1;
-/** Which of the eight thirteens this card belongs to, 0..7. */
+/** Which of the four thirteens this card belongs to, 0..3. */
 export const copyOf = (card: Card): number => Math.floor(card / RANKS);
 
 /** The suit this card reads as at the given difficulty (see the note above). */
@@ -79,7 +60,7 @@ export interface Pile {
 
 export interface SpiderBoard {
   readonly suitCount: SuitCount;
-  /** Face down, dealt ten at a time from the end (§3). */
+  /** Face down, dealt up to seven at a time from the end (§3). */
   readonly stock: readonly Card[];
   readonly tableau: readonly Pile[];
   /** Finished king-to-ace runs, each still holding its thirteen cards (§2). */
@@ -114,33 +95,33 @@ export function isCompleteRun(run: readonly Card[], suitCount: SuitCount): boole
   return run.length === RANKS && rankOf(run[0]!) === RANKS && isMovableRun(run, suitCount);
 }
 
-/**
- * The sizes a stock can really have (§3). It is dealt with fifty and leaves ten
- * at a time, so it holds 50, 40, 30, 20, 10 or 0 — never 5, never 15, never 60.
- *
- * This is not pedantry about a saved file. `dealRow` takes the last ten cards
- * and hands one to each of the ten columns; a stock of five hands `undefined`
- * to five of them, and a stock of fifteen deals once and leaves a stock of
- * five behind to do it on the next press.
- */
+/** Reachable stocks: 24 → 17 → 10 → 3 → 0 (§3). */
 export const isValidStockSize = (count: number): boolean =>
-  Number.isInteger(count) && count >= 0 && count <= COLUMNS * STOCK_DEALS && count % COLUMNS === 0;
+  Number.isInteger(count) &&
+  count >= 0 &&
+  count <= INITIAL_STOCK &&
+  (count === 0 || (INITIAL_STOCK - count) % COLUMNS === 0);
 
 /**
  * A board that could have come from a deal and legal play: every one of the
- * 104 cards exactly once, ten columns, a stock of whole undealt rows, no column
+ * cards exactly once, the requested columns and a reachable stock size, no column
  * showing a face-down top under an empty face-up part, and every completed pile
  * a real king-to-ace run.
  */
-export function isValidBoard(board: SpiderBoard): boolean {
-  if (board.tableau.length !== COLUMNS) return false;
-  if (board.completed.length > RUNS_TO_WIN) return false;
+export function validateBoardShape(
+  board: SpiderBoard,
+  cardCount: number,
+  columns: number,
+  validStockSize: (count: number) => boolean,
+): boolean {
+  if (board.tableau.length !== columns) return false;
+  if (board.completed.length > cardCount / RANKS) return false;
   if (board.suitCount !== 1 && board.suitCount !== 2 && board.suitCount !== 4) return false;
-  if (!isValidStockSize(board.stock.length)) return false;
+  if (!validStockSize(board.stock.length)) return false;
 
-  const seen = new Array<boolean>(CARD_COUNT).fill(false);
+  const seen = new Array<boolean>(cardCount).fill(false);
   const see = (card: Card): boolean => {
-    if (!Number.isInteger(card) || card < 0 || card >= CARD_COUNT || seen[card]) return false;
+    if (!Number.isInteger(card) || card < 0 || card >= cardCount || seen[card]) return false;
     seen[card] = true;
     return true;
   };
@@ -158,3 +139,6 @@ export function isValidBoard(board: SpiderBoard): boolean {
   }
   return seen.every(Boolean);
 }
+
+export const isValidBoard = (board: SpiderBoard): boolean =>
+  validateBoardShape(board, CARD_COUNT, COLUMNS, isValidStockSize);

@@ -1,0 +1,349 @@
+[data-game='spades'] {
+  --sa-felt: #e7eee7;
+  --sa-felt-ink: #294b3f;
+  --sa-edge: #b6c8b8;
+  --sa-paper: #fffaf0;
+  --sa-card-black: #213a36;
+  --sa-card-red: #a12a42;
+}
+[data-theme='dark'][data-game='spades'],
+[data-theme='dark'] [data-game='spades'] {
+  --sa-felt: #19362f;
+  --sa-felt-ink: #e1ebdf;
+  --sa-edge: #587164;
+}
+.sa-screen .game-content {
+  overflow-y: auto;
+}
+.sa-screen .game-topbar {
+  flex-shrink: 0;
+}
+.sa-home-content {
+  width: 100%;
+}
+.sa-intro,
+.sa-rule-summary {
+  margin: 0 0 12px;
+  text-align: center;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+.sa-rule-summary {
+  font-size: 12px;
+}
+.sa-table {
+  width: 100%;
+  max-width: 760px;
+  margin: 8px auto 0;
+  padding: 0 14px 24px;
+  display: grid;
+  gap: 14px;
+}
+.sa-felt {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--sa-edge);
+  border-radius: 26px;
+  color: var(--sa-felt-ink);
+  background: var(--sa-felt);
+  box-shadow: inset 0 0 0 4px #ffffff08;
+}
+.sa-panel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sa-seats {
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.sa-seat {
+  min-width: 0;
+  padding: 7px 9px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  text-align: center;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.sa-seat.is-active {
+  border-color: var(--accent);
+  background: #ffffff12;
+}
+.sa-seat strong,
+.sa-seat span {
+  display: block;
+}
+.sa-seat-back {
+  position: relative;
+  display: block;
+  width: 28px;
+  height: 39px;
+  margin: 0 auto 4px;
+  border-radius: 4px;
+  transform: rotate(-7deg);
+}
+.sa-status {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--surface);
+  text-align: center;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.sa-status.is-yours {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+.sa-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+}
+.sa-heading small {
+  color: var(--ink-soft);
+  font-weight: 400;
+}
+.sa-hand {
+  display: grid;
+  grid-template-columns: repeat(var(--sa-hand-columns, 7), minmax(0, 1fr));
+  gap: 10px 5px;
+  padding-top: 6px;
+}
+.sa-card {
+  position: relative;
+  display: block;
+  min-width: 0;
+  width: 100%;
+  aspect-ratio: 5/7;
+  padding: 0;
+  border: 1px solid #b9bbae;
+  border-radius: 6px;
+  color: var(--sa-card-black);
+  background: var(--sa-paper);
+  box-shadow: 0 2px 3px #00000012;
+}
+.sa-card-red {
+  color: var(--sa-card-red);
+}
+.sa-card-joker {
+  color: #70428d;
+}
+button.sa-card:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.sa-card.is-legal {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.sa-card.is-selected {
+  transform: translateY(-6px);
+  outline: 3px solid var(--accent);
+  outline-offset: 1px;
+}
+.sa-card:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+  z-index: 2;
+}
+.sa-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  min-height: 120px;
+}
+.sa-center .sa-card {
+  width: 64px;
+  height: 90px;
+}
+.sa-pile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.sa-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sa-actions .btn {
+  min-height: 44px;
+}
+.sa-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--ink-soft);
+}
+.sa-score {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0 0;
+  font-size: 13px;
+}
+.sa-score div {
+  text-align: center;
+}
+.sa-score dt,
+.sa-score dd {
+  margin: 0;
+}
+.sa-score dd {
+  font-weight: 700;
+}
+.sa-tutorial-figure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 152px;
+  margin: 12px auto 24px;
+}
+.sa-tutorial-figure .sa-card {
+  width: 72px;
+  height: 101px;
+}
+@media (min-width: 900px), (min-width: 600px) and (orientation: landscape) {
+  .sa-table {
+    max-width: 1120px;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  .sa-felt {
+    align-self: stretch;
+  }
+}
+@media (min-width: 600px) and (orientation: landscape) and (max-height: 600px) {
+  .sa-table {
+    margin-top: 0;
+    gap: 12px;
+    padding-inline: 12px;
+  }
+  .sa-felt {
+    padding: 10px;
+    border-radius: 20px;
+  }
+  .sa-panel {
+    gap: 7px;
+  }
+  .sa-seats {
+    margin-bottom: 8px;
+  }
+  .sa-seat {
+    padding: 3px 7px;
+  }
+  .sa-seat-back {
+    width: 20px;
+    height: 28px;
+  }
+  .sa-hand {
+    gap: 7px 4px;
+  }
+  .sa-hand .sa-card {
+    aspect-ratio: 4/5;
+  }
+  .sa-screen .game-topbar {
+    padding-block: 4px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sa-table *,
+  .sa-table *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+[data-reduced-motion='true'] .sa-table *,
+[data-reduced-motion='true'] .sa-table *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+.sa-figure-group {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+.sa-tutorial-figure {
+  flex-wrap: wrap;
+  gap: 18px;
+}
+.sa-figure-group .sa-card {
+  width: 48px;
+  height: 67px;
+  flex-shrink: 0;
+}
+.sa-choice {
+  display: grid;
+  gap: 8px;
+}
+.sa-actions select,
+.sa-actions input {
+  max-width: 150px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--sa-edge);
+  border-radius: 12px;
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+}
+.sa-actions label {
+  font-size: 13px;
+}
+.sa-bidding,
+.sa-raise {
+  display: grid;
+  gap: 8px;
+  text-align: center;
+}
+.sa-score {
+  color: inherit;
+}
+.overlay-result .sa-score {
+  margin-block: 12px;
+}
+
+.sa-center.is-empty {
+  min-height: 40px;
+}
+@media (min-width: 600px) and (orientation: landscape) and (max-height: 600px) {
+  .sa-center {
+    min-height: 90px;
+  }
+  .sa-center .sa-card {
+    width: 48px;
+    height: 67px;
+  }
+  .sa-center.is-empty {
+    min-height: 24px;
+  }
+}
+
+@media (max-width: 359px) {
+  .sa-panel > .sa-hand {
+    grid-template-columns: repeat(var(--sa-hand-compact-columns, 6), minmax(0, 1fr));
+  }
+}
+
+/* The same table can use landscape space inside a nearby room. */
+.nearby-screen[data-game='spades'] {
+  max-width: 1120px;
+}

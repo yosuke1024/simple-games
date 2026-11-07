@@ -1,0 +1,5 @@
+{
+  "df.saveGame": "{\"schemaVersion\":1,\"savedAt\":1793794081038,\"session\":{\"seed\":3014990797,\"hands\":[[3,5,12,14,15,18,20,22,27,32,34,40,51],[7,13,19,21,24,25,31,33,39,44,48,50],[2,10,16,23,26,35,36,38,41,42,43,49],[0,1,4,6,8,9,11,29,30,37,45,46,52]],\"discard\":[28,17],\"table\":[47],\"turn\":3,\"leader\":2,\"passed\":[],\"order\":[],\"previousOrder\":[],\"revolution\":false,\"phase\":\"play\",\"status\":\"playing\",\"moves\":3,\"elapsedSeconds\":16,\"event\":{\"kind\":\"play\",\"seat\":2,\"cards\":[47]}}}",
+  "df.stats": "{\"schemaVersion\":1,\"played\":1,\"completed\":0,\"wins\":0,\"placements\":[0,0,0,0],\"totalPlaySeconds\":16}",
+  "df.flags": "{\"schemaVersion\":1,\"tutorialCompleted\":true}"
+}

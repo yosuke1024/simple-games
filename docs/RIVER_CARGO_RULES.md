@@ -1,5 +1,7 @@
 # River Cargo (No. 73)
 
+2026-11-07: オーナーの指示によりアプリに正式収録(1.8.1)。Club House・Nearbyには加えない。
+
 ## ルール
 
 船頭と荷物を左岸から右岸へ運ぶ。船頭は常に船と移動し、荷物用の席は別に数える。
@@ -36,14 +38,15 @@ Easy / Normal / Hardに各4問を置き、全問を最初から選べる。
 ゲーム保存と統計はv2、flagsとprefsはv1。puzzleIdと合法手列で再構成する。
 v1の保存は難易度ごとの1問目へ対応させ、元の荷物順・危険な組・定員・最短手数を維持する。
 v1の統計も同じ1問目に引き継ぎ、別の問題の記録と混ぜない。
+正式収録でこのv2を凍結し、公開Webで採取した記録を `storage/releasedRecords.json` で固定する。
 問題識別子と定義は保存の再現性のため固定する。
 
 ## 共通契約
 
 2026-11-03、製品オーナーの追加3本とWeb公開の依頼、および候補3本への承認による。
-Web先行公開のみ。正式収録65本・Club House・Nearbyには加えない。
+2026-11-07に正式収録。Club House・Nearbyには加えない。
 純粋TypeScriptのゲーム層、ゲームごとの保存、14言語、図解3ステップを持つ。
-GameHomeHeader / GameArtwork / WebBetaNotice / BannerSlot / ResultAdSlot / ShareActionを使う。
+GameHomeHeader / GameArtwork / WebBetaNotice(正式収録では表示しない) / BannerSlot / ResultAdSlot / ShareActionを使う。
 操作中の確認は背景をinertにし、キー入力・CPU・再生を停止する。非表示・退出時は保存する。
 動き軽減では演出を省略し、タイマー・イベント購読はアンマウントで解除する。
 保存は上記の問題識別子と合法手列から再構成し、不正値・過長履歴・終了後入力を拒否する。
@@ -55,7 +58,7 @@ GameHomeHeader / GameArtwork / WebBetaNotice / BannerSlot / ResultAdSlot / Share
 
 2026-11-03、公開Webの完全一致検索でChain Territory / Marble Weave / River Cargoという
 同名ゲームは確認できなかった。Prism LinesとRiver Passageは同名アプリがあったため採用しない。
-検索は商標クリアランスではなく、商標DB・両ストアの全件調査は正式収録前に行う。
+検索は商標クリアランスではなく、商標DB・両ストアの全件調査は正式収録前に行う。2026-11-07: 1.8.2 の本番公開前に商標DB・両ストアを調べた(両ストアの検索、USPTO、J-PlatPat、TMview、WIPO は一部。各DBは既知の名前で検索が効くことを確かめてから0件と判断)。同名・紛らわしい名前のアプリ・ゲーム・商標は見つからず、題はそのまま使う(低リスク。法的クリアランスではない。WIPO の完全一致検索・EUIPO の直接検索など、エラーで実行できなかったものがある)。
 盤面・キャラクター・図は自作SVG/CSS、音は既存サービスのみ。既存作品の素材・コードは使わない。
 検証・公開記録は docs/plans/2026-11-03-three-more-games-71-73.md に残す。
 

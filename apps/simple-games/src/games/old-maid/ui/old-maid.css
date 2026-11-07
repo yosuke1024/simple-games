@@ -16,7 +16,8 @@
   --om-card-muted: #f1efe7;
   --om-felt-glow: color-mix(in srgb, var(--om-card-paper) 28%, transparent);
 }
-[data-theme='dark'][data-game='old-maid'] {
+[data-theme='dark'][data-game='old-maid'],
+[data-theme='dark'] [data-game='old-maid'] {
   --om-felt: #1b322c;
   --om-felt-edge: #3e5148;
   --om-felt-ink: #d1e1d6;
@@ -703,7 +704,7 @@
 }
 
 /* A wide screen puts the hand beside the table instead of stretching the table vertically. */
-@media (min-width: 900px) {
+@media (min-width: 900px), (min-width: 600px) and (orientation: landscape) {
   .om-body {
     max-width: 1120px;
     display: grid;
@@ -738,5 +739,26 @@
   .om-note {
     grid-column: 2;
     grid-row: 5;
+  }
+}
+
+/* Nearby uses the same responsive table geometry as CPU play. */
+.nearby-screen[data-game='old-maid'] {
+  max-width: 1120px;
+}
+
+/* Phones in landscape keep the cards and the table visible side by side. */
+@media (min-width: 600px) and (orientation: landscape) and (max-height: 600px) {
+  .om-body {
+    column-gap: 12px;
+    row-gap: 6px;
+    padding-inline: 12px;
+  }
+  .om-arena {
+    padding: 8px;
+    border-radius: 20px;
+  }
+  .om-hand {
+    gap: 7px 4px;
   }
 }

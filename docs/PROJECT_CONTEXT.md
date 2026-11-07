@@ -1,6 +1,19 @@
 # Simple Games — Project Context / Source of Truth
 
-Updated: 2026-11-04
+2026-11-07: オーナーの指示でWeb先行の残り2本(Frost Route / River Cargo)を正式収録へ変更。コード上は正式80本・Web先行0本・収録見送り2本の全82エントリ。Nearbyは28本のまま。配布は1.8.1の内部テスト/TestFlightから。以下の古い日付の対象数より本行を優先する。
+
+2026-11-05: オーナーがインディアンラミー・クレイジーエイト・スペード・デュラック・
+テキサスホールデム・ブラックジャックをCPU戦と近隣対戦込みで追加し、既存トランプも
+カードの意匠と横画面を改善するよう指示した。ポーカーの形式はテキサスホールデムと明示選択。
+新6本のCPU戦・近隣対戦・14言語を実装し、コード上の正式収録を78本、Nearby対応を28本とする。
+既存10本を含むトランプ16本へ共通のオリジナルカード意匠を適用。ストア配布は未実施。
+仕様は各RULES、意匠は [CARD_DESIGN.md](CARD_DESIGN.md)、進捗と検証範囲は
+[実装記録](plans/2026-11-05-six-card-games.md)。過去の計画でのポーカー／ブラックジャック
+見送りより、このオーナー判断を優先する。チップの販売・換金・実際の賭けは導入しない。
+
+2026-11-04: Nearby Playを8本追加して22本へ。対象のWebベータ7本もアプリに収録するというオーナーの承認により、正式72本。仕様は [近隣対戦の契約](architecture/nearby-multiplayer.md) と各RULES。ストア配布・実機検証は別途。
+
+Updated: 2026-11-05
 
 2026-11-04: オーナーの公開後フィードバックで大富豪・七並べ・ババ抜きの対戦卓、カード、手番表示、
 手札操作と小画面での配置を改善。ゲーム規則・保存schemaは維持し、具体的な操作は各RULESに記録。
@@ -49,10 +62,10 @@ Design philosophy:
 ### Collection
 
 - 1つの `Simple Games: Offline Games` として提供する。
-- 現在の正式収録は **65 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ。
-  本数はここで数える)。`GAMES` は全76エントリで、Web先行公開9本と収録見送り2本を含む。
-  Web先行公開は Backgammon(No. 67)、Ridge Cannons(No. 68)、Fleet Search(No. 69)、Frost Route(No. 70)、
-  Chain Territory(No. 71)、River Cargo(No. 73)、Daifugo(No. 74)、Sevens(No. 75)、Old Maid(No. 76)。
+- 現在の正式収録は **80 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ)。
+  `GAMES` は全82エントリで、収録見送り2本を含む。Web先行公開は0本(2026-11-07にFrost Route / River Cargoを正式収録)。
+  2026-11-05、オーナーの「対戦込みで一気に導入」の指示により新トランプ6本をアプリへ収録した。
+  2026-11-04、Nearbyの対象拡張とオーナーの明示承認により7本をアプリへ収録した。
   収録見送りは Falling Blocks(2026-10-29に取り下げ)とMarble Weave(No. 72、2026-11-03に取り下げ)。
   Backgammonの仕様は `docs/BACKGAMMON_RULES.md`。新作3本は製品オーナーの
   「3つくらいゲーム追加、UIを他のゲームに揃え、Web公開まで」という依頼と候補選択に基づく。
@@ -173,26 +186,27 @@ Design philosophy:
 
 2026-10-25、オーナーが製品実装を指示し、1.5.1 の実機フィードバック後に入口を改定。
 native の対応ゲームのトップに **「誰かと遊ぶ」** を置き、近くの相手と Bluetooth／同一 Wi-Fi で
-遊ぶことを短く補足する。対応は1対1ターン制の13本（Yacht / Reversi / Connect Four / Gomoku / Checkers / Gin Rummy / Mancala / Dominoes / Dots and Boxes / Chess / Nested Tic-Tac-Toe / Scopa / Nim）と、2026-10-26の追加実装対象である4席のLudo。コレクションには参加専用の「近くの対戦相手を探す」を置き、ゲーム未選択のまま全14本の募集を横断して探せる。
+遊ぶことを短く補足する。対応は1対1ターン制の13本（Yacht / Reversi / Connect Four / Gomoku / Checkers / Gin Rummy / Mancala / Dominoes / Dots and Boxes / Chess / Nested Tic-Tac-Toe / Scopa / Nim）に、2席のBackgammon / Ridge Cannons / Fleet Search / Chain Territoryと4席のLudo / Hearts / Daifugo / Sevens / Old Maidを加えた22本。コレクションには参加専用の「近くの対戦相手を探す」を置き、ゲーム未選択のまま全22本の募集を横断して探せる。
 入口はClub House直下に、Club Houseと同程度の控えめなテキスト行として配置する。
-探索画面の下部には「対戦サポートゲーム」と全14本のリンクを置き、探索を停止して対応する通常のゲームトップへ移動する。
+探索画面の下部には「対戦サポートゲーム」と全22本のリンクを置き、探索を停止して対応する通常のゲームトップへ移動する。
 募集作成は各ゲームのトップから行い、Club House からは開始しない。他ゲームに未実装のボタンを置かない。
 
 2026-10-26、オーナーが「ゲームごとの席数の上限を固定し、人とCPUの割合を変える」設計を採用した。
-最初の混成対応はLudoだけで、4人／3人＋1CPU／2人＋2CPU／1人＋3CPUを同じ4席で扱う。
+最初の混成対応はLudoで、2026-11-04にHearts / Daifugo / Sevens / Old Maidへ拡張した。
+4人／3人＋1CPU／2人＋2CPU／1人＋3CPUを同じ4席で扱う。
 hostは開始前と対局中に参加者の席を人間からCPUへ変更し、接続中の参加者へ操作を戻せる。
 駒・手番・すでに振った出目は引き継ぐ。
-2026-10-27、オーナーはこの席の扱いを、3席以上のNearby対戦すべてが従う共通の約束とした（現在使うのはLudoだけ）。
+2026-10-27、オーナーはこの席の扱いを、3席以上のNearby対戦すべてが従う共通の約束とした（現在は上記5本が使う）。
 明示的な退出は即座にその席をCPUにし、通信が切れただけの離席では席を本人のものとして残して全員が待つ。
 戻るときにhostの承認は要らず、CPUへ替えるかはhostが手動で決める。参加は対局と対局の間だけで、
 対局中の部屋は探索一覧に出さない。**集まりを終えるのはhostの明示的な退出だけで、host移譲はしない。**
 正本は `architecture/nearby-multiplayer.md`「2026-10-27: 3席以上の集まりの共通契約」。
-通信はhostと最大3台の参加端末、CPUはhost内で進める。Ludoではチャットを提供せず、
-対局履歴だけをNearby専用の端末内保存へ追加する。既存13本は2人対戦のままで、
+通信はhostと最大3台の参加端末、CPUはhost内で進める。4席ゲームではチャットを提供せず、
+対局履歴だけをNearby専用の端末内保存へ追加する。2席の17本は2人対戦で、
 そのチャット・再接続・履歴の契約は次段落以降のとおり維持する。4台のBLE/LAN実機確認、
 混在OS、電池・旧端末の検証は未実施であり、この実装を配布・実機検証済みとは扱わない。
 
-以下は既存13本の2人対戦の契約である。Ludoとの差分は `architecture/nearby-multiplayer.md` と `LUDO_RULES.md` §14を正とする。
+以下は2席17本の2人対戦の契約である。4席ゲームとの差分は `architecture/nearby-multiplayer.md` と各ゲームのルール文書を正とする。
 ゲーム選択済み → 募集／参加 → host承認 → 双方Ready → 各ゲームの既存CPU戦と共通の盤面・操作で対局。
 全体探索は Bluetooth／同一Wi-Fi 選択 → 明示探索 → 募集名＋ゲーム名・人数の一覧 → 募集選択 →
 自分の表示名で参加 → host承認 → 双方Ready → そのゲーム、の順。
@@ -214,7 +228,7 @@ hostは開始前と対局中に参加者の席を人間からCPUへ変更し、�
 Nearby全削除・設定のローカルデータ削除では保存した表示名も消す。
 新しい募集名の通信はwire v7／discovery v2で、両端末を1.5.4へ更新する。旧募集はどちらの探索入口にも表示しない。
 製品は `src/nearby/`、PoC は引き続き `prototypes/nearby/` に分離。近隣対戦の実行は native 限定。
-Web のコレクションには無効な「近くの対戦相手を探す」、Ludoを含む対応14本のトップには無効な「誰かと遊ぶ」ボタンと「アプリ専用の機能です」を表示する
+Web のコレクションには無効な「近くの対戦相手を探す」、4席5本を含む対応22本のトップには無効な「誰かと遊ぶ」ボタンと「アプリ専用の機能です」を表示する
 （英語は “Play with someone” / “Available in the app only.”）。押して接続画面へ進む操作は無く、
 Web に Nearby の実行コード・探索・権限要求・接続・履歴読取を追加しない。ソロ / CPU 戦は従来どおり提供する。
 旧 wire v2 PoC では Pixel 9 Pro / iPhone 11 の BLE 両方向と通常 LAN の各1局を完走した。

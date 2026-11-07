@@ -1,0 +1,6 @@
+{
+  "fs.stats": "{\"schemaVersion\":1,\"totalPlaySeconds\":11,\"boards\":{\"easy\":{\"played\":1,\"completed\":0,\"best\":null},\"normal\":{\"played\":0,\"completed\":0,\"best\":null},\"hard\":{\"played\":0,\"completed\":0,\"best\":null}}}",
+  "fs.prefs": "{\"schemaVersion\":1,\"mode\":\"easy\"}",
+  "fs.flags": "{\"schemaVersion\":1,\"tutorialCompleted\":true}",
+  "fs.saveGame": "{\"schemaVersion\":1,\"seed\":4109416877,\"mode\":\"easy\",\"actions\":[{\"type\":\"start\"},{\"type\":\"shot\",\"cell\":0}],\"elapsedSeconds\":11,\"savedAt\":1793794025059}"
+}

@@ -1,0 +1,6 @@
+{
+  "ct.prefs": "{\"schemaVersion\":1,\"mode\":\"easy\"}",
+  "ct.flags": "{\"schemaVersion\":1,\"tutorialCompleted\":true}",
+  "ct.saveGame": "{\"schemaVersion\":1,\"seed\":3213764501,\"mode\":\"easy\",\"actions\":[0,8],\"elapsedSeconds\":26,\"savedAt\":1793794054875}",
+  "ct.stats": "{\"schemaVersion\":1,\"totalPlaySeconds\":26,\"boards\":{\"easy\":{\"played\":1,\"completed\":0,\"best\":null},\"normal\":{\"played\":0,\"completed\":0,\"best\":null},\"hard\":{\"played\":0,\"completed\":0,\"best\":null}}}"
+}

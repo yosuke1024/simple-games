@@ -1,0 +1,40 @@
+import type { DurakMessages } from './en';
+export const id: DurakMessages = {
+  durakPlayed: 'Permainan dimulai',
+  durakFinished: 'Permainan selesai',
+  durakWins: 'Kemenangan',
+  durakYou: 'Kamu',
+  durakCpu: 'CPU {n}',
+  durakCards: '{n} kartu',
+  durakField: 'Meja kartu',
+  durakHand: 'Kartu di tanganmu',
+  durakYourTurn: 'Giliranmu',
+  durakTurn: 'Giliran {name}…',
+  durakJoker: 'Joker',
+  durakCard: '{rank} {suit}',
+  durakDraws: 'Seri',
+  durakWon: 'Anda menang!',
+  durakLost: 'Permainan selesai',
+  durakDraw: 'Seri',
+  durakName: 'Durak',
+  durakIntro: 'Tangkis serangan, lalu balikkan keadaan.',
+  durakRules: '2 kursi · 36 kartu · Masing-masing 6 · Truf mengalahkan jenis lain.',
+  durakStep1Title: 'Serang dengan satu kartu',
+  durakStep1Body:
+    'Penyerang memulai dengan satu kartu, lalu boleh menambah nilai yang sudah ada di meja.',
+  durakStep2Title: 'Bertahan atau ambil',
+  durakStep2Body:
+    'Kalahkan tiap serangan dengan kartu sejenis yang lebih tinggi atau truf, atau ambil kartu di meja.',
+  durakStep3Title: 'Habiskan kartu',
+  durakStep3Body:
+    'Isi kembali sampai enam setelah serangan; saat tumpukan habis, jangan jadi orang terakhir yang masih memegang kartu.',
+  durakTrump: 'Truf: {suit}',
+  durakStockCount: 'Tumpukan: {n}',
+  durakAttackHint:
+    'Serang dengan kartu berbingkai; setelah ditangkis, tambah nilai yang cocok atau akhiri.',
+  durakDefendHint: 'Kalahkan serangan yang belum ditutup atau ambil semua kartu.',
+  durakTaking: 'Pengambilan dipilih; penyerang dapat menambah nilai yang cocok sebelum selesai.',
+  durakConfirmTake: 'Pastikan pengambilan',
+  durakDone: 'Akhiri serangan',
+  durakTake: 'Ambil',
+} as const;

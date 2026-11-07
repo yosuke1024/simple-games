@@ -30,7 +30,8 @@
 > 試用の言葉は書かない(Basic は未提供で、Trial の枠は運用で変わる)。**v1.5.0 の公開と同時に**、
 > 人間の承認の後で Console に反映する。v1.4.2 / v1.4.3 はテスト版なので掲載文は変えていない。
 
-> 掲載は収録ゲーム 65 本(Sudoku / Solitaire / Spider Solitaire / FreeCell /
+> 掲載は収録ゲーム 80 本(1.8.2。下の詳細説明の INCLUDED GAMES が registry の順の全一覧)。以下の 65 本の列挙は 1.7.2 時点の記録:
+> (Sudoku / Solitaire / Spider Solitaire / FreeCell /
 > Mahjong Solitaire / Hearts / Gin Rummy / Minesweeper / Ludo / 2048 /
 > Block Puzzle / Checkers / Reversi / Connect Four / Gomoku / Bubble Pop /
 > Brick Breaker / Nonogram / Takuzu / Futoshiki /
@@ -84,6 +85,14 @@
 > **2026-10-31 / 1.7.2:** 9 本の題を両ストアと商標で調べた結果、7 本はそのまま、Invaders は **Formation Fire**、Overtake は
 > **Road Weave** に改名した(製品オーナーの判断。根拠は docs/RELEASE_CHECKLIST.md の 2026-10-31 の節と各ルール文書の冒頭)。
 > この下の一覧はすでに新しい題。
+
+> **2026-11-07 / 1.8.2:** オーナーの指示で本番リリース。15 本を加えて 80 本(Backgammon / Ridge Cannons / Fleet Search /
+> Chain Territory / Frost Route / River Cargo / Daifugo / Sevens / Old Maid / Crazy Eights / Durak / Spades / Texas Hold’em /
+> Blackjack / Indian Rummy)、Nearby Play は 28 本(4 席 10 本)。オーナーの「数値を変えるだけでなく訴求できるものに」「Codex に最高の
+> 思考力で」の依頼で Codex(xhigh)が全面改稿し、照合のうえオーナーが確定した。オーナー判断: サブタイトルは数独・ソリティアを残して
+> トランプを足す / Texas Hold’em は冒頭・宣伝文・サブタイトルに出さず、一覧と「チップ・ポイント」の開示文にだけ置く。
+> 価格は書かない(地域で変わる。1.7.2 の掲載にも無い)。下の「詳細説明」は 1.8.2 で ASC と Play に載せる英語の正文で、
+> App Store と Play で同じ文を使う。題名 5 本(Ridge Cannons ほか)の商標DB・両ストア調査は 2026-11-07 に済み(各 RULES「名称」)。
 
 > **2026-10-26 / 1.6.0:** オーナーが本番公開を依頼。Nearby Play の13本・host承認・任意チャット・端末内履歴を追加し、通常プレイのオフライン説明と区別した。App Store Connect の新1.6.0下書きは14言語で保存・GET一致を確認。Google Play反映・審査提出は別に記録する。
 
@@ -148,6 +157,8 @@ Sudoku の併記を「数独」でなく「ナンプレ」にしたのと同じ�
 
 ## 短い説明(80字以内)— 候補
 
+**1.8.2 で採用**: `80 offline games. 16 card games. Nearby tables for up to 4; CPUs fill seats.`(76字)。以下は以前の候補。
+
 1. `No rush, no connection needed. Classic games gathered into one simple app.`(74字)
 2. `Classic games in one quiet, offline app. No subscriptions or paywalls.`(70字)
 3. OSS 行(補助): `Built in public. The source code is available on GitHub.`(56字)
@@ -156,104 +167,113 @@ Sudoku の併記を「数独」でなく「ナンプレ」にしたのと同じ�
 ## 詳細説明
 
 ```text
-I made this app because I wanted games I could play on a long flight, without worrying about a connection.
+80 games in one app, including 16 card games. All are playable offline from the first launch. Enjoy a game on your own, or gather 2–4 people for 10 Nearby games, with CPUs filling empty seats.
 
-Simple Games is a simple collection of classic games in one app. Where most game apps keep adding things, this one takes them away — everything that gets between you and the game. More games will be added gradually, as long as they fit this idea.
+Solo play and games against the computer need no connection. No account to create. No subscription. Every game feature is free, including hints and undo wherever a game has them.
 
-• Plays offline, from the very first launch
-• No subscription, and no account to create
-• Nothing interrupts play: one small banner while you're online, never a full-screen or video ad
-• Every game feature is included, and hints and undo are free wherever a game has them
-• A small download — quick to install, light on storage
-• Favorites pin your games to the top; search finds the rest by name
+While you're online, the app shows one small banner ad. There are no full-screen, rewarded or app-open ads. An optional one-time Remove Ads purchase removes ads permanently.
 
-Nothing rushes you.
-No login bonuses, no day-streak counters, no limited-time events. No clock runs on screen while you play. Skip a day and you lose nothing.
+16 CARD GAMES, ONE SIMPLE DESIGN
+The card collection includes Solitaire, Hearts, Daifugo, Sevens, Crazy Eights and Spades. All 16 card games share one original, simple card design.
 
-Play offline, from the very first launch.
-Solo games and games against the computer need no internet connection, account or game server. Your progress stays on your device, with no cloud sync. Nearby Play and Club House are optional ways to play or share with others, described below.
+A TABLE FOR THE PEOPLE WITH YOU
+Nearby Play supports 28 games over Bluetooth or the same Wi-Fi, without internet, an account or Club House. Eighteen games have two seats; ten have four. In the four-seat games, 2–4 people can play together and CPUs fill the empty seats.
 
-Nearby Play — play with someone nearby.
-In the app, 13 turn-based games support one-to-one play over Bluetooth or the same Wi-Fi. Host a gathering from a supported game, or find nearby hosts from the collection. The host approves each participant. Chat is optional and off by default; game and chat history stay on each participant’s device. No internet connection, account or Club House membership is needed.
+The host approves every join. Where chat is available, it is optional and off by default; four-seat card games have no chat. Nearby history stays on each device. Nearby Play is not available on the web. For newer games over Bluetooth, use 1.8.2 or later on every device.
 
-Club House is optional, and only connects if you join one.
-Join a Club with a nickname — there is no account. From then on, each game you finish sends its result (time, moves or score) to the Clubs you joined, automatically — in the games that support Clubs, and nothing you played before joining. In each game and mode your personal bests sit next to theirs; everyone plays different boards, luck included. In most games the daily puzzle is one board for everyone, so you can see how others did on the very same one. You can disconnect, delete your own records one by one, or change your name at any time. PixApps runs the Public Club House, and you can also start your own Club and invite family or friends with a link — PixApps runs that one too. A device that never joins never connects to it.
+CARD-GAME POINTS
+Texas Hold’em uses free table chips that reset each game. Blackjack uses round points. Neither involves real money, prizes or cash-out.
+
+AT YOUR PACE
+No streaks, login bonuses, push notifications or limited-time events. No clock on screen while you play.
+
+CLUB HOUSE IS OPTIONAL
+Join with just a nickname. While you're a member, results of finished games are sent automatically to the Clubs you've joined, only in games that support Clubs. Games played before joining are not sent. PixApps runs the Public Club House and your own Clubs.
 
 INCLUDED GAMES
-• Sudoku
-• Solitaire
-• Spider Solitaire
-• FreeCell
-• Mahjong Solitaire
-• Hearts
-• Gin Rummy
-• Minesweeper
-• Ludo
-• 2048
-• Block Puzzle
-• Checkers (Draughts)
-• Reversi
-• Connect Four
-• Gomoku (Five in a Row)
-• Bubble Pop
-• Brick Breaker
-• Nonogram
-• Takuzu (Binary Puzzle)
-• Futoshiki
-• Kakuro (Cross Sums)
-• Number Match
-• Quick Math
-• Schulte Table
-• Number Recall
-• Water Sort
-• Sliding Puzzle
-• Memory Match
-• Sky Fighter
-• Bunny Hop
-• Crown Grid (Star Battle)
-• Number Path
-• Shape Regions
-• Yacht
-• Mancala (Kalah)
-• Dominoes
-• Hit & Blow (Bulls and Cows)
-• Dots and Boxes
-• Binary Balance
-• Sudoku 6×6
-• Box Regions
-• Chess
-• Nested Tic-Tac-Toe
-• Scopa
-• Nim
-• Unblock Puzzle
-• Snake
-• Loop Puzzle
-• Bridges
-• Peg Solitaire
-• Gem Swap
-• Pipe Link
-• Bounce Up
-• Echo Pads
-• Road Weave
-• Make the Target
-• Tangram
-• Light Grid
-• Color Flood
-• Three Peaks
-• Knight’s Tour
-• Formation Fire
-• Paddle Rally
-• Hanoi Towers
-• Maze Escape
-
-No game feature is locked behind a payment, and there is no subscription. Hints and undo are free wherever a game has them — no limit on how often you use them, and never an ad to watch first.
-
-While you are online, the app shows one small banner ad. It helps me maintain and improve the app, and it never covers the board or interrupts play. Prefer no ads? A one-time purchase removes them permanently, including in every game added later.
-
-The source code is public.
-Everything said above is something you can check for yourself.
+Sudoku
+Solitaire
+Spider Solitaire
+FreeCell
+Hearts
+Gin Rummy
+Minesweeper
+Mahjong Solitaire
+2048
+Block Puzzle
+Ludo
+Checkers (Draughts)
+Reversi
+Connect Four
+Gomoku (Five in a Row)
+Bubble Pop
+Brick Breaker
+Nonogram
+Takuzu (Binary Puzzle)
+Futoshiki
+Kakuro (Cross Sums)
+Number Match
+Quick Math
+Schulte Table
+Number Recall
+Water Sort
+Sliding Puzzle
+Memory Match
+Sky Fighter
+Bunny Hop
+Crown Grid (Star Battle)
+Number Path
+Shape Regions
+Yacht
+Mancala (Kalah)
+Dominoes
+Hit & Blow (Bulls and Cows)
+Dots and Boxes
+Binary Balance
+Sudoku 6×6
+Box Regions
+Unblock Puzzle
+Snake
+Loop Puzzle
+Bridges
+Peg Solitaire
+Chess
+Gem Swap
+Pipe Link
+Bounce Up
+Echo Pads
+Road Weave
+Make the Target
+Nested Tic-Tac-Toe
+Scopa
+Tangram
+Light Grid
+Color Flood
+Three Peaks
+Nim
+Knight’s Tour
+Formation Fire
+Paddle Rally
+Hanoi Towers
+Maze Escape
+Backgammon
+Ridge Cannons
+Fleet Search
+Frost Route
+Chain Territory
+River Cargo
+Daifugo
+Sevens
+Old Maid
+Crazy Eights
+Durak
+Spades
+Texas Hold’em
+Blackjack
+Indian Rummy
 
 Simple Games by PixApps
+The source code is public on GitHub.
 ```
 
 ## 構成の意図(短くしたのは意図である)

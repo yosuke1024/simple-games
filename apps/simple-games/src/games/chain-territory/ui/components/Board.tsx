@@ -22,7 +22,9 @@ export function Board({
   blocked,
   onPlay,
   lastCell,
+  opponentName,
 }: {
+  opponentName?: string;
   board: Cell[];
   blocked: boolean;
   onPlay: (cell: number) => void;
@@ -77,13 +79,16 @@ export function Board({
           aria-label={t('chainTerritoryCell', {
             row: Math.floor(i / COLS) + 1,
             col: (i % COLS) + 1,
-            owner: t(
-              cell.owner === 1
-                ? 'chainTerritoryYou'
-                : cell.owner === 2
-                  ? 'chainTerritoryCpu'
-                  : 'chainTerritoryEmpty',
-            ),
+            owner:
+              cell.owner === 2 && opponentName
+                ? opponentName
+                : t(
+                    cell.owner === 1
+                      ? 'chainTerritoryYou'
+                      : cell.owner === 2
+                        ? 'chainTerritoryCpu'
+                        : 'chainTerritoryEmpty',
+                  ),
             n: cell.count,
             max: capacity(i),
           })}

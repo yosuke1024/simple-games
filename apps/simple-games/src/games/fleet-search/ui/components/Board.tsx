@@ -1,11 +1,13 @@
 import { useRef } from 'react';
 import { Vessel } from './Vessel';
 import { useSettings } from '@/state/SettingsContext';
-import { knowledge, type Session } from '../../game';
+import { knowledge, type Session, type Knowledge, type Ship } from '../../game';
 export const coordinate = (c: number) =>
   `${String.fromCharCode(65 + (c % 8))}${Math.floor(c / 8) + 1}`;
-export function Board({
-  session,
+export function SeaBoard({
+  fleet,
+  shots,
+  view,
   own = false,
   mini = false,
   reveal = false,
@@ -14,7 +16,9 @@ export function Board({
   invalid = false,
   onSelect,
 }: {
-  session: Session;
+  fleet: Ship[];
+  shots: number[];
+  view: Knowledge;
   own?: boolean;
   mini?: boolean;
   reveal?: boolean;
@@ -24,15 +28,12 @@ export function Board({
   onSelect?: (cell: number) => void;
 }) {
   const { t } = useSettings(),
-    refs = useRef<(HTMLButtonElement | null)[]>([]),
-    view = knowledge(session, own ? 1 : 0),
-    shots = session.shots[own ? 1 : 0],
-    fleet = session.fleets[own ? 0 : 1];
+    refs = useRef<(HTMLButtonElement | null)[]>([]);
   const state = (cell: number) =>
     view.sunk.some((ship) => ship.includes(cell))
       ? 'Sunk'
       : shots.includes(cell)
-        ? fleet.some((ship) => ship.includes(cell))
+        ? view.hits.includes(cell)
           ? 'Hit'
           : 'Miss'
         : view.blocked.includes(cell)
@@ -119,5 +120,22 @@ export function Board({
         })}
       </div>
     </div>
+  );
+}
+
+export function Board({
+  session,
+  ...props
+}: Omit<import('react').ComponentProps<typeof SeaBoard>, 'fleet' | 'shots' | 'view'> & {
+  session: Session;
+}) {
+  const side = props.own ? 1 : 0;
+  return (
+    <SeaBoard
+      {...props}
+      view={knowledge(session, side)}
+      shots={session.shots[side]}
+      fleet={session.fleets[props.own ? 0 : 1]}
+    />
   );
 }

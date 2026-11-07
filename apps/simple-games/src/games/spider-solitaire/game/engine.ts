@@ -16,6 +16,7 @@ import {
   isMovableRun,
   isValidStockSize,
   RANKS,
+  RUNS_TO_WIN,
   rankOf,
   suitOf,
   type Card,
@@ -129,10 +130,7 @@ export function moveRun(
  * dug them out, and it is the reason an empty column is worth holding.
  */
 export function canDeal(board: SpiderBoard): boolean {
-  // A stock that is not whole rows cannot have come from a deal (types.ts).
-  // The saved-game validator already refuses one, and this refuses it again:
-  // a board that reached the engine anyway must not be made worse by dealing
-  // short rows from it, and fifteen would otherwise deal ten and leave five.
+  // Only 24, 17, 10, 3 and 0 can occur. The final three-card row is intentional.
   if (!isValidStockSize(board.stock.length)) return false;
   if (board.stock.length === 0) return false;
   return board.tableau.every((pile) => pile.up.length > 0 || pile.down.length > 0);
@@ -147,22 +145,25 @@ export function dealBlockedByEmptyColumn(board: SpiderBoard): boolean {
   return board.stock.length > 0 && isValidStockSize(board.stock.length);
 }
 
-/** Deals one card face up to every column (§3). */
+/** Deals up to seven cards, left to right; the last deal contains three (§3). */
 export function dealRow(board: SpiderBoard): SpiderBoard | null {
   if (!canDeal(board)) return null;
-  const taken = board.stock.slice(board.stock.length - COLUMNS);
+  const count = Math.min(COLUMNS, board.stock.length);
+  const taken = board.stock.slice(-count);
   const next: SpiderBoard = {
     ...board,
-    stock: board.stock.slice(0, board.stock.length - COLUMNS),
-    tableau: board.tableau.map((pile, i) => ({ down: pile.down, up: [...pile.up, taken[i]!] })),
+    stock: board.stock.slice(0, -count),
+    tableau: board.tableau.map((pile, i) =>
+      i < count ? { down: pile.down, up: [...pile.up, taken[i]!] } : pile,
+    ),
   };
   return harvested(next);
 }
 
 /** How many deals are left in the stock — what the player actually counts (§3). */
-export const dealsLeft = (board: SpiderBoard): number => Math.floor(board.stock.length / COLUMNS);
+export const dealsLeft = (board: SpiderBoard): number => Math.ceil(board.stock.length / COLUMNS);
 
-/** All eight runs finished (§2). */
+/** All four runs finished (§2). */
 export function isWon(board: SpiderBoard): boolean {
-  return board.completed.length >= 8;
+  return board.completed.length >= RUNS_TO_WIN;
 }

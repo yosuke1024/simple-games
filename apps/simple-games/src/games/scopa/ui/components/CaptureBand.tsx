@@ -1,3 +1,4 @@
+import { PlayingCardBack } from '@/ui/cards/PlayingCardFace';
 /**
  * The band at the top of the table (docs/SCOPA_RULES.md §7, §11.2): one row
  * per side, drawn the same way, each with the match score, the dealer's mark
@@ -100,7 +101,9 @@ export const CaptureBand = memo(function CaptureBand({
             aria-label={names ? `${who} · ${held}` : t('scopaCpuHandLabel', { n: held })}
           >
             {Array.from({ length: held }, (_, index) => (
-              <span key={index} className="sc-back" />
+              <span key={index} className="sc-back">
+                <PlayingCardBack />
+              </span>
             ))}
           </span>
         ) : null}

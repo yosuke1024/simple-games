@@ -27,8 +27,8 @@ export const SPIDER_SOLITAIRE_CHALLENGE = {
   order: 'moves',
   direction: 'asc' as const,
   validateParams(raw: unknown): Record<string, unknown> | null {
-    if (!isRecord(raw) || !isSuitCount(raw.suitCount)) return null;
-    return { suitCount: raw.suitCount };
+    if (!isRecord(raw) || raw.layout !== 'spiderette' || !isSuitCount(raw.suitCount)) return null;
+    return { layout: 'spiderette', suitCount: raw.suitCount };
   },
   validateFacts(raw: unknown): Record<string, unknown> | null {
     if (!isRecord(raw)) return null;
@@ -39,6 +39,8 @@ export const SPIDER_SOLITAIRE_CHALLENGE = {
     return { moves, elapsedSeconds, hints };
   },
   paramsKey(params: Record<string, unknown>): string {
-    return params.suitCount === 1 ? '1-suit' : `${String(params.suitCount)}-suits`;
+    return params.suitCount === 1
+      ? 'spiderette-1-suit'
+      : `spiderette-${String(params.suitCount)}-suits`;
   },
 };

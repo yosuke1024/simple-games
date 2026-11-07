@@ -1,5 +1,7 @@
 # Fleet Search
 
+2026-11-04: オーナーの承認によりアプリに正式収録し、Nearby Playに対応。現在の契約は末尾のNearby節が優先する。
+
 ## ルール
 
 8×8の海に長さ4/3/2/2の艦を縦横に隠す。艦同士は辺・角で接しない。
@@ -18,9 +20,9 @@ CPUはプレイヤーの艦配置を受け取らない射撃選択関数で動�
 ## 共通の契約
 
 No. 69。2026-11-03、オーナーの「3つくらいゲーム追加、UIを揃えてWeb公開まで」の依頼で実装する。
-Web先行公開のみ。正式収録とClub/Nearbyは含めない。`game/` は純粋TS、他ゲームに依存しない。
+2026-11-04に正式収録・Nearbyへ追加。Clubへの登録は含めない。`game/` は純粋TS、他ゲームに依存しない。
 全機能無料。通信・通知・連続日数・時間制限なし。途中保存は端末内だけ。
-ホーム・Quick RulesにWebBetaNotice。GameHomeHeader / GameArtwork / BannerSlot / ResultAdSlot /
+ホーム・Quick RulesのWebBetaNoticeは正式収録では表示しない。GameHomeHeader / GameArtwork / BannerSlot / ResultAdSlot /
 ShareActionを既存と同じ形で使う。タイトルは英語名で統一、1タイトル1アクセント。
 
 ## UIと保存
@@ -30,7 +32,7 @@ ShareActionを既存と同じ形で使う。タイトルは英語名で統一、
 未実施の実機検証を済みとは書かない。Quick Rulesは図つき3ステップ。
 設定はEasy/Normal/Hard、再開、統計を提供。保存は`fs.game/prefs/stats/flags`の4キー。
 入力履歴をシードから再生し、不正値・不正手・過長履歴・終了後入力を拒否する。
-保存のv1はベータ中。ゲーム変更・戻る・非表示・アンマウントで同期し、終了時は進行保存を消す。
+保存のv1は正式収録で凍結。ゲーム変更・戻る・非表示・アンマウントで同期し、終了時は進行保存を消す。
 同じ局の再挑戦と新しい局を区別し、進行中の置き換えは確認する。
 
 ## i18n
@@ -43,7 +45,7 @@ ShareActionを既存と同じ形で使う。タイトルは英語名で統一、
 2026-11-03に公開Web検索を行った。仮題Cannon Duel/Hidden Fleet/Ice Trailには同名ゲームが
 見つかったため採用せず、一般語を組み合わせた独自名に変更した。新名の完全一致検索では
 同名ゲームの結果を確認できなかった。これは商標クリアランスではない。商標DB・両ストアの
-確認は正式収録前に行う。既存作品の画面、キャラクター、音、素材、コードは使用しない。
+確認は正式収録前に行う。2026-11-07: 1.8.2 の本番公開前に商標DB・両ストアを調べた(両ストアの検索、USPTO、J-PlatPat、TMview、WIPO は一部。各DBは既知の名前で検索が効くことを確かめてから0件と判断)。同名・紛らわしい名前のアプリ・ゲーム・商標は見つからず、題はそのまま使う(低リスク。法的クリアランスではない。WIPO の完全一致検索・EUIPO の直接検索など、エラーで実行できなかったものがある)。既存作品の画面、キャラクター、音、素材、コードは使用しない。
 図は自作SVG/CSS、音は既存サービスだけ。名称確認元:
 https://twozygames.itch.io/cannon-duel / https://tobs241.itch.io/hiddenfleet /
 https://www.reddit.com/r/WebGames/comments/1xciaih/ice_trail_slide_until_a_wall_stops_you_collect_3/
@@ -51,3 +53,14 @@ https://www.reddit.com/r/WebGames/comments/1xciaih/ice_trail_slide_until_a_wall_
 ## 検証記録
 
 実装・ブラウザー確認・テストと公開状態は [実装記録](plans/2026-11-03-three-games-68-70.md) に記す。未実施の実機検証と翻訳の人手確認は別扱いとする。
+
+## Nearby Play (2026-11-04)
+
+2026-11-04、オーナーの指示によりNearby Playに対応。アプリの「誰かと遊ぶ」から開始し、
+Webでは無効ボタンとアプリ専用の説明を表示する。通信・履歴はNearby専用で、通常のCPU戦・保存・統計を変えない。
+正式収録へ変更し、既存保存schema v1を凍結する。収録はオーナー判断で、安定稼働期間の達成ではない。
+接続・承認・再接続の共通契約は [近隣対戦の契約](architecture/nearby-multiplayer.md) を正とする。
+
+2席。host、guestの順で配置を確定し、両者の確定後はhostから交互に撃つ。
+相手には射撃結果と沈没艦だけを公開し、全配置は終局後に見せる。隠した艦や配置seedは送らない。
+再配置・回転・射撃前の座標確認はCPU戦と共通。命中しても交代、全11マスで勝利。

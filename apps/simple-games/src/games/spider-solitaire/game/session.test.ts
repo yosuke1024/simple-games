@@ -23,7 +23,7 @@ const card = (copy: number, rank: number): Card => copy * RANKS + (rank - 1);
 describe('creating sessions', () => {
   it('pins the deal to the seed and the difficulty to the session', () => {
     const session = createFreeSession(2, freeSeed('a'));
-    expect(session.board).toEqual(dealBoard('ss-free-a', 2));
+    expect(session.board).toEqual(dealBoard('ss-spiderette-free-a', 2));
     expect(session.suitCount).toBe(2);
     expect(createFreeSession(1).seed).not.toBe(createFreeSession(1).seed);
     expect(newSeedToken(1, () => 0)).toBe('1-0');
@@ -47,7 +47,7 @@ describe('creating sessions', () => {
     expect(session.status).toBe('playing');
     expect(canUndo(session)).toBe(false);
     expect(undo(session)).toBeNull();
-    expect(dealsLeft(session.board)).toBe(5);
+    expect(dealsLeft(session.board)).toBe(4);
   });
 });
 
@@ -55,7 +55,7 @@ describe('moves and counting (§4)', () => {
   it('counts a dealt row as one move', () => {
     const dealt = doDeal(createFreeSession(1, freeSeed('deal')))!;
     expect(dealt.moveCount).toBe(1);
-    expect(dealsLeft(dealt.board)).toBe(4);
+    expect(dealsLeft(dealt.board)).toBe(3);
   });
 
   it('returns null for an illegal move and leaves the session untouched', () => {
@@ -75,7 +75,7 @@ describe('moves and counting (§4)', () => {
 });
 
 describe('undo (§8)', () => {
-  it('takes back a dealt row whole — ten cards, one step', () => {
+  it('takes back a dealt row whole — seven cards, one step', () => {
     const start = createFreeSession(1, freeSeed('undo-deal'));
     const dealt = doDeal(start)!;
     const back = undo(dealt)!;
