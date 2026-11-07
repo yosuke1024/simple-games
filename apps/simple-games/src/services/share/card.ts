@@ -1,6 +1,6 @@
 /**
  * The picture that rides along with a share (issue #86; results added
- * 2026-09-03, docs/plans/2026-09-03-share-results-card.md): a 1080×1080 PNG
+ * 2026-09-03, docs/plans/2026-09-03-share-results-card.md): a 1200×900 PNG
  * drawn with Canvas 2D, no dependency, no network request.
  *
  * WHY A DRAWN CARD, AND NOT A SCREENSHOT
@@ -12,7 +12,7 @@
  * into a share. Capturing the DOM instead (html2canvas and its like) means a
  * dependency heavy enough to matter against this app's size budget, built on
  * browser features this app's 2021 WebView floor does not reliably have. A
- * card this module draws itself looks the same for all thirty titles and
+ * card this module draws itself uses the same layout for every title and
  * never carries an ad.
  *
  * WHY SYNCHRONOUS
@@ -31,10 +31,11 @@
  * `useSettings()` or `prefers-color-scheme`; the dark palette simply does not
  * apply here.
  */
-import { LANDING_BASE_URL, SERIES_NAME, seriesColors } from '@simple-games/brand';
-import { GAMES, type GameId } from '../../app/registry';
+import { LANDING_BASE_URL, SERIES_NAME, SERIES_BY_LINE, seriesColors } from '@simple-games/brand';
+import type { GameId } from '../../app/registry';
 import { titleAccentOf } from '../../app/titleAccent';
 import { shareTitleOf, usableDetails, type ShareDetail, type ShareOutcome } from './message';
+import { drawShareBoard, isShareBoardPreview, type ShareBoardPreview } from './board';
 
 /**
  * The drawn card, in the two shapes the two share paths need.
@@ -63,11 +64,20 @@ export interface ShareCardInput {
   details: readonly ShareDetail[];
   /** The translated word drawn on the pill for a real win: `t('shareCardCleared')`. */
   clearedLabel: string;
+  /** Short invitation in the player's language, not a claim about their score. */
+  actionLabel: string;
+  /** The collection's illustration, decoded before the click. Never the run's board. */
+  artwork?: CanvasImageSource | null;
+  /** Only visible cells explicitly supplied by this game. */
+  board?: ShareBoardPreview | null;
+  /** Localized caption distinguishing a real board from an illustrative scene. */
+  visualLabel?: string;
 }
 
-const CANVAS_SIZE = 1080;
-const PADDING = 96;
-const CONTENT_WIDTH = CANVAS_SIZE - PADDING * 2; // 888
+const CANVAS_WIDTH = 1200;
+const CANVAS_HEIGHT = 900;
+const PADDING = 84;
+const CONTENT_WIDTH = CANVAS_WIDTH - PADDING * 2;
 
 /**
  * Bundled via @fontsource and already on screen by the time a result card is
@@ -152,123 +162,133 @@ export function renderShareCard(input: ShareCardInput): ShareCard | null {
   try {
     if (typeof document === 'undefined') return null;
     const canvas = document.createElement('canvas');
-    canvas.width = CANVAS_SIZE;
-    canvas.height = CANVAS_SIZE;
+    canvas.width = CANVAS_WIDTH;
+    canvas.height = CANVAS_HEIGHT;
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
-    const { gameId, outcome, clearedLabel } = input;
-    // The title's own accent, by the same lookup the home-screen shortcut
-    // icon draws with (app/titleAccent.ts) — one tile, two pictures, one colour.
+    const { gameId, outcome, clearedLabel, actionLabel, artwork } = input;
     const accent = titleAccentOf(gameId);
-    const glyph = GAMES.find((game) => game.id === gameId)?.glyph ?? '';
     const title = shareTitleOf(gameId);
+    const facts = usableDetails(input.details);
+    const board = isShareBoardPreview(input.board, gameId) ? input.board : null;
+    const hasVisual = board !== null || Boolean(artwork);
 
-    // Background: the title's own accent, always the light palette (header).
-    ctx.fillStyle = accent.light;
-    ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-
-    // The series tile: the collection home's own mark for this game.
-    const tileSize = 120;
-    ctx.save();
+    // Paper, title ink and the same original illustration as the collection.
+    // No legacy glyph, invented medal, percentile or best-score claim.
     ctx.fillStyle = seriesColors.surface;
-    roundedRectPath(ctx, PADDING, PADDING, tileSize, tileSize, 28);
-    ctx.fill();
-    ctx.restore();
-
-    ctx.save();
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     ctx.fillStyle = accent.light;
-    ctx.font = fontOf(700, 64);
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(glyph, PADDING + tileSize / 2, PADDING + tileSize / 2);
-    ctx.restore();
+    ctx.fillRect(0, 0, CANVAS_WIDTH, 12);
 
-    // "Simple Games", right of the tile and centred on it.
-    ctx.save();
-    ctx.globalAlpha = 0.8;
-    ctx.fillStyle = accent.onLight;
-    ctx.font = fontOf(700, 40);
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(SERIES_NAME, PADDING + tileSize + 24, PADDING + tileSize / 2);
-    ctx.restore();
-
-    // The title, shrunk to fit the content width rather than wrapping.
-    ctx.save();
-    ctx.fillStyle = accent.onLight;
+    ctx.fillStyle = seriesColors.ink;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
-    fitFont(ctx, title, 800, 128, 64, CONTENT_WIDTH);
-    ctx.fillText(title, PADDING, 430);
-    ctx.restore();
+    ctx.font = fontOf(800, 40);
+    ctx.fillText(SERIES_NAME, PADDING, 93);
+    ctx.fillStyle = seriesColors.inkSoft;
+    ctx.font = fontOf(600, 26);
+    ctx.fillText(SERIES_BY_LINE, PADDING + 280, 93);
 
-    // The cleared pill — only where the run actually was a win (ShareOutcome).
+    ctx.fillStyle = accent.light;
+    fitFont(ctx, title, 800, 112, 40, CONTENT_WIDTH);
+    ctx.fillText(title, PADDING, 230, CONTENT_WIDTH);
+
+    // A quiet badge reports only a real clear. Other outcomes stay unlabelled.
     if (outcome === 'completed') {
-      const pillPaddingX = 28;
-      const pillHeight = 72;
-      const pillY = 480;
-      ctx.font = fontOf(700, 44);
-      const pillWidth = ctx.measureText(clearedLabel).width + pillPaddingX * 2;
-
+      fitFont(ctx, clearedLabel, 800, 26, 20, CONTENT_WIDTH - 40);
+      const pillWidth = Math.min(CONTENT_WIDTH, ctx.measureText(clearedLabel).width + 40);
       ctx.save();
-      ctx.globalAlpha = 0.18;
-      ctx.fillStyle = accent.onLight;
-      roundedRectPath(ctx, PADDING, pillY, pillWidth, pillHeight, 36);
+      ctx.globalAlpha = 0.1;
+      ctx.fillStyle = accent.light;
+      roundedRectPath(ctx, PADDING, 258, pillWidth, 46, 23);
       ctx.fill();
       ctx.restore();
-
-      ctx.save();
-      ctx.fillStyle = accent.onLight;
-      ctx.font = fontOf(700, 44);
-      ctx.textAlign = 'left';
+      ctx.fillStyle = accent.light;
       ctx.textBaseline = 'middle';
-      ctx.fillText(clearedLabel, PADDING + pillPaddingX, pillY + pillHeight / 2);
-      ctx.restore();
+      ctx.fillText(clearedLabel, PADDING + 20, 281, pillWidth - 40);
+      ctx.textBaseline = 'alphabetic';
     }
 
-    // The facts of the run, headline first — the same strings the result
-    // screen showed (message.ts usableDetails already trims to three and
-    // drops anything blank). Nothing is drawn here when there are none.
-    const facts = usableDetails(input.details);
-    const columnWidth = facts.length > 0 ? CONTENT_WIDTH / facts.length : 0;
-    facts.forEach((detail, index) => {
-      const columnX = PADDING + index * columnWidth;
-      const maxWidth = columnWidth - 24;
+    // The headline result is large enough to read in a feed. The two supporting
+    // facts stay subordinate, with bounded text widths for every locale.
+    const resultWidth = hasVisual ? 500 : CONTENT_WIDTH;
+    if (facts[0]) {
+      const headline = facts[0];
+      ctx.fillStyle = seriesColors.inkSoft;
+      fitFont(ctx, headline.label ?? '', 700, 32, 22, resultWidth);
+      ctx.fillText(headline.label ?? '', PADDING, 374, resultWidth);
+      ctx.fillStyle = seriesColors.ink;
+      fitFont(ctx, headline.value, 800, 164, 44, resultWidth);
+      ctx.fillText(headline.value, PADDING - 4, 540, resultWidth);
 
-      if (detail.label) {
+      const supporting = facts.slice(1);
+      const columnWidth = resultWidth / Math.max(1, supporting.length);
+      supporting.forEach((detail, index) => {
+        const x = PADDING + index * columnWidth;
+        const width = columnWidth - 28;
+        ctx.fillStyle = seriesColors.inkSoft;
+        fitFont(ctx, detail.label ?? '', 700, 26, 18, width);
+        ctx.fillText(detail.label ?? '', x, 615, width);
+        ctx.fillStyle = seriesColors.ink;
+        fitFont(ctx, detail.value, 800, 52, 26, width);
+        ctx.fillText(detail.value, x, 681, width);
+      });
+    }
+
+    // Games may hand over their visible board cells. Other games use an
+    // illustrative scene; the localized caption makes that distinction clear.
+    // No screen capture, hidden solution or ad can enter either picture.
+    if (hasVisual) {
+      const x = facts.length ? 636 : 360;
+      const y = 328;
+      const width = 480;
+      const height = 360;
+      ctx.save();
+      ctx.globalAlpha = 0.06;
+      ctx.fillStyle = accent.light;
+      roundedRectPath(ctx, x, y, width, height, 40);
+      ctx.fill();
+      ctx.restore();
+      if (board) {
+        drawShareBoard(ctx, board, { x, y, width, height }, accent.light);
+      } else if (artwork) {
+        ctx.drawImage(artwork, x, y, width, height);
+      }
+      if (input.visualLabel) {
         ctx.save();
-        ctx.globalAlpha = 0.72;
-        ctx.fillStyle = accent.onLight;
-        ctx.textAlign = 'left';
+        ctx.fillStyle = seriesColors.inkSoft;
+        ctx.textAlign = 'center';
         ctx.textBaseline = 'alphabetic';
-        fitFont(ctx, detail.label, 700, 34, 22, maxWidth);
-        ctx.fillText(detail.label, columnX, 720);
+        fitFont(ctx, input.visualLabel, 700, 24, 18, width);
+        ctx.fillText(input.visualLabel, x + width / 2, 727, width);
         ctx.restore();
       }
+    }
 
-      ctx.save();
-      ctx.fillStyle = accent.onLight;
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'alphabetic';
-      fitFont(ctx, detail.value, 800, 88, 40, maxWidth);
-      ctx.fillText(detail.value, columnX, 820);
-      ctx.restore();
-    });
-
-    // Footer: the address a stranger could type in by hand, derived from the
-    // landing URL rather than hard-coded so it moves if that address ever
-    // does (expect "pixapps.ai/simple-games").
+    // A clear invitation and a human-readable address survive even when the
+    // image is forwarded without its accompanying text. The actual share URL
+    // still opens this game directly (message.ts).
+    ctx.fillStyle = accent.light;
+    ctx.fillRect(0, 760, CANVAS_WIDTH, 140);
+    ctx.fillStyle = accent.onLight;
+    fitFont(ctx, actionLabel, 800, 42, 24, CONTENT_WIDTH - 100);
+    ctx.fillText(actionLabel, PADDING, 820, CONTENT_WIDTH - 100);
     const landing = new URL(LANDING_BASE_URL);
     const address = `${landing.host}${landing.pathname}`.replace(/\/$/, '');
-    ctx.save();
-    ctx.globalAlpha = 0.72;
-    ctx.fillStyle = accent.onLight;
-    ctx.font = fontOf(700, 36);
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
-    ctx.fillText(address, PADDING, 984);
-    ctx.restore();
+    ctx.font = fontOf(600, 26);
+    ctx.fillText(address, PADDING, 865);
+    ctx.strokeStyle = accent.onLight;
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(1060, 818);
+    ctx.lineTo(1104, 818);
+    ctx.moveTo(1088, 802);
+    ctx.lineTo(1104, 818);
+    ctx.lineTo(1088, 834);
+    ctx.stroke();
 
     const dataUrl = canvas.toDataURL('image/png');
     const base64 = dataUrl.slice(dataUrl.indexOf(',') + 1);

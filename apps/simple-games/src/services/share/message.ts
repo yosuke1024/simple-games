@@ -126,8 +126,9 @@ export function buildShareMessage(
   const game = shareTitleOf(gameId);
   const line = outcome === 'completed' ? t('shareCleared', { game }) : t('sharePlayed', { game });
   const facts = formatDetailLine(details);
-  // With a result to look at, the closing line is a nudge to try; without
-  // one it stays the plain invitation, since there is nothing to beat.
+  // A result invites another person to play, rather than promising the same
+  // board or a comparable score. A loss and an endless run get that same
+  // invitation; neither is presented as a win or a record to beat.
   const closing = facts ? t('shareChallenge') : t('shareInvite');
   const text = facts ? `${line}\n${facts}\n${closing}` : `${line}\n${closing}`;
   return { text, url: gamePlayUrl(gameId) };

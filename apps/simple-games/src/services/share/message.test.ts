@@ -65,7 +65,7 @@ describe('the message', () => {
     expect(lines[1]).toBe(en('shareInvite'));
   });
 
-  it('is three lines and ends with the challenge when there are details', () => {
+  it('is three lines and ends with an invitation when there are details', () => {
     const message = buildShareMessage(
       { gameId: 'sudoku', outcome: 'played', details: [{ label: 'Time', value: '4:32' }] },
       en,
@@ -73,6 +73,35 @@ describe('the message', () => {
     const lines = message.text.split('\n');
     expect(lines).toHaveLength(3);
     expect(lines[2]).toBe(en('shareChallenge'));
+  });
+
+  it('invites a new turn without claiming a win or a comparable board, in every language', () => {
+    for (const locale of Object.keys(catalogs) as Locale[]) {
+      const local = t(locale);
+      const facts = [{ label: 'Score', value: '120' }];
+      const played = buildShareMessage(
+        { gameId: '2048', outcome: 'played', details: facts },
+        local,
+      );
+      const cleared = buildShareMessage(
+        { gameId: 'sudoku', outcome: 'completed', details: facts },
+        local,
+      );
+
+      expect(played.text.split('\n'), locale).toEqual([
+        local('sharePlayed', { game: '2048' }),
+        'Score 120',
+        local('shareChallenge'),
+      ]);
+      expect(cleared.text.split('\n')[2], locale).toBe(local('shareChallenge'));
+      expect(local('shareCardAction').trim(), locale).not.toBe('');
+      expect(local('shareCardAction'), locale).not.toBe('shareCardAction');
+      expect(played.text, locale).not.toContain('{game}');
+    }
+
+    // English is the source for the translations. The invitation names only
+    // the action that is available, not a seed-specific challenge or victory.
+    expect(en('shareChallenge')).toBe('Your turn. Try it in your browser.');
   });
 
   it('puts the details on their own line, joined by " · "', () => {

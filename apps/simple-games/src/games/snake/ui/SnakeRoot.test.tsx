@@ -41,6 +41,12 @@ import { toPersisted } from '../storage/gamePersistence';
 import { SN_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
 import { SnakeRoot } from './SnakeRoot';
 
+// This suite counts Snake's gameplay timers. Optional share-image preparation
+// has its own bounded decoder/lifecycle tests and must not join that clock.
+vi.mock('@/services/gameArtworkImage', () => ({
+  prepareGameArtwork: vi.fn().mockResolvedValue(null),
+}));
+
 const { deviceStore, writes } = vi.hoisted(() => ({
   deviceStore: new Map<string, string>(),
   /** Every key written, in order — what "never on a tick" is measured against. */

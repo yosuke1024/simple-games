@@ -127,10 +127,25 @@ src/
   issue #86)。向きは `ResultAdSlot` と同じ(ゲーム → `ui/components/`)で、
   ゲームが渡すのは `gameId`・**嘘のない結果種別**(`completed` / `played`)・
   `details`(結果画面が表示しているのと同じ翻訳済みラベルと整形済み値、最大 3 件、
-  見出しの数字を先頭に)の 3 つ。文面は `services/share/message.ts`(Pure
+  見出しの数字を先頭に)の 3 つと、任意の `board`(可視のセルのみ)。文面は `services/share/message.ts`(Pure
   TypeScript)、画像カードは `services/share/card.ts`、share sheet と clipboard は
   `services/share/share.ts` が持つ。共有が言えるのは結果画面が言ったことだけ
   (ゲームが同じ文字列を渡す) —— 履歴(自己ベスト・通算成績)は渡さない。
+  2026-11-07 に画像を 1200×900 の紙の下地・大きな主記録・補足 2 件・任意の誘いへ改定。
+  実盤面はゲーム内の `ui/shareBoard.ts` がその局の可視セルだけへ投影し、共有の
+  `services/share/board.ts` が同期で描く。共通側へ session・seed・hidden answer を渡さず、
+  他ゲームの状態も読まない。初期対応は 2048 / Minesweeper / Reversi / Connect Four /
+  Gomoku / Crown Grid。ゲーム内の色と配置を保つ。
+  Minesweeper / Crown Grid はデイリーを渡さず、紹介用の絵へ戻す。
+  紹介イラストは `ShareGameArtwork` を `services/gameArtworkImage.ts` の share variant で
+  ローカルに画像化する。4 本の専用シーンと、それ以外の `GameArtwork` へのフォールバックで、
+  ゲーム本体の import や別の PNG 素材は増やさない。実盤面がある場合は準備を省略する。
+  紹介イラストは結果表示中に準備し、アンマウント・ゲーム変更で
+  中断する。クリック中には非同期処理を挟まず、準備が間に合わなければ絵なしの
+  記録カードを即座に共有する。画像自体が作れなければ従来どおり本文とリンクを渡す。
+  一時 Blob URL は成功・失敗・中断・2 秒のデコード期限で解放し、永続画像キャッシュは持たない。
+  ショートカットは引き続き collection variant を使い、棚と同じ図を維持する。
+  実盤面と紹介イラストにはそれぞれ翻訳済みの判別ラベルを付ける。
   ゲーム固有の共有フォーマッタを 30 個作らないのは変わらない: 渡す文字列は
   結果画面が既に整形しているものそのままである。
   `completed` を使ってよいのは勝ち・クリアが確定した結果だけで、敗北・引き分け・
@@ -143,11 +158,9 @@ src/
   `https://localhost` で `undefined`)。それまでの Android は共有シートが一度も
   開かず、クリップボードへ落ちていた。プラグインが失敗した場合はブラウザ側の
   梯子(Web Share → clipboard)へそのまま落ちるので、退化はしない。
-  **Android だけは文面と URL を自前で 1 つの text にまとめ、`url` を渡さない**
-  —— プラグインは両方渡すと「本文 + 半角スペース + URL」に連結するが、X の
-  Android 受け口は画像が付くとその末尾 URL を捨てる(2026-09-04 の実機で確認。
-  URL が独立行だったクリップボード経由の文面は残っていた)。iOS は URL を
-  別項目のまま渡す(共有シートが本物の URL として扱うため)。
+  **Android / iOS とも文面と URL を自前で 1 つの text にまとめ、`url` を渡さない**。
+  画像付きの X 投稿で別項目の URL が失われるのを防ぐため、リンクを独立行に置く
+  (`services/share/share.ts` の既存実装に合わせ、2026-11-07 に記述を訂正)。
   共有は報酬・機能解放・再催促を一切生まない
   ([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「初期リリースで実装しないもの」)。
 - Analytics / Remote Config / トラッキングのサービスは**アプリの成果物に

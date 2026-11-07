@@ -151,7 +151,10 @@ export const zhHant: Messages = {
   shareCleared: '我在 Simple Games 裡通關了 {game}。',
   sharePlayed: '我在 Simple Games 裡玩了 {game}。',
   shareInvite: '在瀏覽器裡就能直接玩。',
-  shareChallenge: '你也來試試?',
+  shareChallenge: '換你了，打開瀏覽器試試吧。',
+  shareCardAction: '換你試試',
+  shareCardBoard: '本局盤面',
+  shareCardPreview: '遊戲示意',
   shareCardCleared: '破關!',
   shareCopied: '已複製連結',
 

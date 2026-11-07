@@ -14,6 +14,7 @@ import { useResultReveal } from '@/ui/useResultReveal';
 import type { ReversiSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 import type { Stats } from '../../storage/schemas';
+import { shareBoardOf } from '../shareBoard';
 
 export interface ReversiResultOverlayProps {
   session: ReversiSession;
@@ -99,6 +100,7 @@ export function ReversiResultOverlay({
           // The final count, win or lose or draw — it is the one honest
           // summary of a finished game, never a streak.
           details={details}
+          board={shareBoardOf(session)}
         />
         <ClubResultAction
           gameId="reversi"

@@ -13,6 +13,7 @@ import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
 import { boardDigestOf, type CrownGridSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
+import { shareBoardOf } from '../shareBoard';
 
 export interface CrownGridResultOverlayProps {
   session: CrownGridSession;
@@ -108,7 +109,12 @@ export function CrownGridResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="crown-grid" outcome="completed" details={details} />
+        <ShareAction
+          gameId="crown-grid"
+          outcome="completed"
+          details={details}
+          board={shareBoardOf(session)}
+        />
         <ClubResultAction
           gameId="crown-grid"
           outcome="completed"

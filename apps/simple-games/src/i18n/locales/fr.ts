@@ -159,7 +159,10 @@ export const fr: Messages = {
   shareCleared: 'J’ai terminé {game} sur Simple Games.',
   sharePlayed: 'J’ai joué à {game} sur Simple Games.',
   shareInvite: 'Vous pouvez y jouer directement dans le navigateur.',
-  shareChallenge: 'Envie d’essayer ?',
+  shareChallenge: 'À vous de jouer. Essayez dans votre navigateur.',
+  shareCardAction: 'À vous de jouer',
+  shareCardBoard: 'Votre plateau',
+  shareCardPreview: 'Aperçu du jeu',
   shareCardCleared: 'Terminé !',
   shareCopied: 'Lien copié',
 

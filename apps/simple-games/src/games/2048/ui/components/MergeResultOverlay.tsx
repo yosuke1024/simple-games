@@ -18,6 +18,7 @@ import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
 import { largestTile, type Game2048Session } from '../../game';
 import type { LastResult } from '../../state/GameContext';
+import { shareBoardOf } from '../shareBoard';
 
 export interface MergeResultOverlayProps {
   session: Game2048Session;
@@ -108,7 +109,12 @@ export function MergeResultOverlay({
               {t('backHome')}
             </button>
           </div>
-          <ShareAction gameId="2048" outcome="played" details={details} />
+          <ShareAction
+            gameId="2048"
+            outcome="played"
+            details={details}
+            board={shareBoardOf(session)}
+          />
           <ClubResultAction
             gameId="2048"
             outcome="completed"
@@ -159,6 +165,7 @@ export function MergeResultOverlay({
           gameId="2048"
           outcome="completed"
           details={[{ label: t('score'), value: String(session.score) }]}
+          board={shareBoardOf(session)}
         />
       </div>
       <ResultAdSlot />

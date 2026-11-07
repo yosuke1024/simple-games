@@ -10,12 +10,8 @@
  * returns null so Android can use the collection's launcher icon instead.
  */
 import { seriesColors } from '@simple-games/brand';
-import { createElement } from 'react';
-import { flushSync } from 'react-dom';
-import { createRoot } from 'react-dom/client';
 import type { GameDefinition } from '../../app/registry';
-import { titleAccentOf } from '../../app/titleAccent';
-import { GameArtwork } from '../../ui/components/GameArtwork';
+import { gameArtworkSvg } from '../gameArtworkImage';
 
 /** 108dp at xxxhdpi: the launcher owns the mask over this full-bleed layer. */
 const FULL_BLEED = 432;
@@ -26,31 +22,6 @@ const FULL_BLEED = 432;
 const ART_WIDTH = 288;
 const ART_HEIGHT = 216;
 const DECODE_TIMEOUT_MS = 2000;
-
-function artworkSvg(game: GameDefinition): string | null {
-  const host = document.createElement('div');
-  const root = createRoot(host);
-  try {
-    flushSync(() => root.render(createElement(GameArtwork, { id: game.id })));
-    const svg = host.querySelector('svg');
-    if (!svg) return null;
-    const accent = titleAccentOf(game.id).light;
-    // An SVG decoded as an Image has no access to the page's inherited CSS.
-    // Resolve both tokens explicitly rather than depending on its current theme.
-    for (const node of [svg, ...svg.querySelectorAll('[fill], [stroke]')]) {
-      for (const name of ['fill', 'stroke']) {
-        const value = node.getAttribute(name);
-        if (value === 'currentColor') node.setAttribute(name, accent);
-        if (value === 'var(--surface)') node.setAttribute(name, seriesColors.surface);
-      }
-    }
-    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-    svg.setAttribute('font-family', 'Nunito, ui-rounded, system-ui, sans-serif');
-    return new XMLSerializer().serializeToString(svg);
-  } finally {
-    root.unmount();
-  }
-}
 
 function decodeImage(image: HTMLImageElement, source: string): Promise<boolean> {
   return new Promise((resolve) => {
@@ -85,7 +56,7 @@ export async function renderHomeShortcutIcon(game: GameDefinition): Promise<stri
     canvas.height = FULL_BLEED;
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
-    const source = artworkSvg(game);
+    const source = gameArtworkSvg(game.id);
     if (!source) return null;
     objectUrl = URL.createObjectURL(new Blob([source], { type: 'image/svg+xml' }));
     image = new Image();

@@ -9,6 +9,7 @@ import { useSettings } from '@/state/SettingsContext';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
+import { shareBoardOf } from '../shareBoard';
 import type { GomokuSession } from '../../game';
 import type { Stats } from '../../storage/schemas';
 
@@ -68,12 +69,12 @@ export function GomokuResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        {/* No per-run figure is shown here — only the standing record note,
-            which is history and never shared. */}
+        {/* Share the visible final board, never the standing record or history. */}
         <ShareAction
           gameId="gomoku"
           outcome={session.status === 'won' ? 'completed' : 'played'}
           details={[]}
+          board={shareBoardOf(session)}
         />
       </div>
       <ResultAdSlot />

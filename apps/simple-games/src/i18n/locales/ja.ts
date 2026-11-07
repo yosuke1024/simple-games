@@ -157,7 +157,10 @@ export const ja: Messages = {
   shareCleared: 'Simple Games で {game} をクリアしました。',
   sharePlayed: 'Simple Games で {game} を遊びました。',
   shareInvite: 'ブラウザですぐ遊べます。',
-  shareChallenge: 'あなたも挑戦してみて。',
+  shareChallenge: '次はあなたも。ブラウザですぐ遊べます。',
+  shareCardAction: 'あなたも挑戦',
+  shareCardBoard: '今回の盤面',
+  shareCardPreview: 'ゲームのイメージ',
   shareCardCleared: 'クリア!',
   shareCopied: 'リンクをコピーしました',
 
