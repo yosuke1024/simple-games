@@ -28,6 +28,8 @@ export const SHELL_BACKUP_KEYS: readonly string[] = [
   STORAGE_KEYS.settings,
   // The pinned shelf. A choice, so it moves with the person who made it.
   STORAGE_KEYS.favorites,
+  // The category layout is another explicit choice of the player.
+  STORAGE_KEYS.categoryDisclosure,
   // The recently-played shortcuts. A history rather than a choice, and it
   // travels for the same reason the shelf does: arriving on a new device to a
   // home that looks like the old one is the whole point of the feature.

@@ -225,7 +225,7 @@ gate を維持することを門にする。技術の正本と実機検証条件
 
 ## コレクションホーム
 
-収録数が増えても使えることが設計条件(`CollectionHomeScreen.tsx`)。**全ゲームはグリッド**(スマホ 2 列、広い画面で 3〜5 列)で、カテゴリ別セクションに分ける。**説明文はホームに置かない**——Quick Rules と Landing Page が担う。**「最近遊んだ」**(上限 2・0 件なら節ごと非表示・時刻や進捗を持たない)と**「お気に入り」**(留めた順・3 経路とも同じ `sg.favorites` を書く・お気に入りは最近遊んだから落とす)がグリッドの上に乗る。**「ホーム画面ショートカット」**(Android のみ。ショートカットからの起動だけは、中断中の局がちょうど 1 つのときに限りその盤面へ直接入る——判定はシェルではなく各ゲームが自分の保存領域だけを見て行い、`src/test/shortcutResumeWiring.test.ts` が機械的に見る。issue #113)、**「ホーム画面の Quick Actions」**(iOS のみ。お気に入りの先頭 4 本をアプリアイコン長押しのメニューに映す。項目は Android のショートカットと同じ `?game=<id>` の住所を運び、起動経路も同じ 1 本。issue #114)と**ゲーム名の検索**(常設の検索ボックスは置かない・一致は表示中タイトルへの部分一致のみ)も同じ画面の機能で、いずれも状態表示ではなく近道であることを繰り返し原則にする。
+収録数が増えても使えることが設計条件(`CollectionHomeScreen.tsx`)。カテゴリは見出しで開閉でき、状態を端末内に記憶する(初回は全開・一括開閉あり)。**全ゲームはグリッド**(スマホ 2 列、広い画面で 3〜5 列)で、カテゴリ別セクションに分ける。**説明文はホームに置かない**——Quick Rules と Landing Page が担う。**「最近遊んだ」**(上限 2・0 件なら節ごと非表示・時刻や進捗を持たない)と**「お気に入り」**(留めた順・3 経路とも同じ `sg.favorites` を書く・お気に入りは最近遊んだから落とす)がグリッドの上に乗る。**「ホーム画面ショートカット」**(Android のみ。ショートカットからの起動だけは、中断中の局がちょうど 1 つのときに限りその盤面へ直接入る——判定はシェルではなく各ゲームが自分の保存領域だけを見て行い、`src/test/shortcutResumeWiring.test.ts` が機械的に見る。issue #113)、**「ホーム画面の Quick Actions」**(iOS のみ。お気に入りの先頭 4 本をアプリアイコン長押しのメニューに映す。項目は Android のショートカットと同じ `?game=<id>` の住所を運び、起動経路も同じ 1 本。issue #114)と**ゲーム名の検索**(常設の検索ボックスは置かない・一致は表示中タイトルへの部分一致のみ)も同じ画面の機能で、いずれも状態表示ではなく近道であることを繰り返し原則にする。
 
 → 全文: [architecture/collection-home.md](architecture/collection-home.md)
 
@@ -267,7 +267,7 @@ gate を維持することを門にする。技術の正本と実機検証条件
 
 ## バックアップと復元
 
-アカウント・クラウドセーブ・バックエンドを持たない以上、機種変更で進行が全部消える摩擦は**ユーザーが自分で運べる 1 ファイル**で引き受ける(issue #160、実装は `src/backup/`)。ファイルは `formatVersion` / `createdAt` / `appVersion` / `platform` / `data`(ストレージキー → パース済み JSON)の JSON で、**`appVersion` と `platform` は参考情報にすぎず復元可否を決めない** —— Android ↔ iOS ↔ Web を同じファイルで往復できることが目的である。運ぶ対象はレジストリの `storageKeys` とシェルの `sg.settings` / `sg.favorites` / `sg.recent`。**`sg.iap` は絶対に入れない**(ファイルはコピーできるので、入れた時点で「コピーできる買い切り」になる。docs/ADS_POLICY.md)。**レコードの検証はバックアップ層ではなく各レコードの `SchemaDef` が行い**、到達経路は必須フィールド `GameDefinition.loadStorageSchemas` —— 入れ忘れがコンパイルエラーになる。復元は `readBackup`(何も書かない・全件検証)と `applyBackup`(検証済みのものしか受け取れない)に分かれ、snapshot → 書き込み → **読み直して照合** → 不一致なら rollback。ファイルに無いキーは消す(**merge は作らない**)。未知キーと新しい `formatVersion` は黙って捨てず拒否する。Export / Restore に通信は無い。
+アカウント・クラウドセーブ・バックエンドを持たない以上、機種変更で進行が全部消える摩擦は**ユーザーが自分で運べる 1 ファイル**で引き受ける(issue #160、実装は `src/backup/`)。ファイルは `formatVersion` / `createdAt` / `appVersion` / `platform` / `data`(ストレージキー → パース済み JSON)の JSON で、**`appVersion` と `platform` は参考情報にすぎず復元可否を決めない** —— Android ↔ iOS ↔ Web を同じファイルで往復できることが目的である。運ぶ対象はレジストリの `storageKeys` とシェルの `sg.settings` / `sg.favorites` / `sg.recent` / `sg.categoryDisclosure`。**`sg.iap` は絶対に入れない**(ファイルはコピーできるので、入れた時点で「コピーできる買い切り」になる。docs/ADS_POLICY.md)。**レコードの検証はバックアップ層ではなく各レコードの `SchemaDef` が行い**、到達経路は必須フィールド `GameDefinition.loadStorageSchemas` —— 入れ忘れがコンパイルエラーになる。復元は `readBackup`(何も書かない・全件検証)と `applyBackup`(検証済みのものしか受け取れない)に分かれ、snapshot → 書き込み → **読み直して照合** → 不一致なら rollback。ファイルに無いキーは消す(**merge は作らない**)。未知キーと新しい `formatVersion` は黙って捨てず拒否する。Export / Restore に通信は無い。
 
 → 全文: [architecture/backup.md](architecture/backup.md)
 

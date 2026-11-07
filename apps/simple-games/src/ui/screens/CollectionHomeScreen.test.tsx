@@ -106,6 +106,10 @@ import {
   recordGameOpened,
   resetRecentGamesForTesting,
 } from '../../app/recentGames';
+import {
+  initCategoryDisclosure,
+  resetCategoryDisclosureForTesting,
+} from '../../app/categoryDisclosure';
 import { GAMES, GAME_CATEGORIES, type GameId } from '../../app/registry';
 import { en } from '../../i18n/locales/en';
 import { SettingsProvider } from '../../state/SettingsContext';
@@ -139,6 +143,7 @@ beforeEach(() => {
   appMock.App.exitApp.mockClear();
   resetRecentGamesForTesting();
   resetFavoriteGamesForTesting();
+  resetCategoryDisclosureForTesting();
   // Off by default, like every build the launcher cannot pin to.
   homeShortcutsAvailable.mockReset().mockReturnValue(false);
   requestHomeShortcut.mockReset().mockResolvedValue(true);
@@ -189,7 +194,11 @@ const cardText = (element: Element) => {
   copy.querySelectorAll('[aria-hidden="true"]').forEach((art) => art.remove());
   return copy.textContent;
 };
-const cardsIn = (region: HTMLElement) => within(region).getAllByRole('button').map(cardText);
+const cardsIn = (region: HTMLElement) =>
+  within(region)
+    .getAllByRole('button')
+    .filter((button) => button.matches('.game-cell, .game-row'))
+    .map(cardText);
 const cardFor = (game: (typeof GAMES)[number]) =>
   `${game.title}${game.channel === 'web-beta' ? ' BETA' : ''}`;
 /** What the card is called: the title, plus the BETA mark a web-beta title wears. */
@@ -209,11 +218,10 @@ const sectionedList = GAME_CATEGORIES.flatMap((category) => [
 describe('the game list', () => {
   it('shows every game exactly once on both builds', () => {
     renderHome();
-    for (const game of shown) {
-      // getBy* would also throw on duplicates, but spell the intent out: a
-      // game must not appear under two categories.
-      expect(screen.getAllByRole('button', { name: nameOf(game) })).toHaveLength(1);
-    }
+    // Compare the whole multiset in one accessibility query, including duplicates.
+    expect(cardsIn(screen.getByRole('navigation', { name: 'Games' })).sort()).toEqual(
+      shown.map(cardFor).sort(),
+    );
   });
 
   it('groups the grid by category, keeping registry order within each section', () => {
@@ -222,7 +230,7 @@ describe('the game list', () => {
     // Headings and cards in document order. A game whose category is missing
     // from GAME_CATEGORIES would be absent here; one listed under a duplicate
     // category id would appear twice — either way this comparison fails.
-    const rendered = Array.from(list.querySelectorAll('h2, button')).map(cardText);
+    const rendered = Array.from(list.querySelectorAll('.category-name, .game-cell')).map(cardText);
     expect(rendered).toEqual(sectionedList);
   });
 });
@@ -1608,5 +1616,75 @@ describe("PixApps' other apps", () => {
     expect(
       await screen.findByRole('region', { name: en.moreFromPixAppsTitle }),
     ).toBeInTheDocument();
+  });
+});
+
+describe('collapsible categories', () => {
+  it('supports keyboard disclosure, keeps counts, and restores choices on remount', async () => {
+    const kv = createMemoryKV();
+    await initCategoryDisclosure(kv);
+    const user = userEvent.setup();
+    const view = renderHome();
+    const toggle = screen.getByRole('button', { name: /^Logic \d+$/ });
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    toggle.focus();
+    await user.keyboard('{Enter}');
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('button', { name: 'Sudoku' })).toBeNull();
+    expect(toggle).toHaveFocus();
+    expect(document.getElementById(toggle.getAttribute('aria-controls')!)).toHaveAttribute(
+      'hidden',
+    );
+    view.unmount();
+    await initCategoryDisclosure(kv);
+    renderHome();
+    expect(screen.getByRole('button', { name: /^Logic \d+$/ })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    expect(screen.getByRole('button', { name: /^Cards \d+$/ })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+  });
+
+  it('searches closed shelves without changing their saved layout', async () => {
+    await initCategoryDisclosure(createMemoryKV());
+    const user = userEvent.setup();
+    renderHome();
+    await user.click(screen.getByRole('button', { name: en.collapseAllCategories }));
+    expect(screen.queryByRole('button', { name: 'Sudoku' })).toBeNull();
+    await user.click(screen.getByRole('button', { name: en.searchGames }));
+    await user.type(screen.getByRole('searchbox'), 'Sudoku');
+    expect(screen.getByRole('button', { name: 'Sudoku' })).toBeVisible();
+    await user.keyboard('{Escape}');
+    expect(screen.getByRole('button', { name: /^Logic \d+$/ })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    await user.click(screen.getByRole('button', { name: en.expandAllCategories }));
+    expect(cardsIn(screen.getByRole('navigation', { name: 'Games' })).sort()).toEqual(
+      shown.map(cardFor).sort(),
+    );
+  });
+
+  it('marks additions to closed shelves until opened, without marking a fresh collapse', async () => {
+    await initCategoryDisclosure(
+      createMemoryKV({
+        'sg.categoryDisclosure': JSON.stringify({
+          schemaVersion: 1,
+          collapsed: [{ id: 'logic', gameIds: ['sudoku'] }],
+        }),
+      }),
+    );
+    const user = userEvent.setup();
+    renderHome();
+    const toggle = screen.getByRole('button', { name: /^Logic \d+ New$/ });
+    await user.click(screen.getByRole('button', { name: en.collapseAllCategories }));
+    expect(toggle).toHaveTextContent('New');
+    await user.click(toggle);
+    expect(toggle).not.toHaveTextContent('New');
+    await user.click(toggle);
+    expect(toggle).not.toHaveTextContent('New');
   });
 });

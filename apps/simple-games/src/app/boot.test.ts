@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   initReview: vi.fn<() => Promise<void>>(),
   initRecentGames: vi.fn<() => Promise<void>>(),
   initFavoriteGames: vi.fn<() => Promise<void>>(),
+  initCategoryDisclosure: vi.fn<() => Promise<void>>(),
   initShortcutLaunch: vi.fn<() => Promise<void>>(),
   initHomeShortcuts: vi.fn<() => Promise<void>>(),
   initQuickActions: vi.fn<() => Promise<void>>(),
@@ -35,6 +36,7 @@ vi.mock('../services/network', () => ({ initNetwork: mocks.initNetwork }));
 vi.mock('../services/review', () => ({ initReview: mocks.initReview }));
 vi.mock('../storage/repo', () => ({ loadRecord: mocks.loadRecord }));
 vi.mock('./recentGames', () => ({ initRecentGames: mocks.initRecentGames }));
+vi.mock('./categoryDisclosure', () => ({ initCategoryDisclosure: mocks.initCategoryDisclosure }));
 vi.mock('./favoriteGames', () => ({ initFavoriteGames: mocks.initFavoriteGames }));
 vi.mock('./shortcutLaunch', () => ({ initShortcutLaunch: mocks.initShortcutLaunch }));
 vi.mock('../services/homeShortcut/homeShortcut', () => ({
@@ -55,6 +57,7 @@ beforeEach(() => {
   mocks.initReview.mockReset().mockResolvedValue(undefined);
   mocks.initRecentGames.mockReset().mockResolvedValue(undefined);
   mocks.initFavoriteGames.mockReset().mockResolvedValue(undefined);
+  mocks.initCategoryDisclosure.mockReset().mockResolvedValue(undefined);
   mocks.initShortcutLaunch.mockReset().mockResolvedValue(undefined);
   mocks.initHomeShortcuts.mockReset().mockResolvedValue(undefined);
   mocks.initQuickActions.mockReset().mockResolvedValue(undefined);
@@ -72,6 +75,7 @@ describe('initShellState (issue #96)', () => {
     expect(mocks.initReview).toHaveBeenCalledTimes(1);
     expect(mocks.initRecentGames).toHaveBeenCalledTimes(1);
     expect(mocks.initFavoriteGames).toHaveBeenCalledTimes(1);
+    expect(mocks.initCategoryDisclosure).toHaveBeenCalledTimes(1);
     // The shortcut steps (issues #110 and #114): which game a home-screen
     // shortcut launched us into, whether the launcher pins at all, and the
     // iOS mirror of the favourites onto the quick actions.
@@ -100,6 +104,7 @@ describe('initShellState (issue #96)', () => {
     await expect(initShellState()).resolves.toEqual(storedSettings);
     expect(mocks.initRecentGames).toHaveBeenCalledTimes(1);
     expect(mocks.initFavoriteGames).toHaveBeenCalledTimes(1);
+    expect(mocks.initCategoryDisclosure).toHaveBeenCalledTimes(1);
     expect(mocks.initShortcutLaunch).toHaveBeenCalledTimes(1);
     expect(mocks.initHomeShortcuts).toHaveBeenCalledTimes(1);
     expect(mocks.initQuickActions).toHaveBeenCalledTimes(1);
@@ -125,6 +130,7 @@ describe('initShellState (issue #96)', () => {
     mocks.initReview.mockImplementation(failing);
     mocks.initRecentGames.mockImplementation(failing);
     mocks.initFavoriteGames.mockImplementation(failing);
+    mocks.initCategoryDisclosure.mockImplementation(failing);
     mocks.initShortcutLaunch.mockImplementation(failing);
     mocks.initHomeShortcuts.mockImplementation(failing);
     mocks.initQuickActions.mockImplementation(failing);

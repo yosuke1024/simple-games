@@ -14,6 +14,7 @@ Nearby Play は下表の KV / Preferences に保存しない。専用 native plu
 | `sg.iap`        | 広告削除購入状態のローカルキャッシュ                                                                                                                                                                                                 |
 | `sg.review`     | ストアレビュー導線の状態(完了数 / 表示回数 / 解決済みフラグ)                                                                                                                                                                         |
 | `sg.recent`     | 「最近遊んだ」のゲーム id(新しい順・最大 2 件)                                                                                                                                                                                       |
+| `sg.categoryDisclosure` | 閉じたカテゴリのidと、閉じる時点のゲームid一覧(schemaVersion 1)。全開が既定。バックアップ・ローカルデータ削除の対象。 |
 | `sg.favorites`  | 「お気に入り」に固定したゲーム id(**留めた順**・上限は実質なし)                                                                                                                                                                      |
 | `sg.club`       | Club House の接続(Club ごとの endpoint / メンバートークン / ニックネーム。**バックアップに運ばない**・ローカルデータ削除で消える。[club.md](club.md) §4-1)                                                                           |
 | `sg.clubOutbox` | Club House の未送信の結果(約 100 件・統合のあと古い順に捨てる。ランキング・デイリー・旧形式の 3 種の要素。**バックアップに運ばない**・ローカルデータ削除で消える。club.md §4-2)                                                      |

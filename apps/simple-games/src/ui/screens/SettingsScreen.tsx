@@ -23,6 +23,7 @@ import packageJson from '../../../package.json';
 import { currentPlatform, pickBackupFile, saveBackupFile } from '../../backup/file';
 import type { BackupProblem, PreparedRestore } from '../../backup/restore';
 import { getFavoriteGames, initFavoriteGames, toggleFavoriteGame } from '../../app/favoriteGames';
+import { initCategoryDisclosure } from '../../app/categoryDisclosure';
 import { initRecentGames } from '../../app/recentGames';
 import { availableGames } from '../../app/gameChannel';
 import { GAMES, type GameId } from '../../app/registry';
@@ -247,6 +248,7 @@ export function SettingsScreen({ onBack, onOpenClub, onResetNearby }: SettingsSc
     replaceSettings(await loadRecord(settingsSchema));
     await initRecentGames();
     await initFavoriteGames();
+    await initCategoryDisclosure();
     setFavoriteIds(getFavoriteGames());
   };
 

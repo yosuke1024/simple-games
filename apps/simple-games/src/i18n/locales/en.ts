@@ -132,6 +132,9 @@ export const en = {
   searchNoResults: 'No games match.',
   // Section headings on the collection home, one per GameCategoryId
   // (app/registry.ts GAME_CATEGORIES)
+  expandAllCategories: 'Expand all',
+  collapseAllCategories: 'Collapse all',
+  categoryNewGames: 'New',
   categoryLogic: 'Logic',
   categoryCards: 'Cards',
   categoryPuzzle: 'Puzzle',
