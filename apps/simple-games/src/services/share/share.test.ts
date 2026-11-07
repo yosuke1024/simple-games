@@ -33,8 +33,8 @@ import type { ShareCard } from './card';
 import { shareMessageAsText, type ShareMessage } from './message';
 
 const message: ShareMessage = {
-  text: 'I played Sudoku on Simple Games.\nYou can play it right in your browser.',
-  url: 'https://pixapps.ai/simple-games/play/?game=sudoku',
+  text: 'I played Sudoku on Simple Games.\nGet the Simple Games app.',
+  url: 'https://pixapps.ai/simple-games/share/sudoku/',
 };
 
 function stubNavigator(navigatorLike: Record<string, unknown>): void {

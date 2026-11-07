@@ -46,12 +46,18 @@ export const LANDING_BASE_URL = 'https://pixapps.ai/simple-games';
  * game to open carried in `?game=<id>` (issue #83, `app/webRoute.ts`).
  *
  * A shared URL rather than an app-local one because it is the address the
- * whole product hands out — the app's share action builds a link at a game
- * from it, and the landing site links here from every guide. The trailing
+ * browser and launcher shortcuts use; the landing site links here from guides.
+ * Result sharing uses SHARE_BASE_URL instead. The trailing
  * slash is part of it: the page is served from a directory, and dropping it
  * costs a redirect on every shared link.
  */
 export const WEB_PLAY_URL = `${LANDING_BASE_URL}/play/`;
+
+/** Shared HTTPS links open the native game, or its install landing page. */
+export const SHARE_BASE_URL = `${LANDING_BASE_URL}/share/`;
+
+/** Explicit "Open in app" fallback; never used for automatic redirects. */
+export const APP_LINK_SCHEME = 'com.pixapps.simplegames';
 
 /**
  * The privacy policy and terms of use. These pages are the SINGLE SOURCE for
