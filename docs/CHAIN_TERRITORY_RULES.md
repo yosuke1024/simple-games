@@ -35,7 +35,7 @@ GameHomeHeader / GameArtwork / WebBetaNotice / BannerSlot / ResultAdSlot / Share
 
 2026-11-03、公開Webの完全一致検索でChain Territory / Marble Weave / River Cargoという
 同名ゲームは確認できなかった。Prism LinesとRiver Passageは同名アプリがあったため採用しない。
-検索は商標クリアランスではなく、商標DB・両ストアの全件調査は正式収録前に行う。
+検索は商標クリアランスではなく、商標DB・両ストアの全件調査は正式収録前に行う。2026-11-07: 1.8.2 の本番公開前に商標DB・両ストアを調べた(両ストアの検索、USPTO、J-PlatPat、TMview、WIPO は一部。各DBは既知の名前で検索が効くことを確かめてから0件と判断)。同名・紛らわしい名前のアプリ・ゲーム・商標は見つからず、題はそのまま使う(低リスク。法的クリアランスではない。WIPO の完全一致検索・EUIPO の直接検索など、エラーで実行できなかったものがある)。
 盤面・キャラクター・図は自作SVG/CSS、音は既存サービスのみ。既存作品の素材・コードは使わない。
 検証・公開記録は docs/plans/2026-11-03-three-more-games-71-73.md に残す。
 

@@ -47,7 +47,7 @@ ShareActionを既存と同じ形で使う。タイトルは英語名で統一、
 2026-11-03に公開Web検索を行った。仮題Cannon Duel/Hidden Fleet/Ice Trailには同名ゲームが
 見つかったため採用せず、一般語を組み合わせた独自名に変更した。新名の完全一致検索では
 同名ゲームの結果を確認できなかった。これは商標クリアランスではない。商標DB・両ストアの
-確認は正式収録前に行う。既存作品の画面、キャラクター、音、素材、コードは使用しない。
+確認は正式収録前に行う。2026-11-07: 1.8.2 の本番公開前に商標DB・両ストアを調べた(両ストアの検索、USPTO、J-PlatPat、TMview、WIPO は一部。各DBは既知の名前で検索が効くことを確かめてから0件と判断)。同名・紛らわしい名前のアプリ・ゲーム・商標は見つからず、題はそのまま使う(低リスク。法的クリアランスではない。WIPO の完全一致検索・EUIPO の直接検索など、エラーで実行できなかったものがある)。既存作品の画面、キャラクター、音、素材、コードは使用しない。
 図は自作SVG/CSS、音は既存サービスだけ。名称確認元:
 https://twozygames.itch.io/cannon-duel / https://tobs241.itch.io/hiddenfleet /
 https://www.reddit.com/r/WebGames/comments/1xciaih/ice_trail_slide_until_a_wall_stops_you_collect_3/
