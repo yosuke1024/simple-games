@@ -161,6 +161,8 @@ export const ja: Messages = {
   sharePlayed: 'Simple Games で {game} を遊びました。',
   shareInvite: 'Simple Games アプリはこちら。',
   shareChallenge: '次はあなたも。Simple Games アプリで遊べます。',
+  shareInviteBrowser: 'ブラウザですぐ遊べます。',
+  shareChallengeBrowser: '次はあなたも。ブラウザですぐ遊べます。',
   shareCardAction: 'あなたも挑戦',
   shareCardBoard: '今回の盤面',
   shareCardPreview: 'ゲームのイメージ',

@@ -155,6 +155,8 @@ export const zhHant: Messages = {
   sharePlayed: '我在 Simple Games 裡玩了 {game}。',
   shareInvite: '下載 Simple Games 應用程式。',
   shareChallenge: '換你了，來 Simple Games 應用程式裡玩吧。',
+  shareInviteBrowser: '在瀏覽器裡就能直接玩。',
+  shareChallengeBrowser: '換你了，打開瀏覽器試試吧。',
   shareCardAction: '換你試試',
   shareCardBoard: '本局盤面',
   shareCardPreview: '遊戲示意',

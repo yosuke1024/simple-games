@@ -761,3 +761,10 @@ Crazy Eights / Durak / Spades / Texas Hold’em / Blackjack / Indian Rummy の
 キーの整合と共有文への反映を自動検査する。人間・母語話者の自然さの確認は未実施。
 出す前のレビューで、ja は他のキーと同じ「Simple Games アプリ」(半角空白あり)にそろえ、ko の
 `shareChallenge` は UI で避ける二人称「당신」を外して旧文と同じ「직접 도전해 보세요」で始めた。
+
+## 2026-11-08: Web 先行ゲームの共有はブラウザ案内のまま
+
+Web 先行(registry の `channel: 'web-beta'`)のゲームはアプリに無いので、その共有だけはブラウザ版の住所と
+ブラウザ案内を残す。シェルに `shareInviteBrowser` / `shareChallengeBrowser` を足し、14 言語とも 1.8.3 まで
+`shareInvite` / `shareChallenge` として出していた文をそのまま戻した(新しい訳は作っていない)。
+高リスクキーの変更はない。母語話者による確認は、もとの文と同じく未実施。

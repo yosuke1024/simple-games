@@ -161,6 +161,8 @@ export const tr: Messages = {
   sharePlayed: 'Simple Games’te {game} oynadım.',
   shareInvite: 'Simple Games uygulamasını indir.',
   shareChallenge: 'Sıra sende. Simple Games uygulamasında oyna.',
+  shareInviteBrowser: 'Doğrudan tarayıcıda oynayabilirsin.',
+  shareChallengeBrowser: 'Sıra sende. Tarayıcında dene.',
   shareCardAction: 'Sıra sende',
   shareCardBoard: 'Bu oyunun tahtası',
   shareCardPreview: 'Oyun önizlemesi',

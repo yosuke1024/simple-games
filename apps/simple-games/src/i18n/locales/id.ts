@@ -162,6 +162,8 @@ export const id: Messages = {
   sharePlayed: 'Saya bermain {game} di Simple Games.',
   shareInvite: 'Unduh aplikasi Simple Games.',
   shareChallenge: 'Sekarang giliranmu. Main di aplikasi Simple Games.',
+  shareInviteBrowser: 'Bisa langsung dimainkan di browser.',
+  shareChallengeBrowser: 'Sekarang giliranmu. Coba main di browser.',
   shareCardAction: 'Giliranmu',
   shareCardBoard: 'Papan permainan ini',
   shareCardPreview: 'Pratinjau permainan',

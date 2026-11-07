@@ -158,6 +158,8 @@ export const ko: Messages = {
   sharePlayed: 'Simple Games에서 {game}을(를) 플레이했습니다.',
   shareInvite: 'Simple Games 앱을 다운로드하세요.',
   shareChallenge: '직접 도전해 보세요. Simple Games 앱에서 즐길 수 있어요.',
+  shareInviteBrowser: '브라우저에서 바로 즐길 수 있습니다.',
+  shareChallengeBrowser: '직접 도전해 보세요. 브라우저에서 바로 즐길 수 있어요.',
   shareCardAction: '도전해 보세요',
   shareCardBoard: '이번 게임판',
   shareCardPreview: '게임 미리보기',

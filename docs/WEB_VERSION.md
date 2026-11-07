@@ -145,7 +145,9 @@ https://pixapps.ai/simple-games/play/?game=sudoku → Sudoku
   (`packages/brand` の `SHARE_BASE_URL`)を配る。アプリが入っていれば
   App Links / Universal Links でそのゲームが開き、入っていなければ共有専用 LP
   (ストアへの案内)が開く([共有リンク](architecture/share-links.md))。
-  issue #86 から 1.8.3 までは、この `?game=<id>` の住所を配り、受け手はブラウザ版で
+  例外は Web 先行(registry の `channel: 'web-beta'`)のゲームで、アプリに無いので
+  Web 版はいまもこの `?game=<id>` の住所と「ブラウザですぐ遊べます」の文を配る。
+  issue #86 から 1.8.3 までは、全ゲームでこの `?game=<id>` の住所を配り、受け手はブラウザ版で
   そのまま遊べた。`?game=<id>` はブラウザ版の入口・ゲーム別ガイド・ホーム画面
   ショートカットの住所として残る。共有される URL に盤面・レベル・成績が乗らないのは
   上の「URL は入口であって保存場所ではない」そのままで、共有のために例外を作らない。

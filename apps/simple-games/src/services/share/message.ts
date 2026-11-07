@@ -24,9 +24,10 @@
  * message that let a player look like they had won something they had not
  * would be a small lie told in the product's voice.
  */
-import { SHARE_BASE_URL } from '@simple-games/brand';
+import { SHARE_BASE_URL, WEB_PLAY_URL } from '@simple-games/brand';
 import type { MessageKey, TranslateVars } from '../../i18n';
 import { GAMES, type GameId } from '../../app/registry';
+import { GAME_PARAM } from '../../app/webRoute';
 
 /**
  * How the run ended, as far as the sentence is concerned.
@@ -70,15 +71,37 @@ export interface ShareInput {
 export interface ShareMessage {
   /** The sentences, in the player's language. */
   text: string;
-  /** The native game when installed, otherwise its download landing page. */
+  /**
+   * The native game when installed, otherwise its download landing page. A
+   * Web-only game links to the browser game instead (`isWebOnlyGame`).
+   */
   url: string;
 }
 
 /** A translate function — `useSettings().t`, or `translate` bound to a locale. */
 export type Translate = (key: MessageKey, vars?: TranslateVars) => string;
 
-/** One HTTPS address for the native game and the no-install download landing. */
+/**
+ * A title on the browser's early-release channel (registry `channel:
+ * 'web-beta'`) is not in the app. Only the browser version can share it, and
+ * its link has to stay there: the app's address would open an install landing
+ * for a game the app does not have (docs/architecture/share-links.md).
+ */
+export function isWebOnlyGame(gameId: GameId): boolean {
+  return GAMES.find((game) => game.id === gameId)?.channel === 'web-beta';
+}
+
+/**
+ * Where a shared game points. An app game: one HTTPS address for the native
+ * game and the no-install download landing. A Web-only game: the browser
+ * version opened at it, the `?game=<id>` contract `app/webRoute.ts` reads.
+ */
 export function gameShareUrl(gameId: GameId): string {
+  if (isWebOnlyGame(gameId)) {
+    const url = new URL(WEB_PLAY_URL);
+    url.searchParams.set(GAME_PARAM, gameId);
+    return url.toString();
+  }
   return new URL(`${gameId}/`, SHARE_BASE_URL).toString();
 }
 
@@ -121,8 +144,12 @@ export function buildShareMessage(
   const facts = formatDetailLine(details);
   // A result invites another person to play, rather than promising the same
   // board or a comparable score. A loss and an endless run get that same
-  // invitation; neither is presented as a win or a record to beat.
-  const closing = facts ? t('shareChallenge') : t('shareInvite');
+  // invitation; neither is presented as a win or a record to beat. It names
+  // where the link goes: the app, or the browser for a Web-only game.
+  const browser = isWebOnlyGame(gameId);
+  const closing = facts
+    ? t(browser ? 'shareChallengeBrowser' : 'shareChallenge')
+    : t(browser ? 'shareInviteBrowser' : 'shareInvite');
   const text = facts ? `${line}\n${facts}\n${closing}` : `${line}\n${closing}`;
   return { text, url: gameShareUrl(gameId) };
 }

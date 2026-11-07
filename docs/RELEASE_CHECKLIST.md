@@ -1598,6 +1598,13 @@ Network Inspector が使えなかったとき、通信の宛先を特定でき�
 - [ ] タグ `v<major>.<minor>.<patch>` を打って push する
       (`android-release.yml` が署名済み AAB + 確認用 APK を出す)
 - [ ] ワークフローが緑(署名 secret が無ければ失敗する)
+- [ ] **どの端末にも入れる前に**(内部テスト・TestFlight も)、そのタグで正式収録(registry に `channel` が
+      無い)の全ゲームの共有 LP が本番で 200 であることを確かめる:
+      `pnpm --filter simple-games share:check --ref v<major>.<minor>.<patch>`
+      (`scripts/share-landing-check.mjs`。リダイレクトなしの 200 で、そのゲームの LP であり、
+      「アプリには入っていません」の LP でないこと)。落ちたら、そのタグから Web 版を Publish してマージし、
+      本番に出てからやり直す。Web 先行から正式収録へ移すゲームがある版では、この順でないと必ず落ちる
+      ([共有リンク](architecture/share-links.md)「Release gate」)
 - [ ] AAB を Play Console の**内部テスト**トラックにアップロード(手動)
 - [ ] 内部テストトラック経由でインストールして動作確認
       (課金とレビュー導線はこの経路でしか確認できない)
