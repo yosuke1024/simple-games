@@ -2,8 +2,8 @@
  * What a shared game says, and where it points (issue #86; results added
  * 2026-09-03, docs/plans/2026-09-03-share-results-card.md).
  *
- * Pure: it reads the registry's title, the player's catalog and the browser
- * version's address, and returns two strings. Nothing here touches the share
+ * Pure: it reads the registry's title, the player's catalog and the shared
+ * install landing address, and returns two strings. Nothing here touches the share
  * sheet, the clipboard, storage or the network — `share.ts` does that, and
  * keeps this side testable as plain data.
  *
@@ -24,10 +24,9 @@
  * message that let a player look like they had won something they had not
  * would be a small lie told in the product's voice.
  */
-import { WEB_PLAY_URL } from '@simple-games/brand';
+import { SHARE_BASE_URL } from '@simple-games/brand';
 import type { MessageKey, TranslateVars } from '../../i18n';
 import { GAMES, type GameId } from '../../app/registry';
-import { GAME_PARAM } from '../../app/webRoute';
 
 /**
  * How the run ended, as far as the sentence is concerned.
@@ -71,22 +70,16 @@ export interface ShareInput {
 export interface ShareMessage {
   /** The sentences, in the player's language. */
   text: string;
-  /** The link they are about: the browser version, opened at this game. */
+  /** The native game when installed, otherwise its download landing page. */
   url: string;
 }
 
 /** A translate function — `useSettings().t`, or `translate` bound to a locale. */
 export type Translate = (key: MessageKey, vars?: TranslateVars) => string;
 
-/**
- * The browser version, opened straight at one game (issue #83): the same
- * `?game=<id>` contract `app/webRoute.ts` reads on arrival, so a shared link
- * lands on the game rather than on the collection.
- */
-export function gamePlayUrl(gameId: GameId): string {
-  const url = new URL(WEB_PLAY_URL);
-  url.searchParams.set(GAME_PARAM, gameId);
-  return url.toString();
+/** One HTTPS address for the native game and the no-install download landing. */
+export function gameShareUrl(gameId: GameId): string {
+  return new URL(`${gameId}/`, SHARE_BASE_URL).toString();
 }
 
 /**
@@ -131,7 +124,7 @@ export function buildShareMessage(
   // invitation; neither is presented as a win or a record to beat.
   const closing = facts ? t('shareChallenge') : t('shareInvite');
   const text = facts ? `${line}\n${facts}\n${closing}` : `${line}\n${closing}`;
-  return { text, url: gamePlayUrl(gameId) };
+  return { text, url: gameShareUrl(gameId) };
 }
 
 /**

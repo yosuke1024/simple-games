@@ -141,7 +141,7 @@ describe('the share on that card', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Share' }));
 
     const [{ text, url }] = share.mock.calls[0] as [{ text: string; url: string }];
-    expect(url).toBe('https://pixapps.ai/simple-games/play/?game=minesweeper');
+    expect(url).toBe('https://pixapps.ai/simple-games/share/minesweeper/');
     // The card also states a new record against the previous best (3:20); the
     // message repeats this run's own time and hint count, never that history.
     expect(text).toContain('Time 2:05');

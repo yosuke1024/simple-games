@@ -140,16 +140,16 @@ https://pixapps.ai/simple-games/play/?game=sudoku → Sudoku
   自分の端末に自分で留めた扉で、リンクは誰でも踏める住所であり、後者で
   盤面から始めるのは初めて来た人にとって説明の飛ばしでしかない
   ([ARCHITECTURE.md](ARCHITECTURE.md)「ホーム画面ショートカット」)。
-- **アプリの結果画面の「共有」が配るのはこの URL である**(issue #86)。
-  `packages/brand` の `WEB_PLAY_URL` に `?game=<id>` を付けるだけで、短縮 URL も
-  リダイレクタも作らない。したがって共有リンクは Web 版・アプリ版のどちらから
-  配られても同じ 1 本の入口に落ちる —— アプリを持っていない受け手が、何も
-  インストールせずにそのゲームを開ける、というのがこの導線の全部である
-  ([ARCHITECTURE.md](ARCHITECTURE.md)「レイヤー規則」)。共有される URL に
-  盤面・レベル・成績が乗らないのは上の「URL は入口であって保存場所ではない」
-  そのままで、共有のために例外を作らない。結果(時間・スコア等)は共有**文と
-  画像**に載るのであって URL には載らない —— 「URL は入口であって保存場所では
-  ない」はそのまま。
+- **結果画面の「共有」が配るのは、2026-11-08 からこの URL ではない。**
+  Web 版・アプリ版のどちらからも `https://pixapps.ai/simple-games/share/<game-id>/`
+  (`packages/brand` の `SHARE_BASE_URL`)を配る。アプリが入っていれば
+  App Links / Universal Links でそのゲームが開き、入っていなければ共有専用 LP
+  (ストアへの案内)が開く([共有リンク](architecture/share-links.md))。
+  issue #86 から 1.8.3 までは、この `?game=<id>` の住所を配り、受け手はブラウザ版で
+  そのまま遊べた。`?game=<id>` はブラウザ版の入口・ゲーム別ガイド・ホーム画面
+  ショートカットの住所として残る。共有される URL に盤面・レベル・成績が乗らないのは
+  上の「URL は入口であって保存場所ではない」そのままで、共有のために例外を作らない。
+  結果(時間・スコア等)は共有**文と画像**に載るのであって URL には載らない。
 
 **履歴の扱い —— 「外から来た」と「コレクションから入った」を区別する。**
 
@@ -193,14 +193,15 @@ https://pixapps.ai/simple-games/play/?game=sudoku → Sudoku
 原則どおりで、この経路にビルド時ゲートは追加しない)。アプリには住所欄が
 無く、同じ操作はハードウェア戻るボタンが既に持っている
 ([ARCHITECTURE.md](ARCHITECTURE.md)「ハードウェア戻るボタン」)。
-App Links / Universal Links は導入しない。
+ゲーム共有は `/simple-games/share/<game-id>/` の HTTPS を App Links / Universal Links
+として受け取る(2026-11-08)。`/play/` と通常のLP・ガイドは対象にしない。
+仕様・公開順序は [共有リンク](architecture/share-links.md) を参照。
 
 Android アプリのホーム画面ショートカット(issue #110)は、この同じ住所を
-Intent の中に運び、同じパーサで読み戻す——`app/shortcutLaunch.ts` が
-`?game=<id>` を組み立て、`gameIdFromHref` で読む。iOS の Quick Action(issue #114)
+Intent の中に運ぶ——`app/shortcutLaunch.ts` が `?game=<id>` を組み立て、
+`nativeGameTarget` が既存ショートカットと共有URLの両方を検証する。iOS の Quick Action(issue #114)
 も同じ住所を項目の `userInfo` に運び、`AppDelegate.swift` が Capacitor の URL open
-に変換するので、読む側は 1 行も増えていない。ゲーム別の入口はブラウザ・
-ショートカット・Quick Action で 1 本の契約のまま増えていない。上の「履歴の扱い」
+に変換する。ショートカット・Quick Action のURL形式は維持する。上の「履歴の扱い」
 (`history.back()` / `sgRouteDepth`)はそれでもアプリでは一度も動かない——
 住所欄も `history` も無い native の世界であることは変わらず、画面の切り替えは
 `app/App.tsx` の `appUrlOpen` リスナーが直接行う。
@@ -987,10 +988,8 @@ I18N_POLICY.md の高リスクキー 5 番(無料・オフライン・paywall �
   持つ住所で、`?game=` の契約は変わらない。[architecture/club.md](architecture/club.md) §7)。
 - `index.html` は 1 枚のまま。Web 向けの meta / OGP / canonical はネイティブ側の
   WebView(Android WebView / iOS の WKWebView)が無視するので、分ける理由がない。
-  **共有リンクのプレビューもこの 1 枚が持つ OGP をそのまま使う**(issue #86)。
-  `?game=<id>` はクエリなので同じページであり、ゲームごとの OG 画像を出すには
-  動的生成か 30 枚の静的ページが要る —— どちらも固定インフラ費と維持を増やす
-  ので、作らない。ゲーム別の絵が要るなら、既にあるゲーム別ガイドを共有先に
-  するかどうかを別途決める話になる。結果画面の共有が付ける画像カードは共有
-  シートに渡す**ファイル**であり(`services/share/card.ts`)、リンクのプレビュー
-  (OGP)ではない —— だからゲーム別 OG 画像を作る理由は増えていない。
+  **結果共有のリンクは共有専用LPへ送る**(2026-11-08)。LPはゲーム名・アイコンを
+  使う共通テンプレートから静的生成し、ゲーム別のtitle / descriptionを初期HTMLに置く。
+  OGP画像は共通で、盤面画像をLPのために増やさない。結果画面の共有画像カードは
+  共有シートへ渡すファイルのままで、LPへアップロードしない。
+  詳細は [共有リンク](architecture/share-links.md)。

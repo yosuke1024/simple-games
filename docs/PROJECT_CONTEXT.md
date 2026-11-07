@@ -283,6 +283,10 @@ Club House の側の境界(ゲームは PixApps のサーバーを 1 つも必�
 
 詳細: `docs/PRODUCT_PRINCIPLES.md`, `docs/OFFLINE_POLICY.md`, `docs/ADS_POLICY.md`
 
+2026-11-08: 結果共有を共有専用LP・Universal Links / App Linksへ変更する方針を採用。
+既存利用者は対象ゲームへ、未導入者はストア導線へ進む。
+仕様・2リポジトリの公開順序は [共有リンク](architecture/share-links.md)。
+
 ## 5. Current direction — Friction first
 
 現時点のプロダクト改善の中心は **engagement mechanics を増やすことではなく、ゲーム内外のストレスを徹底的に減らすこと** である。

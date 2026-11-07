@@ -36,6 +36,20 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="club.pixapps.ai" android:path="/join" />
             </intent-filter>
+            <!-- Shared game links only; the normal landing and /play/ stay on the web. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="pixapps.ai" android:pathPrefix="/simple-games/share/" />
+            </intent-filter>
+            <!-- Explicit fallback button in browsers that retain HTTPS links. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.pixapps.simplegames" android:host="share" />
+            </intent-filter>
         </activity>
 
         <!-- Started only by an explicit Nearby session; never restarted after process death. -->

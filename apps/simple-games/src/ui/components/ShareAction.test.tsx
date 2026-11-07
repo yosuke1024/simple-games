@@ -78,8 +78,8 @@ describe('the share button', () => {
     await userEvent.click(renderAction('completed', timeAndMistakes));
 
     expect(share).toHaveBeenCalledWith({
-      text: 'I cleared Sudoku on Simple Games.\nTime 4:32 · Mistakes 0\nYour turn. Try it in your browser.',
-      url: 'https://pixapps.ai/simple-games/play/?game=sudoku',
+      text: 'I cleared Sudoku on Simple Games.\nTime 4:32 · Mistakes 0\nYour turn. Play in the Simple Games app.',
+      url: 'https://pixapps.ai/simple-games/share/sudoku/',
     });
     // A share sheet is its own confirmation; a toast on top of it is noise.
     expect(screen.queryByText(en.shareCopied)).not.toBeInTheDocument();
@@ -92,8 +92,8 @@ describe('the share button', () => {
     await userEvent.click(renderAction('played'));
 
     expect(share).toHaveBeenCalledWith({
-      text: 'I played Sudoku on Simple Games.\nYou can play it right in your browser.',
-      url: 'https://pixapps.ai/simple-games/play/?game=sudoku',
+      text: 'I played Sudoku on Simple Games.\nGet the Simple Games app.',
+      url: 'https://pixapps.ai/simple-games/share/sudoku/',
     });
   });
 
@@ -106,8 +106,8 @@ describe('the share button', () => {
     await waitFor(() => expect(screen.getByText(en.shareCopied)).toBeInTheDocument());
     expect(writeText).toHaveBeenCalledWith(
       'I played Sudoku on Simple Games.\n' +
-        'You can play it right in your browser.\n' +
-        'https://pixapps.ai/simple-games/play/?game=sudoku',
+        'Get the Simple Games app.\n' +
+        'https://pixapps.ai/simple-games/share/sudoku/',
     );
   });
 
@@ -267,8 +267,8 @@ describe('the picture card', () => {
     });
     expect(share).toHaveBeenCalledWith({
       files: [file],
-      text: 'I cleared Sudoku on Simple Games.\nYou can play it right in your browser.',
-      url: 'https://pixapps.ai/simple-games/play/?game=sudoku',
+      text: 'I cleared Sudoku on Simple Games.\nGet the Simple Games app.',
+      url: 'https://pixapps.ai/simple-games/share/sudoku/',
     });
   });
 
@@ -284,8 +284,8 @@ describe('the picture card', () => {
     await userEvent.click(renderAction());
 
     expect(share).toHaveBeenCalledWith({
-      text: 'I played Sudoku on Simple Games.\nYou can play it right in your browser.',
-      url: 'https://pixapps.ai/simple-games/play/?game=sudoku',
+      text: 'I played Sudoku on Simple Games.\nGet the Simple Games app.',
+      url: 'https://pixapps.ai/simple-games/share/sudoku/',
     });
     expect(share.mock.calls[0]?.[0]).not.toHaveProperty('files');
   });

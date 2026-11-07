@@ -77,7 +77,8 @@ import {
 } from './nearbyGate';
 import { recordGameOpened } from './recentGames';
 import { type GameEntry, type GameId } from './registry';
-import { gameIdFromShortcutUrl, shortcutLaunchGame, shortcutLaunchUrl } from './shortcutLaunch';
+import { shortcutLaunchGame, shortcutLaunchUrl } from './shortcutLaunch';
+import { nativeGameTarget } from './nativeGameLink';
 import {
   currentRouteGame,
   popRoute,
@@ -383,7 +384,8 @@ export function App() {
 
   const openGameFromNearby = useCallback(
     (gameId: NearbyGameId) => {
-      if (viewRef.current.kind !== 'nearby' || nearbyReset.current || nearbyActiveRef.current) return;
+      if (viewRef.current.kind !== 'nearby' || nearbyReset.current || nearbyActiveRef.current)
+        return;
       // The browser stops discovery before handing navigation back to the shell.
       releaseSound();
       setNearbyGame(null);
@@ -571,10 +573,15 @@ export function App() {
         });
         return;
       }
+      const gameLink = nativeGameTarget(url);
+      if (!gameLink) return;
       launchInviteToken.current = null;
-      const showing = viewRef.current.kind === 'game' ? viewRef.current.gameId : null;
-      const target = gameIdFromShortcutUrl(url);
-      if (showing === target) return;
+      const current = viewRef.current;
+      const showing = current.kind === 'game' ? current.gameId : null;
+      const target = gameLink.gameId;
+      // Nothing to do only when that game, or the collection, is already showing:
+      // from Settings, the Club House or Nearby a collection link still goes home.
+      if (target !== null ? showing === target : current.kind === 'collection') return;
       if (showing !== null) leaveGame(showing);
       if (target !== null) enterGame(target, 'shortcut');
       else show({ kind: 'collection' });

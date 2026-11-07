@@ -6,12 +6,12 @@
  * for every title rather than trusted from one example.
  */
 import { describe, expect, it } from 'vitest';
-import { WEB_PLAY_URL } from '@simple-games/brand';
+import { SHARE_BASE_URL } from '@simple-games/brand';
 import { GAMES } from '../../app/registry';
-import { gameIdFromHref } from '../../app/webRoute';
+import { nativeGameTarget } from '../../app/nativeGameLink';
 import { translate, type MessageKey, type TranslateVars } from '../../i18n';
 import { catalogs, type Locale } from '../../i18n';
-import { buildShareMessage, gamePlayUrl, MAX_SHARE_DETAILS, shareMessageAsText } from './message';
+import { buildShareMessage, gameShareUrl, MAX_SHARE_DETAILS, shareMessageAsText } from './message';
 
 const t =
   (locale: Locale) =>
@@ -21,8 +21,8 @@ const t =
 const en = t('en');
 
 describe('the link', () => {
-  it('is the browser version opened at that game', () => {
-    expect(gamePlayUrl('sudoku')).toBe(`${WEB_PLAY_URL}?game=sudoku`);
+  it('is the shared HTTPS address for the native game or its install landing', () => {
+    expect(gameShareUrl('sudoku')).toBe(`${SHARE_BASE_URL}sudoku/`);
   });
 
   it('round-trips through the router for every game in the collection', () => {
@@ -34,7 +34,7 @@ describe('the link', () => {
     // collection (app/gameChannel.ts) — the one case this skips.
     for (const game of GAMES) {
       if (game.channel === 'in-development') continue;
-      expect(gameIdFromHref(gamePlayUrl(game.id)), game.id).toBe(game.id);
+      expect(nativeGameTarget(gameShareUrl(game.id))?.gameId, game.id).toBe(game.id);
     }
   });
 });
@@ -101,7 +101,7 @@ describe('the message', () => {
 
     // English is the source for the translations. The invitation names only
     // the action that is available, not a seed-specific challenge or victory.
-    expect(en('shareChallenge')).toBe('Your turn. Try it in your browser.');
+    expect(en('shareChallenge')).toBe('Your turn. Play in the Simple Games app.');
   });
 
   it('puts the details on their own line, joined by " · "', () => {

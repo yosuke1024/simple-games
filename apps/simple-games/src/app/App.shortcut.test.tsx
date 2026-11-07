@@ -205,6 +205,57 @@ afterEach(() => {
   }
 });
 
+describe('shared native links', () => {
+  it.each(['android', 'ios'])(
+    'opens a shared game on cold start and preserves the board on replay (%s)',
+    async (platform) => {
+      capacitorMock.platform = platform;
+      const url = 'https://pixapps.ai/simple-games/share/sudoku/';
+      await launchFrom(url);
+      const board = playing('sudoku');
+      tapShortcut(url);
+      expect(playing('sudoku')).toBe(board);
+      expect(releaseSound).not.toHaveBeenCalled();
+      tapShortcut('com.pixapps.simplegames://share/minesweeper');
+      expect(playing('minesweeper')).toBeInTheDocument();
+    },
+  );
+
+  it('does not navigate away from a game for an unrelated URL', async () => {
+    await launchFrom(shortcutUrlFor('sudoku'));
+    const board = playing('sudoku');
+    tapShortcut('https://evil.example/simple-games/share/minesweeper/');
+    tapShortcut('https://pixapps.ai/simple-games/');
+    expect(playing('sudoku')).toBe(board);
+    expect(releaseSound).not.toHaveBeenCalled();
+  });
+
+  it('opens the collection for a shared game unavailable in this app', async () => {
+    await launchFrom('https://pixapps.ai/simple-games/share/new-game/');
+    expect(await collectionHome()).toBeInTheDocument();
+    tapShortcut('https://pixapps.ai/simple-games/share/sudoku/');
+    expect(playing('sudoku')).toBeInTheDocument();
+    tapShortcut('https://pixapps.ai/simple-games/share/falling-blocks/');
+    expect(await collectionHome()).toBeInTheDocument();
+  });
+
+  it('goes home from the settings screen for the collection link or an unavailable game', async () => {
+    const user = userEvent.setup();
+    await launchFrom(undefined);
+    await collectionHome();
+
+    for (const link of [
+      'https://pixapps.ai/simple-games/share/',
+      'https://pixapps.ai/simple-games/share/falling-blocks/',
+    ]) {
+      await user.click(screen.getByRole('button', { name: 'Settings' }));
+      expect(screen.queryByRole('heading', { name: 'Simple Games' })).not.toBeInTheDocument();
+      tapShortcut(link);
+      expect(await collectionHome()).toBeInTheDocument();
+    }
+  });
+});
+
 describe('a cold start from a home-screen shortcut', () => {
   it('opens the game it names, as the first thing on screen', async () => {
     const history = watchHistory();
