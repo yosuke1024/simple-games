@@ -2,6 +2,7 @@ import type { SpiderMessages } from './en';
 
 export const fr: SpiderMessages = {
   spiderName: 'Spider Solitaire',
+  spiderLayoutNote: 'Spiderette · 7 colonnes · 52 cartes',
   spiderNewDeal: 'Nouvelle donne',
   spiderTableLabel: 'Table de Spider Solitaire',
   spiderCardLabel: '{rank} de {suit}',
@@ -29,7 +30,7 @@ export const fr: SpiderMessages = {
   spiderStuckBody:
     'La pioche est épuisée et rien ne passe. Annulez un coup, ou prenez une nouvelle donne.',
   spiderWonTitle: 'Gagné !',
-  spiderWonBody: 'Les huit suites sont complètes.',
+  spiderWonBody: 'Les quatre suites sont complètes.',
   spiderNewBestMoves: 'Votre plus petit nombre de coups.',
   spiderNewBestTime: 'Votre meilleur temps.',
   spiderBestMoves: 'Minimum de coups',
@@ -45,5 +46,5 @@ export const fr: SpiderMessages = {
     'Les cartes d’une même famille qui se suivent se déplacent ensemble. Formez du roi à l’as et la suite quitte la table.',
   spiderStep3Title: 'Distribuez quand vous bloquez',
   spiderStep3Body:
-    'La pioche donne une carte à chaque colonne — mais seulement si aucune colonne n’est vide.',
+    'Remplissez toutes les colonnes avant de distribuer 7 cartes ; la dernière distribution ajoute une carte à chacune des 3 colonnes de gauche.',
 };

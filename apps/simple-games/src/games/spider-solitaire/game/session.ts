@@ -52,7 +52,7 @@ export function newSeedToken(now: number = Date.now(), random: () => number = Ma
   return `${now.toString(36)}-${Math.floor(random() * 0xffffff).toString(36)}`;
 }
 
-export const freeSeed = (token: string): string => `ss-free-${token}`;
+export const freeSeed = (token: string): string => `ss-spiderette-free-${token}`;
 
 function baseSession(
   mode: GameMode,

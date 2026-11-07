@@ -221,6 +221,9 @@ export function modeLabel(gameId: string, key: string, t: T, daily = false): str
   // Solitaire's draw and Spider's suit count (their contracts' paramsKey).
   if (key === 'draw-1') return t('clubTier_draw1');
   if (key === 'draw-3') return t('clubTier_draw3');
+  if (gameId === 'spider-solitaire' && key.startsWith('spiderette-')) {
+    return modeLabel(gameId, key.slice(11), t, daily);
+  }
   if (key === '1-suit') return t('clubTier_suit1');
   if (key === '2-suits') return t('clubTier_suits2');
   if (key === '4-suits') return t('clubTier_suits4');
@@ -347,6 +350,9 @@ const SCHULTE_ORDER: ReadonlyMap<string, number> = new Map([
 const COUNT_ORDER: ReadonlyMap<string, number> = new Map([
   ['draw-1', 1],
   ['draw-3', 3],
+  ['spiderette-1-suit', 1],
+  ['spiderette-2-suits', 2],
+  ['spiderette-4-suits', 4],
   ['1-suit', 1],
   ['2-suits', 2],
   ['4-suits', 4],

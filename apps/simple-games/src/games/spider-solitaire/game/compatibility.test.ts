@@ -1,9 +1,12 @@
 /**
- * Golden deals — the v1 contract for Spider's generator.
+ * Golden deals — the v2 (Spiderette) contract for Spider's generator.
  *
  * These strings pin the whole chain at once: the PRNG, the exact shape of the
- * seed strings, the shuffle of 104 cards, and the order they are laid into the
- * ten columns. Any change to any of them shows up here.
+ * seed strings, the shuffle of 52 cards, and the order they are laid into the
+ * seven columns. Any change to any of them shows up here.
+ *
+ * The 2026-11-07 change deliberately starts a separate layout and record namespace.
+ * The old 104-card records remain archived and are never replayed by this generator.
  *
  * If this test fails, the thing to fix is the implementation, not the
  * expectation. Regenerating these strings changes which deal a date produces
@@ -19,14 +22,14 @@ import type { SuitCount } from './types';
 
 /** The free deal at one suit. The leading field is the difficulty. */
 const GOLDEN_FREE =
-  '1/2e010p1t071c1i1s0g2n0i0d1z1a0b0n1b2u271v0e251e0q1h261l242d1y0v1228292k1w0l0o1f0r2g2a182r05130a1q170f//1j2v2l1p1n!0t.1r2c0c211x!1g.2m031u2i02!09.0u2j1k0x1m!2p.1d0s2q0j!16.2f0k200m!1o.150z2t2h!2o.2s041022!0w.2b061923!14.000y080h!11';
+  '1/020f15070a0o160j1706130n0g0u090r190d0t0z0h1a180b//!1e.0v!08.110y!0i.0k011c!14.1b030p1d!0e.0s0l0x0w0m!00.100q120c0504!1f';
 
 const GOLDEN_DAILY =
-  '4/012o2s222n2820182d0x2p150q1u2r0e1p172j060s140k08260w0t1s1v100j240b0m1l190z0p092v210l2k020n232m1y0f1f//2c1x0o0g2q!13.071h0y2h2u!1n.0r1c1r1k1j!2a.2i272t1g0d!2b.1a11041e!03.0c160i00!1d.1b0v120u!2f.1t2l051i!1z.291q2g0h!1m.251w2e1o!0a';
+  '4/0o1f06170n0x190q180u0s0l140f0w020a0r010d0v110e0y//!12.0t!1a.071b!0p.0m0g1d!0c.08091e04!0k.0j03130i05!15.10160h000z1c!0b';
 
-describe('deal compatibility (v1)', () => {
+describe('deal compatibility (v2 (Spiderette))', () => {
   it('pins a fixed free deal', () => {
-    expect(boardToString(dealBoard('ss-free-golden', 1))).toBe(GOLDEN_FREE);
+    expect(boardToString(dealBoard('ss-spiderette-free-golden', 1))).toBe(GOLDEN_FREE);
   });
 
   it('pins the daily deal for a fixed date', () => {
@@ -41,7 +44,7 @@ describe('deal compatibility (v1)', () => {
    */
   it('lays identical cards at every difficulty, changing only the suits they read as', () => {
     for (const suitCount of [2, 4] as SuitCount[]) {
-      expect(boardToString(dealBoard('ss-free-golden', suitCount))).toBe(
+      expect(boardToString(dealBoard('ss-spiderette-free-golden', suitCount))).toBe(
         `${suitCount}${GOLDEN_FREE.slice(1)}`,
       );
     }

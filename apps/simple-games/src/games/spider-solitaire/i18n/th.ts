@@ -2,6 +2,7 @@ import type { SpiderMessages } from './en';
 
 export const th: SpiderMessages = {
   spiderName: 'Spider Solitaire',
+  spiderLayoutNote: 'สไปเดอเร็ตต์ · 7 คอลัมน์ · 52 ใบ',
   spiderNewDeal: 'แจกไพ่ใหม่',
   spiderTableLabel: 'โต๊ะ Spider Solitaire',
   spiderCardLabel: '{rank} {suit}',
@@ -28,7 +29,7 @@ export const th: SpiderMessages = {
   spiderStuckTitle: 'ไม่มีตาให้เดินแล้ว',
   spiderStuckBody: 'กองจั่วหมดและไม่มีที่ให้วาง ย้อนกลับสักตา หรือแจกไพ่ใหม่',
   spiderWonTitle: 'คุณชนะ!',
-  spiderWonBody: 'ครบทั้งแปดชุดแล้ว',
+  spiderWonBody: 'ครบทั้งสี่ชุดแล้ว',
   spiderNewBestMoves: 'จำนวนตาน้อยที่สุดของคุณ',
   spiderNewBestTime: 'เวลาเร็วที่สุดของคุณ',
   spiderBestMoves: 'ตาน้อยที่สุด',
@@ -42,5 +43,6 @@ export const th: SpiderMessages = {
   spiderStep2Body:
     'ไพ่ดอกเดียวกันที่เรียงต่อกันจะย้ายพร้อมกันได้ เรียงจาก K ถึง A ครบเมื่อไร ชุดนั้นจะออกจากโต๊ะ',
   spiderStep3Title: 'ตันเมื่อไรก็แจกเพิ่ม',
-  spiderStep3Body: 'กองจั่วจะแจกไพ่ให้ทุกคอลัมน์ คอลัมน์ละใบ — แต่ต้องไม่มีคอลัมน์ว่างเหลืออยู่',
+  spiderStep3Body:
+    'เติมทุกคอลัมน์ก่อนแจกไพ่ 7 ใบ โดยครั้งสุดท้ายจะแจกให้เฉพาะ 3 คอลัมน์ซ้ายสุด คอลัมน์ละใบ',
 };

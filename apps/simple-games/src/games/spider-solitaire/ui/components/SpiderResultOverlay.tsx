@@ -143,7 +143,7 @@ export function SpiderResultOverlay({
           details={details}
           facts={facts}
           seed={session.seed}
-          params={{ suitCount: session.suitCount }}
+          params={{ layout: 'spiderette', suitCount: session.suitCount }}
           boardDigest={session.mode === 'daily' ? boardDigestOf(session) : null}
           daily={session.mode === 'daily' ? session.dailyDate : null}
         />

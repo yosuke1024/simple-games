@@ -4,7 +4,7 @@
  * corrupt file costs a player their record, never their app (§10).
  */
 import { describe, expect, it } from 'vitest';
-import { COLUMNS, dealBoard, type SpiderBoard } from '../game';
+import { dealBoard, type SpiderBoard } from '../game';
 import { gameSchema, statsSchema } from './schemas';
 
 describe('statsSchema (§9)', () => {
@@ -76,18 +76,18 @@ const saved = (board: SpiderBoard): Record<string, unknown> => ({
 describe('gameSchema (§10)', () => {
   it('restores a board that could have come from play', () => {
     const restored = gameSchema.validate(saved(dealBoard('ss-free-schema', 4)));
-    expect(restored?.stock).toHaveLength(50);
+    expect(restored?.stock).toHaveLength(24);
     expect(restored?.moveCount).toBe(12);
   });
 
   it('refuses a whole pack whose stock is not whole undealt rows', () => {
-    // 104 cards, each exactly once — the file would pass a card-counting check
+    // 52 cards, each exactly once — the file would pass a card-counting check
     // and still hand short rows to the columns on the next deal (§3).
     for (const count of [5, 15]) {
       const board = withStockOf(count);
       expect(board.stock).toHaveLength(count);
       expect(gameSchema.validate(saved(board))).toBeNull();
     }
-    expect(gameSchema.validate(saved(withStockOf(COLUMNS * 4)))).not.toBeNull();
+    expect(gameSchema.validate(saved(withStockOf(17)))).not.toBeNull();
   });
 });

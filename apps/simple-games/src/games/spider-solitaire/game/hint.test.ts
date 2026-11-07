@@ -15,14 +15,12 @@ function board(tableau: Pile[], partial: Partial<SpiderBoard> = {}): SpiderBoard
   };
 }
 
-/** Ten cards no board below uses, so a waiting stock is unambiguous. */
-const stockRow: Card[] = Array.from({ length: COLUMNS }, (_, i) =>
-  i < 8 ? card(i, 11) : card(i - 8, 12),
-);
+/** Three cards no board below uses, so a waiting stock is unambiguous. */
+const stockRow: Card[] = Array.from({ length: 3 }, (_, i) => card(i, 11));
 
-/** Nine single-card columns that neither stack on each other nor on an eight. */
-const ninePlainColumns = (): Pile[] =>
-  Array.from({ length: 9 }, (_, i): Pile => ({ down: [], up: [i < 8 ? card(i, 5) : card(0, 3)] }));
+/** Six single-card columns that neither stack on each other nor on an eight. */
+const sixPlainColumns = (): Pile[] =>
+  Array.from({ length: 6 }, (_, i): Pile => ({ down: [], up: [card(i % 4, 5)] }));
 
 describe('findHint (§8)', () => {
   it('prefers the move that turns a card over', () => {
@@ -61,7 +59,7 @@ describe('findHint (§8)', () => {
     const b = board([
       { down: [], up: [card(2, 3), card(1, 8)] },
       { down: [], up: [card(0, 9)] },
-      { down: [], up: [card(4, 9)] },
+      { down: [], up: [card(2, 9)] },
     ]);
     expect(findHint(b)).toBeNull();
   });
@@ -82,7 +80,7 @@ describe('findHint (§8)', () => {
         { down: [], up: [card(2, 3), card(1, 8)] },
         { down: [], up: [card(0, 9)] },
       ],
-      { stock: Array.from({ length: COLUMNS }, (_, i) => card(5, i + 1)) },
+      { stock: Array.from({ length: 3 }, (_, i) => card(3, i + 1)) },
     );
     // Every column must be occupied for the deal to be legal (§3).
     const occupied = board(
@@ -91,7 +89,7 @@ describe('findHint (§8)', () => {
           ? { down: [], up: [card(2, 3), card(1, 8)] }
           : i === 1
             ? { down: [], up: [card(0, 9)] }
-            : { down: [], up: [card(6, 12)] },
+            : { down: [], up: [card(3, 12)] },
       ),
       { stock: b.stock },
     );
@@ -99,38 +97,38 @@ describe('findHint (§8)', () => {
   });
 
   it('offers the move that fills the last empty column so the stock can deal', () => {
-    // Column 9 is empty, so the stock will not deal (§3). The 8 can only go
+    // Column 6 is empty, so the stock will not deal (§3). The 8 can only go
     // there: it uncovers nothing, joins no suit and empties no column, so
     // every local test calls it a sideways shuffle — and the deal fallback
     // cannot fire either, because the deal is what is blocked. Saying "no
     // move" here would be wrong twice over.
-    const columns = ninePlainColumns();
+    const columns = sixPlainColumns();
     columns[0] = { down: [], up: [card(2, 3), card(1, 8)] };
     const b = board(columns, { stock: stockRow });
 
-    expect(findHint(b)).toEqual({ kind: 'move', from: 0, index: 1, to: 9 });
+    expect(findHint(b)).toEqual({ kind: 'move', from: 0, index: 1, to: 6 });
   });
 
   it('keeps quiet about the same move once the stock is spent', () => {
     // Nothing to unblock, so it is an ordinary sideways shuffle again and the
     // circle-walking rule applies.
-    const columns = ninePlainColumns();
+    const columns = sixPlainColumns();
     columns[0] = { down: [], up: [card(2, 3), card(1, 8)] };
     expect(findHint(board(columns, { stock: [] }))).toBeNull();
   });
 
   it('will not move a whole column into the last empty one to unblock the deal', () => {
-    // Every column here is a single card, so filling column 9 would empty the
+    // Every column here is a single card, so filling column 6 would empty the
     // column it came from: the hole has moved, not closed, and the stock is
     // no closer to dealing.
-    expect(findHint(board(ninePlainColumns(), { stock: stockRow }))).toBeNull();
+    expect(findHint(board(sixPlainColumns(), { stock: stockRow }))).toBeNull();
   });
 
   it('will not split a tidy run to fill the last empty column', () => {
-    // 9♠8♠7♠ could send its 7 to column 9 and unblock the deal, but §8 puts
+    // 9♠8♠7♠ could send its 7 to column 6 and unblock the deal, but §8 puts
     // breaking a tidy run out of bounds — the exception buys one move, not a
     // licence to undo tidy work.
-    const columns = ninePlainColumns();
+    const columns = sixPlainColumns();
     columns[0] = { down: [], up: [card(0, 9), card(0, 8), card(0, 7)] };
     expect(findHint(board(columns, { stock: stockRow }))).toBeNull();
   });
@@ -138,7 +136,7 @@ describe('findHint (§8)', () => {
   it('leaves the exception alone while more than one column is empty', () => {
     // Two holes: filling one still leaves the deal blocked, so nothing here
     // is worth suggesting.
-    const columns = ninePlainColumns().slice(0, 8);
+    const columns = sixPlainColumns().slice(0, 5);
     columns[0] = { down: [], up: [card(2, 3), card(1, 8)] };
     expect(findHint(board(columns, { stock: stockRow }))).toBeNull();
   });

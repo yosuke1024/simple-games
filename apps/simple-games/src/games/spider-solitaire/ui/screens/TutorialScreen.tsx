@@ -130,6 +130,7 @@ export function SpiderTutorialScreen() {
         ) : null}
       </header>
 
+      <p className="sp-suit-note">{t('spiderLayoutNote')}</p>
       <div className="tutorial-card">
         <div className="tutorial-step-count" aria-hidden="true">
           {steps.map((_, index) => (

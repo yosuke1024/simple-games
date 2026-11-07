@@ -2,6 +2,7 @@ import type { SpiderMessages } from './en';
 
 export const es: SpiderMessages = {
   spiderName: 'Spider Solitaire',
+  spiderLayoutNote: 'Spiderette · 7 columnas · 52 cartas',
   spiderNewDeal: 'Nuevo reparto',
   spiderTableLabel: 'Mesa de Spider Solitaire',
   spiderCardLabel: '{rank} de {suit}',
@@ -28,7 +29,7 @@ export const es: SpiderMessages = {
   spiderStuckTitle: 'No quedan movimientos',
   spiderStuckBody: 'El mazo se agotó y nada encaja. Deshaz una jugada o pide otro reparto.',
   spiderWonTitle: '¡Ganaste!',
-  spiderWonBody: 'Las ocho secuencias están completas.',
+  spiderWonBody: 'Las cuatro secuencias están completas.',
   spiderNewBestMoves: 'Tu mínimo de jugadas hasta ahora.',
   spiderNewBestTime: 'Tu mejor tiempo hasta ahora.',
   spiderBestMoves: 'Mínimo de jugadas',
@@ -44,5 +45,5 @@ export const es: SpiderMessages = {
     'Las cartas del mismo palo en orden se mueven juntas. Forma del rey al as y la secuencia sale de la mesa.',
   spiderStep3Title: 'Reparte cuando te atasques',
   spiderStep3Body:
-    'El mazo da una carta a cada columna, pero solo cuando ninguna columna está vacía.',
+    'Llena todas las columnas antes de repartir 7 cartas; el último reparto añade una carta a cada una de las 3 columnas de la izquierda.',
 };

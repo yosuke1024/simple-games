@@ -5,6 +5,7 @@
  */
 export const en = {
   spiderName: 'Spider Solitaire',
+  spiderLayoutNote: 'Spiderette · 7 columns · 52 cards',
   spiderNewDeal: 'New deal',
   spiderTableLabel: 'Spider Solitaire table',
   spiderCardLabel: '{rank} of {suit}',
@@ -31,7 +32,7 @@ export const en = {
   spiderStuckTitle: 'No moves left',
   spiderStuckBody: 'The stock is spent and nothing fits. Undo a move, or take a new deal.',
   spiderWonTitle: 'You won!',
-  spiderWonBody: 'All eight runs are complete.',
+  spiderWonBody: 'All four runs are complete.',
   spiderNewBestMoves: 'Your fewest moves yet.',
   spiderNewBestTime: 'Your fastest yet.',
   spiderBestMoves: 'Fewest moves',
@@ -46,7 +47,8 @@ export const en = {
   spiderStep2Body:
     'Cards of the same suit in order move as one. Build a king down to an ace and the run leaves the table.',
   spiderStep3Title: 'Deal when you are stuck',
-  spiderStep3Body: 'The stock deals one card to every column — but only when no column is empty.',
+  spiderStep3Body:
+    'Fill all columns before dealing 7 cards; the final deal adds 3 cards to the leftmost columns.',
 } as const;
 
 /** Every locale of this game must provide exactly these keys. */

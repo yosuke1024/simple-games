@@ -1,21 +1,14 @@
 import { PlayingCardFace, PlayingCardBack, PLAYING_CARD_SUITS } from '@/ui/cards/PlayingCardFace';
 /**
  * The whole table (docs/SPIDER_SOLITAIRE_RULES.md §1, §3, §12): the stock and
- * the finished runs up top, ten columns below. Every playable spot is a
+ * the finished runs up top, seven columns below. Every playable spot is a
  * button; the screen owns the select-then-place state machine (§3) and this
  * component draws and reports taps — and, since issue #119, drags.
  *
- * TEN COLUMNS IS THE CONSTRAINT EVERYTHING HERE ANSWERS TO. It is the most in
- * the collection — Klondike has seven, FreeCell eight — and on a 320px screen
- * that leaves each card about 28px wide with roughly 11px of it showing once
- * the next card overlaps it. The corner index is therefore drawn as a ROW,
- * rank beside suit, not as the column the other two card games use: stacked,
- * it needs about 22px of height and the rank gets cut in half. That was
- * measured, not guessed (§12).
- *
- * The suit has to survive that squeeze along with the rank, because at four
- * suits a run is only movable if every card in it shares a suit — colour alone
- * cannot tell a spade from a club.
+ * Seven columns give each card enough width for a larger corner index. Rank
+ * and suit share one row so both remain visible under overlapping cards.
+ * At four suits a run moves only if every card shares a suit, so colour alone
+ * cannot replace the suit mark.
  *
  * Selection and highlights use a lift and an outline, never colour alone (§12).
  *
@@ -143,7 +136,7 @@ export interface Selection {
  */
 export type DragSource = Selection;
 
-/** Where a drag can let go: one of the ten columns. A column is the only spot
+/** Where a drag can let go: one of the seven columns. A column is the only spot
  *  a drop can land — the stock and the completed-run slots take nothing. */
 export interface DropTarget {
   readonly pile: number;
@@ -786,7 +779,7 @@ export const SpiderTable = memo(function SpiderTable({
       onPointerCancel={onTablePointerCancel}
     >
       <div className="sp-top-row" data-top-row="">
-        {/* The stock: five deals of ten, and the count is what a player plans
+        {/* The stock: three deals of seven, then three cards, and the count is what a player plans
             around, so it is the count — not the card total — on show (§3). */}
         <button
           type="button"

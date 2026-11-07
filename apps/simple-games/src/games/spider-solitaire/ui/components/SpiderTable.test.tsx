@@ -25,7 +25,7 @@ afterEach(() => {
 });
 
 describe('dropTargetAt', () => {
-  /** Ten 45px columns on a 50px pitch, a 63px top row, the tableau from y=75. */
+  /** Seven 45px columns on a 50px pitch, a 63px top row, the tableau from y=75. */
   const zones: DropZones = {
     left: -22.5,
     right: 495 + 22.5,
@@ -60,6 +60,13 @@ describe('dropTargetAt', () => {
 });
 
 describe('SpiderTable drag reporting', () => {
+  function dragBoard() {
+    const board = dealBoard('ss-spiderette-free-ui-5', 1);
+    const tableau = [...board.tableau];
+    [tableau[1], tableau[5]] = [tableau[5]!, tableau[1]!];
+    return { ...board, tableau };
+  }
+
   const COL = 50;
   const CARD_W = 45;
   const rect = (left: number, top: number, width: number, height: number): DOMRect =>
@@ -86,7 +93,7 @@ describe('SpiderTable drag reporting', () => {
       this: Element,
     ) {
       const el = this as HTMLElement;
-      if (el.dataset.topRow !== undefined) return rect(0, 0, COL * 10 - (COL - CARD_W), 63);
+      if (el.dataset.topRow !== undefined) return rect(0, 0, COL * 7 - (COL - CARD_W), 63);
       if (el.dataset.pile !== undefined)
         return rect(Number(el.dataset.pile) * COL, 75, CARD_W, 200);
       if (cards && el.dataset.card !== undefined) return rect(0, 75, CARD_W, 63);
@@ -104,7 +111,7 @@ describe('SpiderTable drag reporting', () => {
 
   function renderTable(overrides: Partial<SpiderTableProps> = {}) {
     const props: SpiderTableProps = {
-      board: dealBoard('ss-free-golden', 1),
+      board: dragBoard(),
       moveTick: 0,
       selection: null,
       hint: null,
@@ -235,7 +242,7 @@ describe('SpiderTable drag reporting', () => {
     fireEvent.pointerDown(el, { pointerId: 3, button: 0, buttons: 1, ...PRESS });
     fireEvent.pointerMove(el, { pointerId: 3, buttons: 1, clientX: 122, clientY: 200 });
     expect(props.onDragStart).toHaveBeenCalledTimes(1);
-    const other = within(column(3)).getByRole('button', { name: '10 of spades' });
+    const other = within(column(3)).getByRole('button', { name: 'J of spades' });
     fireEvent.pointerDown(other, { pointerId: 4, button: 0, buttons: 1, ...PRESS });
     fireEvent.pointerMove(other, { pointerId: 4, buttons: 1, clientX: 222, clientY: 200 });
     expect(props.onDragStart).toHaveBeenCalledTimes(1);
@@ -381,7 +388,7 @@ describe('SpiderTable drag reporting', () => {
     // Safari does not retarget the click to the captured card: it may arrive
     // on whatever is under the pointer. The mark is the table's, not one
     // button's.
-    const other = within(column(3)).getByRole('button', { name: '10 of spades' });
+    const other = within(column(3)).getByRole('button', { name: 'J of spades' });
     fireEvent.click(other, { detail: 1 });
     expect(props.onColumnTap).not.toHaveBeenCalled();
     // Spent: the next real tap is heard.
@@ -475,7 +482,7 @@ describe('SpiderTable drag reporting', () => {
 
   it('tells the screen when a board change takes a drag away', () => {
     const props: SpiderTableProps = {
-      board: dealBoard('ss-free-golden', 1),
+      board: dragBoard(),
       moveTick: 0,
       selection: null,
       hint: null,

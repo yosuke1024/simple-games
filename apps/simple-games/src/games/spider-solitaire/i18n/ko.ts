@@ -2,6 +2,7 @@ import type { SpiderMessages } from './en';
 
 export const ko: SpiderMessages = {
   spiderName: 'Spider Solitaire',
+  spiderLayoutNote: '스파이더렛 · 7열 · 52장',
   spiderNewDeal: '새 게임',
   spiderTableLabel: 'Spider Solitaire 테이블',
   spiderCardLabel: '{suit} {rank}',
@@ -28,7 +29,7 @@ export const ko: SpiderMessages = {
   spiderStuckTitle: '움직일 수 없습니다',
   spiderStuckBody: '더미를 다 썼고 놓을 곳도 없습니다. 되돌리거나, 새 게임을 시작하세요.',
   spiderWonTitle: '승리!',
-  spiderWonBody: '여덟 세트가 모두 완성되었습니다.',
+  spiderWonBody: '네 세트가 모두 완성되었습니다.',
   spiderNewBestMoves: '최소 이동 수 기록입니다.',
   spiderNewBestTime: '최단 기록입니다.',
   spiderBestMoves: '최소 이동 수',
@@ -43,5 +44,6 @@ export const ko: SpiderMessages = {
   spiderStep2Body:
     '같은 무늬가 순서대로 이어져 있으면 한 번에 옮겨집니다. K부터 A까지 이으면 그 세트는 테이블에서 빠집니다.',
   spiderStep3Title: '막히면 배분하세요',
-  spiderStep3Body: '더미는 모든 줄에 한 장씩 나눠 줍니다. 단, 빈 줄이 없어야 합니다.',
+  spiderStep3Body:
+    '빈 열을 모두 채우면 7장을 나눠 주며, 마지막에는 왼쪽 3개 열에만 한 장씩 나눠 줍니다.',
 };
