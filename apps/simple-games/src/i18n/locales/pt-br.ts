@@ -157,7 +157,10 @@ export const ptBR: Messages = {
   shareCleared: 'Completei {game} no Simple Games.',
   sharePlayed: 'Joguei {game} no Simple Games.',
   shareInvite: 'Dá para jogar direto no navegador.',
-  shareChallenge: 'Quer tentar também?',
+  shareChallenge: 'Agora é sua vez. Experimente no navegador.',
+  shareCardAction: 'Sua vez',
+  shareCardBoard: 'Seu tabuleiro',
+  shareCardPreview: 'Prévia do jogo',
   shareCardCleared: 'Concluído!',
   shareCopied: 'Link copiado',
 

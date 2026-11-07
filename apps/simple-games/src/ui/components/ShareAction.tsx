@@ -31,6 +31,8 @@ import {
   type ShareOutcome,
 } from '../../services/share/message';
 import { renderShareCard } from '../../services/share/card';
+import { prepareGameArtwork } from '../../services/gameArtworkImage';
+import { isShareBoardPreview, type ShareBoardPreview } from '../../services/share/board';
 import { useSettings } from '../../state/SettingsContext';
 import { useTransientTimeout } from '../useTransientTimeout';
 import { IconShare } from './icons';
@@ -54,12 +56,32 @@ export interface ShareActionProps {
    * figure, an abandoned endless run).
    */
   details: readonly ShareDetail[];
+  /** An optional picture of this game's visible board, never a hidden answer. */
+  board?: ShareBoardPreview | null;
 }
 
-export function ShareAction({ gameId, outcome, details }: ShareActionProps) {
+export function ShareAction({ gameId, outcome, details, board }: ShareActionProps) {
   const { t } = useSettings();
   const [copied, setCopied] = useState(false);
   const hideLater = useTransientTimeout();
+  const artwork = useRef<{ gameId: GameId; image: HTMLImageElement | null } | null>(null);
+  const hasBoard = isShareBoardPreview(board, gameId);
+  useEffect(() => {
+    // Decode while the result is on screen, never after the share click: the
+    // browser needs that click's activation to open its share sheet. An early
+    // click still shares immediately with a complete record card without artwork.
+    const controller = new AbortController();
+    artwork.current = null;
+    if (!hasBoard) {
+      void prepareGameArtwork(gameId, controller.signal, 'share').then((image) => {
+        if (!controller.signal.aborted) artwork.current = { gameId, image };
+      });
+    }
+    return () => {
+      controller.abort();
+      artwork.current = null;
+    };
+  }, [gameId, hasBoard]);
   // The share sheet outlives the screen easily — a player can leave for Home
   // while it is open. The result then arrives for a component that is gone,
   // and the note it would have shown has nowhere to appear.
@@ -84,13 +106,17 @@ export function ShareAction({ gameId, outcome, details }: ShareActionProps) {
       outcome,
       details,
       clearedLabel: t('shareCardCleared'),
+      actionLabel: t('shareCardAction'),
+      artwork: artwork.current?.gameId === gameId ? artwork.current.image : null,
+      board: hasBoard ? board : null,
+      visualLabel: t(hasBoard ? 'shareCardBoard' : 'shareCardPreview'),
     });
     void shareGame(message, card).then((result) => {
       if (!mounted.current || result !== 'copied') return;
       setCopied(true);
       hideLater(() => setCopied(false), COPIED_MS);
     });
-  }, [gameId, outcome, details, t, hideLater]);
+  }, [gameId, outcome, details, board, hasBoard, t, hideLater]);
 
   return (
     <div className="result-share">

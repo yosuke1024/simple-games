@@ -158,7 +158,10 @@ export const vi: Messages = {
   shareCleared: 'Tôi đã hoàn thành {game} trên Simple Games.',
   sharePlayed: 'Tôi đã chơi {game} trên Simple Games.',
   shareInvite: 'Bạn có thể chơi ngay trong trình duyệt.',
-  shareChallenge: 'Bạn cũng thử xem sao?',
+  shareChallenge: 'Đến lượt bạn. Chơi thử ngay trong trình duyệt.',
+  shareCardAction: 'Đến lượt bạn',
+  shareCardBoard: 'Bàn chơi của bạn',
+  shareCardPreview: 'Hình minh họa trò chơi',
   shareCardCleared: 'Hoàn thành!',
   shareCopied: 'Đã sao chép liên kết',
 

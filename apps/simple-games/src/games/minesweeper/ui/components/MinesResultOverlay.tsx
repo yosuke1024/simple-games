@@ -16,6 +16,7 @@ import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
 import { boardDigestOf, type MinesweeperSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
+import { shareBoardOf } from '../shareBoard';
 
 export interface MinesResultOverlayProps {
   session: MinesweeperSession;
@@ -112,6 +113,7 @@ export function MinesResultOverlay({
           gameId="minesweeper"
           outcome={won ? 'completed' : 'played'}
           details={details}
+          board={shareBoardOf(session)}
         />
         {session.firstIndex !== null ? (
           // No `daily`: the daily board depends on the first tap, so it is not one board for everyone (club.md §6-0).

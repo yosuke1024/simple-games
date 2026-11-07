@@ -154,7 +154,10 @@ export const th: Messages = {
   shareCleared: 'ฉันเล่น {game} จบแล้วใน Simple Games',
   sharePlayed: 'ฉันเล่น {game} ใน Simple Games',
   shareInvite: 'เล่นได้ทันทีในเบราว์เซอร์',
-  shareChallenge: 'ลองเล่นดูไหม?',
+  shareChallenge: 'ถึงตาคุณแล้ว ลองเล่นในเบราว์เซอร์ได้เลย',
+  shareCardAction: 'ตาคุณแล้ว',
+  shareCardBoard: 'กระดานของคุณ',
+  shareCardPreview: 'ตัวอย่างเกม',
   shareCardCleared: 'ผ่านแล้ว!',
   shareCopied: 'คัดลอกลิงก์แล้ว',
 

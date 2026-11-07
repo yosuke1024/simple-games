@@ -8,6 +8,9 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform: () => false } }));
+vi.mock('../../services/gameArtworkImage', () => ({
+  prepareGameArtwork: vi.fn().mockResolvedValue(null),
+}));
 
 // Wraps the real `renderShareCard` rather than replacing it outright: most
 // tests below want its real jsdom behaviour (no 2D context, so `null`, the
@@ -23,17 +26,20 @@ import { SettingsProvider } from '../../state/SettingsContext';
 import { settingsSchema } from '../../storage/schemas';
 import { renderShareCard } from '../../services/share/card';
 import type { ShareCard } from '../../services/share/card';
+import type { ShareBoardPreview } from '../../services/share/board';
 import type { ShareDetail } from '../../services/share/message';
 import { ShareAction } from './ShareAction';
+import { prepareGameArtwork } from '../../services/gameArtworkImage';
 
 function renderAction(
   outcome: 'completed' | 'played' = 'played',
   details: readonly ShareDetail[] = [],
   strict = false,
+  board: ShareBoardPreview | null = null,
 ) {
   const tree = (
     <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
-      <ShareAction gameId="sudoku" outcome={outcome} details={details} />
+      <ShareAction gameId="sudoku" outcome={outcome} details={details} board={board} />
     </SettingsProvider>
   );
   render(strict ? <StrictMode>{tree}</StrictMode> : tree);
@@ -72,7 +78,7 @@ describe('the share button', () => {
     await userEvent.click(renderAction('completed', timeAndMistakes));
 
     expect(share).toHaveBeenCalledWith({
-      text: 'I cleared Sudoku on Simple Games.\nTime 4:32 · Mistakes 0\nThink you can beat it?',
+      text: 'I cleared Sudoku on Simple Games.\nTime 4:32 · Mistakes 0\nYour turn. Try it in your browser.',
       url: 'https://pixapps.ai/simple-games/play/?game=sudoku',
     });
     // A share sheet is its own confirmation; a toast on top of it is noise.
@@ -143,6 +149,49 @@ describe('the share button', () => {
 });
 
 describe('the picture card', () => {
+  it('passes the current visible board synchronously without preparing an illustration', async () => {
+    const board: ShareBoardPreview = {
+      gameId: 'sudoku',
+      columns: 1,
+      rows: 1,
+      cells: [{ text: '6' }],
+    };
+    const previousPrepares = vi.mocked(prepareGameArtwork).mock.calls.length;
+    const share = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { share });
+    await userEvent.click(renderAction('completed', [], false, board));
+    expect(share).toHaveBeenCalledOnce();
+    expect(vi.mocked(prepareGameArtwork).mock.calls).toHaveLength(previousPrepares);
+    expect(renderShareCard).toHaveBeenLastCalledWith(
+      expect.objectContaining({ board, visualLabel: en.shareCardBoard }),
+    );
+  });
+
+  it('shares immediately even while the current illustration is still preparing', async () => {
+    vi.mocked(prepareGameArtwork).mockReturnValueOnce(new Promise(() => {}));
+    const share = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { share });
+    await userEvent.click(renderAction('completed', timeAndMistakes));
+    expect(share).toHaveBeenCalledOnce();
+    expect(renderShareCard).toHaveBeenLastCalledWith(expect.objectContaining({ artwork: null }));
+  });
+
+  it('uses the current collection illustration once it is ready', async () => {
+    const image = document.createElement('img');
+    vi.mocked(prepareGameArtwork).mockResolvedValueOnce(image);
+    vi.stubGlobal('navigator', { share: vi.fn().mockResolvedValue(undefined) });
+    await userEvent.click(renderAction('completed', timeAndMistakes));
+    expect(renderShareCard).toHaveBeenLastCalledWith(expect.objectContaining({ artwork: image }));
+  });
+
+  it('cancels illustration preparation when the result leaves the screen', () => {
+    renderAction();
+    const signal = vi.mocked(prepareGameArtwork).mock.calls.at(-1)?.[1];
+    expect(signal?.aborted).toBe(false);
+    cleanup();
+    expect(signal?.aborted).toBe(true);
+  });
+
   it('reaches the sheet as a file, alongside the same text and link', async () => {
     const file = new File([new Uint8Array([1, 2, 3])], 'card.png', { type: 'image/png' });
     const card: ShareCard = { file, base64: 'AAEC', name: 'card.png' };
@@ -163,6 +212,10 @@ describe('the picture card', () => {
       outcome: 'completed',
       details: [],
       clearedLabel: en.shareCardCleared,
+      actionLabel: en.shareCardAction,
+      artwork: null,
+      board: null,
+      visualLabel: en.shareCardPreview,
     });
     expect(share).toHaveBeenCalledWith({
       files: [file],

@@ -194,12 +194,17 @@ export const en = {
   // where the player actually won — every other ending, loss and draw and
   // endless run alike, says `played`. {game} is the registry title, a proper
   // noun that is not translated. shareCardCleared is the short word drawn on
-  // the picture card, and only appears there for a real win.
+  // the picture card, and only appears there for a real win. The invitation
+  // asks the reader to play; it does not claim they will get the same board
+  // or that results from different runs can be compared.
   shareAction: 'Share',
   shareCleared: 'I cleared {game} on Simple Games.',
   sharePlayed: 'I played {game} on Simple Games.',
   shareInvite: 'You can play it right in your browser.',
-  shareChallenge: 'Think you can beat it?',
+  shareChallenge: 'Your turn. Try it in your browser.',
+  shareCardAction: 'Your turn',
+  shareCardBoard: 'Your board',
+  shareCardPreview: 'Game preview',
   shareCardCleared: 'Cleared!',
   shareCopied: 'Link copied',
 

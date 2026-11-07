@@ -37,10 +37,13 @@ function createFakeContext(): CanvasRenderingContext2D & { calls: FillTextCall[]
     globalAlpha: 1,
     calls,
     fillRect: () => undefined,
+    drawImage: vi.fn(),
+    stroke: () => undefined,
     beginPath: () => undefined,
     moveTo: () => undefined,
     lineTo: () => undefined,
     arcTo: () => undefined,
+    arc: () => undefined,
     closePath: () => undefined,
     fill: () => undefined,
     save: () => undefined,
@@ -87,6 +90,7 @@ const baseInput: ShareCardInput = {
   outcome: 'completed',
   details,
   clearedLabel: 'Cleared!',
+  actionLabel: 'Your turn',
 };
 
 describe('renderShareCard', () => {
@@ -133,6 +137,83 @@ describe('renderShareCard', () => {
     expect(texts).toContain('Cleared!');
   });
 
+  it('uses the current artwork and never prints a legacy registry glyph', () => {
+    const ctx = createFakeContext();
+    stubGetContext(ctx);
+    stubToDataURL(() => TINY_PNG_DATA_URL);
+    const artwork = document.createElement('img');
+    expect(renderShareCard({ ...baseInput, artwork })).not.toBeNull();
+    expect(ctx.drawImage).toHaveBeenCalledWith(artwork, 636, 328, 480, 360);
+    const texts = ctx.calls.map((call) => call.text);
+    expect(texts).toContain('Your turn');
+    expect(texts).not.toContain(GAMES.find((game) => game.id === 'sudoku')?.glyph);
+  });
+
+  it('bounds unusually long captions, values and invitations to their columns', () => {
+    const ctx = createFakeContext();
+    stubGetContext(ctx);
+    stubToDataURL(() => TINY_PNG_DATA_URL);
+    const fillText = vi.spyOn(ctx, 'fillText');
+    const longText = 'Long caption '.repeat(20);
+    expect(
+      renderShareCard({
+        ...baseInput,
+        artwork: document.createElement('img'),
+        actionLabel: longText,
+        clearedLabel: longText,
+        details: [
+          { label: longText, value: longText },
+          { label: longText, value: longText },
+          { label: longText, value: longText },
+        ],
+      }),
+    ).not.toBeNull();
+    for (const call of fillText.mock.calls.filter(([text]) => text === longText)) {
+      const [text, x, , maxWidth] = call;
+      expect(maxWidth, text).toBeGreaterThan(0);
+      expect(x + (maxWidth ?? Infinity)).toBeLessThanOrEqual(1116);
+    }
+  });
+
+  it('draws this game’s visible board instead of the illustrative image', () => {
+    const ctx = createFakeContext();
+    stubGetContext(ctx);
+    stubToDataURL(() => TINY_PNG_DATA_URL);
+    const card = renderShareCard({
+      ...baseInput,
+      gameId: '2048',
+      board: {
+        gameId: '2048',
+        columns: 2,
+        rows: 2,
+        cells: [{ text: '128' }, { text: '256' }, {}, { text: '512' }],
+      },
+      artwork: document.createElement('img'),
+      visualLabel: 'Your board',
+    });
+    expect(card).not.toBeNull();
+    expect(ctx.drawImage).not.toHaveBeenCalled();
+    expect(ctx.calls.map(({ text }) => text)).toEqual(
+      expect.arrayContaining(['128', '256', '512', 'Your board']),
+    );
+  });
+
+  it('rejects another game’s board and falls back to the illustration', () => {
+    const ctx = createFakeContext();
+    stubGetContext(ctx);
+    stubToDataURL(() => TINY_PNG_DATA_URL);
+    const artwork = document.createElement('img');
+    expect(
+      renderShareCard({
+        ...baseInput,
+        board: { gameId: '2048', columns: 1, rows: 1, cells: [{ text: '8192' }] },
+        artwork,
+      }),
+    ).not.toBeNull();
+    expect(ctx.drawImage).toHaveBeenCalled();
+    expect(ctx.calls.map(({ text }) => text)).not.toContain('8192');
+  });
+
   it('draws the cleared label only where the run was a real win', () => {
     stubToDataURL(() => TINY_PNG_DATA_URL);
 
@@ -167,8 +248,8 @@ describe('renderShareCard', () => {
 
     expect(mahjongPx).toBeLessThan(sudokuPx);
     // The fake measureText mirrors fitFont's own arithmetic, so a title that
-    // "fits" here is one fitFont actually shrank to the 888px content width.
-    expect('Mahjong Solitaire'.length * mahjongPx * 0.55).toBeLessThanOrEqual(888);
+    // "fits" here is one fitFont actually shrank to the 1032px content width.
+    expect('Mahjong Solitaire'.length * mahjongPx * 0.55).toBeLessThanOrEqual(1032);
   });
 
   it('draws at most three details, dropping a fourth', () => {
