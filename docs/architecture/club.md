@@ -669,7 +669,17 @@ Phase 0 で Sudoku / Minesweeper / Water Sort の 3 本を実装事実で確か�
 - **局を拒む画面は無い。** 以前(spike)は、ゲームが挑戦の盤面を受け取って digest を照合し、
   不一致なら遊ばせず `This challenge was made with a different version of the game` を出していた。
   この経路(`challenge` prop・per-game の club モード・4 つ目の保存枠)は 2026-10-02 に
-  出荷前に取り除いた(§16-3)。
+  出荷前に取り除いた(§16-3)。この約束はゲームの側のもので、2026-11-07 以降も変わらない — ゲームは
+  どの局も普通に遊ばせ、デイリーはホームからいつでも遊べる。
+- **別の版の盤面の挑戦には `Play` を出さない(2026-11-07)。** ゲームの契約の `validateParams` が
+  挑戦の `params` を受け付けない挑戦は、生成器(配り方)を変える前の版の端末が作った盤面である
+  (最初の例は 1.8.2 の 104 枚 Spider のデイリー。`{ suitCount }` だけで `layout` が無い)。その挑戦の
+  `Play` を押しても開くのは**この端末の**デイリー(別の盤面・別の digest)で、結果は上のとおり別の挑戦へ
+  行き、戻ってきた元の挑戦には `Play` が残ったままになる。だから Club の画面だけが次のように振る舞う
+  (`club/contract/challenge.ts` の `isCurrentBoard`): `Today` はその挑戦を並べない(契約の葉の約束「形の合わない
+  挑戦は Club が並べない」と同じ)。別の道(ゲームから戻る `ClubFocus`)で開いた Challenge 画面は、`Play` と
+  開示の 1 文を出さず、`clubDifferentVersion`(`This challenge was made with a different version of the game.`)を
+  出す。結果はそのまま読める。古い挑戦はサーバに残り、古い版の端末はそこへ送り続ける(サーバは変えない)。
 
 ### 6-1. ゲームごとの契約(v1)
 
@@ -1137,7 +1147,8 @@ Hosting                                        ← Owner だけ
 局が Challenge にならなくなったので消えた。`Records` は各表の 1 位として `Rankings` に居る。)
 
 - **Today** はその日(端末のローカル日付)の `daily` の印が付いた挑戦(`GET /challenges?daily=`、
-  §6-3)。順位は Challenge の中にある。
+  §6-3)。順位は Challenge の中にある。そのゲームの契約が `params` を受け付けない挑戦(別の版の盤面)は
+  並べない(§6-0、2026-11-07)。
 - **Your rankings**(`clubMyRankings`。2026-10-10、判断 47)は `GET /rankings/mine`: 自分が入っている表だけ、
   1 行 = 1 表(タイル・ゲーム · モード・`{m} 位 · {n} 件`・自分の最良の値・`1 つ上まで {gap}`)。並びは Rankings の
   棚と同じで固定(順位順・最近順にしない)。1 件も無ければ節ごと出ない。「N 表に参加」の数は出さない。押すと
@@ -1145,7 +1156,9 @@ Hosting                                        ← Owner だけ
 - **Rankings** は `GET /rankings` の一覧を**ゲーム単位にたたんだ棚**(2026-10-10、判断 46): ホームと同じ
   `GAME_CATEGORIES` の見出しの下に、表が実在するゲームのタイル(`game-cell`。タイル + 題だけで、1 位の名前や
   件数は載せない)。棚の中は registry の順。空のカテゴリは出さない。この端末で遊べないゲーム(アプリでの
-  web-beta)は出さない。押すと §16-2 の画面(そのゲームの全モード)。
+  web-beta)は出さない。押すと §16-2 の画面(そのゲームの全モード)。ゲームの契約がもう作らない表
+  (104 枚 Spider の `1-suit` / `2-suits` / `4-suits`。末尾「Spiderette への切り替え」)は、棚・チップ・
+  Your rankings・Member 画面のどれにも出さない(2026-11-07)。
 - 一覧は開いたときと明示の再読み込みで取る(§10)。件数・未読・「新着」を Core へ
   持ち出さない。表やデイリーを見て戻ったときは読み直さない(`ClubRoot` が最後の一覧を保つ。2026-10-10)。
   **Member 画面を開いて戻ったときも同じ**(2026-10-22): 戻り先の Members 画面・表・デイリーは、読んだ中身と
@@ -2077,3 +2090,19 @@ Spider Solitaire は 7 列・52 枚に統一する。新しい結果の params �
 `spiderette-1-suit` / `spiderette-2-suits` / `spiderette-4-suits`。旧 104 枚版の
 順位と比較しない。新しい配札は `ss2:` の digest を使い、旧版の params は新しい
 ゲームの契約で受け付けない。表示上のモード語は既存のスート数の訳を使う。
+
+サーバは変えない。旧 104 枚の表(`1-suit` / `2-suits` / `4-suits`)と `ss1:` のデイリーの挑戦は
+サーバに残り、1.8.2 の端末はそこへ送り続ける。比べないことはクライアントだけで守る(1.8.3〜):
+
+- **表**: `club/contract/challenge.ts` の `isCurrentTable` が、契約がもう作らない表を答える(Spider は
+  `spiderette-` で始まらない鍵すべて。表を入れ替えたゲームだけがここに載る)。`GET /rankings` と
+  `GET /rankings/mine` は Club の画面が読んだところで落とすので、棚のタイル・表の画面のチップ・タイルが
+  開く既定のモード・Your rankings に旧表は出ない。Member 画面の行(`sortByShelf`)、オーナーの記録帳と
+  アルバムの発行の選択肢も同じ。`titles.test.ts` は全契約の全キーがこの判定を通ることを見る。
+- **デイリー**: §6-0「別の版の盤面の挑戦には `Play` を出さない」。`isCurrentBoard`(契約の `validateParams`)が
+  受け付けない挑戦は `Today` に並べず、Challenge 画面は `Play` の代わりに `clubDifferentVersion` を出す。
+  記録帳とアルバムの発行の選択肢のデイリーの行も同じ判定で落とす。
+- 発行済みのアルバムが旧表・旧デイリーを含むときは、その行を描かず、「{n} 件の記録が利用できなくなって
+  います」(`clubAlbumUnavailable`)の数に足す(新しい文言は作らない)。
+- LP(pixapps-landing の読み取り専用ビュー、§18)はサーバの表をそのまま出す。別のリポジトリなので、
+  同じ扱いにするならそちらで直す。

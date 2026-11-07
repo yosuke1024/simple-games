@@ -14,7 +14,7 @@ import { createClient } from '../api/client';
 import { ClubApiError } from '../api/errors';
 import { dropOutboxMatching } from '../storage/outbox';
 import type { Challenge, Result } from '../api/types';
-import { contractFor, gameTitle, rankResults } from '../contract/challenge';
+import { contractFor, gameTitle, isCurrentBoard, rankResults } from '../contract/challenge';
 import { findAvailableGame } from '@/app/gameChannel';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
@@ -130,9 +130,17 @@ export function ChallengeScreen({
   // Only a title this build offers (app/gameChannel.ts): on the app a web-beta id resolves to
   // nothing, so Play can never open a game the app keeps off its doors.
   const gameId = challenge ? (findAvailableGame(challenge.gameId)?.id ?? null) : null;
+  // ...and only a board this build deals (club.md §6-0, 2026-11-07): a daily another version
+  // of the game made (104-card Spider) would be played as this build's daily, whose result
+  // goes to another challenge, so it offers no Play and says why.
+  const playable =
+    challenge !== null &&
+    gameId !== null &&
+    contractFor(challenge.gameId) !== null &&
+    isCurrentBoard(challenge.gameId, challenge.params);
 
   const play = () => {
-    if (!challenge || gameId === null) return;
+    if (!challenge || gameId === null || !playable) return;
     // The game opens onto its own daily and its result goes out like any other;
     // what the shell keeps is only the way back to this challenge.
     onPlay({ gameId, focus: { endpoint: connection.endpoint, challengeId: challenge.id } });
@@ -205,7 +213,7 @@ export function ChallengeScreen({
               date: dateLabel(challenge.createdAt, locale),
             })}
           </p>
-          {gameId !== null && contractFor(challenge.gameId) !== null ? (
+          {playable ? (
             <>
               {/* A replay sends nothing (club.md §6-3), and neither does a connection that has not
                   accepted automatic sending (§4-1): neither promises anything. */}

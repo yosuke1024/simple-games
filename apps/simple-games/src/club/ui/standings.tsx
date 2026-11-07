@@ -3,14 +3,16 @@
  * rankings」, 「Member」): the Club screen shows the viewer's own, the Member
  * screen shows another member's, and both are the same row in the same order
  * (the shelves': category, registry, the mode's place — never by rank, never by
- * recency) and filtered by the same rule (a game this device can open). Pure
- * drawing and ordering; the screens decide what a press does.
+ * recency) and filtered by the same rule (a game this device can open, a table
+ * its contract still makes). Pure drawing and ordering; the screens decide what
+ * a press does.
  */
 import { availableGames } from '@/app/gameChannel';
 import { GAME_CATEGORIES, type GameDefinition } from '@/app/registry';
 import { GameTile } from '@/ui/components/GameTile';
 import { IconChevronRight } from '@/ui/components/icons';
 import type { RankingMine } from '../api/types';
+import { isCurrentTable } from '../contract/challenge';
 import { axisGap, axisText, compareModes, rankingTitle, RankMark, type T } from './common';
 
 /** A shelf game with its place in registry order. */
@@ -31,8 +33,9 @@ export function shelfGames(): ShelfGames {
 
 /**
  * The tables of games this device can open, in the shelves' order (club.md
- * §9): category, then registry, then the mode's place. A new array; the server's
- * order (the spelling of the keys) is left as it came.
+ * §9): category, then registry, then the mode's place. A table the game's
+ * contract no longer makes (`isCurrentTable`: 104-card Spider's) is left out.
+ * A new array; the server's order (the spelling of the keys) is left as it came.
  */
 export function sortByShelf(rows: readonly RankingMine[], games: ShelfGames): RankingMine[] {
   const categoryOf = (gameId: string) => {
@@ -40,7 +43,7 @@ export function sortByShelf(rows: readonly RankingMine[], games: ShelfGames): Ra
     return game ? GAME_CATEGORIES.findIndex((c) => c.id === game.category) : -1;
   };
   return rows
-    .filter((row) => games.has(row.gameId))
+    .filter((row) => games.has(row.gameId) && isCurrentTable(row.gameId, row.paramsKey))
     .sort(
       (a, b) =>
         categoryOf(a.gameId) - categoryOf(b.gameId) ||

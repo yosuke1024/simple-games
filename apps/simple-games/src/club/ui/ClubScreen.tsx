@@ -15,7 +15,7 @@ import { ClubApiError } from '../api/errors';
 import type { Challenge, Member, RankingMine, RankingSummary, ReportedMember } from '../api/types';
 import type { ClubSettings } from '../api/managementTypes';
 import { updateClubGames } from '../storage/connections';
-import { contractFor, gameTitle } from '../contract/challenge';
+import { contractFor, currentTables, gameTitle, isCurrentBoard } from '../contract/challenge';
 import { PUBLIC_CLUB_ENDPOINT } from '../public';
 import { flushOutbox, type FlushReport } from '../storage/outbox';
 import { GAME_CATEGORIES } from '@/app/registry';
@@ -221,8 +221,10 @@ export function ClubScreen({
           reported,
           today,
           todayDate,
-          rankings,
-          mine,
+          // Only the tables this build's contracts make: a retired one (104-card Spider)
+          // is another game's, so no shelf, chip or "Your rankings" row shows or opens it.
+          rankings: currentTables(rankings),
+          mine: currentTables(mine),
           ...(settings ? { settings } : {}),
           ...(waiting !== undefined ? { waitingRequests: waiting } : {}),
         });
@@ -259,11 +261,16 @@ export function ClubScreen({
   }, [data]);
 
   // Held to the date asked for: a server that predates `?daily=` ignores the
-  // parameter and answers with its ordinary list, which is not today's.
+  // parameter and answers with its ordinary list, which is not today's. A daily
+  // another version of the game made is not this build's board (club.md §6-0).
   const allowed = (id: string) =>
     data?.settings?.allowedGameIds == null || data.settings.allowedGameIds.includes(id);
   const todays = (data?.today ?? []).filter(
-    (c) => allowed(c.gameId) && contractFor(c.gameId) !== null && c.daily === data?.todayDate,
+    (c) =>
+      allowed(c.gameId) &&
+      contractFor(c.gameId) !== null &&
+      isCurrentBoard(c.gameId, c.params) &&
+      c.daily === data?.todayDate,
   );
 
   const games = shelfGames();

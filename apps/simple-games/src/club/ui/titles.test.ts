@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { GAMES } from '@/app/registry';
 import type { Challenge } from '../api/types';
-import { contractFor } from '../contract/challenge';
+import { contractFor, isCurrentTable } from '../contract/challenge';
 import { challengeTitle } from './ClubScreen';
 import { axisGap, modeLabel, modeOrder, rankingTitle, sortModes, type T } from './common';
 
@@ -286,6 +286,8 @@ describe('every mode the contracts can produce reads as a word, never as the raw
         const valid = contract!.validateParams(params);
         expect(valid, `${gameId} accepts ${JSON.stringify(params)}`).not.toBeNull();
         expect(contract!.paramsKey(valid!), `${gameId} ${JSON.stringify(params)}`).toBe(key);
+        // A key the contract makes is never one the Club hides as retired.
+        expect(isCurrentTable(gameId, key), `${gameId} · ${key} is a current table`).toBe(true);
 
         // The ranking table's title and the challenge's, daily or not.
         for (const label of [modeLabel(gameId, key, t), modeLabel(gameId, key, t, true)]) {
