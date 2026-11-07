@@ -164,7 +164,7 @@ export const es: Messages = {
   shareInvite: 'Puedes jugarlo directamente en el navegador.',
   shareChallenge: 'Te toca. Pruébalo en tu navegador.',
   shareCardAction: 'Te toca',
-  shareCardBoard: 'Tu tablero',
+  shareCardBoard: 'Tablero de esta partida',
   shareCardPreview: 'Vista previa del juego',
   shareCardCleared: '¡Completado!',
   shareCopied: 'Enlace copiado',

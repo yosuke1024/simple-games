@@ -164,7 +164,7 @@ export const de: Messages = {
   shareInvite: 'Direkt im Browser spielbar.',
   shareChallenge: 'Jetzt bist du dran. Probiere es im Browser aus.',
   shareCardAction: 'Du bist dran',
-  shareCardBoard: 'Dein Spielbrett',
+  shareCardBoard: 'Spielbrett dieser Partie',
   shareCardPreview: 'Spielvorschau',
   shareCardCleared: 'Geschafft!',
   shareCopied: 'Link kopiert',

@@ -225,8 +225,10 @@ function DiscBoard({ kind }: { kind: 'reversi' | 'checkers' | 'gomoku' | 'connec
  * Peg Solitaire's own board: the 15-hole triangle (rows of 1 to 5), a peg
  * standing in every hole but the middle one. Holes are the board's recess, the
  * pegs are the title's one colour with a small light from above. Only
- * currentColor and the paper token are used (no other var()): the Android
- * shortcut rasterizer resolves exactly those two.
+ * currentColor and the paper token are used: the share card and the Android
+ * shortcut decode this SVG as an image, where only the paints that
+ * services/gameArtworkImage.ts resolves (currentColor and its listed tokens)
+ * can show.
  */
 function PegTriangle() {
   return (
@@ -802,6 +804,8 @@ function Motif({ id }: { id: GameId }): ReactNode {
       return (
         <Board>
           <path d="M30 36h60M30 54h60M50 17v54M70 17v54" stroke="currentColor" opacity=".2" />
+          {/* The two sides' own colours. As an image (share card, shortcut)
+              they come from ARTWORK_CSS_TOKENS in services/gameArtworkImage.ts. */}
           <g fill="var(--ct-you)">
             <circle cx="40" cy="27" r="6" />
             <circle cx="60" cy="27" r="6" />

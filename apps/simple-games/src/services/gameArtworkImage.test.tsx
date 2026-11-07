@@ -1,9 +1,12 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { useEffect } from 'react';
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { seriesColors } from '@simple-games/brand';
+import { GAMES } from '../app/registry';
 import { titleAccentOf } from '../app/titleAccent';
-import { prepareGameArtwork } from './gameArtworkImage';
+import { ARTWORK_CSS_TOKENS, gameArtworkSvg, prepareGameArtwork } from './gameArtworkImage';
 
 let decode: 'load' | 'error' | 'pending' | 'throw';
 let images: FakeImage[];
@@ -183,5 +186,49 @@ describe('prepareGameArtwork', () => {
     vi.stubGlobal('document', undefined);
     await expect(prepareGameArtwork('sudoku')).resolves.toBeNull();
     expectReleased();
+  });
+});
+
+describe('gameArtworkSvg', () => {
+  // An SVG decoded as an image sees none of the page's CSS: any var() or
+  // currentColor left in it paints nothing. Both drawings are checked because
+  // the share card uses the share scene and the Android shortcut the shelf one.
+  it.each(['collection', 'share'] as const)(
+    'leaves no unresolved paint in any game’s %s drawing',
+    (variant) => {
+      for (const game of GAMES) {
+        const svg = gameArtworkSvg(game.id, variant);
+        expect(svg, `${game.id} ${variant}`).not.toBeNull();
+        expect(svg, `${game.id} ${variant}`).not.toMatch(/var\(|currentColor/);
+      }
+    },
+  );
+
+  it('keeps Chain Territory’s two sides visible, in their light-theme colours', () => {
+    for (const variant of ['collection', 'share'] as const) {
+      const svg = gameArtworkSvg('chain-territory', variant) ?? '';
+      expect(svg, variant).toContain(`fill="${ARTWORK_CSS_TOKENS['--ct-you']}"`);
+      expect(svg, variant).toContain(`fill="${ARTWORK_CSS_TOKENS['--ct-cpu']}"`);
+    }
+  });
+
+  it('copies each token from the light theme of ui/styles.css', () => {
+    // Resolved from the app root rather than import.meta.url: these tests run
+    // in the jsdom environment, where import.meta.url is an http:// URL.
+    const css = readFileSync(resolve('src/ui/styles.css'), 'utf8');
+    for (const [name, value] of Object.entries(ARTWORK_CSS_TOKENS)) {
+      // The first declaration is the light one: every dark override in the
+      // stylesheet follows the rule it overrides. The selector says so too.
+      const at = css.indexOf(`\n  ${name}:`);
+      expect(at, `${name} is declared in styles.css`).toBeGreaterThan(-1);
+      const open = css.lastIndexOf('{', at);
+      const selector = css
+        .slice(css.lastIndexOf('}', open) + 1, open)
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .trim();
+      expect(selector, name).not.toMatch(/dark|prefers-color-scheme/);
+      const declared = css.slice(css.indexOf(':', at + 1) + 1, css.indexOf(';', at)).trim();
+      expect(value.toLowerCase(), `${name} in ${selector}`).toBe(declared.toLowerCase());
+    }
   });
 });

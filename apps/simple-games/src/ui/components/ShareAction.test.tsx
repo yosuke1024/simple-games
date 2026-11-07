@@ -184,6 +184,54 @@ describe('the picture card', () => {
     expect(renderShareCard).toHaveBeenLastCalledWith(expect.objectContaining({ artwork: image }));
   });
 
+  it('still attaches a card when the illustration taints the canvas at click time', async () => {
+    // The illustration was decoded long before the click, but WebKit can still
+    // decide at draw time that it taints the canvas, which then refuses to be
+    // read back. Only the render that carried the illustration fails here.
+    const image = document.createElement('img');
+    vi.mocked(prepareGameArtwork).mockResolvedValueOnce(image);
+    const tainted = new Set<HTMLCanvasElement>();
+    const noop = () => undefined;
+    getContextSpy.mockImplementation(function (this: HTMLCanvasElement) {
+      return {
+        drawImage: () => tainted.add(this),
+        measureText: (text: string) => ({ width: text.length * 10 }),
+        fillRect: noop,
+        fillText: noop,
+        stroke: noop,
+        beginPath: noop,
+        moveTo: noop,
+        lineTo: noop,
+        arcTo: noop,
+        arc: noop,
+        closePath: noop,
+        fill: noop,
+        save: noop,
+        restore: noop,
+      };
+    });
+    const encode = vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockImplementation(function (
+      this: HTMLCanvasElement,
+    ) {
+      if (tainted.has(this)) throw new DOMException('Tainted canvas', 'SecurityError');
+      return 'data:image/png;base64,AAAA';
+    });
+    const share = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { share, canShare: () => true });
+    try {
+      await userEvent.click(renderAction('completed', timeAndMistakes));
+
+      expect(renderShareCard).toHaveBeenLastCalledWith(expect.objectContaining({ artwork: image }));
+      expect(tainted.size).toBe(1);
+      expect(share).toHaveBeenCalledOnce();
+      expect(share.mock.calls[0]?.[0]).toEqual(
+        expect.objectContaining({ files: [expect.any(File)] }),
+      );
+    } finally {
+      encode.mockRestore();
+    }
+  });
+
   it('cancels illustration preparation when the result leaves the screen', () => {
     renderAction();
     const signal = vi.mocked(prepareGameArtwork).mock.calls.at(-1)?.[1];

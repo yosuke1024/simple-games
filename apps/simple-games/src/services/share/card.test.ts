@@ -189,12 +189,12 @@ describe('renderShareCard', () => {
         cells: [{ text: '128' }, { text: '256' }, {}, { text: '512' }],
       },
       artwork: document.createElement('img'),
-      visualLabel: 'Your board',
+      visualLabel: 'This game’s board',
     });
     expect(card).not.toBeNull();
     expect(ctx.drawImage).not.toHaveBeenCalled();
     expect(ctx.calls.map(({ text }) => text)).toEqual(
-      expect.arrayContaining(['128', '256', '512', 'Your board']),
+      expect.arrayContaining(['128', '256', '512', 'This game’s board']),
     );
   });
 
@@ -283,6 +283,121 @@ describe('renderShareCard', () => {
       expect(accent.light, `${game.id} light`).toMatch(hex);
       expect(accent.onLight, `${game.id} onLight`).toMatch(hex);
     }
+  });
+
+  describe('a picture the browser refuses at click time', () => {
+    /**
+     * One fake context per canvas, so the card that is finally handed back can
+     * be read on its own. `drawImage` marks its canvas tainted, and a tainted
+     * canvas refuses `toDataURL` — WebKit's rule for an image it will not let
+     * the page read back. A tainted canvas stays tainted; only a new one works.
+     */
+    function stubCanvases(
+      options: {
+        taintOnDraw?: boolean;
+        /** Adjusts the context of the `index`-th canvas the renderer creates. */
+        decorate?: (ctx: ReturnType<typeof createFakeContext>, index: number) => void;
+      } = {},
+    ) {
+      const contexts: ReturnType<typeof createFakeContext>[] = [];
+      const tainted = new Set<HTMLCanvasElement>();
+      vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (
+        this: HTMLCanvasElement,
+      ) {
+        const ctx = createFakeContext();
+        if (options.taintOnDraw) {
+          vi.mocked(ctx.drawImage).mockImplementation(() => {
+            tainted.add(this);
+          });
+        }
+        options.decorate?.(ctx, contexts.length);
+        contexts.push(ctx);
+        return ctx as unknown as ReturnType<HTMLCanvasElement['getContext']>;
+      });
+      const encode = vi
+        .spyOn(HTMLCanvasElement.prototype, 'toDataURL')
+        .mockImplementation(function (this: HTMLCanvasElement) {
+          if (tainted.has(this)) throw new DOMException('Tainted canvas', 'SecurityError');
+          return TINY_PNG_DATA_URL;
+        });
+      return { contexts, tainted, encode };
+    }
+
+    const texts = (ctx: ReturnType<typeof createFakeContext>) => ctx.calls.map(({ text }) => text);
+
+    it('keeps the card, without the illustration, when the canvas that drew it is tainted', () => {
+      const { contexts, tainted } = stubCanvases({ taintOnDraw: true });
+      const card = renderShareCard({
+        ...baseInput,
+        artwork: document.createElement('img'),
+        visualLabel: 'Game preview',
+      });
+      expect(card).not.toBeNull();
+      expect(card?.file?.type).toBe('image/png');
+      expect(contexts).toHaveLength(2);
+      expect(tainted.size).toBe(1);
+      const final = contexts[1]!;
+      expect(final.drawImage).not.toHaveBeenCalled();
+      // The record, the address and the invitation all survive; only the
+      // picture and its caption are gone.
+      expect(texts(final)).toEqual(
+        expect.arrayContaining(['Sudoku', 'Time', '4:32', 'Cleared!', 'Your turn']),
+      );
+      expect(texts(final)).not.toContain('Game preview');
+    });
+
+    it('keeps the card when drawing an image it now treats as broken throws', () => {
+      const ctx = createFakeContext();
+      vi.mocked(ctx.drawImage).mockImplementation(() => {
+        throw new DOMException('The image is broken', 'InvalidStateError');
+      });
+      stubGetContext(ctx);
+      stubToDataURL(() => TINY_PNG_DATA_URL);
+      const card = renderShareCard({ ...baseInput, artwork: document.createElement('img') });
+      expect(card).not.toBeNull();
+      expect(ctx.drawImage).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps the card when a board preview cannot be drawn', () => {
+      // Only the board draws arcs (its pieces); the card's own shapes do not.
+      const { contexts } = stubCanvases({
+        decorate: (ctx, index) => {
+          if (index === 0) {
+            ctx.arc = () => {
+              throw new DOMException('Negative radius', 'IndexSizeError');
+            };
+          }
+        },
+      });
+      const card = renderShareCard({
+        ...baseInput,
+        board: { gameId: 'sudoku', columns: 1, rows: 1, cells: [{ piece: 'dark', text: '7' }] },
+        visualLabel: 'This game’s board',
+      });
+      expect(card).not.toBeNull();
+      expect(contexts).toHaveLength(2);
+      expect(texts(contexts[1]!)).toContain('Sudoku');
+      expect(texts(contexts[1]!)).not.toContain('7');
+      expect(texts(contexts[1]!)).not.toContain('This game’s board');
+    });
+
+    it('draws once and still returns null when nothing optional was passed', () => {
+      const { contexts, encode } = stubCanvases();
+      encode.mockImplementation(() => {
+        throw new Error('toDataURL is not implemented');
+      });
+      expect(renderShareCard(baseInput)).toBeNull();
+      expect(contexts).toHaveLength(1);
+    });
+
+    it('returns null when the card fails without its picture too', () => {
+      const { contexts, encode } = stubCanvases();
+      encode.mockImplementation(() => {
+        throw new Error('toDataURL is not implemented');
+      });
+      expect(renderShareCard({ ...baseInput, artwork: document.createElement('img') })).toBeNull();
+      expect(contexts).toHaveLength(2);
+    });
   });
 
   it('still hands back the base64 when this WebView has no File constructor', () => {

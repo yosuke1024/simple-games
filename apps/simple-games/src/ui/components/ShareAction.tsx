@@ -100,6 +100,9 @@ export function ShareAction({ gameId, outcome, details, board }: ShareActionProp
     // Nothing is awaited before shareGame(), so the click's user activation is
     // still valid when the share sheet is asked for — that includes drawing
     // the card, which is synchronous for the same reason (services/share/card.ts).
+    // A picture the browser refuses at this point (an illustration WebKit
+    // treats as broken or tainting) costs only the picture: renderShareCard
+    // redraws the card without it inside the same call.
     const message = buildShareMessage({ gameId, outcome, details }, t);
     const card = renderShareCard({
       gameId,

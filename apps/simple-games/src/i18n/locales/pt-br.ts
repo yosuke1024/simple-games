@@ -162,7 +162,7 @@ export const ptBR: Messages = {
   shareInvite: 'Dá para jogar direto no navegador.',
   shareChallenge: 'Agora é sua vez. Experimente no navegador.',
   shareCardAction: 'Sua vez',
-  shareCardBoard: 'Seu tabuleiro',
+  shareCardBoard: 'Tabuleiro desta partida',
   shareCardPreview: 'Prévia do jogo',
   shareCardCleared: 'Concluído!',
   shareCopied: 'Link copiado',
