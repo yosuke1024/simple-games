@@ -759,3 +759,5 @@ Crazy Eights / Durak / Spades / Texas Hold’em / Blackjack / Indian Rummy の
 シェルの `shareInvite` / `shareChallenge` を14言語で、ブラウザ案内からSimple Gamesアプリの案内へ変更。
 英語を原文にAIが作成した。価格・オフライン・購入条件の約束は追加していない。
 キーの整合と共有文への反映を自動検査する。人間・母語話者の自然さの確認は未実施。
+出す前のレビューで、ja は他のキーと同じ「Simple Games アプリ」(半角空白あり)にそろえ、ko の
+`shareChallenge` は UI で避ける二人称「당신」を外して旧文と同じ「직접 도전해 보세요」で始めた。

@@ -238,6 +238,22 @@ describe('shared native links', () => {
     tapShortcut('https://pixapps.ai/simple-games/share/falling-blocks/');
     expect(await collectionHome()).toBeInTheDocument();
   });
+
+  it('goes home from the settings screen for the collection link or an unavailable game', async () => {
+    const user = userEvent.setup();
+    await launchFrom(undefined);
+    await collectionHome();
+
+    for (const link of [
+      'https://pixapps.ai/simple-games/share/',
+      'https://pixapps.ai/simple-games/share/falling-blocks/',
+    ]) {
+      await user.click(screen.getByRole('button', { name: 'Settings' }));
+      expect(screen.queryByRole('heading', { name: 'Simple Games' })).not.toBeInTheDocument();
+      tapShortcut(link);
+      expect(await collectionHome()).toBeInTheDocument();
+    }
+  });
 });
 
 describe('a cold start from a home-screen shortcut', () => {

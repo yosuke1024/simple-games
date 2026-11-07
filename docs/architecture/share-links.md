@@ -25,6 +25,9 @@ Web-only share destination, not the browser version or its ordinary links.
 - Safari same-domain navigation, embedded browsers, user link preferences and
   older app versions can retain the web page even when an app is installed.
   The LP keeps store links and explains opening in Safari/Chrome if needed.
+- App versions up to 1.8.3 register neither the share paths nor the custom
+  scheme. On such an iPhone, **Open in app** ends in Safari's invalid-address
+  alert, so the LP's help text also says to update the app from the store.
 - Install → first launch does **not** automatically remember the shared game.
   Reopening the original link after installing is the first-version behavior.
 
@@ -49,12 +52,26 @@ The site PR adds the following to existing files, preserving PixWork entries:
   `8XR3LLAS54.com.pixapps.simplegames`, path `/simple-games/share/*` only.
 - `/.well-known/assetlinks.json`: package `com.pixapps.simplegames`, Play app
   signing certificate SHA-256 supplied by the owner on 2026-11-08:
-  `BF:0B:5A:52:D6:42:4E:74:5E:7A:76:10:45:D9:72:65:61:C5:C9:B3:5D:02:E3:F4:1E:AA:84:4D:09:7E:0A:7F`.
-  This is the Play app signing certificate, not an upload or debug key.
+  `BF:0B:5A:52:D6:42:4E:74:5E:7A:76:10:45:D9:72:65:61:C5:C9:B3:5D:02:E3:F4:1E:AA:84:4D:09:7E:0A:7F`,
+  and the upload key that signs the CI release APK:
+  `B8:D4:B9:44:09:76:F2:93:85:95:3F:B3:AF:5F:6F:58:99:C3:AC:03:62:4F:F5:64:5F:45:57:E6:96:76:08:C6`.
+  The same two fingerprints as club.pixapps.ai's file, so every build that
+  verifies one host verifies the other. Never a debug key.
 
 1. Review both PRs together. Publish the landing and association files first.
 2. Confirm both association files return HTTP 200 without redirects, the AASA
-   has `application/json`, and a shared game page renders at its production URL.
+   has `application/json`, and a shared game page renders at its production URL
+   for every game id the native build can share. Then confirm Apple's CDN copy,
+   `https://app-site-association.cdn-apple.com/a/v1/pixapps.ai`, contains
+   `8XR3LLAS54.com.pixapps.simplegames`: devices read that copy, not the origin,
+   and Apple caches it for hours.
+   **No build with these registrations may be installed anywhere — internal test
+   tracks and TestFlight included — before this step passes.** Android verifies
+   App Links only at install and update (background re-verification starts with
+   Android 15). On Android 11 and lower the app counts as verified only when
+   every autoVerify host verifies, so an install made while pixapps.ai lacks the
+   entry also loses the Club House `club.pixapps.ai/join` links, until the next
+   app update.
 3. Enable Associated Domains on the iOS App ID if needed and regenerate the
    release provisioning profile. The app already uses this capability for Club
    House; the new entitlement adds `pixapps.ai`.
@@ -76,5 +93,7 @@ artifacts, mobile/desktop CTAs, language switching and no-JavaScript fallback.
 Before a production release, verify with store-signed builds on actual iOS and
 Android: link from Messages/Mail, cold and warm starts, no-install fallback,
 Safari same-domain link, Chrome, and the messaging apps used for sharing. Check
-Android domain verification with `adb shell pm get-app-links com.pixapps.simplegames`.
+Android domain verification with `adb shell pm get-app-links com.pixapps.simplegames`
+(Android 12 and later) or `adb shell dumpsys package d` (Android 11 and lower), for
+both pixapps.ai and club.pixapps.ai.
 An unsigned build or simulated user agent does not prove OS domain verification.

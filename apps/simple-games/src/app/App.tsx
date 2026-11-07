@@ -576,9 +576,12 @@ export function App() {
       const gameLink = nativeGameTarget(url);
       if (!gameLink) return;
       launchInviteToken.current = null;
-      const showing = viewRef.current.kind === 'game' ? viewRef.current.gameId : null;
+      const current = viewRef.current;
+      const showing = current.kind === 'game' ? current.gameId : null;
       const target = gameLink.gameId;
-      if (showing === target) return;
+      // Nothing to do only when that game, or the collection, is already showing:
+      // from Settings, the Club House or Nearby a collection link still goes home.
+      if (target !== null ? showing === target : current.kind === 'collection') return;
       if (showing !== null) leaveGame(showing);
       if (target !== null) enterGame(target, 'shortcut');
       else show({ kind: 'collection' });
