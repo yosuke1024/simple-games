@@ -5,7 +5,7 @@ import type { GameRootProps } from './registry';
 import type { NearbyGameId } from './nearbyGate';
 
 const state = vi.hoisted(() => ({
-  native: true,
+  platform: 'android' as 'android' | 'ios' | 'web',
   loaded: vi.fn(),
   mounted: vi.fn(),
   unmounted: vi.fn(),
@@ -18,7 +18,11 @@ vi.mock('@capacitor/core', async (original) => {
   const actual = await original<typeof import('@capacitor/core')>();
   return {
     ...actual,
-    Capacitor: { ...actual.Capacitor, isNativePlatform: () => state.native },
+    Capacitor: {
+      ...actual.Capacitor,
+      isNativePlatform: () => state.platform !== 'web',
+      getPlatform: () => state.platform,
+    },
   };
 });
 vi.mock('@capacitor/app', () => ({
@@ -68,7 +72,7 @@ vi.mock('../ui/screens/SettingsScreen', () => ({
 import { SettingsProvider } from '../state/SettingsContext';
 import { settingsSchema } from '../storage/schemas';
 import { App } from './App';
-import { resetRecentGamesForTesting } from './recentGames';
+import { getRecentGames, resetRecentGamesForTesting } from './recentGames';
 
 function GameHome({ onExit, onPlayTogether, playTogetherActive }: GameRootProps) {
   return (
@@ -129,6 +133,9 @@ function RetainedPeer({
     <section data-testid="peer" data-visible={visible}>
       <h1>{gameId ?? 'browse'} with someone</h1>
       {!gameId && <button onClick={() => onOpenGame?.('chess')}>Open Chess home</button>}
+      {/* A door that would name a title the iOS app leaves out: the shell's
+          open point must refuse it there (App.tsx enterGame). */}
+      {!gameId && <button onClick={() => onOpenGame?.('blackjack')}>Open Blackjack home</button>}
       {!gameId && (
         <button
           onClick={() => {
@@ -173,7 +180,7 @@ function openPeer() {
 }
 beforeEach(() => {
   vi.clearAllMocks();
-  state.native = true;
+  state.platform = 'android';
   state.stopBarrier = null;
   window.history.replaceState(null, '', '/');
   resetRecentGamesForTesting();
@@ -251,7 +258,7 @@ describe('multiplayer entrances retain one session', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sudoku' }));
     expect(screen.queryByRole('button', { name: 'Play with someone' })).not.toBeInTheDocument();
     first.unmount();
-    state.native = false;
+    state.platform = 'web';
     renderShell();
     chooseYacht();
     expect(screen.queryByRole('button', { name: 'Play with someone' })).not.toBeInTheDocument();
@@ -327,5 +334,40 @@ describe('multiplayer entrances retain one session', () => {
     expect(state.unmounted).toHaveBeenCalledTimes(1);
     expect(state.cleared).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('button', { name: 'Play with someone' })).toBeInTheDocument();
+  });
+});
+
+/**
+ * The shell's one open point (App.tsx `enterGame`) behind every door. On the
+ * iOS app a title it leaves out (app/iosWithheldGames.ts) opens nothing there
+ * and records nothing, whichever door asked — here, a Nearby stub that names
+ * it, with every game root stubbed open so the open point is the only gate in
+ * the way. Android opens the same title.
+ */
+describe('the shell’s open point and a title the iOS app leaves out', () => {
+  it('shows the collection on iOS and records nothing', () => {
+    state.platform = 'ios';
+    renderShell();
+    fireEvent.click(screen.getByRole('button', { name: /Find nearby opponents/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Open Blackjack home' }));
+    expect(screen.queryByRole('heading', { name: 'Game home' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Simple Games' })).toBeVisible();
+    expect(getRecentGames()).toEqual([]);
+    expect(document.documentElement.dataset.game).toBeUndefined();
+    // The same door still opens a title the iOS app offers.
+    fireEvent.click(screen.getByRole('button', { name: /Find nearby opponents/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Open Chess home' }));
+    expect(screen.getByRole('heading', { name: 'Game home' })).toBeVisible();
+    expect(getRecentGames()).toEqual(['chess']);
+  });
+
+  it('opens the game on Android', () => {
+    state.platform = 'android';
+    renderShell();
+    fireEvent.click(screen.getByRole('button', { name: /Find nearby opponents/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Open Blackjack home' }));
+    expect(screen.getByRole('heading', { name: 'Game home' })).toBeVisible();
+    expect(getRecentGames()).toEqual(['blackjack']);
+    expect(document.documentElement.dataset.game).toBe('blackjack');
   });
 });

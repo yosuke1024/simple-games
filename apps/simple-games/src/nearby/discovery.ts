@@ -1,3 +1,4 @@
+import { isWithheldHere } from '../app/iosWithheldGames';
 import { isNearbyGameId, NEARBY_GAME_CODES } from '../app/nearbyGameIds';
 import type { NearbyGameId } from './gameTypes';
 import { isRoomName, PROTOCOL_VERSION } from './session';
@@ -22,14 +23,19 @@ export interface DiscoveredPeer {
 const encoder = new TextEncoder();
 const keys = ['available', 'gameId', 'label', 'protocol', 'roomName', 'v'];
 
+/**
+ * The game a discovery label advertises — null for a code this build does not
+ * know, and in the iOS app for a title it does not offer
+ * (app/iosWithheldGames.ts). A table hosted on Android for one of those is
+ * then what an unknown code already is: never listed and never joined.
+ */
 export function gameForLabel(label: string): NearbyGameId | null {
   if (!/^[PF]-[A-F0-9]{6}$/.test(label)) return null;
   const code = (parseInt(label.slice(2, 4), 16) & 0x7f).toString(16).toUpperCase().padStart(2, '0');
-  return (
-    (Object.keys(NEARBY_GAME_CODES) as NearbyGameId[]).find(
-      (gameId) => NEARBY_GAME_CODES[gameId] === code,
-    ) ?? null
+  const gameId = (Object.keys(NEARBY_GAME_CODES) as NearbyGameId[]).find(
+    (id) => NEARBY_GAME_CODES[id] === code,
   );
+  return gameId === undefined || isWithheldHere(gameId) ? null : gameId;
 }
 
 export function isMetadataLabel(label: string): boolean {

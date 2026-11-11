@@ -571,6 +571,88 @@ describe('the same doors on iOS', () => {
   });
 });
 
+/**
+ * The titles the iOS app leaves out (app/iosWithheldGames.ts) — a share link
+ * a friend on Android sent, or a quick action an earlier build wrote. Every
+ * one of them is a link to a game this app does not have: the collection, as
+ * for a retired id, with nothing recorded and no accent stamped. Android, which
+ * keeps both titles, opens them.
+ */
+const WITHHELD_FROM_IOS = ['blackjack', 'texas-holdem'] as const;
+const shareUrl = (id: string) => `https://pixapps.ai/simple-games/share/${id}/`;
+const schemeUrl = (id: string) => `com.pixapps.simplegames://share/${id}`;
+
+describe('a link to a title the iOS app leaves out', () => {
+  describe.each(WITHHELD_FROM_IOS)('%s', (id) => {
+    const doors = [
+      ['the share link', () => shareUrl(id)],
+      ['the app-scheme share link', () => schemeUrl(id)],
+      ['the shortcut address', () => shortcutUrlFor(id)],
+    ] as const;
+
+    it.each(doors)(
+      'lands on the collection on iOS from %s, at a cold start',
+      async (_door, url) => {
+        capacitorMock.platform = 'ios';
+        await launchFrom(url());
+
+        expect(await collectionHome()).toBeInTheDocument();
+        expect(screen.queryByText(`playing ${id}`)).not.toBeInTheDocument();
+        expect(getRecentGames()).toEqual([]);
+        expect(document.documentElement.dataset.game).toBeUndefined();
+      },
+    );
+
+    it.each(doors)(
+      'closes the game on screen onto the collection on iOS, from %s while the app runs',
+      async (_door, url) => {
+        capacitorMock.platform = 'ios';
+        reviewMock.shouldPromptReview.mockReturnValue(true);
+        await launchFrom(shortcutUrlFor('sudoku'));
+        playing('sudoku');
+
+        tapShortcut(url());
+
+        expect(await collectionHome()).toBeInTheDocument();
+        expect(screen.queryByText('playing sudoku')).not.toBeInTheDocument();
+        expect(screen.queryByText(`playing ${id}`)).not.toBeInTheDocument();
+        expect(releaseSound).toHaveBeenCalledTimes(1);
+        expect(getRecentGames()).toEqual(['sudoku']);
+        expect(document.documentElement.dataset.game).toBeUndefined();
+        // The same fail-safe landing a retired id gets: not the pause the
+        // review question waits for.
+        expect(reviewMock.markReviewPromptShown).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each(doors)('does nothing on the iOS collection for %s', async (_door, url) => {
+      capacitorMock.platform = 'ios';
+      await launchFrom(undefined);
+      await collectionHome();
+
+      tapShortcut(url());
+
+      expect(await collectionHome()).toBeInTheDocument();
+      expect(releaseSound).not.toHaveBeenCalled();
+      expect(getRecentGames()).toEqual([]);
+    });
+
+    it.each(doors)('opens the game on Android from %s', async (_door, url) => {
+      capacitorMock.platform = 'android';
+      await launchFrom(url());
+      expect(playing(id)).toBeInTheDocument();
+      expect(getRecentGames()).toEqual([id]);
+      cleanup();
+      resetShortcutLaunchForTesting();
+
+      await launchFrom(shortcutUrlFor('sudoku'));
+      tapShortcut(url());
+      expect(playing(id)).toBeInTheDocument();
+      expect(screen.queryByText('playing sudoku')).not.toBeInTheDocument();
+    });
+  });
+});
+
 describe('the shell the browser runs', () => {
   it('never registers for a shortcut, and never reads the launch', async () => {
     capacitorMock.platform = 'web';

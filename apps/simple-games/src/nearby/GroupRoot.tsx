@@ -4,6 +4,7 @@ import type { NearbyGroupGame } from './groupGames';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
+import { isWithheldHere } from '../app/iosWithheldGames';
 import { useSettings } from '../state/SettingsContext';
 import { ConfirmDialog } from '../ui/components/ConfirmDialog';
 import { IconBack } from '../ui/components/icons';
@@ -87,7 +88,10 @@ export default function GroupRoot({
     const request = ++historyRequest.current;
     try {
       const data = await loadHistory();
-      if (live.current && request === historyRequest.current) setHistory(data.groups ?? []);
+      // A gathering of a title the iOS app leaves out stays saved but unshown
+      // there (app/iosWithheldGames.ts) — it is the player's, and Android keeps it.
+      if (live.current && request === historyRequest.current)
+        setHistory((data.groups ?? []).filter((g) => !isWithheldHere(g.gameId ?? 'ludo')));
     } catch {
       if (live.current && request === historyRequest.current) setError(true);
     }
