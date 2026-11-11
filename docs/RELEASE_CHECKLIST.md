@@ -1,6 +1,73 @@
 # Simple Games — リリースチェックリスト
 
+## 2026-11-11: iOS 1.8.5(Blackjack / Texas Hold'em を iOS から外して再提出。Android は 1.8.4 のまま)
+
+2026-11-10、App Store の審査が iOS「Simple Games: Offline Games」(`com.pixapps.simplegames`)の 1.8.4 (10804) を
+リジェクトした(提出 `a93bf340`、Guideline 2.3.6、審査端末 iPad Air 11-inch (M3))。模擬ギャンブルのアプリは
+組織(法人)の開発者アカウントからしか受け付けず、このアプリは個人のアカウントで出している。1.8.2 から年齢区分で
+「Simulated Gambling: Infrequent/Mild」を申告していたのは、1.8.0 で加えた Blackjack と Texas Hold'em のため
+(下の 1.8.2 の節)。いま公開中の iOS は 1.7.2 で、この 2 本は一度も入っていない。ほかに模擬ギャンブルに当たる
+タイトルは無い(Indian Rummy は賭けを持たない)。
+
+オーナー判断(2026-11-11):
+
+1. iOS アプリからは Blackjack(`blackjack`)と Texas Hold'em(`texas-holdem`)だけを外す。Android アプリと
+   Web 版(iPhone の Safari を含む)は残す。規則の正本は [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)
+   「iOS で出さないタイトル」。
+2. 実行時ガードでビルドは 1 つ。コードはバンドルに残し、iOS ではすべての扉を閉じる(`web-beta` と同じ形 —
+   [WEB_VERSION.md](WEB_VERSION.md)「先行公開」)。
+3. iOS は 1.8.5 (10805) で出す。Android は 1.8.4 のまま — タグ `v1.8.5` で CI が Android の AAB 10805 を
+   作るが、公開しない。
+4. landing の 2 本の共有ページは、iPhone・iPad の訪問者に「Android 版アプリとブラウザ版にあり、iPhone・iPad 版
+   アプリには無い」と伝え、ブラウザ版で遊ぶリンクを出す。この 2 本は iOS で Smart App Banner と「アプリで開く」を
+   出さず、AASA はこの 2 本の共有パスを主張しない(アプリが入った iPhone でもアプリではなくページが開く)。
+   [共有リンク](architecture/share-links.md)「Titles the iOS app does not offer」。
+
+本数(iOS アプリ): 78 本(80 − 2)、トランプ 14 本(16 − 2)、Nearby 26 本(2 席 18 本・4 席 8 本(10 − 2))。
+1.8.x で増えたタイトルは iOS では 13 本(2 本を含めると 15 本)— iPhone の利用者は 1.7.2 から直接上がるので、
+新機能の本数はこれ。Android は 80 本 / トランプ 16 本 / Nearby 28 本(18 + 10)、Web は 80 本 / トランプ 16 本のまま。
+
+順番が門: (1) アプリの PR を main へ → (2) landing の PR ブランチで共有カタログをその main から同期し直し、
+Publish(ボットのビルド commit)→ main へマージ → (3) Apple の CDN で AASA を確かめる → (4) iOS を審査へ。
+landing の AASA のテストは共有カタログから除外パスを組み立てるので、(1) より前の app の ref から Publish すると
+テストで止まる(古い ref が 2 本を iOS に戻してしまうのを止める門)。
+
+- [ ] アプリの PR をマージ(registry の `unavailableOn: 'ios'`、`app/gameChannel.ts`、`app/iosWithheldGames.ts`、
+      Nearby の扉、`App.tsx` の `enterGame`、iOS の版 1.8.5 / 10805)
+- [ ] landing の PR ブランチで共有カタログをマージ後の app main から同期し直し(`sourceCommit` がその commit になる)、
+      Publish → main へマージ。iPhone の UA で注記とブラウザ版へのリンクが出て、Smart App Banner・「アプリで開く」・
+      ストアのバッジが無いこと。Android の UA では Google Play と「アプリで開く」が今までどおり
+- [ ] landing の製品ページ(`/simple-games/`)が「アプリ版(Android・iOS)はブラウザ版と同じ 80 ゲーム」と言わないこと
+      (iOS アプリから「by PixApps」のフッターや Learn More で辿れる)。同じ landing の PR で直す
+- [ ] 既知の残り(オーナー判断): Web 版の Blackjack / Hold'em のゲームトップの「誰かと遊ぶ」の注記「アプリ専用の機能です」は、
+      iPhone の Safari では iOS アプリにもあるように読める。直すなら新しい i18n の文(14 言語)が要る
+- [ ] Apple の CDN(`https://app-site-association.cdn-apple.com/a/v1/pixapps.ai`)がこの 2 本の共有パスを主張して
+      いないこと(Apple は数時間キャッシュする。確かめてから審査に出す)。ほかの共有パスと Club の `/join` は残っていること
+- [ ] タグ `v1.8.5`(Android の AAB 10805 はビルドされるが、Play には出さない)
+- [ ] iOS のビルド 10805 をアップロード
+- [ ] ASC: 年齢区分の `gamblingSimulated` を NONE に戻す(iOS アプリには模擬ギャンブルのタイトルが無い。2026-11-11 にオーナーへ
+      この手順を示したうえで「iOS だけ外す」と決まった)
+- [ ] ASC: 14 言語の説明文・宣伝文・キーワード・新機能(What's New)を、`apps/simple-games/store/listing.md` の
+      「App Store (iOS)」の正文から書き直す — 78 本 / トランプ 14 本 / Nearby 26 本 / 4 席 8 本、2 本の名前を書かない、
+      チップ・ポイントの段落を書かない。新機能の新しいゲームは 13 本。サブタイトルにも 2 本の名前と Android の本数が無いこと。
+      書き込み後に読み戻して一致を確かめる
+- [ ] ASC: スクリーンショット(全サイズ・全言語)にこの 2 本が写っていないこと
+- [ ] ASC: 審査メモに「Blackjack と Texas Hold'em は iOS 版ではもう提供しない(アプリのどこからも開けない)」と書く
+      (下の 2026-11-05 の節の審査向け説明案は使わない)
+- [ ] TestFlight の実機で全部の扉を確かめる: ホーム(トランプの節に 2 本が無く、本数が 14)、検索(「Blackjack」
+      「Texas」「Hold」で出ない)、お気に入り(設定のピッカーにも棚にも出ない)、Quick Action、アプリが入った iPhone で
+      2 本の共有リンクを開く(ページが開き、アプリは開かない)、カスタムスキーム
+      `com.pixapps.simplegames://share/blackjack`(コレクションが開く)、Nearby の「対戦サポートゲーム」(26 本)、
+      Android の host が開いた Blackjack / Hold'em の卓が iPhone の探索に出ないこと、4 席の集まりの履歴に 2 本が出ないこと
+- [ ] 審査に再提出
+
 ## 2026-11-08: 1.8.4(1.8.3 の内容 + 共有リンクのアプリ対応。1.8.3 は配らない)
+
+**2026-11-11 追記: iOS の 1.8.4 (10804) は 2026-11-10 にリジェクトされ(Guideline 2.3.6)、iOS は 1.8.5 (10805) で
+置き換える(上の 2026-11-11 の節)。Android は 1.8.4 のまま。** あわせて、模擬ギャンブルの申告と 2 本の説明は
+これから先は Android(Google Play)だけのものになる — 下の 1.8.2 の節の Apple の年齢区分の行(`gamblingSimulated` を
+INFREQUENT_OR_MILD)は iOS 1.8.5 で NONE に戻して置き換え、2026-11-05 の節の審査向け説明案は Google Play 向けにだけ
+使う(App Store の審査メモには 2 本を iOS 版で提供しないと書く)。
 
 1.8.3 を出し切る前に、オーナーが共有リンクのアプリ対応(simple-games#322、サイト側 pixapps-landing#237)を
 足したので、1.8.3 は配らずに 1.8.4 として出す(オーナー判断)。タグ `v1.8.3`(d78c55bd)は残るが、
@@ -61,7 +128,7 @@ iOS は 1.8.2 が審査待ちのままなので、オーナーの判断で審査
 - [x] Apple の CDN(`https://app-site-association.cdn-apple.com/a/v1/pixapps.ai`)が
       `8XR3LLAS54.com.pixapps.simplegames` を返してから iOS 1.8.4 を審査に出す(承認後に自動公開のため)
 - [x] App Store: 1.8.3 (10803) の審査を取り下げ、同じ枠を 1.8.4 / 10804 にして再提出(2026-11-08、審査待ち・
-      承認後に自動公開)。Play: 製品版へ 10804(オーナーが公開。リリースノート 17 言語を API で読み戻して一致)
+      承認後に自動公開。→ 2026-11-10 にリジェクト、iOS は 1.8.5 で出し直す — 上の 2026-11-11 の節)。Play: 製品版へ 10804(オーナーが公開。リリースノート 17 言語を API で読み戻して一致)
       (10803 は出さない)
 - [x] 1.8.4 の Web 版を Publish してマージ(pixapps-landing#238。最初の Publish は共有ページの生成後に React の
       後片付けが `window` の消えた後に走って落ちた → 同じ PR で直した。#236 は閉じた)
@@ -73,6 +140,7 @@ iOS は 1.8.2 が審査待ちのままなので、オーナーの判断で審査
       (2026-11-08、エミュレータ(Android 17)に CI のリリース APK を入れて確認済み: 両ホスト verified、
       共有リンクの未起動・起動中とも Sudoku / Minesweeper が開く、`/join` はアプリ、`/play/?game=` は Chrome)
 - [ ] 実機(iPhone): 1.8.4 で共有リンクがそのゲームを開く。LP の「アプリで開く」。Club の招待リンクも開く
+      (iOS の 1.8.4 は出ないので、1.8.5 で確かめる)
 
 ## 2026-11-07: 1.8.2(新しい Nearby 14 本の接続修正)
 
@@ -89,6 +157,8 @@ native 側の発見 label の受理範囲が Ludo(0x8E)で止まっていたの�
 - [x] 題名 5 本(Ridge Cannons / Fleet Search / Chain Territory / Frost Route / River Cargo)の商標DB・両ストア調査: すべてそのまま(各 RULES「名称」)
 - [x] 年齢区分(Apple): オーナー判断「正直に申告」。`gamblingSimulated` を NONE → INFREQUENT_OR_MILD(ASC 上の区分は 12+ のまま。
       新方式では 13+、オーストラリアは R 18+)。現金の賭け・景品・ルートボックスは「なし」のまま
+      (2026-11-11 追記: iOS 1.8.4 はこの 2 本を理由に Guideline 2.3.6 でリジェクトされた。iOS は 1.8.5 で 2 本を外し、
+      NONE に戻す — 冒頭の 2026-11-11 の節。模擬ギャンブルの申告が残るのは Google Play だけ)
 - [ ] 年齢区分(Google Play): IARC 質問票を再回答し、模擬ギャンブル「はい」(現金・景品「いいえ」)。PEGI 18 見込み・オーストラリア R 18+。
       EEA・英国・オーストラリア・ブラジルなどで未成年に届かなくなる可能性をオーナーは承知の上で採った。算出結果で対象年齢と広告設定を確認(オーナー)
 - [ ] AdMob: Gambling & betting の広告カテゴリを除外していることを管理画面で確認(Play のポリシー上、模擬ギャンブルを含むアプリには出せない。オーナー)
@@ -137,6 +207,10 @@ Google Playは質問票の回答に影響する内容・機能変更時に再回
 審査向け説明案:「Texas Hold'emは開始時1000チップ、Blackjackは1ハンド10点の独立した
 ラウンドです。点数・チップはゲーム内のみで、購入、換金、現実の賞品への交換はできません。
 CPU戦はオフライン、対人戦は近隣Bluetooth/同一Wi-Fiのみで、新6本にチャットはありません。」
+
+2026-11-11 追記: iOS アプリは 1.8.5 からこの 2 本を出さない(冒頭の 2026-11-11 の節、
+[PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「iOS で出さないタイトル」)。この節の年齢区分と審査向け説明案は、
+これから先は Google Play にだけ当てる。App Store は模擬ギャンブルを NONE にし、審査メモには 2 本を提供しないと書く。
 
 ## 2026-11-04: Nearby Playを22本へ拡張
 
@@ -978,8 +1052,13 @@ bash .github/scripts/check-principles.sh
       Universal は 2026-08-30 に一度コードへ入ったが、この 2 つが揃うまで
       バイナリとしては出さない([ARCHITECTURE.md](ARCHITECTURE.md)
       「ワイド画面のレイアウト」)
-- [ ] iOS 実機でゲーム起動・全ゲームプレイが可能/初回起動からオフラインで
+- [ ] iOS 実機でゲーム起動・全ゲームプレイが可能(iOS で出さないタイトルを除く)/初回起動からオフラインで
       ゲーム可能/機内モードで広告・consent の通信リトライが発生しない
+- [ ] **iOS で出さないタイトル**(registry の `unavailableOn: 'ios'`。いまは Texas Hold'em / Blackjack)に
+      どの扉からも届かない: ホームの棚と節の本数・検索・お気に入り(ピッカーと棚)・Quick Actions・
+      共有リンク(Universal Link とカスタムスキーム)・Nearby の「対戦サポートゲーム」・Android の host が
+      開いた卓・4 席の集まりの履歴。年齢区分の模擬ギャンブルの申告が iOS の中身と一致している
+      ([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「iOS で出さないタイトル」、2026-11-11)
 - [ ] 「さらに大きな文字」を最大にしても、アプリの文字が大きくならない(WKWebView は px の文字を
       大きくしない前提で、端末では未確認 —— [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)
       「Android の文字の倍率」の境界 2。大きくなるなら、iOS にも同じ判断が要る)
@@ -1593,6 +1672,10 @@ Network Inspector が使えなかったとき、通信の宛先を特定でき�
 - [ ] 設定画面の「プライバシーポリシー」「利用規約」が実機で開くことを確認
       (アプリは文面を同梱せずリンクするだけになった)
 - [ ] 「Coming Soon」表記や未実装ゲームの名前が掲載文に含まれていない
+- [ ] App Store の掲載(14 言語の説明文・宣伝文・キーワード・サブタイトル・新機能・スクリーンショット)が
+      `apps/simple-games/store/listing.md` の「App Store (iOS)」の正文に従い、iOS で出さないタイトルの名前・
+      チップ・ポイントの開示文・Android の本数(80 / 16 / 28 / 4 席 10)を含まない。Play の文を ASC に貼らない
+      ([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「iOS で出さないタイトル」、2026-11-11)
 - [ ] GitHub リポジトリの description / homepage / topics が [BRAND.md](BRAND.md)
       「GitHub リポジトリの公開 metadata」の値と一致し、homepage がリダイレクトなしで
       開く(ゲーム数は書かない)

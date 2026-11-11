@@ -1,4 +1,4 @@
-# Simple Games: Offline Games — Google Play 掲載ドラフト
+# Simple Games: Offline Games — ストア掲載ドラフト(Google Play / App Store)
 
 > 公開前に人間が確認: タイトル文字数制限(30字)と検索性、スクリーンショット、
 > Data Safety フォーム、Privacy Policy のホスティング URL。
@@ -30,7 +30,7 @@
 > 試用の言葉は書かない(Basic は未提供で、Trial の枠は運用で変わる)。**v1.5.0 の公開と同時に**、
 > 人間の承認の後で Console に反映する。v1.4.2 / v1.4.3 はテスト版なので掲載文は変えていない。
 
-> 掲載は収録ゲーム 80 本(1.8.2。下の詳細説明の INCLUDED GAMES が registry の順の全一覧)。以下の 65 本の列挙は 1.7.2 時点の記録:
+> 掲載は収録ゲーム 80 本(1.8.2。下の詳細説明の INCLUDED GAMES が registry の順の全一覧。App Store は 2026-11-11 から 78 本 — 下の「App Store (iOS)」)。以下の 65 本の列挙は 1.7.2 時点の記録:
 > (Sudoku / Solitaire / Spider Solitaire / FreeCell /
 > Mahjong Solitaire / Hearts / Gin Rummy / Minesweeper / Ludo / 2048 /
 > Block Puzzle / Checkers / Reversi / Connect Four / Gomoku / Bubble Pop /
@@ -91,8 +91,18 @@
 > Blackjack / Indian Rummy)、Nearby Play は 28 本(4 席 10 本)。オーナーの「数値を変えるだけでなく訴求できるものに」「Codex に最高の
 > 思考力で」の依頼で Codex(xhigh)が全面改稿し、照合のうえオーナーが確定した。オーナー判断: サブタイトルは数独・ソリティアを残して
 > トランプを足す / Texas Hold’em は冒頭・宣伝文・サブタイトルに出さず、一覧と「チップ・ポイント」の開示文にだけ置く。
-> 価格は書かない(地域で変わる。1.7.2 の掲載にも無い)。下の「詳細説明」は 1.8.2 で ASC と Play に載せる英語の正文で、
-> App Store と Play で同じ文を使う。題名 5 本(Ridge Cannons ほか)の商標DB・両ストア調査は 2026-11-07 に済み(各 RULES「名称」)。
+> 価格は書かない(地域で変わる。1.7.2 の掲載にも無い)。下の「詳細説明」は 1.8.2 で ASC と Play に載せた英語の正文で、
+> 当時は App Store と Play で同じ文を使った(2026-11-11 からは Play だけの文 — 次の注記)。題名 5 本(Ridge Cannons ほか)の
+> 商標DB・両ストア調査は 2026-11-07 に済み(各 RULES「名称」)。
+
+> **2026-11-11 / iOS 1.8.5:** App Store の審査が 2026-11-10 に iOS 1.8.4 をリジェクトした(Guideline 2.3.6 — 模擬ギャンブルの
+> アプリは組織アカウントからだけ受け付け、このアプリは個人アカウント)。オーナー判断で iOS アプリだけが Texas Hold’em と
+> Blackjack を出さない([docs/PRODUCT_PRINCIPLES.md](../../../docs/PRODUCT_PRINCIPLES.md)「iOS で出さないタイトル」)。
+> **そのため掲載文は App Store と Play で分かれる。** Play は下の「短い説明」「詳細説明」のまま(80 本・トランプ 16 本・
+> Nearby 28 本・4 席 10 本、チップ・ポイントの開示文と 2 本の名前を含む。変えない)。App Store(14 言語の説明文・宣伝文・
+> キーワード・サブタイトル・新機能・スクリーンショット)は下の「App Store (iOS)」の英語の正文から作る — 78 本・トランプ 14 本・
+> Nearby 26 本(2 席 18 本・4 席 8 本)、チップ・ポイントの段落と 2 本の名前を書かない。Play の文を ASC に貼らない。
+> iOS の利用者は 1.7.2 から直接上がるので、新機能の新しいゲームは 13 本(1.8.x の 15 本から 2 本を除く)。
 
 > **2026-10-26 / 1.6.0:** オーナーが本番公開を依頼。Nearby Play の13本・host承認・任意チャット・端末内履歴を追加し、通常プレイのオフライン説明と区別した。App Store Connect の新1.6.0下書きは14言語で保存・GET一致を確認。Google Play反映・審査提出は別に記録する。
 
@@ -157,7 +167,7 @@ Sudoku の併記を「数独」でなく「ナンプレ」にしたのと同じ�
 
 ## 短い説明(80字以内)— 候補
 
-**1.8.2 で採用**: `80 offline games. 16 card games. Nearby tables for up to 4; CPUs fill seats.`(76字)。以下は以前の候補。
+**1.8.2 で採用**: `80 offline games. 16 card games. Nearby tables for up to 4; CPUs fill seats.`(76字。Play。App Store の宣伝文は下の「App Store (iOS)」)。以下は以前の候補。
 
 1. `No rush, no connection needed. Classic games gathered into one simple app.`(74字)
 2. `Classic games in one quiet, offline app. No subscriptions or paywalls.`(70字)
@@ -276,6 +286,126 @@ Simple Games by PixApps
 The source code is public on GitHub.
 ```
 
+## App Store (iOS)
+
+2026-11-11 から、App Store(14 言語)の掲載文はこの英語の正文から作る。上の Play の文との違いは、iOS アプリが
+Texas Hold’em と Blackjack を出さないこと([docs/PRODUCT_PRINCIPLES.md](../../../docs/PRODUCT_PRINCIPLES.md)
+「iOS で出さないタイトル」)から来るものだけ — 本数(78 本・トランプ 14 本・Nearby 26 本・4 席 8 本)、
+「CARD-GAME POINTS」の段落を置かない、INCLUDED GAMES に 2 本を置かない。ほかの文は Play と同じで、上の
+「表現の約束」もそのまま当てる。2 本の名前・チップの開示文・Android の本数(80 / 16 / 28 / 4 席 10)を、
+説明文・宣伝文・キーワード・サブタイトル・新機能・スクリーンショットのどこにも書かない。
+
+**宣伝文(170 字以内)の候補**: `78 offline games. 14 card games. Nearby tables for up to 4; CPUs fill seats.`(76 字。
+Play の短い説明から作った。1.8.2 で ASC に載せた宣伝文そのものはこのリポジトリに記録が無いので、書き直す前に
+ASC の現在の文を読み、2 本の名前と Android の本数が無いことを確かめる)。
+
+### 詳細説明(App Store)
+
+```text
+78 games in one app, including 14 card games. All are playable offline from the first launch. Enjoy a game on your own, or gather 2–4 people for 8 Nearby games, with CPUs filling empty seats.
+
+Solo play and games against the computer need no connection. No account to create. No subscription. Every game feature is free, including hints and undo wherever a game has them.
+
+While you're online, the app shows one small banner ad. There are no full-screen, rewarded or app-open ads. An optional one-time Remove Ads purchase removes ads permanently.
+
+14 CARD GAMES, ONE SIMPLE DESIGN
+The card collection includes Solitaire, Hearts, Daifugo, Sevens, Crazy Eights and Spades. All 14 card games share one original, simple card design.
+
+A TABLE FOR THE PEOPLE WITH YOU
+Nearby Play supports 26 games over Bluetooth or the same Wi-Fi, without internet, an account or Club House. Eighteen games have two seats; eight have four. In the four-seat games, 2–4 people can play together and CPUs fill the empty seats.
+
+The host approves every join. Where chat is available, it is optional and off by default; four-seat card games have no chat. Nearby history stays on each device. Nearby Play is not available on the web. For newer games over Bluetooth, use 1.8.2 or later on every device.
+
+AT YOUR PACE
+No streaks, login bonuses, push notifications or limited-time events. No clock on screen while you play.
+
+CLUB HOUSE IS OPTIONAL
+Join with just a nickname. While you're a member, results of finished games are sent automatically to the Clubs you've joined, only in games that support Clubs. Games played before joining are not sent. PixApps runs the Public Club House and your own Clubs.
+
+INCLUDED GAMES
+Sudoku
+Solitaire
+Spider Solitaire
+FreeCell
+Hearts
+Gin Rummy
+Minesweeper
+Mahjong Solitaire
+2048
+Block Puzzle
+Ludo
+Checkers (Draughts)
+Reversi
+Connect Four
+Gomoku (Five in a Row)
+Bubble Pop
+Brick Breaker
+Nonogram
+Takuzu (Binary Puzzle)
+Futoshiki
+Kakuro (Cross Sums)
+Number Match
+Quick Math
+Schulte Table
+Number Recall
+Water Sort
+Sliding Puzzle
+Memory Match
+Sky Fighter
+Bunny Hop
+Crown Grid (Star Battle)
+Number Path
+Shape Regions
+Yacht
+Mancala (Kalah)
+Dominoes
+Hit & Blow (Bulls and Cows)
+Dots and Boxes
+Binary Balance
+Sudoku 6×6
+Box Regions
+Unblock Puzzle
+Snake
+Loop Puzzle
+Bridges
+Peg Solitaire
+Chess
+Gem Swap
+Pipe Link
+Bounce Up
+Echo Pads
+Road Weave
+Make the Target
+Nested Tic-Tac-Toe
+Scopa
+Tangram
+Light Grid
+Color Flood
+Three Peaks
+Nim
+Knight’s Tour
+Formation Fire
+Paddle Rally
+Hanoi Towers
+Maze Escape
+Backgammon
+Ridge Cannons
+Fleet Search
+Frost Route
+Chain Territory
+River Cargo
+Daifugo
+Sevens
+Old Maid
+Crazy Eights
+Durak
+Spades
+Indian Rummy
+
+Simple Games by PixApps
+The source code is public on GitHub.
+```
+
 ## 構成の意図(短くしたのは意図である)
 
 以前ここには収録ゲームごとの `INCLUDED GAME:` ブロックがあり、ルール・レベル数・
@@ -291,7 +421,9 @@ Hint / Undo の詳細を 5 本ぶん並べていた。**それをやめた。**
 
 収録ゲームは**名前だけ**を並べる。ゲームを追加したらこのリストに 1 行足す。
 並び順は `src/app/registry.ts` と同じ(検索需要の大きい順)。
-未収録のゲームは名前も置かない。
+未収録のゲームは名前も置かない。リストは Play と App Store (iOS) の 2 つあり、ゲームを足すときは両方に足す。
+iOS で出さないタイトル(registry の `unavailableOn: 'ios'`)は Play のリストにだけ置き、App Store (iOS) の
+本文・本数・リストには書かない([docs/PRODUCT_PRINCIPLES.md](../../../docs/PRODUCT_PRINCIPLES.md)「iOS で出さないタイトル」)。
 
 **冒頭の要約 6 行(2026-09-06、issue #123)。** 掲載文は上から読まれ、下まで読まれない。
 そこで 2 段落目の直後に、ユーザーが受け取るものを 1 行ずつ置いた —— オフライン /
