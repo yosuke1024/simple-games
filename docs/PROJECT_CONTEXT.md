@@ -1,5 +1,7 @@
 # Simple Games — Project Context / Source of Truth
 
+2026-11-11: App Storeの審査が2026-11-10にiOS 1.8.4をリジェクト(Guideline 2.3.6: 模擬ギャンブルのアプリは組織アカウントからだけ受け付け、このアプリは個人アカウント)。オーナー判断で**iOSアプリだけがBlackjack / Texas Hold'emを出さない**(registryの`unavailableOn: 'ios'`と実行時ガードで全扉を閉じ、コードと保存キーは残す。Android版とWeb版は変えない)。iOSアプリは78本・Nearby 26本(4席8本)、Android版は80本・Nearby 28本、Web版は80本のまま。iOSは1.8.5で再提出し、Androidは1.8.4のまま。規則は`PRODUCT_PRINCIPLES.md`「iOS で出さないタイトル」、手順は`RELEASE_CHECKLIST.md`の2026-11-11の節。
+
 2026-11-07: オーナーの指示でWeb先行の残り2本(Frost Route / River Cargo)を正式収録へ変更。コード上は正式80本・Web先行0本・収録見送り2本の全82エントリ。Nearbyは28本のまま。配布は1.8.1の内部テスト/TestFlightから。以下の古い日付の対象数より本行を優先する。
 
 2026-11-05: オーナーがインディアンラミー・クレイジーエイト・スペード・デュラック・
@@ -63,6 +65,8 @@ Design philosophy:
 
 - 1つの `Simple Games: Offline Games` として提供する。
 - 現在の正式収録は **80 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ)。
+  iOS アプリはこのうち `unavailableOn: 'ios'` の2本(Texas Hold'em / Blackjack)を出さず **78 games**
+  (2026-11-11、`PRODUCT_PRINCIPLES.md`「iOS で出さないタイトル」)。
   `GAMES` は全82エントリで、収録見送り2本を含む。Web先行公開は0本(2026-11-07にFrost Route / River Cargoを正式収録)。
   2026-11-05、オーナーの「対戦込みで一気に導入」の指示により新トランプ6本をアプリへ収録した。
   2026-11-04、Nearbyの対象拡張とオーナーの明示承認により7本をアプリへ収録した。
@@ -180,6 +184,10 @@ Design philosophy:
 - **Android / iOS app**: 静かに長く遊ぶための完成版。ゲーム機能は初回起動からオフラインで利用できる。
 - **Web**: インストールせず試せる入口、検索流入、PixApps / app への導線、非妨害型広告による収益化。
 - Web を意図的に不便にして app へ誘導しない。
+- Android と iOS で収録が分かれるのは1点だけ: iOS アプリは模擬ギャンブルのタイトル(いまは
+  Blackjack / Texas Hold'em)を出さない(App Store のアカウントが個人である間。2026-11-11、
+  `PRODUCT_PRINCIPLES.md`「iOS で出さないタイトル」)。iOS アプリは78本・Nearby 26本(4席8本)、
+  Android アプリは80本・Nearby 28本(4席10本)、Web は80本(2本も遊べる)。
 - platform 差分の正は `docs/WEB_VERSION.md` と platform code / config。
 
 ### Nearby Play — 製品実装
@@ -450,6 +458,7 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 - Android acquisition measurement (Meta, `android/app/src/metaOn` / `metaOff`, `.github/scripts/check-principles.sh` §8): `PRODUCT_PRINCIPLES.md`「Android の獲得計測(Meta)」+ `META_ANDROID_ACQUISITION.md`
 - Android の文字の倍率(`MainActivity` の `TEXT_ZOOM_CAP_PERCENT`、`.github/scripts/check-principles.sh` §9)と、盤を画面の高さから決めるゲームの上部バー・操作バーの見積もり(`--*-chrome` など): `PRODUCT_PRINCIPLES.md`「Android の文字の倍率」+ `ARCHITECTURE.md`「広告と課金」
 - web only: `WEB_VERSION.md`
+- 賭け・チップ・掛け金・倍賭けを持つゲームの追加や、registry の `unavailableOn`: `PRODUCT_PRINCIPLES.md`「iOS で出さないタイトル」
 - 練習セットの 5 本(Crown Grid / Number Path / Binary Balance / Sudoku 6×6 / Box Regions)や専用入口: `PUZZLE_PRACTICE_SET.md` + `BRAND.md`「自社タイトルと比較対象の名前」
 - public copy: `BRAND.md`
 - i18n: `I18N_POLICY.md`

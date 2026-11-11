@@ -35,14 +35,18 @@ const fixtures = vi.hoisted(() => ({
   remove: vi.fn(),
   clear: vi.fn(),
   block: vi.fn(),
-  native: false,
+  // 'web' is jsdom's own answer; 'android' and 'ios' are the two apps.
+  platform: 'web' as 'web' | 'android' | 'ios',
   peerChatEnabled: false,
   addListener: vi.fn(),
   radio: { start: vi.fn(), connect: vi.fn(), send: vi.fn(), stop: vi.fn() },
 }));
 
 vi.mock('@capacitor/core', () => ({
-  Capacitor: { isNativePlatform: () => fixtures.native },
+  Capacitor: {
+    isNativePlatform: () => fixtures.platform !== 'web',
+    getPlatform: () => fixtures.platform,
+  },
   registerPlugin: () => fixtures.radio,
 }));
 vi.mock('@capacitor/app', () => ({ App: { addListener: fixtures.addListener } }));
@@ -181,7 +185,7 @@ function savedGathering(): Gathering {
 
 beforeEach(() => {
   fixtures.controllers.length = 0;
-  fixtures.native = false;
+  fixtures.platform = 'web';
   fixtures.peerChatEnabled = false;
   fixtures.block.mockResolvedValue(undefined);
   fixtures.saved = [];
@@ -800,7 +804,7 @@ describe('Nearby Play user flows', () => {
   });
 
   it('keeps a live game when leaving its screen and ignores hidden keyboard and native back events', async () => {
-    fixtures.native = true;
+    fixtures.platform = 'android';
     const exit = vi.fn();
     const activeChanged = vi.fn();
     const registerStop = vi.fn<(stop: (() => Promise<void>) | null) => void>();
@@ -1039,4 +1043,56 @@ describe('Nearby Play user flows', () => {
     expect(fixtures.clear).not.toHaveBeenCalled();
     expect(fixtures.controllers).toHaveLength(0);
   });
+});
+
+/**
+ * A title the iOS app leaves out (app/iosWithheldGames.ts) reaches Nearby by
+ * no door there — not the supported-games list, not discovery, not the
+ * game's own Play Together (app/nearbyGate.ts). Should anything still hand
+ * NearbyRoot one of those ids, the iOS app mounts no table for it: the
+ * collection-wide browser shows instead. Android opens the table.
+ */
+describe('a title the iOS app leaves out', () => {
+  it.each(['blackjack', 'texas-holdem'] as const)(
+    'mounts the browser rather than the %s table in the iOS app',
+    async (gameId) => {
+      fixtures.platform = 'ios';
+      const selected = vi.fn();
+      await act(async () => {
+        render(
+          <NearbyRoot
+            gameId={gameId}
+            onExit={() => {}}
+            onOpenGame={() => {}}
+            onGameSelected={selected}
+          />,
+        );
+      });
+      expect(screen.getByRole('heading', { name: 'Find nearby opponents' })).toBeVisible();
+      expect(screen.getByRole('button', { name: en.search })).toBeVisible();
+      const supported = screen.getByRole('region', { name: en.supportedGames });
+      expect(
+        within(supported).queryByRole('link', { name: GAME_TITLES[gameId] }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: en.create })).not.toBeInTheDocument();
+      expect(document.querySelector(`[data-game="${gameId}"]`)).toBeNull();
+      expect(fixtures.controllers).toHaveLength(0);
+      expect(selected).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['blackjack', 'texas-holdem'] as const)(
+    'mounts the %s table on Android',
+    async (gameId) => {
+      fixtures.platform = 'android';
+      await act(async () => {
+        render(<NearbyRoot gameId={gameId} onExit={() => {}} onOpenGame={() => {}} />);
+      });
+      expect(await screen.findByRole('button', { name: en.create })).toBeVisible();
+      expect(
+        screen.queryByRole('heading', { name: 'Find nearby opponents' }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('region', { name: en.supportedGames })).not.toBeInTheDocument();
+    },
+  );
 });

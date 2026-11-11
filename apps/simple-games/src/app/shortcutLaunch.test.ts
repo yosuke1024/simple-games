@@ -113,6 +113,20 @@ describe('the address a shortcut carries', () => {
     expect(gameIdFromShortcutUrl(undefined)).toBeNull();
     expect(gameIdFromShortcutUrl(null)).toBeNull();
   });
+
+  // A title the iOS app leaves out (app/iosWithheldGames.ts): Android keeps
+  // reading its address back to the game, the iOS app reads it as the
+  // collection — a quick action an earlier build wrote, say.
+  it.each(['blackjack', 'texas-holdem'] as const)(
+    'means the collection for %s on iOS, and the game on Android',
+    (id) => {
+      expect(gameIdFromShortcutUrl(shortcutUrlFor(id))).toBe(id);
+      capacitorMock.platform = 'ios';
+      expect(gameIdFromShortcutUrl(shortcutUrlFor(id))).toBeNull();
+      // Every other released title still reads back on iOS.
+      expect(gameIdFromShortcutUrl(shortcutUrlFor('freecell'))).toBe('freecell');
+    },
+  );
 });
 
 describe('reading the launch at boot', () => {
@@ -158,6 +172,20 @@ describe('reading the launch at boot', () => {
     await initShortcutLaunch();
     expect(shortcutLaunchGame()).toBe('freecell');
   });
+
+  it.each(['blackjack', 'texas-holdem'] as const)(
+    'answers null on iOS for a launch naming %s, which the iOS app leaves out',
+    async (id) => {
+      capacitorMock.platform = 'ios';
+      appMock.getLaunchUrl.mockResolvedValue({ url: shortcutUrlFor(id) });
+      await initShortcutLaunch();
+      expect(shortcutLaunchGame()).toBeNull();
+
+      capacitorMock.platform = 'android';
+      await initShortcutLaunch();
+      expect(shortcutLaunchGame()).toBe(id);
+    },
+  );
 
   it('asks nothing in the browser, where no shortcut can exist', async () => {
     capacitorMock.platform = 'web';

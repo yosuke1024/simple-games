@@ -7,13 +7,16 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 - `apps/simple-games/android/` / `apps/simple-games/ios/` は Capacitor が生成した
   ネイティブプロジェクトをコミットする(ビルド成果物・local.properties・
   `ios/App/App/public/`(web 資産のコピー)は除外)。
-- **プラットフォーム差分は 3 箇所に限定する**: 広告 ID・ストアの可用性判定・
-  ホーム画面ショートカット。いずれも実行時に `Capacitor.getPlatform()` で選ぶ
+- **プラットフォーム差分は次の場所に限定する**: 広告 ID・ストアの可用性判定・
+  ホーム画面ショートカット・iOS アプリで出さないタイトル。いずれも実行時に `Capacitor.getPlatform()` で選ぶ
   (`services/ads/banner.ts` / `monetization/nativeStore.ts` の `PlatformRules` /
   `services/homeShortcut/` —— `homeShortcut.ts` が `'android'`(Pinned Shortcut、
   issue #110)、`quickActions.ts` が `'ios'`(Quick Actions、issue #114)を見る。
   起動側の `app/shortcutLaunch.ts` は両 OS が同じ住所を同じプラグインで運ぶので
-  `isNativePlatform()` で足りる)。
+  `isNativePlatform()` で足りる)。iOS アプリで出さないタイトル(2026-11-11、PRODUCT_PRINCIPLES.md「iOS で出さないタイトル」)は
+  シェルだけに置く: registry の `unavailableOn: 'ios'` を `app/gameChannel.ts` が読み、同じ id の一覧を
+  葉の `app/iosWithheldGames.ts` が持つ。`'ios'` を見るのはその葉の `isIosApp()` だけで、Nearby の層
+  (`src/nearby/`)はその葉に問うだけ、自分では OS を見ない。
   ゲーム・保存・i18n のコードに `if (ios)` を書かない。
 - iOS のネイティブ側で書いたのは `AppDelegate.swift`(Quick Action を Capacitor の
   URL open に変換)、`QuickActionsPlugin.swift`(ローカルプラグイン)、それを登録する

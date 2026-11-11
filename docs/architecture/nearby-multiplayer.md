@@ -1,5 +1,29 @@
 # Nearby Multiplayer — 近隣端末間対戦の契約
 
+## 2026-11-11: iOSアプリはTexas Hold'em / Blackjackを出さない(iOS 1.8.5)
+
+App Storeの審査(Guideline 2.3.6)を受けたオーナー判断で、iOSアプリは模擬ギャンブルの2本を出さない
+([PRODUCT_PRINCIPLES.md](../PRODUCT_PRINCIPLES.md)「iOS で出さないタイトル」)。
+**iOSアプリのNearbyは26本(2席18本、4席8本)**。Androidは28本(2席18本、4席10本)のまま、
+Webの無効な案内も28本のまま。以下の古い日付の対象数は、iOSについては本節を優先する。
+
+- 実行時に絞る。判定は葉の`app/iosWithheldGames.ts`(`src/nearby/`はregistryをimportできない —
+  `src/test/importBoundaries.test.ts`)。`nearby/discovery.ts`の`gameForLabel`はiOSアプリでこの2本の
+  code(1A / 1B)をnullにする — この版が知らないcodeと同じ扱いで、`P-` / `F-`どちらのlabelでも、
+  Androidのhostが開いた卓はpeerにもlistingにもならず、一覧に出ず、参加できない
+  (既存の前例どおり説明文は出さない)。`NearbyBrowser`の「対戦サポートゲーム」は描画時に絞る。
+  4席の集まりの履歴は保存を残して表示だけ外す。`app/nearbyGate.ts`の`nearbyAvailable`もこの2本で偽を返し、
+  `NearbyRoot`はほかの扉からidが届いても卓をmountせず探索画面を出す。
+- **意図して変えないもの**: `NEARBY_GAME_CODES`と`NEARBY_GROUP_GAME_IDS`(idの表と履歴の検証は
+  全プラットフォームで同じ。iOSで外すと、この2本の集まりの履歴を持つ端末で履歴の読み込みが失敗し、
+  Nearby全体が使えなくなる)。nativeのlabelの範囲(Android `DiscoveryLabel.metadataCapable`、
+  iOS `NearbyPlayListing.supportsProbe`とも`0x81`〜`0x9C`。上にIndian Rummy(1C)があるので2本だけは
+  抜けず、`src/test/nearbyNativeLabelRange.test.ts`が範囲を固定する)。iOSのnativeはAndroidの
+  `0x9A` / `0x9B`のhostを引き続きBLEでprobeして公開listingを読むが、JSが捨てるので画面には何も出ず、
+  参加・承認・対局も始まらない。
+- Androidのhostには参加申請・承認・対局は届かない(公開listingのBLE probeだけは起きる)。いま公開中のiOS 1.7.2は
+  code 01〜0Eしか知らないので、この2本の卓はもともとiPhoneに見えていない。
+
 ## 2026-11-07: 新しい14本が接続できなかった件(1.8.2)
 
 1.8.0/1.8.1の実機で、Hearts(0F)〜Indian Rummy(1C)の14本はBluetooth・Wi-Fiとも

@@ -11,9 +11,13 @@
  * browser reads and the home-screen shortcut carries, and the lazy root the
  * shell mounts. An `'in-development'` title is offered nowhere — there is no
  * game behind it yet (WEB_VERSION.md「遊べるものだけを出す」) — so the browser
- * keeps it off the same doors the app keeps a beta title off. All of those
+ * keeps it off the same doors the app keeps a beta title off. A title marked
+ * `unavailableOn: 'ios'` is off the same doors in the iOS app only
+ * (app/iosWithheldGames.ts; Android and the browser keep it). All of those
  * ask here, and nowhere else, so "not in this build" is one decision rather
- * than six.
+ * than six. The Nearby layer may not import the registry, so it asks
+ * app/iosWithheldGames.ts directly for its own doors (the supported-games
+ * list, discovery and joining, the group history).
  *
  * Decided at runtime, never at build time. The web and native artifacts are
  * one build with three build-time gates already (ads, analytics, site chrome
@@ -22,7 +26,8 @@
  * in-development title's chunk is in both bundles the same way. That is also
  * why the guard is `Capacitor.isNativePlatform()` and not a mode check — the
  * same seam every other web/app difference in this product uses
- * (app/webRoute.ts).
+ * (app/webRoute.ts) — and `Capacitor.getPlatform() === 'ios'` for the one
+ * title set that differs between the two stores.
  *
  * What is deliberately NOT gated: `storageKeys` and `loadStorageSchemas`.
  * "Reset Local Data" wipes every key the registry knows and a backup restores
@@ -31,14 +36,17 @@
  * save, so the schemas stay registered on both (src/backup/owners.ts).
  */
 import { Capacitor } from '@capacitor/core';
+import { isIosApp } from './iosWithheldGames';
 import { GAMES, type GameDefinition, type GameId } from './registry';
 
 /**
  * Whether this build offers the title: released everywhere, beta in the
- * browser only, and in development nowhere.
+ * browser only, in development nowhere — and a title withheld from iOS
+ * everywhere but the iOS app.
  */
 export function isGameAvailable(game: GameDefinition): boolean {
   if (game.channel === 'in-development') return false;
+  if (game.unavailableOn === 'ios' && isIosApp()) return false;
   return game.channel !== 'web-beta' || !Capacitor.isNativePlatform();
 }
 

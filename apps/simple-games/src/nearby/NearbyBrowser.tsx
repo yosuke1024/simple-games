@@ -3,6 +3,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { useEffect, useRef, useState } from 'react';
 import { NEARBY_GAME_CODES } from '../app/nearbyGameIds';
+import { isWithheldHere } from '../app/iosWithheldGames';
 import { useSettings } from '../state/SettingsContext';
 import { IconBack } from '../ui/components/icons';
 import { NearbyController } from './controller';
@@ -23,7 +24,9 @@ interface Selection {
   roomName: string;
   gameId: NearbyGameId;
 }
-const supportedGames = Object.keys(NEARBY_GAME_CODES) as NearbyGameId[];
+/** Asked at render, not at import: the iOS app leaves some titles out (app/iosWithheldGames.ts). */
+const supportedGames = (): NearbyGameId[] =>
+  (Object.keys(NEARBY_GAME_CODES) as NearbyGameId[]).filter((id) => !isWithheldHere(id));
 
 /** Browse all games without loading a board or starting a game handshake. */
 export function NearbyBrowser({
@@ -408,7 +411,7 @@ export function NearbyBrowser({
             <section className="nearby-supported-games" aria-labelledby="nearby-supported-title">
               <h2 id="nearby-supported-title">{n('supportedGames')}</h2>
               <ul>
-                {supportedGames.map((gameId) => (
+                {supportedGames().map((gameId) => (
                   <li key={gameId}>
                     <a
                       href={`?game=${gameId}`}

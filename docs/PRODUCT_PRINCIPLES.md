@@ -121,7 +121,9 @@ API サーバー・クラウド DB・認証基盤を持たないことで、障�
 Web = サイト共通のページ解析 — [WEB_VERSION.md](WEB_VERSION.md)「計測」、読み方と限界は
 [GROWTH_MEASUREMENT.md](GROWTH_MEASUREMENT.md))、
 収録タイミング(アプリ = 検証済みの正式収録のみ / Web = 新作の先行公開あり —
-[WEB_VERSION.md](WEB_VERSION.md)「先行公開」)。
+[WEB_VERSION.md](WEB_VERSION.md)「先行公開」)、
+収録タイトル(iOS アプリ = 模擬ギャンブルのタイトルを出さない / Android アプリと Web =
+正式収録のすべて — 下の「iOS で出さないタイトル」。収録タイトルが OS で分かれるのはこれだけ)。
 どちらの版でも、その版で成立しない約束を掲げない。
 
 **Core と Club House**(2026-09-09 の issue #176、2026-09-30 の
@@ -378,7 +380,8 @@ Core の任意モードとして許容する(次節)。インターネット経�
 
 2026-11-08、オーナーが共有をアプリのダウンロードにつなげる方針を採用した。
 共有HTTPSリンクは、対応アプリが入っていれば対象ゲームへ、未導入なら共有専用LPへ進む。
-LPの主導線はストアで、ブラウザ版のプレイボタンを並べない。既存Web版のゲーム機能・
+LPの主導線はストアで、ブラウザ版のプレイボタンを並べない(例外は1つ: iOS アプリで出さない
+タイトルの共有ページは、iPhone・iPad の訪問者にブラウザ版で遊ぶリンクを出す — 下の「iOS で出さないタイトル」)。既存Web版のゲーム機能・
 通常の入口は変更せず、共有者の識別子・報酬・催促・強制遷移は追加しない。
 仕様は [共有リンク](architecture/share-links.md)。
 
@@ -412,12 +415,15 @@ Club House は記録・ランキング、Nearby Play はその場限りの近隣
   Club House直下に、Club Houseと同程度の控えめなテキスト行として配置する。
   Bluetooth／同一Wi-Fiを明示選択して全対応ゲームの募集名・ゲーム名・人数を一覧表示する。
   一覧で選ぶと、そのゲームの参加・host承認・双方Readyへ進む。
-  探索画面下部の「対戦サポートゲーム」から全28本の通常トップを開ける。移動前に探索を止める。
+  探索画面下部の「対戦サポートゲーム」から全28本(iOS アプリは26本)の通常トップを開ける。移動前に探索を止める。
   Club House からも開始しない。対応は Yacht / Reversi / Connect Four / Gomoku / Checkers / Gin Rummy / Mancala / Dominoes / Dots and Boxes / Chess / Nested Tic-Tac-Toe / Scopa / Nim / Ludo / Hearts / Backgammon / Ridge Cannons / Fleet Search / Chain Territory / Daifugo / Sevens / Old Maid / Crazy Eights / Durak / Spades / Texas Hold'em / Blackjack / Indian Rummy。それ以外のゲームに未実装のボタンを置かない。
+  **iOS アプリは Texas Hold'em / Blackjack を出さない**(下の「iOS で出さないタイトル」、1.8.5 から)。
+  iOS の対応は **26本(2席18本・4席8本)** で、一覧・探索・参加・履歴の表示のどこにもこの2本は出ず、
+  Android の host が開いたこの2本の卓にも参加できない。Android は上記28本のまま。
   ゲーム選択済み → 募集／参加 → host承認 → 双方Ready → 既存と共通のゲーム画面へ進む。
   初回に同じゲームを改めて提案する操作は求めない。内部protocolの提案・確認処理は維持できる。
-- **席数はゲームごとに固定し、席とその操作担当を分ける。** 2席は18本、4席は10本。
-  混成対局は上記11本が対象。hostは他の席の人間／CPUを開始前・対局中に切り替えられる。
+- **席数はゲームごとに固定し、席とその操作担当を分ける。** 2席は18本、4席は10本(iOS アプリは4席8本)。
+  混成対局は上記11本が対象(iOS アプリは9本)。hostは他の席の人間／CPUを開始前・対局中に切り替えられる。
   人間からCPUへ替えても、その席の駒・手番・出目を引き継ぐ。CPUから人間へ戻すときは接続中の
   本人へ操作を戻す。勝手な振り直しや盤面の初期化はしない。
   操作担当を変更した後に旧担当の入力が届いても適用しない。host本人は対局の管理者として残る。
@@ -593,6 +599,50 @@ RELEASE_CHECKLIST)も直す。
 決める経路が無いこと(`check-principles.sh` §9)。依存するライブラリの中身と、実行時に効くことは
 機械では示さない。端末で上限が効くことは、人が [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §4 で
 確かめる。
+
+## iOS で出さないタイトル
+
+2026-11-11 決定(オーナー判断)、iOS 1.8.5 から。手順と経緯は
+[RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) の 2026-11-11 の節。
+
+2026-11-10、App Store の審査が iOS 1.8.4 (10804) をリジェクトした(App Review Guideline 2.3.6)。
+模擬ギャンブル(simulated gambling)を含むアプリは組織(法人)の開発者アカウントからしか
+受け付けず、このアプリは個人のアカウントで配っている。1.8.2 から年齢区分で
+「Simulated Gambling: Infrequent/Mild」を申告していたのは、1.8.0 で加えた Blackjack と
+Texas Hold'em のためである。
+
+**規則: App Store のアカウントが個人である間、模擬ギャンブルのタイトルを iOS アプリに出さない。**
+模擬ギャンブルとは、賭け・チップ・掛け金・倍賭けの構造を遊びに持つものをいう。無料の点数で、
+現金・購入・換金・景品が無くても当たる(BLACKJACK_RULES・TEXAS_HOLDEM_RULES が「無料でも
+分類は消えない」と書くのと同じ物差し)。Android アプリと Web 版(iPhone の Safari を含む)は
+この規則の外で、タイトルを残す。
+
+- **いま当たるのは 2 本**: Blackjack と Texas Hold'em。iOS アプリは 78 本(トランプ 14 本)、
+  Nearby Play は 26 本(2 席 18 本・4 席 8 本)。Android アプリは 80 本(トランプ 16 本)・
+  Nearby 28 本(2 席 18 本・4 席 10 本)、Web は 80 本のまま。ほかの収録タイトルは当たらない(Indian Rummy は
+  賭けを持たない — [INDIAN_RUMMY_RULES.md](INDIAN_RUMMY_RULES.md) 冒頭)。
+- **採れば当たる見込みのもの**(どれも未収録。採るか、採ったときに当たるかは、その時にオーナーが決める): ポーカーの別の形式(Five-Card Draw など)、Koi-Koi、
+  点数を清算する麻雀・リーチ麻雀、掛け金のあるサイコロ遊び、Backgammon のダブリングキューブ
+  ([BACKGAMMON_RULES.md](BACKGAMMON_RULES.md) §13 は採らないと決めている)、スロット・ルーレットの類。
+  採るなら同じ印を付け、iOS の掲載文と本数を同じ変更で直す。
+- **閉じ方**: registry のエントリに `unavailableOn: 'ios'` を置く。`app/gameChannel.ts` の実行時ガードが
+  iOS アプリ(`Capacitor.getPlatform() === 'ios'`)でだけ、`channel: 'web-beta'` がアプリで閉じるのと
+  同じ扉を閉じる — ホーム・検索・お気に入り・最近・Quick Actions・`?game=`・共有リンク・lazy root・
+  Club の Play、そしてシェルがゲームを開く 1 点(`App.tsx` の `enterGame`)。Nearby の層は registry を
+  import できないので、同じ id の葉 `app/iosWithheldGames.ts` に問い、対応ゲームの一覧・探索と参加・
+  集まりの履歴の表示から外す。扉の全一覧は [WEB_VERSION.md](WEB_VERSION.md)「先行公開」。
+- **ビルドは 1 つ**。コードは iOS のバンドルにも入ったまま(公開ソースでも見える)で、遠隔で開く
+  手段は無い。`storageKeys` と `loadStorageSchemas` は登録したまま — 「ローカルデータ削除」は
+  この 2 本の保存も消し、Android で作ったバックアップは iPhone でも失わずに復元できる(表示しない
+  だけ)。Nearby の id の表と native の label の範囲も変えない
+  ([architecture/nearby-multiplayer.md](architecture/nearby-multiplayer.md) 冒頭の 2026-11-11 節)。
+- **公開文面**: iOS の掲載文(App Store Connect の 14 言語)は `apps/simple-games/store/listing.md` の
+  「App Store (iOS)」の正文から作り、当たるタイトルの名前・チップの開示文・Android の本数を書かない。
+  年齢区分の申告は iOS の中身に合わせる。iOS アプリから辿れる文面(設定の「ソースコードを見る」が
+  開く README)にも iOS の本数を書く。共有リンクのページは iPhone・iPad の訪問者に、そのゲームは
+  Android 版アプリとブラウザ版にあり iPhone・iPad 版アプリには無いと伝える
+  ([architecture/share-links.md](architecture/share-links.md))。
+- **見直すきっかけ**: App Store のアカウントを組織アカウントにしたとき。見直すかどうかはオーナーが決める。
 
 ## Club House — Core の外にある任意の層
 
