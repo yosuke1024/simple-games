@@ -463,6 +463,12 @@ iOS で出さないタイトル(registry の `unavailableOn: 'ios'`)は Play の
   **「同じ盤面」は、デイリーについてだけ言う**(自己ベストの並びは盤面が人ごとに違う。Minesweeper と
   Number Recall のデイリーは全員同じ盤面ではないので「ほとんどのゲームで」と書く)。「参加しない端末は接続しない」は実機で確かめた事実としてだけ書く
   ([RELEASE_CHECKLIST.md](../../../docs/RELEASE_CHECKLIST.md) 5.16)。
+- **遠隔対戦の書き方**(2026-11-14、issue #280、[BRAND.md](../../../docs/BRAND.md)「表現ルール」):
+  方針を採用しただけで未実装なので、出荷するまで掲載文に書かない。出荷する版では、上の 2 つの規則が
+  拠る `The games never go online.` が Core 全体について真でなくなるので、両方を見直し、ソロ / CPU 戦を
+  主語にした文へ改める([docs/PRODUCT_PRINCIPLES.md](../../../docs/PRODUCT_PRINCIPLES.md)「遠隔対戦」14)。
+  Nearby Play の段落の `The host approves every join.` も同じ版で見直す(招待を持つ人は承認なしで
+  着席する — 同節 4)。
 - **広告視聴の書き方**: 「広告を見る必要がない」はヒント・Undo の利用に限定して
   書く。アプリにバナー広告は存在するため、無条件の否定にしない。
 - **文字数を削るときに限定語を落とさない**。短い説明は 80 字上限があり、削る圧力が

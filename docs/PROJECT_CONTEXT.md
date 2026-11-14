@@ -1,5 +1,7 @@
 # Simple Games — Project Context / Source of Truth
 
+2026-11-14: オーナー判断(issue #280)で、Nearby Playの対象ゲーム(Androidアプリ28本・iOSアプリ26本)を招待リンクでインターネット越しに遊ぶ**遠隔対戦**を、Coreの任意モードとして採る方針にした。端末どうしがWebRTC DataChannelで直接つながり、PixAppsは対戦サーバー・シグナリングサーバー・アカウントを持たない(STUNはCloudflareの1社だけ、TURNは使わない。シグナリングの中継は#280のPhase 2で比べる候補として残す)。Android / iOSアプリだけで、Web版には置かない。**方針の採用であり、実装・実機検証・出荷はしていない。** §4の「遠隔対戦を作らない」はこの判断で改めた(フレンドは引き続き作らない)。概要は§3「遠隔対戦 — 採用した方向」、規則は`PRODUCT_PRINCIPLES.md`「遠隔対戦」、技術の契約は`architecture/nearby-multiplayer.md`冒頭の2026-11-14節。
+
 2026-11-11: App Storeの審査が2026-11-10にiOS 1.8.4をリジェクト(Guideline 2.3.6: 模擬ギャンブルのアプリは組織アカウントからだけ受け付け、このアプリは個人アカウント)。オーナー判断で**iOSアプリだけがBlackjack / Texas Hold'emを出さない**(registryの`unavailableOn: 'ios'`と実行時ガードで全扉を閉じ、コードと保存キーは残す。Android版とWeb版は変えない)。iOSアプリは78本・Nearby 26本(4席8本)、Android版は80本・Nearby 28本、Web版は80本のまま。iOSは1.8.5で再提出し、Androidは1.8.4のまま。規則は`PRODUCT_PRINCIPLES.md`「iOS で出さないタイトル」、手順は`RELEASE_CHECKLIST.md`の2026-11-11の節。
 
 2026-11-07: オーナーの指示でWeb先行の残り2本(Frost Route / River Cargo)を正式収録へ変更。コード上は正式80本・Web先行0本・収録見送り2本の全82エントリ。Nearbyは28本のまま。配布は1.8.1の内部テスト/TestFlightから。以下の古い日付の対象数より本行を優先する。
@@ -182,6 +184,7 @@ Design philosophy:
 同一のゲーム実装を基盤として Android / iOS / Web を提供する。
 
 - **Android / iOS app**: 静かに長く遊ぶための完成版。ゲーム機能は初回起動からオフラインで利用できる。
+  遠隔対戦(2026-11-14 に方針を採用、未実装)はインターネットを要する任意モードで、どのゲームもそれが無くても遊べる。
 - **Web**: インストールせず試せる入口、検索流入、PixApps / app への導線、非妨害型広告による収益化。
 - Web を意図的に不便にして app へ誘導しない。
 - Android と iOS で収録が分かれるのは1点だけ: iOS アプリは模擬ギャンブルのタイトル(いまは
@@ -218,7 +221,8 @@ hostは開始前と対局中に参加者の席を人間からCPUへ変更し、�
 ゲーム選択済み → 募集／参加 → host承認 → 双方Ready → 各ゲームの既存CPU戦と共通の盤面・操作で対局。
 全体探索は Bluetooth／同一Wi-Fi 選択 → 明示探索 → 募集名＋ゲーム名・人数の一覧 → 募集選択 →
 自分の表示名で参加 → host承認 → 双方Ready → そのゲーム、の順。
-1.5.4向けの変更で「仲間と／近くの人を募集」の2択を廃止し、すべてhost承認制の2人対戦に統一する。
+1.5.4向けの変更で「仲間と／近くの人を募集」の2択を廃止し、すべてhost承認制の2人対戦に統一する
+(近隣の参加。遠隔対戦の招待は承認なしで着席する例外 — 下の「遠隔対戦 — 採用した方向」)。
 募集名はゲーム名＋短い番号を初期値として編集でき、近隣一覧へ公開される範囲を開始前に説明する。
 個人の表示名とは別に扱い、一覧・待合・新しい履歴の見出しには募集名を使う。個人の表示名は
 接続後の相手表示・対局・チャットに使い、この端末で次回も使えるよう保存する。探索metadataには含めない。
@@ -249,6 +253,34 @@ WAN切断LAN・電池なども未検証で、Epic の全完了や今回のスト
 `RELEASE_CHECKLIST.md` の1.6.0項目へ記録する。
 正本: `PRODUCT_PRINCIPLES.md`「Nearby Play」、`architecture/nearby-multiplayer.md`。
 
+### 遠隔対戦 — 採用した方向
+
+2026-11-14 の製品オーナー判断(issue #280)。Nearby Play の対象ゲームと席(Android アプリ 28 本、
+iOS アプリ 26 本)を、離れた場所にいる知り合いと招待リンクでインターネット越しに遊べるようにする。
+Club House の層ではなく、Nearby と同じ **Core の任意モード**である。
+**方針の採用であり、実装・実機検証・出荷はしていない。** PoC の実測と、この方式で出すかの判断
+(Go / No-Go)は #280 で行う。
+
+招待制だけで、公開ロビー・ランダムマッチ・探索一覧・フレンド・連絡先の保存は作らない。
+host が席ごとに招待のリンクを作り、本人が OS の共有シートかコピーで渡し、相手が返事のリンクを返すと、
+端末どうしが WebRTC DataChannel で直接つながる。**招待を持つ人は host の承認なしに着席する**
+(近隣の「すべての参加に host 承認」の例外。招待は 1 席・1 回限り・期限つきで、作れるのは対局と対局の間だけ)。
+切れたときは近隣と同じく席と盤面を保持し、host が出す再接続のリンクに返事を返して、継続鍵の確認が
+通れば承認なしで同じ席へ戻る。自動で相手を探し直さない。前面で遊ぶ前提で、遠隔のための
+接続維持の通知・背景処理は足さない。ルール・host 確定・CPU への切り替え・チャット・表現チェック・
+端末内履歴は近隣と同じものを使う。入口の置き場所と画面の形は未決(実装時に決める)。
+
+PixApps は対戦サーバー・シグナリングサーバー・アカウントを持たない(シグナリングを中継するサーバーは
+#280 の Phase 2 で比べる候補として残す — `PRODUCT_PRINCIPLES.md`「遠隔対戦」13)。STUN は Cloudflare
+(`stun.cloudflare.com`)の 1 社だけで、TURN は使わない。相手と STUN 事業者には IP アドレスが
+伝わるので、招待を作る前と、招待を開いて参加する前に説明して同意を得る。Android / iOS アプリだけで、
+Web 版には置かない。コードは `src/nearby/remote/` に置き、WebRTC の語を書けるのがそこだけであることを
+`.github/scripts/check-principles.sh` §1c が見る。ストアの申告・プライバシーページ・電気通信事業法の
+外部送信規律の扱いは出荷前に決める(`RELEASE_CHECKLIST.md`「5.19 遠隔対戦」)。公開文面には
+出荷するまで書かない(`BRAND.md`「表現ルール」)。
+
+Canonical: `PRODUCT_PRINCIPLES.md`「遠隔対戦」、`architecture/nearby-multiplayer.md` 冒頭の 2026-11-14 節。
+
 ## 4. Non-negotiable product constraints
 
 以下は成長施策や一般的なゲームアプリ慣習より優先する。
@@ -262,6 +294,10 @@ Club House を一度も触らない利用者にとって、以下は 1 つも変
 Club House の側の境界(ゲームは PixApps のサーバーを 1 つも必要としない・送るのは
 結果画面の事実だけ・順位はゲーム × モードごとの自己ベスト(同じ盤面で競うのはデイリーだけ)・Core の画面に現れる入口は 3 つまで・
 公開デプロイの費用の上限・CI での証明)は `docs/PRODUCT_PRINCIPLES.md`「Club House」が定める。
+Nearby Play(2026-10-25、issue #268)と遠隔対戦(2026-11-14、issue #280)は Club House の層ではなく、
+Core の中の **任意モード**である。遠隔対戦は招待リンクでインターネット越しに遊ぶモードで、端末どうしが
+直接つながり、PixApps のサーバーを使わない。2026-11-14 時点では方針の採用であり、実装も出荷もしていない
+(§3「遠隔対戦 — 採用した方向」、`docs/PRODUCT_PRINCIPLES.md`「遠隔対戦」)。
 
 - ゲーム機能を課金または広告視聴で解放しない。
 - サブスクリプションを導入しない。
@@ -273,8 +309,11 @@ Club House の側の境界(ゲームは PixApps のサーバーを 1 つも必�
   結果も同じ形 — 送るかどうかも送る先も利用者が(参加することで、参加の前の開示を受けて)選び、内容は結果画面が
   表示した事実だけ。参加している間は結果ごとの確認なしに自動で送られる(2026-10-02)。
   同「Club House」)
-- フレンド、インターネット経由の遠隔対戦を作らない。近隣端末間のオフライン対戦だけを
-  Core の任意モードとして許容する(上記 Nearby)。本人が開始した集まりの進行を
+- フレンド・公開ロビー・マッチングを作らない。対人戦は、近隣端末間のオフライン対戦(上記 Nearby)と、
+  招待リンクによる遠隔対戦(上記。2026-11-14 に許容した方向で、未実装)だけを Core の任意モードとして許容する。
+  遠隔対戦は端末どうしが直接つながり、PixApps の対戦サーバーを使わない。シグナリングを中継する
+  サーバーは置かず、#280 の Phase 2 で比べる候補として残す。採る場合はこの項も改める
+  (`docs/PRODUCT_PRINCIPLES.md`「遠隔対戦」13)。本人が開始した集まりの進行を
   参加端末へ渡すことは許容するが、クラウドセーブや統計の外部保存には広げない。
   **Core の画面に継続的な順位表を出さない**(Nearby の一局の勝敗はゲームの結果)。
   (順位表は Club House の層にあり、参加した人がその画面へ行ったときだけ見える。
@@ -420,7 +459,8 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 | Release gates                                                                              | `docs/RELEASE_CHECKLIST.md`                         |
 | Review prompt                                                                              | `docs/REVIEW_PROMPT_POLICY.md`                      |
 | Backup / restore format and versioning                                                     | `docs/architecture/backup.md`                       |
-| Nearby Multiplayer — Core の近隣通信の境界、隔離 PoC、検証と製品化の門                     | `docs/architecture/nearby-multiplayer.md`           |
+| Nearby Multiplayer — 近隣通信の境界と遠隔対戦の技術の契約、隔離 PoC、検証と製品化の門      | `docs/architecture/nearby-multiplayer.md`           |
+| 遠隔対戦 — 招待リンクの Core の任意モード(2026-11-14 に方針を採用、未実装)                 | `docs/PRODUCT_PRINCIPLES.md`「遠隔対戦」            |
 | Club House (Public / Private) — Core との境界、費用の上限、順位の線、CI での証明           | `docs/PRODUCT_PRINCIPLES.md`「Club House」          |
 | Club House — クライアント側の契約(入口・保存・API・挑戦と結果・順位・招待・Host・発見導線) | `docs/architecture/club.md`                         |
 | Game-specific behavior                                                                     | `docs/<GAME>_RULES.md`                              |
@@ -452,7 +492,7 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 - game の変更: 対象 `*_RULES.md`
 - storage / migration: `ARCHITECTURE.md` + 対象 game rules
 - backup / restore: `architecture/backup.md`(保存領域の所有と復元の安全性)
-- nearby(`src/nearby/`、隔離実験の `prototypes/nearby/`): `PRODUCT_PRINCIPLES.md`「Nearby Play」+ `OFFLINE_POLICY.md` + `architecture/nearby-multiplayer.md`。各ゲーム変更では対応する `*_RULES.md` も読む。
+- nearby(`src/nearby/`、隔離実験の `prototypes/nearby/`): `PRODUCT_PRINCIPLES.md`「Nearby Play」+ `OFFLINE_POLICY.md` + `architecture/nearby-multiplayer.md`。各ゲーム変更では対応する `*_RULES.md` も読む。遠隔対戦(置き場所は `src/nearby/remote/`、未実装。WebRTC の語を書けるのはそこだけ — `.github/scripts/check-principles.sh` §1c)では、これに加えて `PRODUCT_PRINCIPLES.md`「遠隔対戦」と `architecture/nearby-multiplayer.md` 冒頭の 2026-11-14 節。
 - club house(`src/club/`、Public / Private、対応ゲームの `challenge/`): `PRODUCT_PRINCIPLES.md`「Club House」+ `architecture/club.md`
 - ads / purchase: `ADS_POLICY.md`
 - Android acquisition measurement (Meta, `android/app/src/metaOn` / `metaOff`, `.github/scripts/check-principles.sh` §8): `PRODUCT_PRINCIPLES.md`「Android の獲得計測(Meta)」+ `META_ANDROID_ACQUISITION.md`

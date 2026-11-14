@@ -1505,6 +1505,9 @@ PRODUCT_PRINCIPLES「機械で示すこと」の 3 と 4 を、実装の名前�
    `WebSocket` / `EventSource` / `sendBeacon` / `setInterval` の `club/` を含めた不在
    検査を **§1 とは別の項**として足す(§1 の除外は `fetch` / `XMLHttpRequest` のため
    にだけ要る)。
+   2026-11-14: 遠隔対戦(issue #280、未実装)の WebRTC は別の項 §1c が見て、書けるのは
+   `src/nearby/remote/` だけである。`club/` の §1 の除外は広がらない — `club/` に WebRTC は書けず、
+   remote/ に fetch は書けない([../PRODUCT_PRINCIPLES.md](../PRODUCT_PRINCIPLES.md)「遠隔対戦」)。
 8. **実機**([../RELEASE_CHECKLIST.md](../RELEASE_CHECKLIST.md) に節を足す): 未接続の
    端末で機内モード → ホーム・設定・結果画面に変化が無く、リクエストが 0 件
    (Android Studio の Network Inspector / Safari の Web Inspector で見る)。
