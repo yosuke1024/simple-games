@@ -268,11 +268,21 @@ type Plan = {
 | `GET /admin/owners/:id`                   | なし                              | `{ owner }`。現在の契約状態                          |
 | `PATCH /admin/owners/:id`                 | `{ plan?, validUntil }`           | 契約の更新・停止、Trial から Basic への移行          |
 | `POST /admin/owners/:id/rotate-token`     | `{}`                              | 紛失した契約トークンを無効にし、新しいトークンを発行 |
+| `GET /admin/stats`                        | なし                              | 契約とクラブの件数、クラブごとの人数と上限到達(読み取り専用) |
 
 `reference` は運用者が管理する 1〜128 文字の英数字・`_`・`-` の参照値で、秘密の認証情報
 ではない。同じ参照値への二重付与は 409 `owner_exists`。付与の応答を受け取れなかった
 場合は参照値で契約 ID を調べ、トークンの再発行へ進む。読み取り API は秘密値を返さず、
 存在しない参照値・契約 ID は 404 にする。
+
+`GET /admin/stats` は運用者向けの読み取り専用の集計で、registry だけを読む — クラブの
+保存領域を起こさず、何も書かない。返すのは
+`{ generatedAt, owners: { total, trial, basic, active, expired }, clubs: { total, ready, provisioning, public, private, atCapacity }, perClub }`
+で、`perClub` の各行(作成順)は id・name・plan・ownerActive・createdAt・memberCount・
+maxMembers・atCapacity(ready かつ `memberCount >= maxMembers`)・visibility・
+approvalRequired・status を持つ。`memberCount` は registry のキャッシュ値 — オーナー画面の
+読み込みとディレクトリを同期する操作で更新され、同期だけが失敗した直後は古い値になり得る。
+reference・トークンのハッシュは返さない。
 
 通常の Trial は `validUntil: null` で期限なし。運用者が日時を設定して停止することは可能。
 Basic には有効期限を必須とし、`{ plan: 'basic', validUntil: <日時> }` で Trial を移行する。
