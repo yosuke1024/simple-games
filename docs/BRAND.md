@@ -47,6 +47,11 @@ A Simple Game by PixApps
 (ADS_POLICY.md「ATT を使わない」)である(版ごとの差分は
 PRODUCT_PRINCIPLES.md「適用範囲」と WEB_VERSION.md、任意の Club House 層との境界は
 同「Club House」— これらの約束は Core、つまり Club House を使っていない状態のもの)。
+「送らない」の宛先は PixApps とサーバーである。近隣対戦は一緒に遊ぶ相手の端末へ対局の進行を
+直接渡す。遠隔対戦(2026-11-14 に方針を採用、未実装 — issue #280。PRODUCT_PRINCIPLES.md「遠隔対戦」)も、
+出荷すれば招待した相手の端末へ、PixApps のサーバーを通さず直接渡す。「オフラインで全機能」と
+コンセプト語の「完全オフライン」は Core 全体を主語にした言い方なので、遠隔対戦を出荷した版からは
+ソロ / CPU 戦・近隣対戦を主語にした言い方へ改める(下の「表現ルール」、PRODUCT_PRINCIPLES.md「遠隔対戦」14)。
 ストア文面では OSS を最後の訴求に置く(下の「訴求の順序」)。
 
 ### 設計思想(Built by subtraction)
@@ -174,13 +179,22 @@ OSS を先頭に出さない。
   この文書とストア文面の約束は **Core**(Club House を使っていない状態)の主語で言い、
   Club House の説明ではデプロイの持ち主(PixApps か、あなたか、招待してくれた人)を
   主語にする。Club House について "offline" / "no server" を言わない。ストアの
-  "The games never go online." も Core について真のままだが、Club House を出荷する版では
+  "The games never go online." も Core について真のまま(遠隔対戦を出荷するまで — 次項)だが、Club House を出荷する版では
   その隣に置く説明を同じ PR で書く。**"no account" は Public でも真である** — 表示名
   だけで、登録するものは無い。**Club House を公開文面に書くときは、参加している間は遊び終えた
   結果が自動で送られる(参加の前の局は送られない)ことを平易に言い**、結果ごとに選べるもの
   として書かない(2026-10-02 に送信をボタンから自動へ改めた。[PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)
   「Club House」)。対象は「Club に対応しているゲーム」で、全ゲームとは書かない。「同じ盤面」は
   デイリーについてだけ言う — 自己ベストの並びは盤面が人ごとに違う。
+- **遠隔対戦は出荷するまで公開文面に書かない** — 上の未実装の機能を書かない規則そのもの
+  (2026-11-14 に方針を採用、issue #280。[PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「遠隔対戦」14)。
+  遠隔対戦は Club House と違って Core の任意モードなので、出荷した版からは
+  "The games never go online." のように Core 全体を主語にした文が真でなくなる。その版で、
+  ソロ / CPU 戦を主語にした文へ改める。遠隔対戦について "offline" / "no server" /
+  「オフライン」「サーバーなし」を言わない(STUN 事業者を使うため)。遠隔対戦を説明するときは、
+  招待と返事を受け取った相手(転送された人を含む)と STUN 事業者に IP アドレスが伝わることを言う
+  (同節 9)。"The host approves every join" /「host がすべての参加を承認する」とも言わない —
+  招待を持つ人は承認なしで着席する(同節 4)。host 承認を言えるのは近隣対戦についてだけである。
 - **"leaderboard" は Club House の画面でだけ使う**(2026-09-30 に "leaderboard" /
   "ranking" /「ランキング」の全面禁止を撤回)。Core の画面・ストア掲載文・アプリの
   スクリーンショットでは引き続き使わない — **Core に順位は無い**からで、"No online

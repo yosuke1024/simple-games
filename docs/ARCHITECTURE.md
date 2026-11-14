@@ -42,6 +42,7 @@ src/
 ├── games/                  # 各ゲームは game/ state/ storage/ ui/ で自己完結
 │   └── <game-id>/          # 収録ゲームの一覧は app/registry.ts が正。ここには列挙しない
 ├── nearby/                 # native限定の近隣接続・承認・chat・Yacht・端末内履歴（遅延読込）
+│   └── remote/             # 遠隔対戦の WebRTC transport の置き場所(issue #280、未実装)
 ├── monetization/           # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
 ├── services/               # 共有: ads(バナーのみ) / network / sound / haptics
 ├── state/                  # 共有: SettingsContext
@@ -71,7 +72,7 @@ src/
   初回の重複ゲーム提案操作を省く。host承認と双方Readyは省かない。
   募集名と個人の表示名は別フィールドで扱う。discovery v2／wire v7では募集名だけを近隣一覧へ公開し、
   個人の表示名は接続後に交換する。一覧・待合・新履歴の見出しは募集名とし、参加者名は別に示す。
-  募集の公開範囲を選ぶ2択は無く、すべてhost承認制・定員はゲームごとの2席または4席。新しい募集には両端末1.5.4を用いる。
+  募集の公開範囲を選ぶ2択は無く、近隣の参加はすべてhost承認制(遠隔対戦の招待は例外 — 下)・定員はゲームごとの2席または4席。新しい募集には両端末1.5.4を用いる。
   Nearby専用history v1に任意の `displayName` と各履歴の `roomName` を追加し、既存データも読む。
   次回入力用の表示名はこの端末だけで再利用し、Nearby全削除／ローカルデータ削除の対象に含める。
   個別の履歴削除では再利用用表示名を消さない。通常ゲームの保存・バックアップ・Clubの所有には移さない。
@@ -85,6 +86,20 @@ src/
   通常のCPU戦や他ゲームは従来どおりアンマウント時にタイマー・購読を片付ける。
   アプリ切替・一時切断からの継続条件は
   [architecture/nearby-multiplayer.md](architecture/nearby-multiplayer.md) の製品契約に従う。
+
+- 遠隔対戦(2026-11-14 に方針を採用、issue #280。**未実装**)は、Nearby Play のもう 1 つの transport として
+  `src/nearby/remote/` に置く。`NearbyPlugin`(`native.ts`)と同じ口を持つ JS の実装で、WebView 標準の
+  `RTCPeerConnection` / `RTCDataChannel` だけを使い、native の実装・WebRTC の SDK・第三者の通信 SDK を足さない。
+  `Transport` に遠隔の種類を足す。`Session` / `GroupSession` / `Channel` / `Delivery`、各ゲームの adapter と View、
+  host 確定・投影・CPU への切り替え、端末内履歴は近隣と共有し、遠隔のためにゲーム側を変えない。
+  近隣と違うのは、承認(招待を持つ人は host の承認なしに着席する)、発見(探索一覧は無く、招待と返事の往復)、
+  再接続(再接続のリンクと継続鍵の確認)、背景(下の「電池」)である。nearby/ の外から remote/ へ届かないことは
+  `src/test/importBoundaries.test.ts` が、WebRTC の語を remote/ の外に書けないことは `check-principles.sh` §1c が見る。
+  Web 成果物とエントリの初期グラフから `src/nearby/` を締め出す既存の検査は remote/ も受け継ぐ。remote/ の別チャンク、
+  remote/ への入口を 1 ファイルの動的 import に限る規則、Web とエントリの初期グラフに無いことの検査は、
+  実装時(#280 の Phase 3)に足す。技術の契約は
+  [architecture/nearby-multiplayer.md](architecture/nearby-multiplayer.md) 冒頭の 2026-11-14 節、製品の約束は
+  [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「遠隔対戦」。
 
 - `games/*/game/` は Pure TypeScript。他のどのレイヤーも import しない
   (テスト容易性と移植性のため)。
@@ -174,8 +189,9 @@ src/
   CI が示すこと**である(`check-dist-ads-separation.sh`)。
 - **Club House(Public / Private、issue #161)は `src/club/` 1 か所に置き、Core からは
   `src/app/` の動的 `import()` でしか届かない**(2026-09-09、issue #176。ディレクトリは
-  まだ無い)。製品の TypeScript ソースで通信 API を書けるのはこのディレクトリだけで(`check-principles.sh` §1 の
-  唯一の除外)、`club/` の外からの静的 import は `src/test/importBoundaries.test.ts` が
+  まだ無い)。製品の TypeScript ソースで §1 の語彙の通信 API(`fetch(` など)を書けるのはこのディレクトリだけで(`check-principles.sh` §1 の
+  唯一の除外。WebRTC はこの語彙に入らず、別の §1c が見る — 書けるのは遠隔対戦の `src/nearby/remote/` だけで、
+  これは Club House の層ではない。`club/` に WebRTC は書けず、remote/ に fetch / WebSocket は書けない)、`club/` の外からの静的 import は `src/test/importBoundaries.test.ts` が
   禁じる。ゲーム・`ui/`・`services/`・`storage/` は `club/` を知らず、`club/` が
   ゲームへ触るのは registry 経由だけ(上の規則どおり)。チャンクは `game-<id>` と同じく
   独立させ、初期グラフに入らないことをサイズ Gate が見る(`club/` が生まれる PR の
@@ -285,6 +301,10 @@ gate を維持することを門にする。技術の正本と実機検証条件
   Nearby は本人が開始した集まりの間だけ接続を保ち、ゲームtopへ戻るだけでは切らない。一時中断では保持し、前面で同じ相手に
   再接続する。退出・解散で終了する。AndroidのconnectedDeviceサービスとiOSのBluetooth背景モードを
   この用途に限って許容する。プロセス終了後の復元は未対応。
+  遠隔対戦(2026-11-14 に方針を採用、未実装)は前面で遊ぶ前提で、背景では OS がアプリを止め、接続は切れるものとして扱う(未計測)。
+  遠隔のために foreground service・状態通知・背景モードを足さない(上の connectedDevice サービスと
+  Bluetooth 背景モードは近隣の BLE / LAN のためのもの)。アプリ層の周期的な生存確認も足さない
+  (WebRTC の下層は接続中に ICE の consent と SCTP の heartbeat を送る)。
 - オフライン時は広告取得をリトライしない。
 - 画面外のゲームはアンマウントする(描画しない)。**アンマウントされたゲームは
   タイマー・RAF・リスナー・音声を一切残さない** — 契約とテストは
@@ -296,7 +316,7 @@ gate を維持することを門にする。技術の正本と実機検証条件
 
 ## Web / Android / iOS
 
-Vite で静的 Web アプリとしてビルドし、Capacitor で Android / iOS アプリ化する(SSR 不要のため Next.js は使用しない)。**プラットフォーム差分はシェルと専用アダプタに閉じ込める**: 広告 ID・ストアの可用性判定・ホーム画面ショートカット(Android の Pinned Shortcut と iOS の Quick Actions は同じ `services/homeShortcut/` に住む)、iOS アプリで出さないタイトルの扉(`app/gameChannel.ts` と葉の `app/iosWithheldGames.ts`、2026-11-11 — 上の「ゲームレジストリの契約」)、およびnative限定のNearby接続開始とBLE/LAN接続。プラットフォーム選択をゲーム・保存・i18n のコードへ持ち込まない。Nearbyの開始可否はシェルが決め、ゲームには既存のcallbackと進行中の状態を渡す。Webの対応13本では共通の `ui/components/PlayTogetherButton.tsx` が `import.meta.env.MODE === 'web'` で無効なボタンとアプリ専用の説明を表示する。Yachtも同じ部品を使い、ゲームごとの分岐や追加propsは持たない。この表示だけのビルド時分岐は [WEB_VERSION.md](WEB_VERSION.md)「実装上の約束」の限定した例外である。ネットワーク状態は使わず、オフラインでも説明を表示し、WebにNearbyの実行コードや開始callbackを追加しない。
+Vite で静的 Web アプリとしてビルドし、Capacitor で Android / iOS アプリ化する(SSR 不要のため Next.js は使用しない)。**プラットフォーム差分はシェルと専用アダプタに閉じ込める**: 広告 ID・ストアの可用性判定・ホーム画面ショートカット(Android の Pinned Shortcut と iOS の Quick Actions は同じ `services/homeShortcut/` に住む)、iOS アプリで出さないタイトルの扉(`app/gameChannel.ts` と葉の `app/iosWithheldGames.ts`、2026-11-11 — 上の「ゲームレジストリの契約」)、およびnative限定のNearby接続開始とBLE/LAN接続(遠隔対戦の WebRTC 接続も Android / iOS アプリだけで、Web には置かない。2026-11-14 に方針を採用、未実装 — [architecture/nearby-multiplayer.md](architecture/nearby-multiplayer.md) 冒頭の 2026-11-14 節)。プラットフォーム選択をゲーム・保存・i18n のコードへ持ち込まない。Nearbyの開始可否はシェルが決め、ゲームには既存のcallbackと進行中の状態を渡す。Webの対応13本では共通の `ui/components/PlayTogetherButton.tsx` が `import.meta.env.MODE === 'web'` で無効なボタンとアプリ専用の説明を表示する。Yachtも同じ部品を使い、ゲームごとの分岐や追加propsは持たない。この表示だけのビルド時分岐は [WEB_VERSION.md](WEB_VERSION.md)「実装上の約束」の限定した例外である。ネットワーク状態は使わず、オフラインでも説明を表示し、WebにNearbyの実行コードや開始callbackを追加しない。
 
 **ハードウェア戻るボタン**: ゲーム内ホーム→コレクションへ、コレクション→アプリ最小化。持ち主は常に 1 つ——ゲームが載っている間はそのゲームの `GameContext`(自分の画面→ホーム→コレクション)、チャンクの読み込み中と読み込み失敗の画面は `ui/useHardwareBackExit`、設定画面はシェル(`App.tsx`)、それ以外はコレクションホーム(レビューの質問 → タイルシート → 検索 → 最小化の順に、上に載っているものから閉じる)。レビューの質問はシェルがコレクションの上に描くが、持ち主を 2 つにはできないので、シェルは「閉じ方」だけをコレクションへ渡す——渡さないと Back が質問を残したままアプリを最小化する(issue #173、[REVIEW_PROMPT_POLICY.md](REVIEW_PROMPT_POLICY.md))。Capacitor の `backButton` は登録された全リスナーに届くので、2 つ目の持ち主は「閉じた画面の下でアプリが最小化する」事故になる。ゲーム側の配線(native ガード付きで 1 回だけ登録し、ホームでは `exitToCollection`)は `src/test/gameBackButtonWiring.test.ts` が、シェル側の受け渡しは `src/app/App.load.test.tsx` が固定する(issue #120)。初回チュートリアル(Quick Rules)から Back で抜けたときは `completeTutorial()` を呼んで「見た」扱いにする——呼ばないと `tutorialCompleted` が偽のまま残り、閉じるボタンは完了後にしか出ないので、そのゲームは開くたびにチュートリアルから始まる。「初回体験の原則」(`PRODUCT_PRINCIPLES.md`)が求めるのは 3 ステップ以内で説明してすぐ始めることであり、毎回出すことではない。全ゲームの挙動は `src/test/tutorialBackWiring.test.tsx` が固定する(issue #142)。`android:enableOnBackInvokedCallback="false"` は削除しない——targetSdk 36 の予測型戻るが既定で有効になると `@capacitor/app` の `backButton` イベントが一切発火しなくなる実機バグを回避するためで、外すとハードウェア戻るがアプリ全体で無反応になる。
 
