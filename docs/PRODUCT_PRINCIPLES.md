@@ -675,6 +675,9 @@ Texas Hold'em のためである。
     2026-09-09 まで Private Game Club と呼んでいたものである。
     (v1.4.0 は Public だけを出す。招待リンクでの参加は**隠す** — Private は次の版で、予告
     (Coming Soon)も置かない。[architecture/club.md](architecture/club.md) §7-3。)
+    (2026-11-14 のオーナー判断で、アプリからこれを建てる導線(Host 導線)は作らないことにした。
+    招待リンクでの参加も隠したまま。サーバの self-hosted API は残る。
+    [architecture/club.md](architecture/club.md) §14 判断 56。)
   - **Managed Club House** — PixApps がクラブごとの保存領域を提供する。オーナーだけが
     ホスティング契約を持ち、通常メンバーの参加とゲームは無料。公開範囲と承認の設定は
     運用形態から切り離す。[architecture/managed-clubs.md](architecture/managed-clubs.md) が契約である。
@@ -852,6 +855,8 @@ Railway 等へのデプロイをクラブ作成の前提にせず、PixApps が 
   技術用語ではなく利用者の言葉で、何が違うのか・誰に向くのか・誰が管理して誰が
   払うのか・どう招待するのか・どう復旧するのかを説明する。Docker やデータベースの
   理解を、判断の前提にしない。
+  (2026-11-14 の判断 56 で、自前のサーバを建てる導線は作らない。アプリで Club を作る入口は
+  Managed のオーナーの入口(無料 Trial)。[architecture/club.md](architecture/club.md) §14 判断 56。)
 
 ### 順位表 — 成績の順位は作る、熱心さの順位は作らない
 
@@ -909,6 +914,10 @@ Public Club House を認めたのは、**固定費が限りなくゼロに近い
 - **無料枠を超えたら、機能を削るかデプロイを畳む。** 利用者への課金・サブスク・広告の
   強化で埋めない。Public が消えても Core は 1 つも変わらず、Private だけで Club House は
   成立し続ける。
+  (2026-11-14 の判断 56 以降、アプリには自前の Club を建てる導線も、その招待リンクで入る経路も無い。
+  Managed は Public と同じデプロイにある([architecture/managed-clubs.md](architecture/managed-clubs.md) §7)。
+  このため Public のデプロイを畳むと、アプリから使える Club House は無くなる。畳むときに何を残すかは
+  決めていない。[architecture/club.md](architecture/club.md) §14 判断 56。)
 - **費用の driver を公開前に文書化し、上限・レート制限・濫用対策を最初から入れる。**
   無料枠の事故的な超過が起きうる形で公開しない。
 - **自動送信で読み書きの量の driver が変わった(2026-10-02)。** 以前は「ボタンを押した数」だった
@@ -928,6 +937,8 @@ Private Club House の持ち主が置ける**事業者側の referral リンク*
 Club House を持つのを助ける」であって、稼ぐことではない。事業者の制度が無くても同じ
 UX が成立すること、併用可否や実コストが未確認のまま公開文面で謳わないことは変わらない。
 紹介の順位表・紹介ストリーク・勧誘目標・PixApps 独自の報酬通貨や payout は作らない。
+(2026-11-14 のオーナー判断で Host 導線を作らないことにしたので、この説明画面と referral リンクは
+アプリに無い。[architecture/club.md](architecture/club.md) §14 判断 56。)
 
 ### 公開文面
 

@@ -346,6 +346,8 @@ Plus / MAX の契約はまだ受け付けない。
 
 Canonical: `PRODUCT_PRINCIPLES.md`「Managed Club House」、
 `architecture/managed-clubs.md`。既存 `architecture/club.md` の self-hosted API は維持する。
+アプリから自前の Club を建てる Host 導線(`club.md` §8-1〜8-4)は作らない(2026-11-14 のオーナー判断、
+`club.md` §14 判断 56)。
 
 ## 6. Monetization
 
