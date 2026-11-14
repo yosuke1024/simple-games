@@ -9,6 +9,12 @@ Managed は同じ per-club API を `/clubs/:id/api/v1/` に持ち、契約キー
 以下の旧仕様と公開範囲・承認・料金に関する説明が食い違う場合、この改定と上記の正典を優先する。
 旧 `/public` の 5 分キャッシュは廃止し、公開範囲の変更を直後の応答に反映する。
 
+**2026-11-14: Railway セルフホストの Host 導線は作らない(§14 判断 56)。** §8-1〜8-4(Host になる)と
+§13-3(`Create your own Club`)は作らなかった設計の記録として、§14「外部確認」6〜9 は確かめなかった
+項目として残す。§8-5(切断)は実装済みで、今の契約である。アプリで Club を作る入口は
+Managed のオーナーの入口(UI の `Owner space`。managed-clubs.md §4「無料 Trial の開始」・§7)。
+`PRIVATE_CLUBS_ENABLED` は `false` のまま。サーバの self-hosted API(§5)は変えない。
+
 作成 2026-09-09、改題 2026-09-30。issue #161 の**設計**であり、
 Epic #175 の段 2(原則の境界 #176 → **#161 の設計** → #164 の発見導線)に当たる。
 境界の正本は [../PRODUCT_PRINCIPLES.md](../PRODUCT_PRINCIPLES.md)「Shared」で、この文書は
@@ -892,12 +898,16 @@ https://<endpoint>/join#invite=<inviteToken>
 ある。コードは残し、**1 つの定数 `PRIVATE_CLUBS_ENABLED`(v1.4.0 は `false`)**で切る — 次の版で `true` に
 するだけで戻る。
 
+**2026-11-14(判断 56):** Private の Host 導線を作らないと決めたので、「次の版で `true`」の予定は取り消した。
+`PRIVATE_CLUBS_ENABLED` は `false` のまま据え置く。Managed の招待は、この定数とは別に開いている
+(managed-clubs.md §7)。
+
 | 経路                                                             | できること                                                                                                                                                             |
 | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 招待 URL をブラウザで開く(SharedHost の Web)                     | nickname → `Join and Play`。**インストール不要**。同じ origin なので CORS の問題が無い                                                                                 |
 | アプリの設定 > Advanced > `Club House` > 参加                    | 招待 URL を**貼り付ける**(`inviteFromHref` で endpoint と token を読む)→ nickname → 参加                                                                               |
 | アプリ / Web 版の `Play together` > `Join the Public Club House` | 開示(ニックネームと結果が公開される)→ nickname → `POST /join { nickname }`。endpoint はアプリが名前で知る唯一のもの(`club/public.ts` の `PUBLIC_CLUB_ENDPOINT`。§15-1) |
-| pixapps.ai の Web 版の `Play together`                           | Public への参加(上の行)と、「招待リンクを開いてください」の説明、Host になる導線(§8)。任意 endpoint への直接接続は無い                                                 |
+| pixapps.ai の Web 版の `Play together`                           | Public への参加(上の行)と、「招待リンクを開いてください」の説明、Host になる導線(§8。判断 56 で作らない)。任意 endpoint への直接接続は無い                                                 |
 
 **v1.4.0 で隠すもの**(`PRIVATE_CLUBS_ENABLED === false` のとき。`Coming Soon` の予告も**置かない** —
 PRODUCT_PRINCIPLES が Coming Soon を採らないのは Club House の中でも同じ。判断 44):
@@ -969,6 +979,10 @@ Simple Games by PixApps
   Shared のために増やさない。
 
 ## 8. Host になる — 説明画面・Setup Key・claim・Hosting
+
+**2026-11-14(判断 56): 8-1〜8-4 の Host 導線(入口・説明画面・Setup Key と claim・Owner リンク・
+Hosting)はアプリに作らない。** 作らなかった設計の記録として残す。8-5 の切断は実装済みで、今の契約である。
+サーバ側の `POST /claim` と `GET` / `PATCH /hosting`(§5-3)は、self-hosted の契約として変えない。
 
 ### 8-1. 入口
 
@@ -1129,6 +1143,10 @@ claim the Club again.`(§8-3)。確認すれば切断できる — 端末を手�
   `Join with an invite link` / `Join another Club` の招待リンクの経路 / `entry: 'invite'` / 持ち主の
   `Invite` は無い。Private の入口(`Create my Club`、`Create your own Club`)は §14 判断 19 のとおり
   次の版。予告(`Coming Soon`)も置かない。
+  **2026-11-14(判断 56)で、Private の入口は作らないと決めた。** Club を作る入口は
+  Managed のオーナーの入口(UI の `Owner space`。managed-clubs.md §4「無料 Trial の開始」・§7)。
+  招待リンクの経路(`Join with an invite link`・`Join another Club`・`entry: 'invite'`・持ち主の `Invite`)は、
+  Managed の Club については在る。閉じているのは自前の Club のものだけ。
 
 ### Club
 
@@ -1145,7 +1163,7 @@ Rankings                                       ← ゲーム単位の棚(§16。
   Cards
   [♠ Solitaire] [♠ FreeCell]
 Members                           18 人  ›   ← 1 行。押すと Members 画面(§9「Members」)
-Hosting                                        ← Owner だけ
+Hosting                                        ← Owner だけ(§8-4。判断 56 で作らない)
 ```
 
 (2026-10-02 まで在った `Challenges` / `Played` / `New Challenge` / `Records` は、デイリー以外の
@@ -1302,6 +1320,7 @@ Report                                         ← メンバーの端末。確�
   から `Disconnect this device` を使う。
 - `Disconnect this device`(§8-5。記録は残る。同じ端末なら入り直して同じメンバーに戻る)。
 - Owner: Club 名の変更、招待の作り直し(**v1.4.0 は隠す**。§7-3)、Owner 端末の追加(§8-3)。
+  Owner 端末の追加(Owner リンク)は判断 56 で作らない。
 
 nickname を**持ち主が**通報への対処として変える `PATCH /members/:id` は別(§17-3)。
 
@@ -1530,6 +1549,10 @@ PRODUCT_PRINCIPLES「機械で示すこと」の 3 と 4 を、実装の名前�
 
 ### 13-3. Club を体験した後 — `Create your own Club`
 
+**2026-11-14(判断 56): 作らない。** §8 の Host 導線と一緒に見送った。#164 は発見の導線が入ったとして
+同日に閉じ、この項は見送りと記録した。Club を作る入口は Managed のオーナーの入口
+(UI の `Owner space`。managed-clubs.md §4「無料 Trial の開始」・§7)。以下は作らなかった設計の記録。
+
 - 置く場所: All Clubs の末尾(§9)、Club の Settings の末尾。Core には置かない。
 - 文言: `Create your own Club` / `Start a private game space for another group of
 friends or family.`。押した先が §8-2 の説明画面で、**お金の話はそこで初めて**出る。
@@ -1542,7 +1565,8 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
 
 招待された人は Shared を探さない。URL を開く → nickname → `Join and Play`。
 インストールを条件にしない。ページの brand 表示は 1 行。**v1.4.0 ではこの入口を隠す**(Private は次の
-版。§7-3、判断 44)。
+版。§7-3、判断 44)。Private の招待は、判断 56(2026-11-14)で Host 導線を作らないと決めたので
+隠したまま。Managed の招待は managed-clubs.md §7。
 
 ### 13-5. やらないこと(#164 の禁止一覧をそのまま)
 
@@ -1596,16 +1620,18 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
 16. **本番 `club.pixapps.ai` のクラブ名は「PixApps Club」。** claim 時は既定の
     「Yoh's Club」で、2026-10-02 に `PATCH /club` で変えた。クラブ名は claim の `clubName`
     で付け、Owner が `PATCH /club` で変える(§5-3)。Private の Owner 画面(名前の入力と
-    変更)は段取りの PR H。
+    変更)は段取りの PR H。→ PR H は判断 56(2026-11-14)で作らないことにした。
 17. **本番の計測用データは Public 公開前に消す。** 費用の spike(`simple-games-club#2`)
     が作ったメンバー 10 人と挑戦は、PR F で Durable Object を作り直してから公開する。
 18. **紹介は §8-4 の形で確定。** Simple Games が招待コードを発行する形にはしない。Host が
     自分の事業者 referral リンクを置き、メンバーが `Create your own Club` を選んだときに
     そのリンクで事業者を 1 回開くだけ。親の Club を使うだけの子は事業者アカウントを
     持たないので還元は起きず、子が自分の Club を建てたときに限る。
+    → 判断 56(2026-11-14)で Host 導線を作らないので、この紹介の形もアプリには入らない。
 19. **Public を先に届け、Private は次の版。** 次のアプリの版に Public Club House と、
     いまベータのアプリの公開リリースを同梱する。Private の Owner 導線(段取りの PR H:
     `Create my Club` / Hosting / クラブ名 / Railway での実証)はその次の版。
+    → 「その次の版」は判断 56(2026-11-14)で取り消した。Private の Owner 導線は作らない。
 
 **2026-10-02 に製品オーナーが確認した判断(段取りの PR C)**:
 
@@ -1688,6 +1714,8 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
     のもの(判断 19)。参加の入口・Web の招待 URL・持ち主の招待パネルを出さない。**Coming Soon の予告は
     置かない**(PRODUCT_PRINCIPLES が採らない)。コードは残し、次の版で戻す(§7-3)。
     判断 42〜44 はすべて **v1.4.0 に入る**。
+    → 「Private Club House は次の版」は判断 56(2026-11-14)で取り消した。`PRIVATE_CLUBS_ENABLED` は
+    `false` のまま。
 
 **2026-10-10 の判断**(製品オーナー確認。段取りは
 [../plans/2026-10-10-club-ranking-rows.md](../plans/2026-10-10-club-ranking-rows.md)):
@@ -1803,8 +1831,23 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
     見分けにくいまま)/ Bluetooth・Wi-Fi のマーク(機能はどちらでもつながり、どちらも他社のロゴ)/
     家の形(「ホームへ戻る」に読める)。
 
+**2026-11-14 に製品オーナーが確認した判断**(Issue の整理で #161・#164 を閉じたとき):
+
+56. **Railway セルフホストの Host 導線は作らない。** §8-1〜8-4 の `Create my Club`・説明画面・
+    Setup Key・claim・Owner リンク・Hosting(referral リンクを含む)と、§13-3 の `Create your own Club`、
+    Railway の one-click template は作らない。事業者上での確認(下の「外部確認」6〜9)は確かめない。
+    判断 16 の Private の Owner 画面、判断 19 の「その次の版」、判断 44 の「Private は次の版」は、これで
+    取り消す。判断 18 の紹介の形は、置き場所(§8-2・§8-4・§13-3)が無くなるのでアプリに入らない。
+    Simple Games が招待コードを発行しない線は変わらない。アプリで Club を作る入口は Managed Club House の
+    オーナーの入口(UI の `Owner space`。2026-10-23 の判断、managed-clubs.md §4・§7)。
+    `PRIVATE_CLUBS_ENABLED` は `false` のまま。判断 44 の「次の版で戻す」が無くなったので、`true` にする
+    予定は無い。この定数が閉じているのは、自前の Club の招待リンクでの参加と、自前の Club の持ち主の
+    `Invite` で、Managed の招待は別に開いている(managed-clubs.md §7)。サーバの self-hosted API
+    (`POST /claim`・`/hosting` を含む §5)と契約テストは変えない(PROJECT_CONTEXT「Managed Club House」)。
+    §8-1〜8-4 と §13-3 は作らなかった設計の記録として残し、§8-5 の切断は今の契約のまま。
+
 **外部の事実確認**(#161 Phase 0 と `simple-games-club#1` の未完了項目。確認できるまで
-文言と数字を出さない):
+文言と数字を出さない。**6〜9 は判断 56 で Host 導線を作らないと決めたので、確かめない**):
 
 6. 事業者は **Railway を第一候補**とする(#161 のとおり)。one-click template で
    persistent volume / healthcheck / 環境変数 `CLUB_SETUP_KEY` の入力と再設定 /
@@ -1838,7 +1881,8 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
 (§1 — Shared / SharedHost / Server は実装側の語)。**最初の版は同日に置いた**: §5 の
 全エンドポイント、§5-4 の JSON をそのまま fixture にした契約テスト、Dockerfile、
 `railway.toml`(healthcheck・app sleeping OFF)。残りは事業者の template、Web ビルドの
-同梱、事業者上での往復確認(段取りの PR B の「受け入れ」)。
+同梱、事業者上での往復確認(段取りの PR B の「受け入れ」)。→ template と事業者上での確認は、
+判断 56(2026-11-14)で行わない。
 
 ## 15. Public Club House 固有のもの(2026-10-02、段取りの PR C)
 
