@@ -151,6 +151,30 @@ describe('following the shelf (boot)', () => {
     expect(lastItems()).toEqual([itemFor('nonogram'), itemFor('solitaire')]);
   });
 
+  /**
+   * A shelf restored from an Android backup can pin a title the iOS app
+   * leaves out (app/iosWithheldGames.ts). The app icon's menu is a door the
+   * OS shows outside the app, so it must not carry that title's name either:
+   * the shelf drops it on read (app/favoriteGames.ts), and the boot write is
+   * what replaces a list an earlier build left with it.
+   */
+  it('leaves a restored pin of a title the iOS app leaves out off the OS list', async () => {
+    const kv = createMemoryKV({
+      [STORAGE_KEYS.favorites]: JSON.stringify({
+        schemaVersion: 1,
+        ids: ['blackjack', 'sudoku', 'texas-holdem'],
+      }),
+    });
+    await initFavoriteGames(kv);
+    await initQuickActions();
+    expect(pluginMock.setItems).toHaveBeenCalledTimes(1);
+    expect(lastItems()).toEqual([itemFor('sudoku')]);
+
+    // And it stays off as the shelf changes.
+    toggleFavoriteGame('hearts');
+    expect(lastItems()).toEqual([itemFor('sudoku'), itemFor('hearts')]);
+  });
+
   it('rewrites the list after every pin and unpin', async () => {
     await initFavoriteGames(createMemoryKV());
     await initQuickActions();

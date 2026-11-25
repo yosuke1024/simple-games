@@ -67,5 +67,16 @@
   アプリが利用者に届く前に書き換える。Play Console のデータセーフティと App Store のプライバシー申告にも
   Club House の項が要る([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §6)。
 
+- `docs/PRODUCT_PRINCIPLES.md`「遠隔対戦」と `docs/architecture/nearby-multiplayer.md` 冒頭の
+  2026-11-14 節 — 招待リンクでインターネット越しに遊ぶ遠隔対戦(issue #280。2026-11-14 に採った
+  方針で、未実装・未出荷)で、誰に何が伝わるか。招待と返事には接続に使う IP アドレスが入り、
+  受け取った相手(転送された人を含む)と STUN 事業者(Cloudflare、`stun.cloudflare.com`)がそれを
+  知る。IP からおおよその地域が推定されうる。**遠隔対戦を載せたアプリが利用者に届く前に**、公開ページへ
+  遠隔対戦の節を足してこれを開示する。文面は pixapps-landing に書き、ここには書かない。
+  Play Console のデータセーフティと App Store のプライバシー申告での扱い、日本の電気通信事業法の
+  外部送信規律に当たるかは未決で、出荷の門([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)
+  「5.19 遠隔対戦」)に置く。機械判定には `check-principles.sh` §1c(WebRTC の語を書けるのは
+  `src/nearby/remote/` だけ、STUN / TURN の URL は `stun.cloudflare.com` の 1 つだけ、WebRTC の依存を足さない)が加わる。
+
 **公開ページと実装が食い違ったら、直すのは実装か、公開ページか、その両方である。**
 この文書を書き足して辻褄を合わせてはいけない — ここはもう文面を持っていない。

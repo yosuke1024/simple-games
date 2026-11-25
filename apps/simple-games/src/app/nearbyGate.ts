@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
+import { isWithheldHere } from './iosWithheldGames';
 import { isNearbyGameId } from './nearbyGameIds';
 import type { NearbyGameId } from '../nearby/gameTypes';
 
@@ -15,7 +16,7 @@ type Root = ComponentType<{
 }>;
 let root: LazyExoticComponent<Root> | null = null;
 export function nearbyAvailable(gameId: string): gameId is NearbyGameId {
-  return isNearbyGameId(gameId) && nearbyDiscoveryAvailable();
+  return isNearbyGameId(gameId) && !isWithheldHere(gameId) && nearbyDiscoveryAvailable();
 }
 export function nearbyDiscoveryAvailable(): boolean {
   return import.meta.env.MODE !== 'web' && Capacitor.isNativePlatform();

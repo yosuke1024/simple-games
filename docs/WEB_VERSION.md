@@ -1,5 +1,13 @@
 # Simple Games — Web 版
 
+## 2026-11-14: 遠隔対戦は Web に置かない(issue #280)
+
+オーナー判断で、Nearby Play の対象ゲームを招待リンクでインターネット越しに遊ぶ遠隔対戦を
+Core の任意モードとして採った([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「遠隔対戦」)。
+方針の採用であって、実装も出荷もしていない。遠隔対戦は Android / iOS アプリだけで、Web 版には
+置かない(同節 2)。Web は近隣対戦と同じく、無効なボタンとアプリ専用の説明だけを持つ。
+扱いは下の「役割分担」「先行公開」「実装上の約束」に書いた。
+
 ## 2026-11-07: Frost Route / River Cargoの正式収録
 
 オーナーの指示で先行公開の残り2本を正式収録へ変更。正式収録は80本、Web先行は0本。
@@ -41,7 +49,11 @@ Webには対応22本の無効な「誰かと遊ぶ」とアプリ専用の説明
 ネイティブアプリの約束(バナー広告 1 枠のみ・買い切りで広告削除・初回起動から
 オフライン)は**アプリのもの**であり、Web 版はここに書く別の約束を持つ。
 その約束は Android と iOS で同じ — 2026-08-28 に iOS 版が出たあとも、この文書が
-分けるのは Web とアプリの 2 つだけで、OS ごとの列は作らない。
+分けるのは Web とアプリの 2 つだけで、OS ごとの列は作らない。**収録タイトルの例外は 1 つだけ**: iOS アプリは
+模擬ギャンブルのタイトル(いまは Texas Hold'em / Blackjack)を出さない(2026-11-11、iOS 1.8.5 から。
+[PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「iOS で出さないタイトル」)。Android アプリと
+Web 版(iPhone の Safari を含む)は 2 本を出す。下の表の「ゲーム内容」と、「先行公開」のガードの
+説明に書く。
 
 ## 2026-10-29: 先行公開 20 本の正式収録(1.7.0)
 
@@ -76,12 +88,16 @@ Webでは無効なアプリ専用案内として表示する。
 | 広告       | ディスプレイ広告ほか([ADS_POLICY.md](ADS_POLICY.md)「Web 版」。既定は無効)                                                                                                                                                                               | Anchored Adaptive Banner 1 枠のみ                                                                                                        |
 | 課金       | なし(完全無料)                                                                                                                                                                                                                                           | $3.99 買い切りで広告永久削除                                                                                                             |
 | 計測       | サイト共通のページ解析(下の「計測」節。実装済み・既定は無効)                                                                                                                                                                                             | なし — Analytics を入れないことがアプリの約束([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))                                            |
-| ゲーム内容 | 正式収録の80本(2026-11-07にFrost Route / River Cargoを収録し先行公開は0本)。registryにはほかに収録見送り2本 — 取り下げたFalling Blocks / Marble Weave。実際の配信版・開始日は下の「先行公開」節とリンク先の公開記録を参照。ソロ / CPU 戦は共通、近隣対戦はアプリ専用表示のみ | 正式収録の80本（registryで`channel`を持たないエントリ）。2026-11-04に7本、2026-11-05にトランプ6本、2026-11-07に2本をオーナーの明示判断で追加。実際のストア配布はリリース記録を参照 |
+| ゲーム内容 | 正式収録の80本(2026-11-07にFrost Route / River Cargoを収録し先行公開は0本)。registryにはほかに収録見送り2本 — 取り下げたFalling Blocks / Marble Weave。実際の配信版・開始日は下の「先行公開」節とリンク先の公開記録を参照。ソロ / CPU 戦は共通、近隣対戦はアプリ専用表示のみ | 正式収録の80本（registryで`channel`を持たないエントリ）。2026-11-04に7本、2026-11-05にトランプ6本、2026-11-07に2本をオーナーの明示判断で追加。Android は80本、iOS は `unavailableOn: 'ios'` の2本(Texas Hold'em / Blackjack)を除く78本(2026-11-11、iOS 1.8.5 から)。実際のストア配布はリリース記録を参照 |
 
 **Play instantly on the web. Play quietly and offline in the app.**
 
-通常のソロ / CPU 戦は両版で共通とする。近隣対戦はOSの通信機能を使うアプリ限定の任意機能で、
-Webでは上記の無効ボタンと説明を表示する。広告視聴でも課金でも解放される機能は、どちらの版にも
+通常のソロ / CPU 戦は両版で共通とする(iOS アプリで出さない 2 本を除く — 上の「OS ごとの列は作らない」の例外)。近隣対戦はOSの通信機能を使うアプリ限定の任意機能で、
+Webでは上記の無効ボタンと説明を表示する。
+遠隔対戦(未実装 — 上の 2026-11-14 節)もアプリ限定だが、使うのは OS の通信機能ではなく
+WebView 標準の WebRTC なので、この理由は当てはまらない。Web に置かないのは
+[PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「遠隔対戦」2 に記録したオーナー判断であり、
+Web で出すにはその節の改定を要する。広告視聴でも課金でも解放される機能は、どちらの版にも
 存在しない(`docs/PRODUCT_PRINCIPLES.md`)。新作の**収録タイミング**も版で
 異なる(Web が先 — 下の「先行公開(ベータ)」)。これは無料の先行であって、
 支払い・広告視聴・アカウントの対価ではない。
@@ -651,6 +667,28 @@ registry から 11 本の `channel: 'web-beta'` を外し、アプリのホー�
   `storageKeys`(Reset Local Data)と `loadStorageSchemas`(Backup & Restore)は
   両ビルドで有効のまま — ブラウザで作ったバックアップをアプリに復元しても
   ベータの保存を失わない。
+- **iOS アプリだけが出さないタイトル**(2026-11-11、iOS 1.8.5 から。
+  [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「iOS で出さないタイトル」): 宣言は `channel` とは別の
+  任意のフィールド `unavailableOn: 'ios'`(いまは Texas Hold'em / Blackjack)。`channel` の値に
+  しないのは、`channel` の値はアプリ全体(Android を含む)で扉を閉じてしまうためで、「`channel` を
+  持たない = 正式収録」という読み方(テストと landing の同期)はそのまま保つ。同じ `app/gameChannel.ts` のガードが、iOS アプリ(`app/iosWithheldGames.ts` の
+  `isIosApp()` — `Capacitor.isNativePlatform()` かつ `Capacitor.getPlatform() === 'ios'`)でだけ扉を
+  閉じる。Android アプリと Web 版は出す(iPhone の Safari では `getPlatform()` が `'web'` なので Web 版の
+  扱い)。閉じる扉は、コレクションホームの棚と節(節の本数も)・検索・設定のお気に入りピッカー・
+  お気に入り棚と最近の行(Android から復元したレコードに id が残っていても)・iOS の Quick Actions
+  (お気に入りから作る)・`?game=` とショートカットの住所・共有リンク(Universal Link の
+  `https://pixapps.ai/simple-games/share/<id>/` とカスタムスキームの
+  `com.pixapps.simplegames://share/<id>` — どちらもコレクションを開く。`app/nativeGameLink.ts`)・
+  lazy root・Club のチャレンジの Play・Nearby の「対戦サポートゲーム」の一覧・Nearby の探索と参加
+  (Android の host が開いた卓は一覧に出ず、参加できない — `nearby/discovery.ts` の `gameForLabel`)・
+  Nearby の集まりの履歴(保存は残し、表示だけ外す)、遠隔対戦の招待(未実装 — issue #280。招待の
+  gameId を同じ `app/iosWithheldGames.ts` に問い、2 本の招待は開かず、着席もしない。理由は表示しない)、
+  そしてシェルがゲームを開く 1 点
+  (`App.tsx` の `enterGame` は、扉がガードに問い忘れても開かず、最近にも記録しない)。Nearby の層は
+  registry を import できないので `app/iosWithheldGames.ts` の一覧に直接問い、registry の印との一致は
+  `gameChannel.test.ts` が固定する。`channel` と同じく、コードはバンドルに入ったまま、`storageKeys` と
+  `loadStorageSchemas` は登録したまま(Android のバックアップを iPhone に復元しても 2 本の保存を
+  失わない)。
 - 表示は `ui/components/WebBetaNotice.tsx`: タイトルカードの `BETA` バッジ
   (アクセシブルネームに含める — 「Crown Grid BETA」)と、各ゲームのホームと
   Quick Rules のバッジ + 説明文。説明文は en / ja だけで、他 12 言語はバッジのみ。
@@ -972,12 +1010,19 @@ I18N_POLICY.md の高リスクキー 5 番(無料・オフライン・paywall �
   共通ボタンを無効な案内表示へ変えるだけのビルド時分岐である。ゲームごとの分岐や追加props、
   Webの接続機能は増やさず、Yachtを含む対応13本で同じ部品を使う。接続の可否と起動は引き続き
   シェルが所有し、Web成果物にNearby runtimeが入らないことを確認する。オンライン判定は使わない。
+  遠隔対戦(未実装 — issue #280)の実装は `src/nearby/remote/` に置き、この除外をそのまま受け継ぐ —
+  Web 成果物とエントリの初期グラフから `src/nearby/` を締め出す既存の検査が、`src/nearby/remote/` も
+  前方一致で見る。remote/ を別のチャンクに分け、入口を 1 ファイルの動的 import に限る検査は、
+  実装時(#280 の Phase 3)に足す([architecture/nearby-multiplayer.md](architecture/nearby-multiplayer.md)
+  冒頭の 2026-11-14 節「機械で示すこと」)。
   **URL ルーティングは例外に加えていない**(上の「URL(ゲーム別の入口)」)。
   外部の SDK もサイト側の資産も持ち込まず、native では 1 行も走らない実行時ガードで
   足りるものを、成果物の分離検査が要る側へ移す理由がないため。Android の
   ホーム画面ショートカット(issue #110)と iOS の Quick Actions(issue #114)も
   同じ理由でビルドゲートではなく実行時ガード側に置く
-  (`Capacitor.getPlatform() === 'android'` / `=== 'ios'`)。
+  (`Capacitor.getPlatform() === 'android'` / `=== 'ios'`)。iOS アプリで出さないタイトル(2026-11-11)も
+  同じで、iOS 用の別ビルドを作らず、`app/iosWithheldGames.ts` の `Capacitor.getPlatform() === 'ios'` に
+  `app/gameChannel.ts` と Nearby の扉が問って閉じる(上の「先行公開」)。
   **Club House(Public / Private、issue #161)もビルド時ゲートにしない**(2026-09-09 の issue #176、
   2026-09-30 の `simple-games-club#1`)。
   native にも Web にも同じコードが入り、有効化した端末でだけ動く実行時ゲート側である。

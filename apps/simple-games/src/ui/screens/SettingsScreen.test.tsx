@@ -9,12 +9,16 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { capacitorMock, openExternalMock } = vi.hoisted(() => ({
-  capacitorMock: { native: false },
+  // 'web' is jsdom's own answer; 'android' and 'ios' are the two apps.
+  capacitorMock: { platform: 'web' as 'web' | 'android' | 'ios' },
   openExternalMock: vi.fn(),
 }));
 
 vi.mock('@capacitor/core', () => ({
-  Capacitor: { isNativePlatform: () => capacitorMock.native },
+  Capacitor: {
+    isNativePlatform: () => capacitorMock.platform !== 'web',
+    getPlatform: () => capacitorMock.platform,
+  },
 }));
 vi.mock('../openExternal', () => ({ openExternal: openExternalMock }));
 // The real implementation, wrapped so a test can read which keys the screen
@@ -58,7 +62,7 @@ function renderSettings(
 }
 
 beforeEach(() => {
-  capacitorMock.native = false;
+  capacitorMock.platform = 'web';
   resetRecentGamesForTesting();
   resetFavoriteGamesForTesting();
   openExternalMock.mockClear();
@@ -73,7 +77,7 @@ afterEach(() => {
 
 describe('ads and support section', () => {
   it('explains the banner and the one-time purchase on the app build', () => {
-    capacitorMock.native = true;
+    capacitorMock.platform = 'android';
     renderSettings();
     expect(screen.getByText(/small banner ad/)).toBeInTheDocument();
   });
@@ -94,7 +98,7 @@ describe('ads and support section', () => {
    * #120).
    */
   it('does not claim a purchase when the entitlement could not be read (issue #96, #120)', async () => {
-    capacitorMock.native = true;
+    capacitorMock.platform = 'android';
     const unreadableKV: KVStore = {
       get: () => Promise.reject(new Error('storage unavailable')),
       set: () => Promise.resolve(),
@@ -114,7 +118,7 @@ describe('ads and support section', () => {
    * one time the thanks copy is the true thing to show.
    */
   it('thanks a player whose cached purchase reads back (issue #120)', async () => {
-    capacitorMock.native = true;
+    capacitorMock.platform = 'android';
     const kv = createMemoryKV({
       [STORAGE_KEYS.iap]: JSON.stringify({
         schemaVersion: 1,
@@ -153,7 +157,7 @@ describe('policy links', () => {
 
   it('carries no bundled policy text on either platform', () => {
     for (const native of [true, false]) {
-      capacitorMock.native = native;
+      capacitorMock.platform = native ? 'android' : 'web';
       const { unmount } = renderSettings();
       // Sentences the retired privacy1-5 / privacyWebAds keys used to render.
       expect(screen.queryByText(/No account/)).not.toBeInTheDocument();
@@ -169,7 +173,7 @@ describe('policy links', () => {
    * their own reasons, so neither is a second copy of the policy.
    */
   it('still states offline what deleting does, and that ads and a purchase exist', async () => {
-    capacitorMock.native = true;
+    capacitorMock.platform = 'android';
     const user = userEvent.setup();
     renderSettings();
     expect(screen.getByText(/small banner ad/)).toBeInTheDocument();
@@ -280,6 +284,35 @@ describe('favorites', () => {
       GAMES.filter((game) => game.channel !== 'in-development').map((game) => game.title),
     );
     expect(picks.every((button) => button.getAttribute('aria-pressed') === 'false')).toBe(true);
+  });
+
+  /**
+   * The iOS app leaves two titles out (app/iosWithheldGames.ts), so its
+   * picker has no row for them — a row would be a door the collection does
+   * not have. Android lists them with the rest.
+   */
+  it('has no row in the iOS app for a title it leaves out', async () => {
+    await initFavoriteGames(createMemoryKV());
+    const titles = () =>
+      within(screen.getByRole('region', { name: 'Favorites' }))
+        .getAllByRole('button')
+        .map((button) => button.textContent);
+    const released = GAMES.filter((game) => !game.channel);
+
+    capacitorMock.platform = 'ios';
+    const ios = renderSettings();
+    expect(titles()).not.toContain('Blackjack');
+    expect(titles()).not.toContain('Texas Hold’em');
+    expect(titles()).toEqual(
+      released.filter((game) => game.unavailableOn !== 'ios').map((game) => game.title),
+    );
+    ios.unmount();
+
+    capacitorMock.platform = 'android';
+    renderSettings();
+    expect(titles()).toContain('Blackjack');
+    expect(titles()).toContain('Texas Hold’em');
+    expect(titles()).toEqual(released.map((game) => game.title));
   });
 
   it('pins and unpins the game its row names', async () => {

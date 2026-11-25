@@ -16,7 +16,8 @@ const { capacitorMock, appMock } = vi.hoisted(() => {
   type Listener = (event: unknown) => void;
   const listeners = new Map<string, Set<Listener>>();
   return {
-    capacitorMock: { native: false },
+    // 'web' is jsdom's own answer; 'android' and 'ios' are the two apps.
+    capacitorMock: { platform: 'web' as 'web' | 'android' | 'ios' },
     appMock: {
       listeners,
       /** Delivers one plugin event to every listener the screen registered. */
@@ -41,7 +42,10 @@ const { capacitorMock, appMock } = vi.hoisted(() => {
 });
 
 vi.mock('@capacitor/core', () => ({
-  Capacitor: { isNativePlatform: () => capacitorMock.native },
+  Capacitor: {
+    isNativePlatform: () => capacitorMock.platform !== 'web',
+    getPlatform: () => capacitorMock.platform,
+  },
 }));
 
 // The screen owns Android's hardware back for the collection (issue #122):
@@ -136,7 +140,7 @@ function renderHome(onOpenGame: (gameId: GameId) => void = () => undefined) {
 }
 
 beforeEach(() => {
-  capacitorMock.native = false;
+  capacitorMock.platform = 'web';
   appMock.listeners.clear();
   appMock.App.addListener.mockClear();
   appMock.App.minimizeApp.mockClear();
@@ -155,7 +159,7 @@ afterEach(() => {
 
 describe('collection tagline', () => {
   it('claims offline play on the app build, without claiming the app is free of charge', () => {
-    capacitorMock.native = true;
+    capacitorMock.platform = 'android';
     renderHome();
     expect(screen.getByText('Works offline. No account. No paywalls.')).toBeInTheDocument();
   });
@@ -186,7 +190,7 @@ describe('collection tagline', () => {
  * development (`channel: 'in-development'`), which no build offers
  * (app/gameChannel.ts). jsdom is the browser, so this is the list the tests
  * below expect by default; the app's narrower list is spelt out where a test
- * flips `capacitorMock.native`.
+ * sets `capacitorMock.platform`.
  */
 const shown = GAMES.filter((game) => game.channel !== 'in-development');
 const cardText = (element: Element) => {
@@ -265,7 +269,7 @@ describe('web-beta titles', () => {
   });
 
   it('are absent from the app build, whose sections hold exactly the released titles', () => {
-    capacitorMock.native = true;
+    capacitorMock.platform = 'android';
     renderHome();
     for (const game of beta) {
       expect(screen.queryByRole('button', { name: nameOf(game) })).not.toBeInTheDocument();
@@ -285,10 +289,10 @@ describe('web-beta titles', () => {
     await initFavoriteGames(createMemoryKV());
     await initRecentGames(createMemoryKV());
     const first = beta[0]!;
-    capacitorMock.native = false;
+    capacitorMock.platform = 'web';
     toggleFavoriteGame(first.id);
     recordGameOpened(first.id);
-    capacitorMock.native = true;
+    capacitorMock.platform = 'android';
     renderHome();
     expect(screen.queryByRole('navigation', { name: 'Favorites' })).not.toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'Recently played' })).not.toBeInTheDocument();
@@ -303,11 +307,120 @@ describe('web-beta titles', () => {
     expect(screen.getByRole('button', { name: `${first.title} BETA` })).toBeInTheDocument();
     cleanup();
 
-    capacitorMock.native = true;
+    capacitorMock.platform = 'android';
     renderHome();
     await user.click(screen.getByRole('button', { name: 'Search games' }));
     await user.type(screen.getByRole('searchbox', { name: 'Search games' }), first.title);
     expect(screen.getByRole('status')).toHaveTextContent('No games match.');
+  });
+});
+
+/**
+ * The titles the iOS app leaves out (`unavailableOn: 'ios'`,
+ * app/iosWithheldGames.ts): released on Android and in the browser, and no
+ * door at all in the iOS app — not on a shelf, not in a section or its count,
+ * not in the search, and not through a pinned or recent record a backup from
+ * Android brought along. One build renders both apps; the platform decides
+ * (app/gameChannel.ts).
+ */
+describe('titles the iOS app leaves out', () => {
+  const withheld = GAMES.filter((game) => game.unavailableOn === 'ios');
+  const released = GAMES.filter((game) => !game.channel);
+  const cards = released.filter((game) => game.category === 'cards');
+  const cardsSection = () =>
+    screen.getByRole('button', { name: new RegExp(`^${en.categoryCards} \\d+$`) });
+  const cardsShelf = () => cardsIn(document.getElementById('category-cards-games')!);
+
+  it('are Blackjack and Texas Hold’em, both card games, so the tests below are not vacuous', () => {
+    expect(withheld.map((game) => game.id)).toEqual(['texas-holdem', 'blackjack']);
+    expect(withheld.every((game) => game.category === 'cards')).toBe(true);
+    expect(cards).toHaveLength(16);
+  });
+
+  it('have no card in the iOS app, whose Cards section lists the other fourteen', () => {
+    capacitorMock.platform = 'ios';
+    renderHome();
+    for (const game of withheld) {
+      expect(screen.queryByRole('button', { name: game.title })).not.toBeInTheDocument();
+    }
+    expect(cardsSection()).toHaveAccessibleName(`${en.categoryCards} 14`);
+    expect(cardsShelf()).toEqual(
+      cards.filter((game) => !game.unavailableOn).map((game) => game.title),
+    );
+    expect(cardsShelf()).toHaveLength(14);
+    // Every section holds exactly the released titles less these two.
+    const list = screen.getByRole('navigation', { name: 'Games' });
+    expect(cardsIn(list)).toEqual(
+      GAME_CATEGORIES.flatMap((category) =>
+        released
+          .filter((game) => game.category === category.id && !game.unavailableOn)
+          .map(cardFor),
+      ),
+    );
+  });
+
+  it.each(['android', 'web'] as const)('are on the %s build’s Cards section', (platform) => {
+    capacitorMock.platform = platform;
+    renderHome();
+    for (const game of withheld) {
+      expect(screen.getByRole('button', { name: game.title })).toBeInTheDocument();
+    }
+    expect(cardsSection()).toHaveAccessibleName(`${en.categoryCards} 16`);
+    expect(cardsShelf()).toEqual(cards.map((game) => game.title));
+  });
+
+  it('are not found by the iOS app’s search, by any part of their names', async () => {
+    const user = userEvent.setup();
+    capacitorMock.platform = 'ios';
+    renderHome();
+    await user.click(screen.getByRole('button', { name: 'Search games' }));
+    for (const query of ['Blackjack', 'Texas', 'Hold']) {
+      const field = screen.getByRole('searchbox', { name: 'Search games' });
+      await user.clear(field);
+      await user.type(field, query);
+      expect(screen.getByRole('status'), query).toHaveTextContent('No games match.');
+      for (const game of withheld) {
+        expect(screen.queryByRole('button', { name: game.title }), query).not.toBeInTheDocument();
+      }
+    }
+  });
+
+  it('are found by the Android app’s search', async () => {
+    const user = userEvent.setup();
+    capacitorMock.platform = 'android';
+    renderHome();
+    await user.click(screen.getByRole('button', { name: 'Search games' }));
+    await user.type(screen.getByRole('searchbox', { name: 'Search games' }), 'Blackjack');
+    expect(screen.getByRole('button', { name: 'Blackjack' })).toBeInTheDocument();
+    await user.clear(screen.getByRole('searchbox', { name: 'Search games' }));
+    await user.type(screen.getByRole('searchbox', { name: 'Search games' }), 'Hold');
+    expect(screen.getByRole('button', { name: 'Texas Hold’em' })).toBeInTheDocument();
+  });
+
+  it('do not reach the iOS app through a pinned or recent record either', async () => {
+    // A backup from Android restored onto an iPhone: one title pinned, the
+    // other recently played (the recent row leaves out what is pinned).
+    await initFavoriteGames(createMemoryKV());
+    await initRecentGames(createMemoryKV());
+    capacitorMock.platform = 'android';
+    toggleFavoriteGame('blackjack');
+    recordGameOpened('texas-holdem');
+    capacitorMock.platform = 'ios';
+    renderHome();
+    expect(screen.queryByRole('navigation', { name: 'Favorites' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Recently played' })).not.toBeInTheDocument();
+    for (const game of withheld) {
+      expect(screen.queryByRole('button', { name: game.title })).not.toBeInTheDocument();
+    }
+    cleanup();
+
+    // The same records on Android: both shelves show them.
+    capacitorMock.platform = 'android';
+    renderHome();
+    expect(cardsIn(screen.getByRole('navigation', { name: 'Favorites' }))).toEqual(['Blackjack']);
+    expect(cardsIn(screen.getByRole('navigation', { name: 'Recently played' }))).toEqual([
+      'Texas Hold’em',
+    ]);
   });
 });
 
@@ -338,7 +451,7 @@ describe('in-development titles', () => {
     ['the browser', false],
     ['the app', true],
   ])('are on no shelf, in no section and in no search result on %s', async (_build, native) => {
-    capacitorMock.native = native;
+    capacitorMock.platform = native ? 'android' : 'web';
     const user = userEvent.setup();
     renderHome();
     const list = screen.getByRole('navigation', { name: 'Games' });
@@ -1442,7 +1555,7 @@ describe('the hardware back button on the collection', () => {
   const pressBack = () => act(() => appMock.fire('backButton', {}));
 
   it('closes the search instead of leaving the app', async () => {
-    capacitorMock.native = true;
+    capacitorMock.platform = 'android';
     const user = userEvent.setup();
     renderHome();
 
@@ -1459,7 +1572,7 @@ describe('the hardware back button on the collection', () => {
    * the app in the same listener's priority.
    */
   it('closes an open tile sheet before anything else', async () => {
-    capacitorMock.native = true;
+    capacitorMock.platform = 'android';
     await initFavoriteGames(createMemoryKV());
     renderHome();
 
@@ -1485,7 +1598,7 @@ describe('the hardware back button on the collection', () => {
    * dialogs, and closing it leaves everything underneath where it was.
    */
   it("closes the shell's review question ahead of everything of its own", async () => {
-    capacitorMock.native = true;
+    capacitorMock.platform = 'android';
     await initFavoriteGames(createMemoryKV());
     const dismissReviewPrompt = vi.fn();
     render(
@@ -1511,7 +1624,7 @@ describe('the hardware back button on the collection', () => {
   });
 
   it('closes the sheet, not the search, when both are open', async () => {
-    capacitorMock.native = true;
+    capacitorMock.platform = 'android';
     await initFavoriteGames(createMemoryKV());
     const user = userEvent.setup();
     renderHome();
@@ -1533,7 +1646,7 @@ describe('the hardware back button on the collection', () => {
   });
 
   it('still leaves the app from the home itself', () => {
-    capacitorMock.native = true;
+    capacitorMock.platform = 'android';
     renderHome();
 
     pressBack();
@@ -1548,7 +1661,7 @@ describe('the hardware back button on the collection', () => {
    * nothing. The screen's own `.catch(() => exitApp())` is the fallback.
    */
   it('falls back to exiting the app when minimizing is rejected', async () => {
-    capacitorMock.native = true;
+    capacitorMock.platform = 'android';
     appMock.App.minimizeApp.mockRejectedValueOnce(new Error('unavailable'));
     renderHome();
 
@@ -1561,7 +1674,7 @@ describe('the hardware back button on the collection', () => {
   });
 
   it('registers exactly one listener, whatever is typed into the field', async () => {
-    capacitorMock.native = true;
+    capacitorMock.platform = 'android';
     const user = userEvent.setup();
     renderHome();
 
@@ -1622,7 +1735,7 @@ describe("PixApps' other apps", () => {
 
   it('comes after the last category, outside the games list, on both builds', () => {
     for (const native of [false, true]) {
-      capacitorMock.native = native;
+      capacitorMock.platform = native ? 'android' : 'web';
       renderHome();
       const games = screen.getByRole('navigation', { name: 'Games' });
       const apps = section();

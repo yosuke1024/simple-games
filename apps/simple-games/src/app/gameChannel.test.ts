@@ -7,12 +7,17 @@
  *
  * The guard is exercised twice: with the real titles the registry declares
  * today, and with synthetic entries spliced into the registry the module
- * under test sees — one `'web-beta'`, one `'in-development'`. The synthetic
- * ones stay even while real ones exist: the day the last of them graduates,
- * a test that needed a real one to run would silently stop testing the
- * mechanism.
+ * under test sees — one `'web-beta'`, one `'in-development'`, one withheld
+ * from iOS. The synthetic ones stay even while real ones exist: the day the
+ * last of them graduates, a test that needed a real one to run would silently
+ * stop testing the mechanism.
+ *
+ * Three builds answer: the browser, the Android app and the iOS app. The iOS
+ * app differs from Android by one field, `unavailableOn: 'ios'`, which is not
+ * a channel — a withheld title is released everywhere else.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { IOS_WITHHELD_GAME_IDS } from './iosWithheldGames';
 import { GAMES, type GameDefinition } from './registry';
 
 /**
@@ -72,7 +77,31 @@ const SYNTHETIC_IN_DEVELOPMENT: GameDefinition = {
   channel: 'in-development',
 };
 
-async function loadOn(native: boolean, withSynthetic = false) {
+/**
+ * The titles the iOS app leaves out, in registry order
+ * (docs/PRODUCT_PRINCIPLES.md「iOS で出さないタイトル」). App Store Review
+ * rejected 1.8.4 (10804) on 2026-11-10 under guideline 2.3.6: simulated
+ * gambling is accepted only from an organisation's developer account, and
+ * this app is published from an individual one. The product owner decided on
+ * 2026-11-11 to withhold these two from the iOS app only — Android and the
+ * browser version, Safari on an iPhone included, keep them. Adding a title
+ * here, or giving one back to iOS, is a release decision and edits this list
+ * on purpose.
+ */
+const NOT_ON_IOS: string[] = ['texas-holdem', 'blackjack'];
+
+/** A released title withheld from iOS that exists only in this file, the same way. */
+const SYNTHETIC_NOT_ON_IOS: GameDefinition = {
+  ...GAMES.find((game) => game.id === 'sudoku')!,
+  id: 'synthetic-not-on-ios' as GameDefinition['id'],
+  title: 'Synthetic Not On iOS',
+  unavailableOn: 'ios',
+};
+
+type Platform = 'web' | 'android' | 'ios';
+
+/** The module graph one build sees, with `extra` entries appended to its registry. */
+async function loadOn(platform: Platform, extra: readonly GameDefinition[] = []) {
   vi.resetModules();
   vi.doMock('@capacitor/core', async (importOriginal) => {
     const actual = await importOriginal<typeof import('@capacitor/core')>();
@@ -80,17 +109,17 @@ async function loadOn(native: boolean, withSynthetic = false) {
       ...actual,
       Capacitor: {
         ...actual.Capacitor,
-        isNativePlatform: () => native,
-        getPlatform: () => (native ? 'android' : 'web'),
+        isNativePlatform: () => platform !== 'web',
+        getPlatform: () => platform,
       },
     };
   });
-  if (withSynthetic) {
+  if (extra.length > 0) {
     vi.doMock('./registry', async (importOriginal) => {
       const actual = await importOriginal<typeof import('./registry')>();
       return {
         ...actual,
-        GAMES: [...actual.GAMES, SYNTHETIC_BETA, SYNTHETIC_IN_DEVELOPMENT],
+        GAMES: [...actual.GAMES, ...extra],
       };
     });
   }
@@ -108,6 +137,8 @@ afterEach(() => {
 
 const released = GAMES.filter((game) => game.channel === undefined);
 const inBrowser = GAMES.filter((game) => game.channel !== 'in-development');
+const onIos = released.filter((game) => !NOT_ON_IOS.includes(game.id));
+const SYNTHETIC_CHANNELS = [SYNTHETIC_BETA, SYNTHETIC_IN_DEVELOPMENT];
 
 /** Every door, closed: what "not offered" means for one id on one build. */
 function expectClosed(build: Awaited<ReturnType<typeof loadOn>>, id: string, title: string) {
@@ -138,8 +169,8 @@ describe('the channels', () => {
     }
   });
 
-  it('offers exactly the released titles on the app, and keeps the others off every door', async () => {
-    const app = await loadOn(true);
+  it('offers exactly the released titles on the Android app, and keeps the others off every door', async () => {
+    const app = await loadOn('android');
     const offered = app.availableGames().map((game) => game.id);
     expect(offered).toEqual(released.map((game) => game.id));
     expect(app.availableGames()).toHaveLength(
@@ -158,7 +189,7 @@ describe('the channels', () => {
   });
 
   it('offers the released and beta titles in the browser, and keeps the in-development ones off every door', async () => {
-    const web = await loadOn(false);
+    const web = await loadOn('web');
     expect(web.availableGames().map((game) => game.id)).toEqual(inBrowser.map((game) => game.id));
     for (const game of inBrowser) {
       expect(web.isAvailableGameId(game.id)).toBe(true);
@@ -186,7 +217,7 @@ describe('the channels', () => {
     const buildingId = SYNTHETIC_IN_DEVELOPMENT.id;
 
     it('offers the beta one in the browser, on every door, and never the in-development one', async () => {
-      const web = await loadOn(false, true);
+      const web = await loadOn('web', SYNTHETIC_CHANNELS);
       expect(web.availableGames().map((game) => game.id)).toEqual([
         ...inBrowser.map((game) => game.id),
         betaId,
@@ -199,8 +230,8 @@ describe('the channels', () => {
       expect(web.searchGames('')).toHaveLength(inBrowser.length + 1);
     });
 
-    it('keeps both off every door of the app build', async () => {
-      const app = await loadOn(true, true);
+    it('keeps both off every door of the Android app', async () => {
+      const app = await loadOn('android', SYNTHETIC_CHANNELS);
       const offered = app.availableGames().map((game) => game.id);
       expect(offered).toEqual(released.map((game) => game.id));
       expectClosed(app, betaId, SYNTHETIC_BETA.title);
@@ -213,10 +244,110 @@ describe('the channels', () => {
   });
 
   it('answers null-ish ids the way the registry always has', async () => {
-    const web = await loadOn(false);
+    const web = await loadOn('web');
     expect(web.isAvailableGameId(null)).toBe(false);
     expect(web.isAvailableGameId(undefined)).toBe(false);
     expect(web.isAvailableGameId('')).toBe(false);
     expect(web.isAvailableGameId('not-a-game')).toBe(false);
+  });
+});
+
+/**
+ * The iOS app (app/iosWithheldGames.ts). One build ships to both stores; the
+ * iOS app answers like the Android one except for the titles marked
+ * `unavailableOn: 'ios'`, which it keeps off every door Android and the
+ * browser open to them. They stay registered — their keys for "Reset Local
+ * Data" and their schemas for Backup & Restore — so a backup made on Android
+ * restores on an iPhone without losing those records.
+ */
+describe('the titles the iOS app leaves out', () => {
+  it('are exactly the golden list, and the leaf the Nearby layer reads names the same ids in the same order', () => {
+    const withheld = GAMES.filter((game) => game.unavailableOn === 'ios').map((game) => game.id);
+    expect(withheld).toEqual(NOT_ON_IOS);
+    // src/nearby may not import the registry, so it reads its own copy
+    // (src/test/importBoundaries.test.ts); the two must never drift.
+    expect([...IOS_WITHHELD_GAME_IDS]).toEqual(withheld);
+    expect(new Set(IOS_WITHHELD_GAME_IDS)).toEqual(new Set(withheld));
+    // 'ios' is the only value the field takes, and only released titles carry
+    // it: a withheld title is on every other build.
+    for (const game of GAMES) {
+      expect([undefined, 'ios'], game.id).toContain(game.unavailableOn);
+      if (game.unavailableOn) expect(game.channel, game.id).toBeUndefined();
+    }
+    // No Club challenge either: the Club's Today list and Directory name a
+    // challenge's game from the registry directly, so a contract here would be
+    // a door the gate does not stand in front of.
+    for (const id of NOT_ON_IOS) {
+      const game = GAMES.find((entry) => entry.id === id)!;
+      expect(game.challenge, id).toBeUndefined();
+      // Still registered on every build (the header's "deliberately NOT gated").
+      expect(game.storageKeys.length, id).toBeGreaterThan(0);
+      expect(typeof game.loadStorageSchemas, id).toBe('function');
+    }
+  });
+
+  it('are off every door of the iOS app, which offers the other released titles in registry order', async () => {
+    const ios = await loadOn('ios');
+    expect(ios.availableGames().map((game) => game.id)).toEqual(onIos.map((game) => game.id));
+    expect(ios.availableGames()).toHaveLength(78);
+    for (const game of onIos) {
+      expect(ios.isAvailableGameId(game.id), game.id).toBe(true);
+      expect(ios.findAvailableGame(game.id)?.id, game.id).toBe(game.id);
+      expect(ios.getLazyRoot(game.id), game.id).not.toBeNull();
+    }
+    for (const id of NOT_ON_IOS) {
+      expectClosed(ios, id, GAMES.find((game) => game.id === id)!.title);
+    }
+    // Nor does any part of either name find them (no other title contains these).
+    for (const query of ['Blackjack', 'Texas', 'Hold', 'hold’em']) {
+      expect(ios.searchGames(query), query).toEqual([]);
+    }
+    expect(ios.searchGames('')).toHaveLength(onIos.length);
+    // The beta and in-development titles are off the iOS app as they are off Android.
+    for (const id of [...WEB_BETA_IDS, ...IN_DEVELOPMENT_IDS]) {
+      expectClosed(ios, id, GAMES.find((game) => game.id === id)!.title);
+    }
+  });
+
+  it.each(['android', 'web'] as const)(
+    'are on every door of the %s build, as before',
+    async (platform) => {
+      const build = await loadOn(platform);
+      for (const id of NOT_ON_IOS) {
+        expect(build.isAvailableGameId(id), id).toBe(true);
+        expect(build.findAvailableGame(id)?.id, id).toBe(id);
+        expect(build.getLazyRoot(id as never), id).not.toBeNull();
+      }
+      expect(build.searchGames('Blackjack').map((game) => game.id)).toEqual(['blackjack']);
+      expect(build.searchGames('Texas').map((game) => game.id)).toEqual(['texas-holdem']);
+      expect(build.searchGames('Hold').map((game) => game.id)).toEqual(['texas-holdem']);
+      expect(build.availableGames().map((game) => game.id)).toEqual(
+        (platform === 'web' ? inBrowser : released).map((game) => game.id),
+      );
+    },
+  );
+
+  describe('with a synthetic title withheld from iOS in the registry', () => {
+    const id = SYNTHETIC_NOT_ON_IOS.id;
+
+    it('keeps it off every door of the iOS app, beside the beta and in-development ones', async () => {
+      const ios = await loadOn('ios', [...SYNTHETIC_CHANNELS, SYNTHETIC_NOT_ON_IOS]);
+      expect(ios.availableGames().map((game) => game.id)).toEqual(onIos.map((game) => game.id));
+      expectClosed(ios, id, SYNTHETIC_NOT_ON_IOS.title);
+      expectClosed(ios, SYNTHETIC_BETA.id, SYNTHETIC_BETA.title);
+      expectClosed(ios, SYNTHETIC_IN_DEVELOPMENT.id, SYNTHETIC_IN_DEVELOPMENT.title);
+      expect(ios.isAvailableGameId('sudoku')).toBe(true);
+    });
+
+    it.each(['android', 'web'] as const)('offers it on the %s build', async (platform) => {
+      const build = await loadOn(platform, [SYNTHETIC_NOT_ON_IOS]);
+      expect(build.availableGames().map((game) => game.id)).toEqual([
+        ...(platform === 'web' ? inBrowser : released).map((game) => game.id),
+        id,
+      ]);
+      expect(build.isAvailableGameId(id)).toBe(true);
+      expect(build.getLazyRoot(id)).not.toBeNull();
+      expect(build.searchGames(SYNTHETIC_NOT_ON_IOS.title).map((game) => game.id)).toEqual([id]);
+    });
   });
 });

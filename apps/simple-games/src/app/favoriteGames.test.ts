@@ -5,6 +5,21 @@
  * the shelf instead of breaking the home.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+// jsdom is the browser; a test that needs an app says which one.
+const { capacitorMock } = vi.hoisted(() => ({ capacitorMock: { platform: 'web' } }));
+vi.mock('@capacitor/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@capacitor/core')>();
+  return {
+    ...actual,
+    Capacitor: {
+      ...actual.Capacitor,
+      isNativePlatform: () => capacitorMock.platform !== 'web',
+      getPlatform: () => capacitorMock.platform,
+    },
+  };
+});
+
 import { createMemoryKV } from '../storage/kv';
 import { FAVORITE_GAMES_MAX, STORAGE_KEYS, favoriteGamesSchema } from '../storage/schemas';
 import {
@@ -17,6 +32,7 @@ import {
 import { GAMES } from './registry';
 
 beforeEach(() => {
+  capacitorMock.platform = 'web';
   resetFavoriteGamesForTesting();
 });
 
@@ -113,6 +129,36 @@ describe('pinning', () => {
     await Promise.resolve();
     const stored: unknown = JSON.parse((await kv.get(STORAGE_KEYS.favorites)) ?? 'null');
     expect(stored).toEqual({ schemaVersion: 1, ids: ['retired-game', 'sudoku', 'hearts'] });
+  });
+
+  /**
+   * A record restored from an Android backup can pin a title the iOS app
+   * leaves out (app/iosWithheldGames.ts). The iOS shelf drops it on read and
+   * the record keeps it, so the same backup restored on Android comes back
+   * pinned — nobody unpinned it.
+   */
+  it('drops a title the iOS app leaves out from the iOS shelf, and keeps it in the record', async () => {
+    capacitorMock.platform = 'ios';
+    const kv = createMemoryKV({
+      [STORAGE_KEYS.favorites]: JSON.stringify({
+        schemaVersion: 1,
+        ids: ['blackjack', 'sudoku', 'texas-holdem'],
+      }),
+    });
+    await initFavoriteGames(kv);
+    expect(getFavoriteGames()).toEqual(['sudoku']);
+    toggleFavoriteGame('hearts');
+    expect(getFavoriteGames()).toEqual(['sudoku', 'hearts']);
+    await Promise.resolve();
+    const stored: unknown = JSON.parse((await kv.get(STORAGE_KEYS.favorites)) ?? 'null');
+    expect(stored).toEqual({
+      schemaVersion: 1,
+      ids: ['blackjack', 'sudoku', 'texas-holdem', 'hearts'],
+    });
+
+    // The same record read by the Android app: both titles are on its shelf.
+    capacitorMock.platform = 'android';
+    expect(getFavoriteGames()).toEqual(['blackjack', 'sudoku', 'texas-holdem', 'hearts']);
   });
 
   it('starts empty when the store cannot be read, instead of throwing', async () => {

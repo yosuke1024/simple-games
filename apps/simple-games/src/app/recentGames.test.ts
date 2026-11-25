@@ -4,7 +4,22 @@
  * grows past its limit, never lists the same game twice, and never offers a
  * door to a game this build does not have.
  */
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+// jsdom is the browser; a test that needs an app says which one.
+const { capacitorMock } = vi.hoisted(() => ({ capacitorMock: { platform: 'web' } }));
+vi.mock('@capacitor/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@capacitor/core')>();
+  return {
+    ...actual,
+    Capacitor: {
+      ...actual.Capacitor,
+      isNativePlatform: () => capacitorMock.platform !== 'web',
+      getPlatform: () => capacitorMock.platform,
+    },
+  };
+});
+
 import type { KVStore } from '../storage/kv';
 import { createMemoryKV } from '../storage/kv';
 import { RECENT_GAMES_LIMIT, STORAGE_KEYS, recentGamesSchema } from '../storage/schemas';
@@ -17,6 +32,7 @@ import {
 import { GAMES } from './registry';
 
 beforeEach(() => {
+  capacitorMock.platform = 'web';
   resetRecentGamesForTesting();
 });
 
@@ -69,6 +85,39 @@ describe('the shortcut row', () => {
     });
     await initRecentGames(kv);
     expect(getRecentGames()).toEqual(['sudoku']);
+  });
+});
+
+/**
+ * A record restored from an Android backup can name a title the iOS app
+ * leaves out (app/iosWithheldGames.ts). The iOS row drops it on read — it
+ * offers no door to a game this app does not have — and the record keeps it,
+ * so the Android app reading the same record still shows it.
+ */
+describe('a title the iOS app leaves out', () => {
+  const restored = () =>
+    createMemoryKV({
+      [STORAGE_KEYS.recent]: JSON.stringify({ schemaVersion: 1, ids: ['blackjack', 'sudoku'] }),
+    });
+
+  it('is dropped from the iOS row and kept in the record', async () => {
+    capacitorMock.platform = 'ios';
+    const kv = restored();
+    await initRecentGames(kv);
+    expect(getRecentGames()).toEqual(['sudoku']);
+    const stored: unknown = JSON.parse((await kv.get(STORAGE_KEYS.recent)) ?? 'null');
+    expect(stored).toEqual({ schemaVersion: 1, ids: ['blackjack', 'sudoku'] });
+
+    capacitorMock.platform = 'android';
+    expect(getRecentGames()).toEqual(['blackjack', 'sudoku']);
+  });
+
+  it('stays in the Android row', async () => {
+    capacitorMock.platform = 'android';
+    await initRecentGames(restored());
+    expect(getRecentGames()).toEqual(['blackjack', 'sudoku']);
+    recordGameOpened('texas-holdem');
+    expect(getRecentGames()).toEqual(['texas-holdem', 'blackjack']);
   });
 });
 

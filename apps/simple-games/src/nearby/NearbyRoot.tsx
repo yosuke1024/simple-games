@@ -1,3 +1,4 @@
+import { isWithheldHere } from '../app/iosWithheldGames';
 import { isGroupGameId } from '../app/nearbyGameIds';
 import { loadGroupGame } from './groupGames';
 import { App as CapacitorApp } from '@capacitor/app';
@@ -63,11 +64,15 @@ export function NearbyRoot(props: NearbyRootProps) {
   const changed = useCallback(() => {
     if (live.current) render((value) => value + 1);
   }, []);
-  const gameId = fromBrowser
+  const requested = fromBrowser
     ? groupJoined
       ? (groupJoined.gameId ?? 'ludo')
       : (joined?.gameId ?? null)
     : props.gameId;
+  // Discovery and the shell's gate already keep a title the iOS app leaves out
+  // from reaching here (app/iosWithheldGames.ts); this keeps any other door
+  // from mounting its table — the browser shows instead.
+  const gameId = requested !== null && isWithheldHere(requested) ? null : requested;
   const Loaded = useMemo(
     () =>
       lazy(async () => {

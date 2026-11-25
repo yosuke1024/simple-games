@@ -1,4 +1,21 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+// jsdom is the browser; a test that needs an app says which one.
+const { capacitorMock } = vi.hoisted(() => ({
+  capacitorMock: { platform: 'web' as 'web' | 'android' | 'ios' },
+}));
+vi.mock('@capacitor/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@capacitor/core')>();
+  return {
+    ...actual,
+    Capacitor: {
+      ...actual.Capacitor,
+      isNativePlatform: () => capacitorMock.platform !== 'web',
+      getPlatform: () => capacitorMock.platform,
+    },
+  };
+});
+
 import { NEARBY_GAME_CODES } from '../app/nearbyGameIds';
 import {
   gameForLabel,
@@ -19,6 +36,10 @@ const valid = {
   protocol: PROTOCOL_VERSION,
   available: true,
 };
+
+beforeEach(() => {
+  capacitorMock.platform = 'web';
+});
 
 describe('nearby discovery metadata', () => {
   it('round trips every supported game and the maximum Unicode room title within a DNS-SD TXT item', () => {
@@ -84,4 +105,67 @@ describe('nearby discovery metadata', () => {
     expect(gameForLabel('F-01abcd')).toBeNull();
     expect(parseListing(JSON.stringify({ ...valid, label: 'P-01ABCD' }), 'P-01ABCD')).toBeNull();
   });
+});
+
+/**
+ * A table hosted on Android for a title the iOS app leaves out
+ * (app/iosWithheldGames.ts) — Texas Hold'em is code 1A, Blackjack 1B — is to
+ * the iOS app what a code it does not know is: no game behind the label, so
+ * the controllers never list it and nobody can join it. The codes themselves
+ * stay in NEARBY_GAME_CODES (src/test/nearbyNativeLabelRange.test.ts), and
+ * Android reads them as before.
+ */
+describe('a label for a title the iOS app leaves out', () => {
+  const withheld = [
+    ['texas-holdem', 'P-9A1234', 'F-1A1234'],
+    ['blackjack', 'P-9B1234', 'F-1B1234'],
+  ] as const;
+  const listingFor = (gameId: string, metadataLabel: string) =>
+    JSON.stringify({ ...valid, label: metadataLabel, gameId });
+
+  it('uses the codes this test names', () => {
+    expect(NEARBY_GAME_CODES['texas-holdem']).toBe('1A');
+    expect(NEARBY_GAME_CODES.blackjack).toBe('1B');
+    expect(metadataGameCode('texas-holdem')).toBe('9A');
+    expect(metadataGameCode('blackjack')).toBe('9B');
+  });
+
+  it.each(withheld)(
+    'names no game in the iOS app, and its listing is rejected: %s',
+    (gameId, metadataLabel, plainLabel) => {
+      capacitorMock.platform = 'ios';
+      expect(gameForLabel(metadataLabel)).toBeNull();
+      expect(gameForLabel(plainLabel)).toBeNull();
+      expect(isMetadataLabel(metadataLabel)).toBe(false);
+      expect(parseListing(listingFor(gameId, metadataLabel), metadataLabel)).toBeNull();
+      // Nor can the iOS app advertise one.
+      expect(serializeListing(metadataLabel, 'Pixel', gameId)).toBeNull();
+      // Every other title still round trips there.
+      expect(gameForLabel('P-8F1234')).toBe('hearts');
+      const hearts = serializeListing('P-8F1234', 'Pixel', 'hearts')!;
+      expect(parseListing(hearts, 'P-8F1234')).toMatchObject({ gameId: 'hearts' });
+    },
+  );
+
+  it.each(withheld)(
+    'round trips on Android as it always has: %s',
+    (gameId, metadataLabel, plainLabel) => {
+      capacitorMock.platform = 'android';
+      expect(gameForLabel(metadataLabel)).toBe(gameId);
+      expect(gameForLabel(plainLabel)).toBe(gameId);
+      expect(isMetadataLabel(metadataLabel)).toBe(true);
+      const raw = serializeListing(metadataLabel, 'Pixel', gameId)!;
+      expect(raw).not.toBeNull();
+      expect(parseListing(raw, metadataLabel)).toEqual({
+        ...valid,
+        label: metadataLabel,
+        gameId,
+      });
+      expect(parseListing(listingFor(gameId, metadataLabel), metadataLabel)).toEqual({
+        ...valid,
+        label: metadataLabel,
+        gameId,
+      });
+    },
+  );
 });

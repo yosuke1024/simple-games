@@ -6,6 +6,8 @@ import type { NearbyGameId } from './gameTypes';
 import { en } from './i18n/en';
 import { NEARBY_GAME_CODES } from '../app/nearbyGameIds';
 import { GAME_TITLES } from './games';
+import type { NativeEvent, NearbyPlugin } from './native';
+import { PROTOCOL_VERSION } from './session';
 
 const fixtures = vi.hoisted(() => ({
   controllers: [] as Array<{
@@ -20,14 +22,32 @@ const fixtures = vi.hoisted(() => ({
   loadGame: vi.fn(),
   loadHistory: vi.fn(),
   joined: vi.fn(),
+  joinedGroup: vi.fn(),
   exited: vi.fn(),
   openedGame: vi.fn(),
-  native: false,
+  // 'web' is jsdom's own answer; 'android' and 'ios' are the two apps.
+  platform: 'web' as 'web' | 'android' | 'ios',
+  /**
+   * Set by a test that needs the real discovery intake (labels and listings
+   * decoded the way the app decodes them): the browser then gets the real
+   * controller over this fake radio instead of the fake controller below.
+   */
+  radio: null as NearbyPlugin | null,
   nativeBack: null as (() => void) | null,
   addListener: vi.fn(),
   removeListener: vi.fn(),
 }));
-vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform: () => fixtures.native } }));
+vi.mock('@capacitor/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@capacitor/core')>();
+  return {
+    ...actual,
+    Capacitor: {
+      ...actual.Capacitor,
+      isNativePlatform: () => fixtures.platform !== 'web',
+      getPlatform: () => fixtures.platform,
+    },
+  };
+});
 vi.mock('@capacitor/app', () => ({ App: { addListener: fixtures.addListener } }));
 vi.mock('../state/SettingsContext', async () => {
   const { translate } = await import('../i18n');
@@ -43,8 +63,9 @@ vi.mock('./games', async (original) => ({
   ...(await original<typeof import('./games')>()),
   loadNearbyGame: fixtures.loadGame,
 }));
-vi.mock('./controller', () => ({
-  NearbyController: class {
+vi.mock('./controller', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./controller')>();
+  class FakeController {
     state = 'idle';
     storageFailed = false;
     reason = 'ended';
@@ -68,8 +89,18 @@ vi.mock('./controller', () => ({
       this.changed();
       return true;
     });
-  },
-}));
+  }
+  return {
+    NearbyController: function NearbyController(
+      setup: ConstructorParameters<typeof actual.NearbyController>[0],
+      changed: () => void,
+    ) {
+      return fixtures.radio
+        ? new actual.NearbyController(setup, changed, fixtures.radio)
+        : new FakeController(setup as { transport: string }, changed);
+    },
+  };
+});
 
 function Harness({ visible = true }: { visible?: boolean }) {
   const [, render] = useState(0);
@@ -79,6 +110,7 @@ function Harness({ visible = true }: { visible?: boolean }) {
       onExit={fixtures.exited}
       onOpenGame={fixtures.openedGame}
       onJoin={fixtures.joined}
+      onJoinGroup={fixtures.joinedGroup}
       onChanged={() => render((v) => v + 1)}
     />
   );
@@ -114,7 +146,8 @@ function fillJoin() {
 beforeEach(() => {
   vi.clearAllMocks();
   fixtures.controllers.length = 0;
-  fixtures.native = false;
+  fixtures.platform = 'web';
+  fixtures.radio = null;
   fixtures.nativeBack = null;
   fixtures.addListener.mockImplementation(async (_event, callback: () => void) => {
     fixtures.nativeBack = callback;
@@ -357,7 +390,7 @@ describe('collection-wide nearby browser', () => {
   });
 
   it('stops when hidden, releases native Back, and ignores both keyboard and late native callbacks', async () => {
-    fixtures.native = true;
+    fixtures.platform = 'android';
     const view = render(<Harness />);
     const controller = await search();
     const oldBack = fixtures.nativeBack!;
@@ -407,4 +440,151 @@ describe('collection-wide nearby browser', () => {
       expect(screen.getByRole('button', { name: 'Find gatherings' })).toBeEnabled();
     },
   );
+});
+
+/**
+ * The titles the iOS app leaves out (app/iosWithheldGames.ts). The browser's
+ * list of supported games has no link to them there, and a table an Android
+ * host opens for one — Texas Hold'em advertises code 1A, Blackjack 1B — is
+ * what a code the app does not know already is: dropped at discovery, so it is
+ * never listed and nothing can join it. These run the real controller over a
+ * fake radio, so the label and the listing are decoded the way the app decodes
+ * them. Android lists and joins the same tables.
+ */
+describe('titles the iOS app leaves out', () => {
+  const withheld = ['texas-holdem', 'blackjack'] as const;
+  const offered = (Object.keys(NEARBY_GAME_CODES) as NearbyGameId[]).filter(
+    (id) => !(withheld as readonly string[]).includes(id),
+  );
+
+  function fakeRadio() {
+    let listener: ((event: NativeEvent) => void) | null = null;
+    const plugin = {
+      start: vi.fn(async () => {}),
+      connect: vi.fn(async () => {}),
+      send: vi.fn(async () => {}),
+      stop: vi.fn(async () => {}),
+      addListener: vi.fn(async (_event: 'nearbyEvent', callback: (event: NativeEvent) => void) => {
+        listener = callback;
+        return {
+          remove: async () => {
+            listener = null;
+          },
+        };
+      }),
+      readHistory: vi.fn(async () => ({ data: null })),
+      writeHistory: vi.fn(async () => {}),
+      clearHistory: vi.fn(async () => {}),
+    } satisfies NearbyPlugin;
+    fixtures.radio = plugin;
+    return { plugin, emit: (event: NativeEvent) => listener?.(event) };
+  }
+  /** A host's advertisement as the native layer reports it: its label and public listing. */
+  const host = (id: string, label: string, roomName: string, gameId: NearbyGameId) => ({
+    type: 'peer' as const,
+    id,
+    name: label,
+    listing: JSON.stringify({
+      v: 2,
+      label,
+      roomName,
+      gameId,
+      protocol: PROTOCOL_VERSION,
+      available: true,
+    }),
+  });
+  const pokerNight = host('holdem-host', 'P-9A1234', 'Poker night', 'texas-holdem');
+  const cardNight = host('blackjack-host', 'P-9B1234', 'Card night', 'blackjack');
+  const heartsNight = host('hearts-host', 'P-8F1234', 'Hearts night', 'hearts');
+
+  async function discover(radio: ReturnType<typeof fakeRadio>, ...events: NativeEvent[]) {
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: en.search }));
+    });
+    expect(radio.plugin.start).toHaveBeenCalledOnce();
+    await act(async () => {
+      for (const event of events) radio.emit(event);
+      for (let i = 0; i < 10; i++) await Promise.resolve();
+    });
+  }
+  async function join(listing: RegExp) {
+    fireEvent.click(screen.getByRole('button', { name: listing }));
+    fireEvent.change(screen.getByRole('textbox', { name: en.name }), {
+      target: { value: 'Guest' },
+    });
+    fireEvent.click(screen.getByRole('checkbox', { name: en.accept }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: en.join }));
+    });
+  }
+
+  it('links only the other twenty-six supported games in the iOS app', () => {
+    fixtures.platform = 'ios';
+    render(<Harness />);
+    const region = screen.getByRole('region', { name: en.supportedGames });
+    const links = within(region).getAllByRole('link');
+    expect(links).toHaveLength(26);
+    expect(links.map((link) => link.getAttribute('href'))).toEqual(
+      offered.map((id) => `?game=${id}`),
+    );
+    for (const id of withheld) {
+      expect(within(region).queryByRole('link', { name: GAME_TITLES[id] })).not.toBeInTheDocument();
+    }
+  });
+
+  it('links all twenty-eight on Android', () => {
+    fixtures.platform = 'android';
+    render(<Harness />);
+    const region = screen.getByRole('region', { name: en.supportedGames });
+    const links = within(region).getAllByRole('link');
+    expect(links).toHaveLength(28);
+    for (const id of withheld) {
+      expect(within(region).getByRole('link', { name: GAME_TITLES[id] })).toBeVisible();
+    }
+  });
+
+  it('never lists an Android host’s table for either in the iOS app, so nothing can join it', async () => {
+    fixtures.platform = 'ios';
+    const radio = fakeRadio();
+    render(<Harness />);
+    await discover(radio, pokerNight, cardNight);
+    expect(screen.getByText(en.noPeers)).toBeVisible();
+    expect(screen.queryByRole('button', { name: /Poker night/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Card night/ })).not.toBeInTheDocument();
+    for (const id of withheld) expect(screen.queryByText(GAME_TITLES[id])).not.toBeInTheDocument();
+
+    // A table for a title the iOS app offers, found by the same search, still
+    // lists and joins — the two above were dropped, not the search.
+    await act(async () => {
+      radio.emit(heartsNight);
+      for (let i = 0; i < 10; i++) await Promise.resolve();
+    });
+    expect(screen.queryByRole('button', { name: /Poker night/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Card night/ })).not.toBeInTheDocument();
+    await join(/Hearts night Hearts/);
+    expect(fixtures.joinedGroup).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ gameId: 'hearts', label: 'P-8F1234' }),
+    );
+    expect(radio.plugin.connect).not.toHaveBeenCalled();
+    expect(fixtures.joined).not.toHaveBeenCalled();
+    expect(fixtures.loadGame).not.toHaveBeenCalled();
+  });
+
+  it('lists and joins the same tables on Android', async () => {
+    fixtures.platform = 'android';
+    const radio = fakeRadio();
+    render(<Harness />);
+    await discover(radio, pokerNight, cardNight);
+    expect(screen.queryByText(en.noPeers)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', {
+        name: new RegExp(`Poker night ${GAME_TITLES['texas-holdem']}`),
+      }),
+    ).toBeVisible();
+    expect(screen.getByRole('button', { name: /Card night Blackjack/ })).toBeVisible();
+    await join(/Card night Blackjack/);
+    expect(fixtures.joinedGroup).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ gameId: 'blackjack', label: 'P-9B1234', roomName: 'Card night' }),
+    );
+  });
 });

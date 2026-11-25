@@ -40,9 +40,14 @@ const fixture = vi.hoisted(() => ({
   clear: vi.fn(),
   addListener: vi.fn(),
   radio: {},
+  // 'web' is jsdom's own answer; 'android' and 'ios' are the two apps.
+  platform: 'web' as 'web' | 'android' | 'ios',
 }));
 vi.mock('@capacitor/core', () => ({
-  Capacitor: { isNativePlatform: () => false },
+  Capacitor: {
+    isNativePlatform: () => fixture.platform !== 'web',
+    getPlatform: () => fixture.platform,
+  },
   registerPlugin: () => fixture.radio,
 }));
 vi.mock('@capacitor/app', () => ({ App: { addListener: fixture.addListener } }));
@@ -216,6 +221,7 @@ function guestSnapshot(): GroupSnapshot {
 }
 beforeEach(() => {
   vi.clearAllMocks();
+  fixture.platform = 'web';
   fixture.controllers.length = 0;
   fixture.saved = [];
   fixture.addListener.mockResolvedValue({ remove: vi.fn() });
@@ -542,6 +548,73 @@ describe('Ludo local history', () => {
     });
     expect(fixture.clear).toHaveBeenCalledTimes(1);
     expect(fixture.controllers).toHaveLength(0);
+  });
+});
+
+/**
+ * The group history lists every saved gathering, whatever its game. In the
+ * iOS app a gathering of a title it leaves out (app/iosWithheldGames.ts) — one
+ * a TestFlight build joined, say — is not shown: the history would otherwise
+ * name a game the app does not have. It stays saved, untouched, and Android
+ * shows it.
+ */
+describe('group history and the titles the iOS app leaves out', () => {
+  const group = (char: string, gameId: SavedGroup['gameId'], roomName: string): SavedGroup => ({
+    gameId,
+    id: char.repeat(32),
+    at: 1000,
+    roomName,
+    transport: 'ble',
+    rounds: [
+      {
+        round: 1,
+        names: ['Host', 'Aki', 'CPU 3', 'CPU 4'],
+        scores: [1, 2, 0, 0],
+        winner: 1,
+        finished: true,
+      },
+    ],
+  });
+  const saved = () => [
+    group('a', 'blackjack', 'Card night'),
+    group('b', 'hearts', 'Hearts night'),
+    group('c', 'texas-holdem', 'Poker night'),
+    group('d', undefined, 'Saved Ludo'),
+  ];
+  async function openHistory() {
+    await mount();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: text('history') }));
+    });
+  }
+
+  it('hides those gatherings in the iOS app and leaves the saved history as it was', async () => {
+    fixture.platform = 'ios';
+    fixture.saved = saved();
+    await openHistory();
+    expect(screen.getByRole('heading', { name: 'Hearts night' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Saved Ludo' })).toBeVisible();
+    expect(screen.queryByRole('heading', { name: 'Card night' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Poker night' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Blackjack')).not.toBeInTheDocument();
+    expect(screen.queryByText('Texas Hold’em')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('article')).toHaveLength(2);
+    expect(fixture.saved).toEqual(saved());
+    expect(fixture.remove).not.toHaveBeenCalled();
+    expect(fixture.clear).not.toHaveBeenCalled();
+    expect(fixture.controllers).toHaveLength(0);
+  });
+
+  it('shows every gathering on Android', async () => {
+    fixture.platform = 'android';
+    fixture.saved = saved();
+    await openHistory();
+    for (const roomName of ['Card night', 'Hearts night', 'Poker night', 'Saved Ludo']) {
+      expect(screen.getByRole('heading', { name: roomName })).toBeVisible();
+    }
+    expect(screen.getByText('Blackjack')).toBeVisible();
+    expect(screen.getByText('Texas Hold’em')).toBeVisible();
+    expect(fixture.saved).toEqual(saved());
   });
 });
 

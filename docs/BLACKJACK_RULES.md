@@ -1,6 +1,10 @@
 # Blackjack
 
-Adopted 2026-11-05; implemented for CPU and native Nearby play. Four player seats around an
+Withheld from the iOS app from 1.8.5 — no public iOS release has offered it (Android app and Web version only) —
+[PRODUCT_PRINCIPLES](PRODUCT_PRINCIPLES.md)「iOS で出さないタイトル」 (App Review 2.3.6; iOS 1.8.4 rejected 2026-11-10).
+The code stays in the bundle and the `bj.*` keys stay registered on every platform.
+
+Adopted 2026-11-05; implemented for CPU and native Nearby play (offered on Android only). Four player seats around an
 automatic dealer. Each player plays against the dealer, not against the others.
 One round is one game. Six standard decks, shuffled anew for each game.
 No reaction timer, betting currency, cash stakes, purchases or ad-gated refills.

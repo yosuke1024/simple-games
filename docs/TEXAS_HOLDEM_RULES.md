@@ -1,7 +1,11 @@
 # Texas Hold'em
 
+Withheld from the iOS app from 1.8.5 — no public iOS release has offered it (Android app and Web version only) —
+[PRODUCT_PRINCIPLES](PRODUCT_PRINCIPLES.md)「iOS で出さないタイトル」 (App Review 2.3.6; iOS 1.8.4 rejected 2026-11-10).
+The code stays in the bundle and the `th.*` keys stay registered on every platform.
+
 Adopted 2026-11-05 following the owner's explicit format selection;
-implemented for CPU and native Nearby play. Four-seat no-limit Hold'em, ordinary 52-card deck.
+implemented for CPU and native Nearby play (offered on Android only). Four-seat no-limit Hold'em, ordinary 52-card deck.
 Each new game starts with 1,000 free table chips per seat, fixed blinds 10/20.
 Chips are game state, never purchased, redeemed, replenished by ads or carried
 as currency between games. No ante, rake, timed blinds, reaction timer or rebuy.

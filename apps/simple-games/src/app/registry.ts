@@ -367,6 +367,22 @@ export interface GameDefinition {
    */
   channel?: 'web-beta' | 'in-development';
   /**
+   * A platform that does not offer this title even though its channel says
+   * it ships. Only `'ios'` exists: the iOS app leaves out simulated-gambling
+   * titles while the App Store account is an individual one (App Review
+   * guideline 2.3.6, the rejection of 1.8.4 on 2026-11-10 —
+   * docs/PRODUCT_PRINCIPLES.md「iOS で出さないタイトル」). Android and the
+   * browser version — Safari on an iPhone included — keep the title. The same
+   * runtime guard as `channel` enforces it (app/gameChannel.ts), with the same
+   * exceptions: the code stays in the bundle and `storageKeys` /
+   * `loadStorageSchemas` stay registered, so a backup from Android restores on
+   * an iPhone without losing these records. A string literal on purpose: the
+   * landing's share sync reads it from this file
+   * (docs/architecture/share-links.md). The Nearby layer reads the same ids
+   * from app/iosWithheldGames.ts, which gameChannel.test.ts pins to this field.
+   */
+  unavailableOn?: 'ios';
+  /**
    * Loads the game's root component from its own bundled chunk. Roots are
    * named exports; the shim to `{ default }` is what React.lazy expects
    * (app/lazyRoots.ts caches the lazy wrapper per game).
@@ -1761,6 +1777,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Texas Hold\u2019em',
     category: 'cards',
     glyph: '♔',
+    unavailableOn: 'ios',
     storageKeys: Object.values(TH_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/texas-holdem/ui/TexasHoldemRoot').then((m) => ({
@@ -1773,6 +1790,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Blackjack',
     category: 'cards',
     glyph: '21',
+    unavailableOn: 'ios',
     storageKeys: Object.values(BJ_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/blackjack/ui/BlackjackRoot').then((m) => ({ default: m.BlackjackRoot })),

@@ -33,7 +33,8 @@ Web-only share destination, not the browser version or its ordinary links.
   `com.pixapps.simplegames://share/<game-id>` on iOS. Android uses an intent for
   the canonical HTTPS URL, restricted to `com.pixapps.simplegames`, falling back
   to Google Play. No automatic scheme probes, timer redirects or installed-app
-  detection. iOS also receives a Smart App Banner with this page's game URL.
+  detection. iOS also receives a Smart App Banner with this page's game URL
+  (except on the pages of titles the iOS app does not offer — see below).
 - Safari same-domain navigation, embedded browsers, user link preferences and
   older app versions can retain the web page even when an app is installed.
   The LP keeps store links and explains opening in Safari/Chrome if needed.
@@ -61,7 +62,8 @@ is a no-op. Club House `/join` associations and handling are preserved.
 The site PR adds the following to existing files, preserving PixWork entries:
 
 - `/.well-known/apple-app-site-association`: app ID
-  `8XR3LLAS54.com.pixapps.simplegames`, path `/simple-games/share/*` only.
+  `8XR3LLAS54.com.pixapps.simplegames`, path `/simple-games/share/*` only
+  (from 2026-11-11 minus the share paths of titles the iOS app does not offer — below).
 - `/.well-known/assetlinks.json`: package `com.pixapps.simplegames`, Play app
   signing certificate SHA-256 supplied by the owner on 2026-11-08:
   `BF:0B:5A:52:D6:42:4E:74:5E:7A:76:10:45:D9:72:65:61:C5:C9:B3:5D:02:E3:F4:1E:AA:84:4D:09:7E:0A:7F`,
@@ -138,6 +140,44 @@ registry with the release gate's reader and compares the result with the
 running `GAMES`, and it checks every published game's artwork against the
 landing's rules. Change the landing's sync before changing either shape here.
 
+## Titles the iOS app does not offer
+
+Decision: 2026-11-11, product owner, from iOS 1.8.5. App Review rejected iOS
+1.8.4 on 2026-11-10 under guideline 2.3.6: simulated-gambling apps are accepted
+only from organisation accounts, and this app is published from an individual
+one. While that holds, the iOS app leaves out simulated-gambling titles — today
+Blackjack and Texas Hold'em, marked `unavailableOn: 'ios'` in the registry
+([PRODUCT_PRINCIPLES.md](../PRODUCT_PRINCIPLES.md)「iOS で出さないタイトル」).
+The Android app and the browser version keep them, so Android and Web users
+still share `/simple-games/share/blackjack/` and `/simple-games/share/texas-holdem/`.
+
+- **Landing.** These two pages carry, for every visitor, a static note that the
+  game is in the Android app and the browser version but not in the iPhone/iPad
+  app, a link to play it in the browser version, and a title and description
+  that name the Android app or the browser rather than "the app". This is the one
+  exception to "no browser play button on a share page". They carry no Smart App
+  Banner. On iPhone and iPad the page also hides the store badges, **Open in
+  app** and the app pitch, and the browser link becomes the primary action.
+  Android visitors keep Google Play as the primary badge and **Open in app**.
+- **Association.** The AASA stops claiming these two share paths, so an iPhone
+  with the app installed opens the page in Safari instead of the app. Apple's
+  CDN copy must show the change before the iOS build goes to review.
+  `assetlinks.json` is unchanged: Android still opens these links in the app.
+- **Catalog.** The landing's share sync reads `unavailableOn` from the
+  registry entry (a string literal there) into `availableOnIos`. It is never a
+  `channel` value: that would mark the title unavailable in every app, including
+  Android.
+- **Order.** The app change reaches main first; the landing PR then re-syncs its
+  catalog from that commit, is published from its branch and merged; Apple's CDN
+  is checked; only then does the iOS build go to review. The landing derives the
+  AASA exclusions it expects from the catalog, so a publish from an app ref
+  without the field fails its tests instead of silently restoring the two titles
+  on iOS.
+- **App.** If such a link still reaches the iOS app (an association cached on the
+  device, or the custom scheme `com.pixapps.simplegames://share/<id>`),
+  `nativeGameLink.ts` resolves it through the same availability gate and opens the
+  collection, as for any unavailable game. Nothing in-app names the title.
+
 ## Verification boundaries
 
 Automated checks cover accepted/rejected URLs, cold/warm launch, replay, stale
@@ -152,3 +192,24 @@ Android domain verification with `adb shell pm get-app-links com.pixapps.simpleg
 (Android 12 and later) or `adb shell dumpsys package d` (Android 11 and lower), for
 both pixapps.ai and club.pixapps.ai.
 An unsigned build or simulated user agent does not prove OS domain verification.
+
+## Remote play invites are not share links
+
+Decision: 2026-11-14, product owner (issue #280). Remote play — the Nearby Play
+games over the internet, by invitation only — is an adopted direction, not
+implemented, verified or shipped ([PRODUCT_PRINCIPLES.md](../PRODUCT_PRINCIPLES.md)
+「遠隔対戦」; technical contract in the 2026-11-14 section at the top of
+[nearby-multiplayer.md](nearby-multiplayer.md)). Nothing above changes for it today.
+
+- A share link grants nothing; an invite grants a seat. Invites and replies will
+  therefore use their own app-link path (not yet chosen), separate from
+  `/simple-games/share/*`, and their own handler, not `nativeGameLink.ts`. The
+  share handler keeps ignoring fragments.
+- The invite or reply payload will travel in the URL fragment (after `#`), which
+  never reaches a server. A page that receives it must not read, send or measure
+  it. Invites can also be passed by copy and paste.
+- The iOS app will not open invites for the titles it does not offer (above).
+- Adding the invite path to the AASA and `assetlinks.json` is a future change.
+  It follows the same order as above: the association files first, confirmed
+  (including Apple's CDN copy) before any build that registers the path is
+  installed anywhere.

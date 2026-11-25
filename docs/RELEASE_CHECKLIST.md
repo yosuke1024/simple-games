@@ -1,6 +1,73 @@
 # Simple Games — リリースチェックリスト
 
+## 2026-11-11: iOS 1.8.5(Blackjack / Texas Hold'em を iOS から外して再提出。Android は 1.8.4 のまま)
+
+2026-11-10、App Store の審査が iOS「Simple Games: Offline Games」(`com.pixapps.simplegames`)の 1.8.4 (10804) を
+リジェクトした(提出 `a93bf340`、Guideline 2.3.6、審査端末 iPad Air 11-inch (M3))。模擬ギャンブルのアプリは
+組織(法人)の開発者アカウントからしか受け付けず、このアプリは個人のアカウントで出している。1.8.2 から年齢区分で
+「Simulated Gambling: Infrequent/Mild」を申告していたのは、1.8.0 で加えた Blackjack と Texas Hold'em のため
+(下の 1.8.2 の節)。いま公開中の iOS は 1.7.2 で、この 2 本は一度も入っていない。ほかに模擬ギャンブルに当たる
+タイトルは無い(Indian Rummy は賭けを持たない)。
+
+オーナー判断(2026-11-11):
+
+1. iOS アプリからは Blackjack(`blackjack`)と Texas Hold'em(`texas-holdem`)だけを外す。Android アプリと
+   Web 版(iPhone の Safari を含む)は残す。規則の正本は [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)
+   「iOS で出さないタイトル」。
+2. 実行時ガードでビルドは 1 つ。コードはバンドルに残し、iOS ではすべての扉を閉じる(`web-beta` と同じ形 —
+   [WEB_VERSION.md](WEB_VERSION.md)「先行公開」)。
+3. iOS は 1.8.5 (10805) で出す。Android は 1.8.4 のまま — タグ `v1.8.5` で CI が Android の AAB 10805 を
+   作るが、公開しない。
+4. landing の 2 本の共有ページは、iPhone・iPad の訪問者に「Android 版アプリとブラウザ版にあり、iPhone・iPad 版
+   アプリには無い」と伝え、ブラウザ版で遊ぶリンクを出す。この 2 本は iOS で Smart App Banner と「アプリで開く」を
+   出さず、AASA はこの 2 本の共有パスを主張しない(アプリが入った iPhone でもアプリではなくページが開く)。
+   [共有リンク](architecture/share-links.md)「Titles the iOS app does not offer」。
+
+本数(iOS アプリ): 78 本(80 − 2)、トランプ 14 本(16 − 2)、Nearby 26 本(2 席 18 本・4 席 8 本(10 − 2))。
+1.8.x で増えたタイトルは iOS では 13 本(2 本を含めると 15 本)— iPhone の利用者は 1.7.2 から直接上がるので、
+新機能の本数はこれ。Android は 80 本 / トランプ 16 本 / Nearby 28 本(18 + 10)、Web は 80 本 / トランプ 16 本のまま。
+
+順番が門: (1) アプリの PR を main へ → (2) landing の PR ブランチで共有カタログをその main から同期し直し、
+Publish(ボットのビルド commit)→ main へマージ → (3) Apple の CDN で AASA を確かめる → (4) iOS を審査へ。
+landing の AASA のテストは共有カタログから除外パスを組み立てるので、(1) より前の app の ref から Publish すると
+テストで止まる(古い ref が 2 本を iOS に戻してしまうのを止める門)。
+
+- [ ] アプリの PR をマージ(registry の `unavailableOn: 'ios'`、`app/gameChannel.ts`、`app/iosWithheldGames.ts`、
+      Nearby の扉、`App.tsx` の `enterGame`、iOS の版 1.8.5 / 10805)
+- [ ] landing の PR ブランチで共有カタログをマージ後の app main から同期し直し(`sourceCommit` がその commit になる)、
+      Publish → main へマージ。iPhone の UA で注記とブラウザ版へのリンクが出て、Smart App Banner・「アプリで開く」・
+      ストアのバッジが無いこと。Android の UA では Google Play と「アプリで開く」が今までどおり
+- [ ] landing の製品ページ(`/simple-games/`)が「アプリ版(Android・iOS)はブラウザ版と同じ 80 ゲーム」と言わないこと
+      (iOS アプリから「by PixApps」のフッターや Learn More で辿れる)。同じ landing の PR で直す
+- [ ] 既知の残り(オーナー判断): Web 版の Blackjack / Hold'em のゲームトップの「誰かと遊ぶ」の注記「アプリ専用の機能です」は、
+      iPhone の Safari では iOS アプリにもあるように読める。直すなら新しい i18n の文(14 言語)が要る
+- [ ] Apple の CDN(`https://app-site-association.cdn-apple.com/a/v1/pixapps.ai`)がこの 2 本の共有パスを主張して
+      いないこと(Apple は数時間キャッシュする。確かめてから審査に出す)。ほかの共有パスと Club の `/join` は残っていること
+- [ ] タグ `v1.8.5`(Android の AAB 10805 はビルドされるが、Play には出さない)
+- [ ] iOS のビルド 10805 をアップロード
+- [ ] ASC: 年齢区分の `gamblingSimulated` を NONE に戻す(iOS アプリには模擬ギャンブルのタイトルが無い。2026-11-11 にオーナーへ
+      この手順を示したうえで「iOS だけ外す」と決まった)
+- [ ] ASC: 14 言語の説明文・宣伝文・キーワード・新機能(What's New)を、`apps/simple-games/store/listing.md` の
+      「App Store (iOS)」の正文から書き直す — 78 本 / トランプ 14 本 / Nearby 26 本 / 4 席 8 本、2 本の名前を書かない、
+      チップ・ポイントの段落を書かない。新機能の新しいゲームは 13 本。サブタイトルにも 2 本の名前と Android の本数が無いこと。
+      書き込み後に読み戻して一致を確かめる
+- [ ] ASC: スクリーンショット(全サイズ・全言語)にこの 2 本が写っていないこと
+- [ ] ASC: 審査メモに「Blackjack と Texas Hold'em は iOS 版ではもう提供しない(アプリのどこからも開けない)」と書く
+      (下の 2026-11-05 の節の審査向け説明案は使わない)
+- [ ] TestFlight の実機で全部の扉を確かめる: ホーム(トランプの節に 2 本が無く、本数が 14)、検索(「Blackjack」
+      「Texas」「Hold」で出ない)、お気に入り(設定のピッカーにも棚にも出ない)、Quick Action、アプリが入った iPhone で
+      2 本の共有リンクを開く(ページが開き、アプリは開かない)、カスタムスキーム
+      `com.pixapps.simplegames://share/blackjack`(コレクションが開く)、Nearby の「対戦サポートゲーム」(26 本)、
+      Android の host が開いた Blackjack / Hold'em の卓が iPhone の探索に出ないこと、4 席の集まりの履歴に 2 本が出ないこと
+- [ ] 審査に再提出
+
 ## 2026-11-08: 1.8.4(1.8.3 の内容 + 共有リンクのアプリ対応。1.8.3 は配らない)
+
+**2026-11-11 追記: iOS の 1.8.4 (10804) は 2026-11-10 にリジェクトされ(Guideline 2.3.6)、iOS は 1.8.5 (10805) で
+置き換える(上の 2026-11-11 の節)。Android は 1.8.4 のまま。** あわせて、模擬ギャンブルの申告と 2 本の説明は
+これから先は Android(Google Play)だけのものになる — 下の 1.8.2 の節の Apple の年齢区分の行(`gamblingSimulated` を
+INFREQUENT_OR_MILD)は iOS 1.8.5 で NONE に戻して置き換え、2026-11-05 の節の審査向け説明案は Google Play 向けにだけ
+使う(App Store の審査メモには 2 本を iOS 版で提供しないと書く)。
 
 1.8.3 を出し切る前に、オーナーが共有リンクのアプリ対応(simple-games#322、サイト側 pixapps-landing#237)を
 足したので、1.8.3 は配らずに 1.8.4 として出す(オーナー判断)。タグ `v1.8.3`(d78c55bd)は残るが、
@@ -54,18 +121,26 @@ iOS は 1.8.2 が審査待ちのままなので、オーナーの判断で審査
 - [x] リリースノート: Spider の古い途中の局と統計は端末に残るが引き継がれないことを書く(オーナー判断)。
       1.8.4 は共有リンクの 1 行を足す(オーナー判断。Play は 500 字に収めるため「見出しにアイコン」を落とす)
 - [x] App Store: 1.8.2 の審査を取り下げ、版を 1.8.3 / 10803 にして再提出(2026-11-08。1.8.4 で置き換える)
-- [ ] landing #237 を本番へ出し、`/.well-known/assetlinks.json` と `/.well-known/apple-app-site-association` が
+- [x] landing #237 を本番へ出し、`/.well-known/assetlinks.json` と `/.well-known/apple-app-site-association` が
       200・リダイレクトなし・`application/json` で新しい項目を含むこと、ネイティブで遊べる全ゲーム ID の
-      `/simple-games/share/<id>/` が 200 であることを確かめる
-- [ ] Apple の CDN(`https://app-site-association.cdn-apple.com/a/v1/pixapps.ai`)が
+      `/simple-games/share/<id>/` が 200 であることを確かめる(2026-11-08。80 本すべて 200。Google の
+      `assetlinks:check` も pixapps.ai・club.pixapps.ai とも `linked: true`)
+- [x] Apple の CDN(`https://app-site-association.cdn-apple.com/a/v1/pixapps.ai`)が
       `8XR3LLAS54.com.pixapps.simplegames` を返してから iOS 1.8.4 を審査に出す(承認後に自動公開のため)
-- [ ] App Store: 1.8.3 (10803) の審査を取り下げ、同じ枠を 1.8.4 / 10804 にして再提出。Play: 製品版へ 10804
+- [x] App Store: 1.8.3 (10803) の審査を取り下げ、同じ枠を 1.8.4 / 10804 にして再提出(2026-11-08、審査待ち・
+      承認後に自動公開。→ 2026-11-10 にリジェクト、iOS は 1.8.5 で出し直す — 上の 2026-11-11 の節)。Play: 製品版へ 10804(オーナーが公開。リリースノート 17 言語を API で読み戻して一致)
       (10803 は出さない)
-- [ ] 1.8.4 の Web 版を Publish してマージ(landing #237 の後。#236 は閉じる)
-- [ ] 実機(Android): Play から入れた 1.8.4 で、メッセージ・メール・Chrome から開いた共有リンクがそのゲームを
-      開く(起動中・未起動の両方)。`adb shell pm get-app-links com.pixapps.simplegames`(Android 12 以上)/
+- [x] 1.8.4 の Web 版を Publish してマージ(pixapps-landing#238。最初の Publish は共有ページの生成後に React の
+      後片付けが `window` の消えた後に走って落ちた → 同じ PR で直した。#236 は閉じた)
+- [x] 実機(Android): Play から入れた 1.8.4 で、メッセージアプリから開いた共有リンクがそのゲームを開く
+      (2026-11-08、オーナーが確認。端末の機種・OS の版と、アプリが起動中だったかは記録していない)
+- [ ] 実機(Android): 残り — メール・Chrome から開いた共有リンク、起動中・未起動の両方、
+      `adb shell pm get-app-links com.pixapps.simplegames`(Android 12 以上)/
       `adb shell dumpsys package d`(11 以下)で pixapps.ai と club.pixapps.ai が verified。Club の招待リンクも開く
+      (2026-11-08、エミュレータ(Android 17)に CI のリリース APK を入れて確認済み: 両ホスト verified、
+      共有リンクの未起動・起動中とも Sudoku / Minesweeper が開く、`/join` はアプリ、`/play/?game=` は Chrome)
 - [ ] 実機(iPhone): 1.8.4 で共有リンクがそのゲームを開く。LP の「アプリで開く」。Club の招待リンクも開く
+      (iOS の 1.8.4 は出ないので、1.8.5 で確かめる)
 
 ## 2026-11-07: 1.8.2(新しい Nearby 14 本の接続修正)
 
@@ -82,6 +157,8 @@ native 側の発見 label の受理範囲が Ludo(0x8E)で止まっていたの�
 - [x] 題名 5 本(Ridge Cannons / Fleet Search / Chain Territory / Frost Route / River Cargo)の商標DB・両ストア調査: すべてそのまま(各 RULES「名称」)
 - [x] 年齢区分(Apple): オーナー判断「正直に申告」。`gamblingSimulated` を NONE → INFREQUENT_OR_MILD(ASC 上の区分は 12+ のまま。
       新方式では 13+、オーストラリアは R 18+)。現金の賭け・景品・ルートボックスは「なし」のまま
+      (2026-11-11 追記: iOS 1.8.4 はこの 2 本を理由に Guideline 2.3.6 でリジェクトされた。iOS は 1.8.5 で 2 本を外し、
+      NONE に戻す — 冒頭の 2026-11-11 の節。模擬ギャンブルの申告が残るのは Google Play だけ)
 - [ ] 年齢区分(Google Play): IARC 質問票を再回答し、模擬ギャンブル「はい」(現金・景品「いいえ」)。PEGI 18 見込み・オーストラリア R 18+。
       EEA・英国・オーストラリア・ブラジルなどで未成年に届かなくなる可能性をオーナーは承知の上で採った。算出結果で対象年齢と広告設定を確認(オーナー)
 - [ ] AdMob: Gambling & betting の広告カテゴリを除外していることを管理画面で確認(Play のポリシー上、模擬ギャンブルを含むアプリには出せない。オーナー)
@@ -130,6 +207,10 @@ Google Playは質問票の回答に影響する内容・機能変更時に再回
 審査向け説明案:「Texas Hold'emは開始時1000チップ、Blackjackは1ハンド10点の独立した
 ラウンドです。点数・チップはゲーム内のみで、購入、換金、現実の賞品への交換はできません。
 CPU戦はオフライン、対人戦は近隣Bluetooth/同一Wi-Fiのみで、新6本にチャットはありません。」
+
+2026-11-11 追記: iOS アプリは 1.8.5 からこの 2 本を出さない(冒頭の 2026-11-11 の節、
+[PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「iOS で出さないタイトル」)。この節の年齢区分と審査向け説明案は、
+これから先は Google Play にだけ当てる。App Store は模擬ギャンブルを NONE にし、審査メモには 2 本を提供しないと書く。
 
 ## 2026-11-04: Nearby Playを22本へ拡張
 
@@ -787,7 +868,10 @@ grep で確定判定できる分は CI(`Brand principles` ジョブ)が毎 PR �
 bash .github/scripts/check-principles.sh
 ```
 
-- [ ] 原則ガードが緑(Core に通信 API なし — 例外は `src/club/` のみ / バナー以外の広告なし / トラッキング依存なし —
+- [ ] 原則ガードが緑(Core に通信 API なし — 例外は `src/club/` のみ /
+      WebRTC の語は遠隔対戦(未実装、§5.19)の `src/nearby/remote/` だけで、STUN / TURN の URL は
+      `stun.cloudflare.com` の 1 つだけ、WebRTC の依存なし — §1c /
+      バナー以外の広告なし / トラッキング依存なし —
       例外は Android release 限定の `facebook-core` 1 行のみ / Android 権限は INTERNET・BILLING のみ /
       本番広告 ID がソースにない / Meta 計測の形)
 
@@ -971,8 +1055,14 @@ bash .github/scripts/check-principles.sh
       Universal は 2026-08-30 に一度コードへ入ったが、この 2 つが揃うまで
       バイナリとしては出さない([ARCHITECTURE.md](ARCHITECTURE.md)
       「ワイド画面のレイアウト」)
-- [ ] iOS 実機でゲーム起動・全ゲームプレイが可能/初回起動からオフラインで
+- [ ] iOS 実機でゲーム起動・全ゲームプレイが可能(iOS で出さないタイトルを除く)/初回起動からオフラインで
       ゲーム可能/機内モードで広告・consent の通信リトライが発生しない
+- [ ] **iOS で出さないタイトル**(registry の `unavailableOn: 'ios'`。いまは Texas Hold'em / Blackjack)に
+      どの扉からも届かない: ホームの棚と節の本数・検索・お気に入り(ピッカーと棚)・Quick Actions・
+      共有リンク(Universal Link とカスタムスキーム)・Nearby の「対戦サポートゲーム」・Android の host が
+      開いた卓・4 席の集まりの履歴。遠隔対戦を出荷する版からは、Android の host が作った 2 本の招待も
+      iPhone で開かず着席しない(遠隔対戦は未実装 — §5.19)。年齢区分の模擬ギャンブルの申告が iOS の中身と一致している
+      ([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「iOS で出さないタイトル」、2026-11-11)
 - [ ] 「さらに大きな文字」を最大にしても、アプリの文字が大きくならない(WKWebView は px の文字を
       大きくしない前提で、端末では未確認 —— [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)
       「Android の文字の倍率」の境界 2。大きくなるなら、iOS にも同じ判断が要る)
@@ -1005,7 +1095,9 @@ App Store Privacy:
 - [ ] App Store Connect のプライバシー申告(おおよその場所・デバイス ID・
       製品の操作・広告データ・クラッシュ・パフォーマンス)と、実際の iOS
       ビルドの SDK / 通信が一致している(トラッキング=「しない」。ATT 不使用と
-      SKAdNetwork の関係は [ADS_POLICY.md](ADS_POLICY.md)「ATT を使わない」)
+      SKAdNetwork の関係は [ADS_POLICY.md](ADS_POLICY.md)「ATT を使わない」)。
+      遠隔対戦を出荷する版からは、招待と返事で相手と STUN 事業者(Cloudflare)に IP アドレスが
+      伝わることの扱いも含める。扱いは未決で、オーナーか専門家が出荷前に決める(§5.19)
 
 ## 5.5 レビュー導線([REVIEW_PROMPT_POLICY.md](REVIEW_PROMPT_POLICY.md))
 
@@ -1554,6 +1646,87 @@ Network Inspector が使えなかったとき、通信の宛先を特定でき�
       2026-10-31 に 48 件とも門を通した(`i18n:gate status` は「Gate complete」、`i18n:gate:check` が緑。
       手順は [I18N_POLICY.md](I18N_POLICY.md)「リリース前の門」)
 
+## 5.19 遠隔対戦([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「遠隔対戦」, issue #280)
+
+**遠隔対戦は未実装である。** 2026-11-14 に方針として採っただけで、実装・実機検証・出荷はしていない。
+この節は遠隔対戦を出荷する版にだけ当てる門で、**下の項目は 1 つも済んでいない**。遠隔対戦を含まない版では
+当てない。製品の約束は [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「遠隔対戦」、技術の契約は
+[architecture/nearby-multiplayer.md](architecture/nearby-multiplayer.md) 冒頭の 2026-11-14 節が定める。
+
+前提: この方式で出すかの判断(Go / No-Go)が issue #280 で Go になっていること。Phase 1 の実測で決める値
+(候補の収集を打ち切る秒数、招待の期限など)は、その結果で上の 2 文書を改めてから、ここで確かめる。
+実機の Android と iPhone の両方で、同じ LAN にいない 2 台(セルラーを含む)で通す。
+
+- [ ] **触っていない端末は WebRTC / STUN の通信を 1 件も出さない。** 招待を作っても開いてもいない端末で、
+      起動 → ホーム → 対象ゲームのトップ → 近隣対戦(BLE / LAN)の画面 → 戻る、の間に STUN の問い合わせも
+      UDP の通信も出ない。近隣の画面を開いただけでは remote/ のチャンク(`nearby-` で始まる名前)を読まない。
+      招待を作る画面・招待を開いた画面でも、開示に同意するまでは STUN へ問い合わせない。同意した後の宛先は
+      `stun.cloudflare.com` の UDP 3478 だけで、TURN と relay 候補が無い。
+      **測り方に注意**: §5.16 の見方(WebView の DevTools の `Network.requestWillBeSent`)は HTTP の要求を
+      見るもので、WebRTC の UDP(STUN を含む)は映らない。ここで 0 件と言えるのは、端末の外での
+      パケットキャプチャか、WebRTC の内部状態を見る道具(`chrome://webrtc-internals` など)で見たときだけ。
+      後者が端末の WebView で使えるかは確かめていないので、使う道具は出荷前に端末で決める
+- [ ] **招待を作る前と、招待を開いて参加する前に、開示と同意の画面が出る。** 招待と返事に入る IP アドレスが
+      相手(転送された人を含む)と STUN 事業者(Cloudflare)に伝わること、IP からおおよその地域が推定され
+      うること、PixApps は招待・返事の中身(そこに入った IP を含む)を受け取らず保存しないことを伝える。
+      招待を受ける `pixapps.ai` のページを開いた場合のページ取得の扱いは、下の判断の記録に合わせて書く。
+      同意しなければ招待は作られず、
+      参加もしない。en と ja で内容が合っていること
+- [ ] **招待は 1 席に 1 つで、1 回だけ使え、期限がある。** 招待を持つ人は host の承認なしに着席する。
+      同じ招待を 2 台目で開くと断られ、席は動かない。期限の切れた招待も断られる。招待を作れるのは対局と
+      対局の間だけで、対局が始まった時点で使われていない招待は無効になる。招待を渡す画面に、転送された
+      招待は先に開いた人が座ることが出る。host は着席した人を近隣と同じ手段で外せる(固定席の 11 本では
+      ブロックか CPU への切り替え、1 対 1 の 17 本ではブロックで、その集まりは終わる)
+- [ ] **招待と返事に端末の LAN 内アドレスが無い。** 招待と返事の中身を実際に取り出して読む。候補は srflx だけで、
+      srflx の raddr も無い。host 候補(私設 IPv4・IPv6 の LAN 内アドレス、iOS の `UUID.local`)が無い。
+      Wi-Fi とセルラーの両方で、Android と iPhone のそれぞれが作った招待と返事を見る。中身は契約の項目
+      (招待は形式の版・gameId・label・募集名・protocol・席・期限・最小化した SDP・招待秘密、返事は
+      形式の版・招待の識別子・最小化した SDP)だけで、報酬・紹介コード・送信者を追う識別子が無い
+- [ ] **iOS で出さない 2 本(Texas Hold'em / Blackjack)**: Android の host が作った 2 本の招待を iPhone で
+      開いても、アプリで開かず着席しない。理由は表示しない(近隣の前例どおり。§4.7 の扉の一覧)
+- [ ] **再接続は再接続のリンクと継続鍵の確認で、承認なしに同じ席へ戻る。** 切れると近隣と同じく席と
+      盤面を保持して待つ(離席)。自動で相手を探し直さない。host が出す再接続のリンクに返事を返すと、
+      承認なしで同じ席へ戻り、盤面が続く。再接続のリンクを別の端末で開いても断られ、席は取られない。
+      host 自身が切れると全員が離席になり、host が席ごとに作り直した再接続のリンクで戻れる
+- [ ] **直接つながらないときに案内が出る。** TURN を使わないので、つながらないネットワークの組み合わせが
+      ある。失敗すると案内が出て(近くにいるなら近隣対戦を勧める)、画面が固まらない。開始の最後の段階では
+      2 人ともアプリを前面に出す必要があることを、画面が伝えている。iPhone のロックダウンモードでは
+      「この端末では使えない」と出る。iOS の下限(15)の実機で `RTCPeerConnection` が使えること
+      (資料ごとに版が食い違うので、実機で確かめる)
+- [ ] **前面だけで遊ぶ。** 遠隔のための接続維持の通知・背景処理・背景モードが無い。遠隔のために Android の
+      権限(INTERNET のまま)と iOS の Info.plist が増えていない
+- [ ] **WebRTC の SDK・native の実装を足していない。** remote/ が使うのは WebView 標準の `RTCPeerConnection`
+      だけで、npm・Gradle・SPM / CocoaPods の依存に WebRTC 系のライブラリが無い(`check-principles.sh` §1c が
+      緑であることに加え、依存の差分を人が読む)
+- [ ] **チャット・記録は近隣と同じ。** 1 対 1 ターン制の 17 本は host がチャットの有無を選び、初期値は OFF。
+      固定席の 11 本(2 席の Durak を含む)はチャットなし。
+      表現チェック・通報・ブロックが近隣と同じに働く。遠隔の対局は Nearby 専用の端末内履歴に入り、ソロの
+      保存・統計・Club に混ざらない。招待・返事・接続の情報が履歴・バックアップ(§5.14)・ログに残らない
+- [ ] **Web 版に遠隔対戦が無い。** 無効なボタンとアプリ専用の説明だけで、Web 成果物とエントリの初期グラフに
+      `src/nearby/remote/` が無い。招待を `pixapps.ai` のリンクで渡す場合(パスは未定)、受けるページは
+      フラグメントの中身を読まず、送らず、計測しない(そのページの Network で確かめる)
+- [ ] **オーナーか専門家の判断を記録した**(PRODUCT_PRINCIPLES「遠隔対戦」15。2026-11-14 時点ですべて未決):
+      相手と STUN 事業者が IP を受け取ることを Google Play のデータセーフティと App Store の App Privacy で
+      どう扱うか(§4.7・§6)。STUN の問い合わせが暗号化されないことと、データセーフティの「転送時の暗号化」の
+      回答。招待が転送されうることと、年齢区分(IARC)・App Store のユーザー間交流・UGC の回答。招待を受ける
+      `pixapps.ai` のページにサイト共通の計測(GA4)を載せるか。公開プライバシーページ(pixapps-landing)の
+      遠隔対戦の節。日本の電気通信事業法の外部送信規律に当たるか。決めた申告とページは、この版が利用者に
+      届く前に公開する
+- [ ] **遠隔対戦の開示の文言が高リスクキーの門を通っている**(§3、[I18N_POLICY.md](I18N_POLICY.md)
+      「リリース前の門」)。I18N_POLICY のとおり、IP が相手と STUN 事業者に伝わることの開示と、招待の性質
+      (承認なしで座れる・転送された招待は先に開いた人が座る・1 回だけ・期限がある)を伝えるキーのすべて。
+      実装で決めるのはキーの件数だけである
+- [ ] **公開文面をこの版に合わせて改めた**([BRAND.md](BRAND.md)「表現ルール」、PRODUCT_PRINCIPLES
+      「遠隔対戦」14)。出荷するまでは書かないので、改めるのはこの版からである。「The games never go online」の
+      ように Core 全体を主語にした文を、ソロ / CPU 戦を主語にした文へ改める。遠隔対戦について「オフライン」
+      「サーバーなし」と言わず、「host がすべての参加を承認する」とも言わない(掲載の「The host approves every
+      join.」のような文が遠隔を含めて読めないかを見る)。上の 2026-11-05 の節の審査向け説明案(「対人戦は
+      近隣Bluetooth/同一Wi-Fiのみ」)は、遠隔対戦を出す版の Google Play の提出では使わず、書き直す
+
+**未確認は未確認として書く。** 実機が片方しか無い、パケットキャプチャを取れなかった、つながらない
+組み合わせしか試せなかった、といったときは、チェックを入れずに「何を確認できなかったか」をこの節の下に
+残す。この節はまだ誰も通していない。
+
 ## 6. ストア掲載
 
 - [ ] `apps/simple-games/store/listing.md` の文言を各言語へ反映
@@ -1578,6 +1751,10 @@ Network Inspector が使えなかったとき、通信の宛先を特定でき�
       一切発生しない(§5.16)。公開ページのプライバシーポリシーの Club House 節と
       同じ内容にそろえ、**この版が利用者に届く前に公開**する。Meta を有効化する
       リリースでは、その分も別に足す(上と §5.15)
+- [ ] **遠隔対戦を出荷する版では**(2026-11-14 時点で未実装)、招待と返事で相手(転送された人を含む)と
+      STUN 事業者(Cloudflare)に IP アドレスが伝わることを、データセーフティ欄と App Store の
+      プライバシーラベルでどう扱うかを先に決めてから申告する。扱いは未決で、オーナーか専門家が決める。
+      PixApps は招待・返事・IP を受け取らない。門は §5.19
 - [ ] **ユーザー生成コンテンツの審査の期待を確認する**(Apple Guideline 1.2 /
       Google Play の UGC ポリシー)。Public には他人の表示名が並ぶので、報告
       (Report)と持ち主による名前の変更・削除の仕組みが、審査が求める水準に
@@ -1586,6 +1763,10 @@ Network Inspector が使えなかったとき、通信の宛先を特定でき�
 - [ ] 設定画面の「プライバシーポリシー」「利用規約」が実機で開くことを確認
       (アプリは文面を同梱せずリンクするだけになった)
 - [ ] 「Coming Soon」表記や未実装ゲームの名前が掲載文に含まれていない
+- [ ] App Store の掲載(14 言語の説明文・宣伝文・キーワード・サブタイトル・新機能・スクリーンショット)が
+      `apps/simple-games/store/listing.md` の「App Store (iOS)」の正文に従い、iOS で出さないタイトルの名前・
+      チップ・ポイントの開示文・Android の本数(80 / 16 / 28 / 4 席 10)を含まない。Play の文を ASC に貼らない
+      ([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「iOS で出さないタイトル」、2026-11-11)
 - [ ] GitHub リポジトリの description / homepage / topics が [BRAND.md](BRAND.md)
       「GitHub リポジトリの公開 metadata」の値と一致し、homepage がリダイレクトなしで
       開く(ゲーム数は書かない)

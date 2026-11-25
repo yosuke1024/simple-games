@@ -6,10 +6,13 @@
  */
 
 /**
- * Private Clubs — joining by invite link and the owner's invite panel — arrive
- * in the next version. While this is false there is no "Join with a link"
- * entry, a web invite URL is not acted on, and the invite panel is not
- * reachable; the code stays so that turning it on is this one line.
+ * Private Clubs — joining a self-hosted Club by invite link and the owner's
+ * invite panel. They were meant to arrive with the host flow (club.md §8),
+ * which the product owner declined on 2026-11-14 (club.md §14, decision 56),
+ * so this stays false. While it is false only managed invites (switched on
+ * separately below) are taken: a self-hosted Club's link is refused when
+ * pasted, its web invite URL is not acted on, and a self-hosted Club has no
+ * invite panel. The code stays so that turning it on is this one line.
  */
 export const PRIVATE_CLUBS_ENABLED = false;
 

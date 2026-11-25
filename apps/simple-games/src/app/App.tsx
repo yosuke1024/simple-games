@@ -66,6 +66,7 @@ import {
   noteClubConnections,
   takeInviteFromLocation,
 } from './clubGate';
+import { isAvailableGameId } from './gameChannel';
 import { getLazyRoot, resetLazyRoot } from './lazyRoots';
 import {
   clearNearbyLocalData,
@@ -367,6 +368,14 @@ export function App() {
   // the player chose, and a load failure is rare enough not to complicate it.
   const enterGame = useCallback(
     (gameId: GameId, entry: GameEntry, club?: { from: 'club' }) => {
+      // Every door asks app/gameChannel.ts before it offers a game; this is
+      // the one open point behind them, so a door that forgot to ask (a title
+      // the iOS app leaves out, a beta title on the app) opens nothing and
+      // records nothing.
+      if (!isAvailableGameId(gameId)) {
+        show({ kind: 'collection' });
+        return;
+      }
       recordGameOpened(gameId);
       trackWebGameOpened(gameId);
       show({ kind: 'game', gameId, entry, ...club });
