@@ -1,5 +1,52 @@
 # Simple Games — リリースチェックリスト
 
+## 2026-11-25: 1.8.6(PixTale の行、Club House 対応 35 → 49 本、共有リンクのリリース門)
+
+オーナー判断(2026-11-25): 次の版を 1.8.6 として iOS と Android の両方に出す。入れるのは次の 4 件で、
+ほかは見送る(遠隔対戦 #280 は PoC 段階、Managed Club の有償化は計画のみ、Android タブレットの回転は
+横画面で収まらないゲームが残る)。
+
+1. **「PixApps のほかのアプリ」に PixTale の行**(§5.18、[PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)
+   「PixApps の自社アプリの一覧は広告ではない」)。新しい文言 `pixTaleTagline` の 12 言語は同日に門を通した。
+2. **Club のテストの固定日付の修正**(テストだけ。`ManagedFlow.test.tsx` の `validUntil` が 2026-11-23 で
+   切れ、全ブランチで 1 件落ちていた)。
+3. **共有リンクの穴埋めとリリース門**(§7 の `share:check`、[共有リンク](architecture/share-links.md)
+   「Release gate」。landing 側は pixapps-landing#239)。利用者に見える変化は無い(Web 先行公開は 0 本)。
+4. **Club House の対応を 35 → 49 本**([architecture/club.md](architecture/club.md) §14 判断 57、
+   計画は [plans/2026-11-14-club-coverage.md](plans/2026-11-14-club-coverage.md)。サーバは
+   simple-games-club#16 の schema 8、landing は pixapps-landing#244)。
+
+版: iOS は 1.8.5 (10805) から、Android は 1.8.4 (10804) から 1.8.6 (10806) へ。Android は 1.8.5 を飛ばす
+(10805 は Play に出していない。1.8.5 の中身は iOS だけの扉で、Android の利用者に見える変化は無い)。
+iOS アプリは 78 本・Android アプリと Web 版は 80 本のまま(ゲームの追加は無い)。
+
+**順番が門**: (1) サーバの PR を main へ → (2) アプリのリリース PR を main へ → (3) オーナーが
+simple-games-club で `pnpm build:web ../simple-games` と `pnpm deploy:production`(サーバと club.pixapps.ai の
+Web 版を同時に。**schema 8 への移行は戻せない**)→ (4) landing の 2 本と Web 版の Publish →
+(5) タグ `v1.8.6` と `share:check` → (6) 端末に入れる(内部テスト / TestFlight)→ (7) ストア。
+**(3) より前に 1.8.6 をどの端末にも入れない** — サーバが新しい 14 本を知る前に送られたランキングの結果は
+`400 invalid_request` で捨てられ、再送されない。
+
+- [ ] simple-games-club#16 をマージ(schema 8。node:sqlite でだけ試した移行で、workerd では走らせていない)
+- [ ] アプリのリリース PR をマージ(PixTale・共有リンク・Club House・iOS の版 1.8.6 / 10806)
+- [ ] オーナー: サーバと club.pixapps.ai の Web 版をデプロイ。デプロイ後、本番の `/api/v1/public` が今までどおり
+      返ること、新しい 14 本のうち 1 本の結果が順位表に載ること
+- [ ] pixapps-landing#244(Club House の節に新しい 14 本の名前)と #239(共有ページを公開済みの全 id に)を
+      マージ、Web 版を Publish。ブラウザ版のホーム末尾に PixTale の行が出ること
+- [ ] タグ `v1.8.6`。`pnpm --filter simple-games share:check --ref v1.8.6` が「All 80 share landings answer 200.」
+      (2026-11-25 に `v1.8.5` に対しては 80 件とも通った)
+- [ ] `pnpm --filter simple-games i18n:gate:check` が緑(2026-11-25、リリース用ブランチで「Gate complete」)
+- [ ] Android の AAB 10806(CI)。iOS のビルド 10806 をアップロード
+- [ ] リリースノート: App Store 14 言語 / Google Play 17 言語タグ(500 字以内)。Club House で比べられるゲームが
+      増えたことを書く。PixTale の行はリリースノートに書かない(送客の文言を増やさない)
+- [ ] §5.18 を PixTale を含めて実機で通す(Android は Google Play、iPhone は App Store の掲載ページが開く)
+- [ ] 実機: 新しい 14 本のうち、時間・手数・スコアの各群から 1 本ずつ結果を Club に送り、順位表に載ること。
+      Today に Unblock Puzzle / Loop Puzzle / Bridges / Pipe Link / Make the Target / Tangram のデイリーが出ること。
+      1.8.5 以前の端末が同じ Club を開いても壊れないこと(自分の契約に無いゲームの表は出ないだけ)
+- [ ] ストアへ提出(App Store は審査、Google Play は製品版)
+
+**未確認は未確認として書く。** 2026-11-25 の時点で、上のどれも実機・本番サーバでは確かめていない。
+
 ## 2026-11-11: iOS 1.8.5(Blackjack / Texas Hold'em を iOS から外して再提出。Android は 1.8.4 のまま)
 
 2026-11-10、App Store の審査が iOS「Simple Games: Offline Games」(`com.pixapps.simplegames`)の 1.8.4 (10804) を
