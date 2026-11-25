@@ -34,10 +34,15 @@ Web 版を同時に。**schema 8 への移行は戻せない**)→ (4) landing �
 - [x] オーナー: サーバと club.pixapps.ai の Web 版をデプロイ(2026-11-25 01:19Z、Worker の版 `80249d65` が 100%)。
       デプロイ後に確かめたこと: `wrangler deployments list` の最新がこの版、club.pixapps.ai が配る `index-*.js` が
       `ed52cb52` から組んだ `web/` と同じファイル名、`/api/v1/health` と `/api/v1/public` が 200
-- [ ] デプロイ後、新しい 14 本のうち 1 本の結果が本番の順位表に載ること(メンバーとして送る必要がある。実機で見る)
-- [ ] pixapps-landing#245(#244 の Club House の節・#239 の共有ページ・Web 版 `v1.8.6` のビルド・LP のカードの絵を
-      1 本にまとめたもの)をマージ。Publish は 2026-11-25 に成功し、ビルドのコミット `568bb66a` が載っている。
-      マージ後、ブラウザ版のホーム末尾に PixTale の行が出ること、LP のカードがゲームごとの絵になっていること
+- [x] デプロイ後、新しい 14 本のうち 1 本の結果が本番の順位表に載ること。2026-11-25 にオーナーが iPhone の
+      TestFlight 1.8.6 (10806) で確認できたと報告した(頼んだのは「Club House に参加した状態で Snake か Light Grid を
+      1 局終えると、そのゲームの順位表に結果が載る」。どちらのゲームで見たかは聞いていない)
+- [x] pixapps-landing#245(#244 の Club House の節・#239 の共有ページ・Web 版 `v1.8.6` のビルド・LP のカードの絵を
+      1 本にまとめたもの)をマージ(2026-11-25 01:29Z、`64fcc664`。#244 と #239 も merged になった)。Publish の
+      ビルドのコミットは `568bb66a`。マージ後に本番で確かめたこと: `/simple-games/` のカード 80 枚が
+      ゲームごとの絵(`share/<id>/artwork.svg`)を指して表示されること、`/simple-games/play/` の `index-*.js` が
+      Publish のビルドと同じファイル名でホーム末尾に PixMeal・PixWork・PixTale の 3 行が出ること(PC のブラウザ)、
+      `share:check --ref v1.8.6` が 80 件とも 200、存在しない共有 id が 404 を返すこと
 - [x] タグ `v1.8.6`(2026-11-25、`ed52cb52`)。`share:check --ref v1.8.6` は「All 80 share landings answer 200.」
 - [x] `i18n:gate` は「Gate complete」(2026-11-25、12 言語とも 47 / 47)
 - [x] Android の AAB 10806(CI の run 45523483232。APK で versionCode 10806 / versionName 1.8.6 を確認)。
@@ -47,14 +52,20 @@ Web 版を同時に。**schema 8 への移行は戻せない**)→ (4) landing �
 - [x] リリースノート: App Store Connect に 14 言語で書き込み、読み戻して一致(2026-11-25)。Google Play 用の
       17 言語タグ(最長 394 字)はオーナーへ渡した。Club House で比べられるゲームが 35 本から 49 本に増えたことだけを
       書き、PixTale の行は書いていない(送客の文言を増やさない)。審査メモも 1.8.6 用に書き換えた
-- [ ] §5.18 を PixTale を含めて実機で通す(Android は Google Play、iPhone は App Store の掲載ページが開く)
+- [ ] §5.18 を PixTale を含めて実機で通す(Android は Google Play、iPhone は App Store の掲載ページが開く)。
+      iPhone は 2026-11-25 にオーナーが TestFlight 10806 で確認できたと報告した(頼んだのは「ホーム最下部に 3 行が並ぶ・
+      PixTale の行が App Store の掲載ページを開いてアプリに戻れる・機内モードでは一覧ごと出ない」)。**Android は未確認**
 - [ ] 実機: 新しい 14 本のうち、時間・手数・スコアの各群から 1 本ずつ結果を Club に送り、順位表に載ること。
       Today に Unblock Puzzle / Loop Puzzle / Bridges / Pipe Link / Make the Target / Tangram のデイリーが出ること。
-      1.8.5 以前の端末が同じ Club を開いても壊れないこと(自分の契約に無いゲームの表は出ないだけ)
-- [ ] ストアへ提出(App Store は審査、Google Play は製品版)
+      1.8.5 以前の端末が同じ Club を開いても壊れないこと(自分の契約に無いゲームの表は出ないだけ)。
+      確かめたのは上の 1 本(iPhone)だけで、3 群すべて・Today・古い版の端末・Android は未確認
+- [x] App Store: 2026-11-25 01:33Z に 1.8.6 (10806) を審査へ提出(reviewSubmission `44d7d076`、WAITING_FOR_REVIEW、
+      承認後に自動公開)。オーナーの TestFlight での確認のあとに出した
+- [ ] Google Play: 製品版へ 10806 とリリースノート 17 言語(オーナーが Console で公開する。AAB とノートは渡してある)
 
-**未確認は未確認として書く。** 2026-11-25 の時点で、実機ではどれも確かめていない。本番サーバについて確かめたのは
-上の「デプロイ後に確かめたこと」だけで、新しい 14 本の結果が実際に順位表に載るところは見ていない。
+**未確認は未確認として書く。** 2026-11-25 の時点で、実機で確かめたのはオーナーが iPhone の TestFlight で見た上の項目だけで、
+Android の実機・エミュレータでは何も確かめていない。本番サーバについて私が確かめたのは「デプロイ後に確かめたこと」と
+landing のマージ後の項目までである。
 
 ## 2026-11-11: iOS 1.8.5(Blackjack / Texas Hold'em を iOS から外して再提出。Android は 1.8.4 のまま)
 
