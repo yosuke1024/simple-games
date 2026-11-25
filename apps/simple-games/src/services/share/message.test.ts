@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { SHARE_BASE_URL } from '@simple-games/brand';
 import { GAMES } from '../../app/registry';
 import { nativeGameTarget } from '../../app/nativeGameLink';
+import { gameIdFromHref } from '../../app/webRoute';
 import { translate, type MessageKey, type TranslateVars } from '../../i18n';
 import { catalogs, type Locale } from '../../i18n';
 import { buildShareMessage, gameShareUrl, MAX_SHARE_DETAILS, shareMessageAsText } from './message';
@@ -31,10 +32,13 @@ describe('the link', () => {
     // after them. A title still in development (registry
     // `channel: 'in-development'`) is not in the collection yet: no build
     // offers it, so nothing can share it, and its address reads as the
-    // collection (app/gameChannel.ts) — the one case this skips.
+    // collection (app/gameChannel.ts) — the one case this skips. A Web-only
+    // title links to the browser game (message.webOnly.test.ts).
     for (const game of GAMES) {
       if (game.channel === 'in-development') continue;
-      expect(nativeGameTarget(gameShareUrl(game.id))?.gameId, game.id).toBe(game.id);
+      const url = gameShareUrl(game.id);
+      if (game.channel === 'web-beta') expect(gameIdFromHref(url), game.id).toBe(game.id);
+      else expect(nativeGameTarget(url)?.gameId, game.id).toBe(game.id);
     }
   });
 });

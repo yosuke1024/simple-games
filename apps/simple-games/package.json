@@ -22,6 +22,7 @@
     "verify:changed": "node scripts/verify-changed.mjs",
     "test:scoped": "node scripts/test-scoped.mjs",
     "ios:version": "node scripts/ios-version.mjs",
+    "share:check": "node scripts/share-landing-check.mjs",
     "cap": "cap"
   },
   "dependencies": {
