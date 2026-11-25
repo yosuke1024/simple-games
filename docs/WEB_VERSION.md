@@ -1,5 +1,13 @@
 # Simple Games — Web 版
 
+## 2026-11-14: 遠隔対戦は Web に置かない(issue #280)
+
+オーナー判断で、Nearby Play の対象ゲームを招待リンクでインターネット越しに遊ぶ遠隔対戦を
+Core の任意モードとして採った([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「遠隔対戦」)。
+方針の採用であって、実装も出荷もしていない。遠隔対戦は Android / iOS アプリだけで、Web 版には
+置かない(同節 2)。Web は近隣対戦と同じく、無効なボタンとアプリ専用の説明だけを持つ。
+扱いは下の「役割分担」「先行公開」「実装上の約束」に書いた。
+
 ## 2026-11-07: Frost Route / River Cargoの正式収録
 
 オーナーの指示で先行公開の残り2本を正式収録へ変更。正式収録は80本、Web先行は0本。
@@ -85,7 +93,11 @@ Webでは無効なアプリ専用案内として表示する。
 **Play instantly on the web. Play quietly and offline in the app.**
 
 通常のソロ / CPU 戦は両版で共通とする(iOS アプリで出さない 2 本を除く — 上の「OS ごとの列は作らない」の例外)。近隣対戦はOSの通信機能を使うアプリ限定の任意機能で、
-Webでは上記の無効ボタンと説明を表示する。広告視聴でも課金でも解放される機能は、どちらの版にも
+Webでは上記の無効ボタンと説明を表示する。
+遠隔対戦(未実装 — 上の 2026-11-14 節)もアプリ限定だが、使うのは OS の通信機能ではなく
+WebView 標準の WebRTC なので、この理由は当てはまらない。Web に置かないのは
+[PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「遠隔対戦」2 に記録したオーナー判断であり、
+Web で出すにはその節の改定を要する。広告視聴でも課金でも解放される機能は、どちらの版にも
 存在しない(`docs/PRODUCT_PRINCIPLES.md`)。新作の**収録タイミング**も版で
 異なる(Web が先 — 下の「先行公開(ベータ)」)。これは無料の先行であって、
 支払い・広告視聴・アカウントの対価ではない。
@@ -667,7 +679,9 @@ registry から 11 本の `channel: 'web-beta'` を外し、アプリのホー�
   `com.pixapps.simplegames://share/<id>` — どちらもコレクションを開く。`app/nativeGameLink.ts`)・
   lazy root・Club のチャレンジの Play・Nearby の「対戦サポートゲーム」の一覧・Nearby の探索と参加
   (Android の host が開いた卓は一覧に出ず、参加できない — `nearby/discovery.ts` の `gameForLabel`)・
-  Nearby の集まりの履歴(保存は残し、表示だけ外す)、そしてシェルがゲームを開く 1 点
+  Nearby の集まりの履歴(保存は残し、表示だけ外す)、遠隔対戦の招待(未実装 — issue #280。招待の
+  gameId を同じ `app/iosWithheldGames.ts` に問い、2 本の招待は開かず、着席もしない。理由は表示しない)、
+  そしてシェルがゲームを開く 1 点
   (`App.tsx` の `enterGame` は、扉がガードに問い忘れても開かず、最近にも記録しない)。Nearby の層は
   registry を import できないので `app/iosWithheldGames.ts` の一覧に直接問い、registry の印との一致は
   `gameChannel.test.ts` が固定する。`channel` と同じく、コードはバンドルに入ったまま、`storageKeys` と
@@ -994,6 +1008,11 @@ I18N_POLICY.md の高リスクキー 5 番(無料・オフライン・paywall �
   共通ボタンを無効な案内表示へ変えるだけのビルド時分岐である。ゲームごとの分岐や追加props、
   Webの接続機能は増やさず、Yachtを含む対応13本で同じ部品を使う。接続の可否と起動は引き続き
   シェルが所有し、Web成果物にNearby runtimeが入らないことを確認する。オンライン判定は使わない。
+  遠隔対戦(未実装 — issue #280)の実装は `src/nearby/remote/` に置き、この除外をそのまま受け継ぐ —
+  Web 成果物とエントリの初期グラフから `src/nearby/` を締め出す既存の検査が、`src/nearby/remote/` も
+  前方一致で見る。remote/ を別のチャンクに分け、入口を 1 ファイルの動的 import に限る検査は、
+  実装時(#280 の Phase 3)に足す([architecture/nearby-multiplayer.md](architecture/nearby-multiplayer.md)
+  冒頭の 2026-11-14 節「機械で示すこと」)。
   **URL ルーティングは例外に加えていない**(上の「URL(ゲーム別の入口)」)。
   外部の SDK もサイト側の資産も持ち込まず、native では 1 行も走らない実行時ガードで
   足りるものを、成果物の分離検査が要る側へ移す理由がないため。Android の

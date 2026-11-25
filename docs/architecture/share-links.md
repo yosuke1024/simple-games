@@ -137,3 +137,24 @@ Android domain verification with `adb shell pm get-app-links com.pixapps.simpleg
 (Android 12 and later) or `adb shell dumpsys package d` (Android 11 and lower), for
 both pixapps.ai and club.pixapps.ai.
 An unsigned build or simulated user agent does not prove OS domain verification.
+
+## Remote play invites are not share links
+
+Decision: 2026-11-14, product owner (issue #280). Remote play — the Nearby Play
+games over the internet, by invitation only — is an adopted direction, not
+implemented, verified or shipped ([PRODUCT_PRINCIPLES.md](../PRODUCT_PRINCIPLES.md)
+「遠隔対戦」; technical contract in the 2026-11-14 section at the top of
+[nearby-multiplayer.md](nearby-multiplayer.md)). Nothing above changes for it today.
+
+- A share link grants nothing; an invite grants a seat. Invites and replies will
+  therefore use their own app-link path (not yet chosen), separate from
+  `/simple-games/share/*`, and their own handler, not `nativeGameLink.ts`. The
+  share handler keeps ignoring fragments.
+- The invite or reply payload will travel in the URL fragment (after `#`), which
+  never reaches a server. A page that receives it must not read, send or measure
+  it. Invites can also be passed by copy and paste.
+- The iOS app will not open invites for the titles it does not offer (above).
+- Adding the invite path to the AASA and `assetlinks.json` is a future change.
+  It follows the same order as above: the association files first, confirmed
+  (including Apple's CDN copy) before any build that registers the path is
+  installed anywhere.

@@ -1,4 +1,145 @@
-# Nearby Multiplayer — 近隣端末間対戦の契約
+# Nearby Multiplayer — 近隣端末間対戦と遠隔対戦の契約
+
+## 2026-11-14: 遠隔対戦(招待リンク・WebRTC DataChannel、issue #280)
+
+オーナー判断で、Nearby Play の対象ゲームを招待リンクでインターネット越しに遊ぶ遠隔対戦を
+Core の任意モードとして採る。製品の約束は [PRODUCT_PRINCIPLES.md](../PRODUCT_PRINCIPLES.md)
+「遠隔対戦」節、この節は技術の契約である。**方針の採用であって、実装・実機検証・出荷はしていない。**
+下の数値のうち出典が実装のソースや文書のものは、実機の観測値ではない。#280 の Phase 1(PoC)で測り、
+Phase 2 でこの方式で出すかを決める。その結果でこの節を改める。
+
+**この節と古い節の関係**: 下の古い節の「すべての参加に host 承認」「同じ label を前面で再発見して戻る」
+「探索 60 秒・承認待ち 60 秒」「アプリ切替・背景でも接続を保つ」「Android の connectedDevice
+foreground service と iOS の Bluetooth 背景モード」は近隣(BLE / LAN)の契約である。遠隔はこの節に従う。
+`Session` / `GroupSession` / `Channel` / `Delivery`、各ゲームの adapter と View、host 確定・投影・
+CPU への切り替え・固定席の共通契約(2026-10-27 節)、端末内履歴、表現チェック・通報・ブロック、
+iOS で出さない 2 本の扱いは、近隣と遠隔で共有する。遠隔のためにゲーム側を変えない。
+
+### transport
+
+- `src/nearby/remote/` に、`NearbyPlugin`(`native.ts`)と同じ口を持つ JS の実装を置く。使うのは
+  WebView 標準の `RTCPeerConnection` と `RTCDataChannel` だけで、native の実装・WebRTC の SDK・
+  第三者の通信 SDK を足さない。`Transport` に遠隔の種類を足す。
+- controller から見た動き: 招待を開くと listing 付きの `peer` イベントが 1 件だけ出て、返事を受け取ると
+  `connected` が出る。controller の「選ぶ → 接続 → 鍵交換 → hello の照合 → Ready」はそのまま通る。
+  承認の段だけ、招待の確認(下)が通れば host が自動で承認する。
+- DataChannel 上の 1 メッセージは、native と同じ 4096 UTF-8 bytes の上限を守る。暗号化前 JSON の
+  上限、`Delivery` の seq / 累積 ACK、state の受信確認もそのまま使う。DTLS に加えて `Channel` の
+  ECDH・AES-GCM を重ねる。
+- ICE は STUN の `stun.cloudflare.com:3478` だけを使う。TURN と relay 候補は使わない。収集は trickle
+  せず、時間で打ち切ってその時点の候補を使う(libwebrtc は STUN の応答を最長約 40 秒待つため。
+  打ち切りの秒数は Phase 1 で決める)。
+
+### 招待と返事
+
+- 招待は host が席ごとに作る。中身は、形式の版・gameId・label・募集名・protocol・席・期限・最小化した
+  SDP・招待秘密である。最小化した SDP は ice-ufrag・ice-pwd・DTLS の fingerprint・setup・候補だけを運び、
+  受け手が組み立て直す。ufrag と pwd は省かない(ローカル SDP の書き換えに頼らない)。
+- **候補は srflx だけを運び、srflx の raddr も載せない。** Android の WebView は host 候補に端末の
+  LAN 内アドレス(私設 IPv4 か IPv6)をそのまま載せる見込みで(Chromium のソースの読解。実機では未確認)、
+  iOS の WKWebView は mDNS 名(UUID.local)に置き換える。LAN 内アドレスを相手に渡さないために host 候補を
+  落とす。同じ LAN の相手とは近隣対戦を使う。
+- 返事は招待を開いた側が作る。中身は形式の版・招待の識別子・最小化した SDP(answer)である。
+- 招待と返事は、アプリリンク(App Links / Universal Links。パスは未定で、`/simple-games/share/*` とは
+  別のパスにする)のフラグメントに置き、コピーと貼り付けでも渡せる。フラグメントはサーバーに届かない。
+  受けるページは中身を読まず、送らず、計測しない。共有リンクは何も与えないが、招待は席を与える。
+  そのため共有リンクのハンドラと混ぜない([share-links.md](share-links.md))。
+- 招待の大きさは、候補が 2〜3 個なら base64url で 200 文字前後の見込み。QR にも載る。実装時に測る。
+- iOS アプリは、招待の gameId を `app/iosWithheldGames.ts` に問い、出していない 2 本の招待を開かない。
+  理由は表示しない(近隣の既存の前例どおり)。
+
+### 承認なしの着席
+
+- 招待秘密は 1 席・1 回限りで、期限がある。鍵交換の後に、招待秘密を鍵として、新しい ECDH の
+  transcript と送信者の役割に結びつけた HMAC の proof を guest が示す。継続鍵による復帰の proof と
+  同じ形である。host は proof が通れば、その招待の席へ自動で承認する。通らない・使用済み・期限切れ・
+  対局中なら、証明の無い断りを返す。
+- 招待を作れるのは対局と対局の間だけである。対局が始まった時点で使われていない招待は無効になる。
+  これは近隣の「参加の受付は対局と対局の間だけ」と同じ扱いである。
+- 招待秘密は proof の後に捨てる。ディスクには保存しない。着席した後は、近隣と同じ継続鍵を
+  初回の鍵交換から導出して、メモリ内だけに保持する。
+- 6 桁の比較コードは遠隔では必須にしない(招待秘密の proof が束縛を担う)。ただし、招待は持参型の
+  資格である。メッセンジャーから漏れたり転送されたりすれば、その人が座れる。proof は本人認証ではない。
+
+### 再接続
+
+- DataChannel・ICE が切れたら、近隣と同じく継続待ち・離席へ移り、盤面と未確認の操作を保持する。
+  切れたと見なす時間の目安は、libwebrtc の既定値から約 5 秒で disconnected、約 15 秒で failed である
+  (ソースの値で、未計測)。アプリ層の 15 秒の ACK 期限はそのまま使う。
+- 戻るときの手順:
+  - host が離席中の席の「再接続のリンク」を作り、戻る人が返事を返す。招待と同じ向きである。
+  - 新しい鍵交換の後、最初の着席で得た継続鍵の proof を示す。既存の proof と同じで、鍵は回転しない。
+  - proof が通れば承認なしで同じ席へ戻る。proof を示せない相手には証明の無い断りを返すので、
+    リンクが転送されても席は取られない。
+- host 自身が切れると、全員の席が離席になる。host は席ごとに再接続のリンクを作り直す。
+  自動で相手を探し直すことはしない。
+
+### 背景と生存確認
+
+- 背景では OS がアプリを止める前提にする。目安は、iOS が数秒〜約 30 秒、Android 14 以上が約 70 秒で
+  凍結される(Apple の文書と AOSP のソースから導いた値で、未計測)。
+- 遠隔のために、foreground service・状態通知・背景モードを足さない。Android の connectedDevice
+  foreground service は、近隣の BLE / LAN のためのものである。
+- アプリ層では周期的な生存確認を足さない。WebRTC の下層は、接続中に ICE の consent(RFC 7675、
+  約 5 秒ごと)と SCTP の heartbeat を送る。
+- 開始の最後の段階(返事を開いて疎通を確かめる間)は、2 人ともアプリが前面にいる必要がある。
+
+### プラットフォーム
+
+- Android: WebView の Chromium 88 の下限で、必要な API はそろう。DataChannel だけなら追加の権限は
+  要らない(INTERNET だけ)。targetSdk 37 で要る ACCESS_LOCAL_NETWORK は、インターネット宛ての srflx 経路には
+  掛からない。
+- iOS: 下限の 15 で WKWebView の RTCPeerConnection は使える見込みである。ただし資料ごとに版が
+  食い違うので、実機で確かめる。15.4 で入った API(暗黙の rollback、`pc.sctp`、DataChannel の
+  `closing` イベント)には頼らない。ロックダウンモードでは `RTCPeerConnection` が無くなるので、
+  機能を検出して「この端末では使えない」と示す。WKWebView のトラフィックはローカルネットワーク許可の
+  対象外とされている(Apple TN3179)。そのため、遠隔のために Info.plist は変えない。
+- Web: 置かない。`src/nearby/` を Web 成果物とエントリの初期グラフから締め出す既存の検査を、
+  `src/nearby/remote/` も前方一致で受け継ぐ。
+
+### 機械で示すこと
+
+- `.github/scripts/check-principles.sh` §1c: WebRTC の語は `src/nearby/remote/` の外では赤になる。
+  STUN / TURN の URL は remote/ を含むどこでも、`stun:stun.cloudflare.com:3478` と完全に一致するもの以外が
+  赤になる(TURN・ほかの STUN 事業者・スキームの文字列連結を含む)。STUN / TURN / ICE をビルド時に注入する
+  `VITE_` の名前と、package.json・Gradle・iOS の依存ファイルにある WebRTC 系のライブラリも赤になる。
+  トークン・除外境界・許可リストを自己検査する。§1 / §1b は変えない。remote/ にも fetch / WebSocket は書けない。
+  grep で示せるのは語が無いことまでで、`globalThis['RTCPeer' + 'Connection']` のような組み立ては見えない
+  (到達経路は下の 2 つが示す)。
+- `src/test/importBoundaries.test.ts`: nearby/ の外から remote/ へ届かないことを確かめるプローブを置く。
+- 実装時(Phase 3)に足すもの:
+  - remote/ を別のチャンク(`nearby-` で始まる名前)に分ける。BLE / LAN の Nearby を開いただけでは
+    WebRTC のコードを読み込まないようにする。
+  - remote/ への入口を 1 ファイルの動的 import に限る規則を足す。`Session` などが remote/ を
+    直接 import できないようにする。
+  - Web とエントリの初期グラフに remote/ が無く、native には有ることを、空振りしない形で検査する。
+
+### つながる見込みと、開始の時間の窓
+
+- TURN を使わない直接接続の成功率は、公表値で 7〜8 割である(2015〜2025 年の測定。条件は揃っていない)。
+  セルラーの CGN は約 4 割が宛先ごとに別のマッピングを持つと報告されていて、スマートフォン同士では
+  これより下がりうる。日本の 4 キャリアの公開データは見つからなかった。
+- 手動の 1 往復には時間の窓が 2 つある:
+  - 招待を作ってから返事が開かれるまでに、招待側の NAT のマッピングが失効しうる。UDP のタイムアウトの
+    中央値は、セルラーで 65 秒、それ以外で 35 秒と報告されている。
+  - 返事を作った側は、すぐに疎通確認を始め、約 15 秒で諦める。
+- Phase 1 では、経過時間ごとの成功率を測る。その結果で、招待の期限、「返事を送ったらすぐ開いてもらう」
+  案内、Phase 2 のシグナリング案を比べる。
+
+### 一次資料(2026-11-14 に確認)
+
+- WebKit: [A Closer Look Into WebRTC](https://webkit.org/blog/7763/a-closer-look-into-webrtc/)、
+  `PeerConnectionBackend.cpp`(ICE 候補のフィルタ)、`UnifiedWebPreferences.yaml`(ロックダウンモード)
+- Chromium: `net/features.gni`(Android の通常ビルドは mDNS を持たない)、`filtering_network_manager.cc`
+- libwebrtc: `p2p_constants.h` / `connection.cc` / `p2p_transport_channel.cc` / `stun_port.cc`
+- [RFC 7675](https://www.rfc-editor.org/rfc/rfc7675.html)、[RFC 4787](https://www.rfc-editor.org/rfc/rfc4787.html)、
+  Richter et al., IMC 2016(CGN の実測)
+- [Apple TN3179](https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy)、
+  [Android local network permission](https://developer.android.com/privacy-and-security/local-network-permission)、
+  [Android cached apps freezer](https://source.android.com/docs/core/perf/cached-apps-freezer)
+- [Cloudflare Realtime TURN FAQ](https://developers.cloudflare.com/realtime/turn/faq/)(STUN は無料・無制限と明記。
+  STUN だけのログ方針と SLA は公開されていない)
+- [webrtcHacks: The Minimum Viable SDP](https://webrtchacks.com/the-minimum-viable-sdp/)
 
 ## 2026-11-11: iOSアプリはTexas Hold'em / Blackjackを出さない(iOS 1.8.5)
 
@@ -99,6 +240,7 @@ Webには対応22本の無効な「誰かと遊ぶ」とアプリ専用の説明
 Updated: 2026-10-27 / issue #268
 
 この文書は近隣端末間対戦の製品契約と検証条件の正本であり、旧通信 PoC の記録も分けて保持する。
+2026-11-14 から遠隔対戦(招待リンク・WebRTC)の技術契約も冒頭の同日の節に置く。
 上位原則は [PRODUCT_PRINCIPLES.md](../PRODUCT_PRINCIPLES.md)「Nearby Play」、
 オフラインの範囲は [OFFLINE_POLICY.md](../OFFLINE_POLICY.md)、Yacht の規則は
 [YACHT_RULES.md](../YACHT_RULES.md) §13。進捗と実測結果は

@@ -39,18 +39,20 @@ for f in apps/*/android/app/build.gradle \
 done
 
 # 1. 通信しないこと ------------------------------------------------------------
-# Core(apps/simple-games/src/club/ を除く全ソース)は通信しない。ネットワークの
+# Core(apps/simple-games/src/club/ を除く全ソース)は fetch 系の API(fetch( /
+# XMLHttpRequest / WebSocket / sendBeacon / EventSource)で通信しない。ネットワークの
 # 用途はオンライン判定と広告 SDK / 課金 SDK / レビュー SDK だけで、Core 自身の
-# コードが通信することはない。
+# コードが fetch 系で通信することはない。遠隔対戦の WebRTC / STUN(方針は採用済み・
+# 未実装、issue #280)は fetch 系の語彙に入らず、§1c が見る(下の段落)。
 #
-# 例外は 1 つだけ、パスで宣言する。2026-09-09、issue #176 で「Club House」
+# fetch 系の例外は 1 つだけ、パスで宣言する。2026-09-09、issue #176 で「Club House」
 # (2026-09-09 時点の名は Shared / Private Game Club)という任意加入のレイヤーを
 # 認めた: 利用者が明示的に
 # 接続した端末だけが、利用者または友人が自前で立てたサーバーへ挑戦の結果
 # (結果画面が表示した事実)だけを送る。PixApps 自身はサーバーを一切運用しない(詳細は
 # docs/PRODUCT_PRINCIPLES.md「Club House」)。2026-09-30 に PixApps が運用する
 # Public デプロイを 1 つ認めたが、**この例外は 1 ディレクトリのまま**である —
-# 通信するのは端末側の `club/` だけで、相手が誰のサーバかは関係しない
+# fetch 系で通信するのは端末側の `club/` だけで、相手が誰のサーバかは関係しない
 # (issue simple-games-club#1)。実装は issue #161 で apps/simple-games/src/club/
 # に着地した(ゲートは先に宣言してあり、docs/architecture/club.md §12 が機械で
 # 示す項目の一覧)。club/ の中で許すのは `fetch(` / XMLHttpRequest だけで、
@@ -62,8 +64,13 @@ done
 # src/app/ からの動的 import() だけであることを強制し(静的 import・
 # import type・`import('x').T` 型・import.meta.glob はすべて拒否)、サイズゲートが
 # club/ をエントリの静的グラフから締め出す。サーバー実装自体は
-# apps/*/src / packages/*/src の下に置かれない(別リポジトリ)ので、パスの例外は
+# apps/*/src / packages/*/src の下に置かれない(別リポジトリ)ので、§1 のパスの例外は
 # これ 1 つで尽きる。
+#
+# WebRTC は fetch 系の語彙に入らないので、§1 は見ない。別の語彙として §1c が見て、
+# その例外は apps/simple-games/src/nearby/remote/ の 1 ディレクトリだけである(遠隔対戦、
+# issue #280。未実装で、club/ のときと同じくゲートを先に宣言してある)。club/ の例外は
+# WebRTC に及ばず、remote/ は §1 の例外ではない(remote/ にも fetch( / WebSocket は書けない)。
 #
 # 成果物(ビルド後のファイル)に対する fetch( の grep はわざと採用していない:
 # ネイティブビルドには Vite の modulepreload polyfill、@capacitor/core
@@ -75,9 +82,9 @@ net_api='\bfetch\(|XMLHttpRequest|\bWebSocket\b|sendBeacon|EventSource'
 net_allowed='^apps/simple-games/src/club/'
 hits="$(grep -rnE "$net_api" "${src_dirs[@]}" | grep -vE "$net_allowed" || true)"
 if [ -n "$hits" ]; then
-  report "Core のソースにネットワーク API があります(通信できるのは apps/simple-games/src/club/ だけです — docs/PRODUCT_PRINCIPLES.md「Shared」)" "$hits"
+  report "Core のソースにネットワーク API があります(fetch 系の通信 API を書けるのは apps/simple-games/src/club/ だけです — docs/PRODUCT_PRINCIPLES.md「Club House」)" "$hits"
 else
-  ok "ネットワーク API なし(Core。例外は apps/simple-games/src/club/ のみ)"
+  ok "fetch 系の通信 API なし(Core。例外は apps/simple-games/src/club/ のみ。WebRTC は §1c)"
 fi
 
 # 位置情報は Club House でも使わない。除外なしの独立した検査にする。
@@ -179,6 +186,296 @@ if [ -n "$dead" ]; then
   report "§1b の検査パターンが壊れています(ガードが no-op です)" "$dead"
 else
   ok "§1b の自己検査(通信トークン ${#probe_persistent_lines[@]} 本 + setInterval( 1 本 + setTimeout( を拾わないこと)"
+fi
+
+# 1c. WebRTC は nearby/remote/ だけ、STUN は Cloudflare の 1 つだけ、TURN は置かない ------
+# 2026-11-14 のオーナー判断(issue #280)で、Nearby Play の対象ゲームを招待リンクで
+# インターネット越しに遊ぶ遠隔対戦を、Core の任意モードとして採った。方針の採用であって、
+# 実装も出荷もしていない。経路は WebView 標準の RTCPeerConnection の DataChannel だけで、
+# 招待のリンクは本人が自分のメッセンジャーで渡し、相手が返事のリンクを返す(シグナリング
+# サーバーは持たない)。STUN は Cloudflare の 1 社だけを使い、TURN(中継)は使わない。
+# WebRTC の SDK・第三者の通信 SDK・native の実装は足さない
+# (docs/PRODUCT_PRINCIPLES.md「遠隔対戦」7・8、docs/architecture/nearby-multiplayer.md)。
+#
+# §1 の net_api は WebRTC を見ていない —— RTCPeerConnection は fetch / XMLHttpRequest /
+# WebSocket / sendBeacon / EventSource のどれでもないので、この節が無いと Core の
+# どこに書いても §1 は緑のままになる。そこで WebRTC の語彙を全ソースで禁止し、例外を
+# 1 ディレクトリだけパスで宣言する:
+#   apps/simple-games/src/nearby/remote/  (NearbyPlugin と同じ口を持つ JS の実装 = 遠隔の transport)
+# Session / GroupSession / Channel / Delivery とゲームの adapter は近隣と共有し、WebRTC の
+# 語に触れるのはこのディレクトリだけにする。§1 の club/ の例外は fetch 系のためのもので
+# WebRTC には及ばない(club/ に書いても赤)。逆に remote/ は §1 の例外ではない ——
+# remote/ にも fetch( / WebSocket は書けない(シグナリングサーバーを足すなら、§1 / §1b と
+# この節を、文書と同じ変更で意図的に改める)。ディレクトリはまだ無い —— club/ と同じく、
+# ゲートを先に宣言する。
+#
+# 語彙は接続を「作る」語(コンストラクタと型)だけでなく、「動かす」語(offer / answer を作る・
+# 記述を当てる・候補を足すメソッド、候補と DataChannel のイベント、ICE の設定のキー)も含める。
+# remote/ が作った接続のオブジェクトを remote/ の外へ渡し、外でそれを動かす書き方も赤にするため
+# である。語の前に \b を置かないのは意図: webkitRTCPeerConnection / mozRTCPeerConnection と、
+# RTCSessionDescriptionInit / RTCIceCandidateInit / RTCDataChannelEvent のような派生の
+# 型名、onicecandidateerror を同じ語で拾う。例外は 4 語 —— createOffer / createAnswer は前後に
+# \b を置き(createOfferings / createAnswerChoices のような別の名前を拾わない。ゲームの関数を
+# ちょうど createAnswer と名づけると赤になるので、そのときは名前を変える)、iceServers /
+# iceTransportPolicy は前に \b を置く(deviceServers のような語の途中を拾わない)。コメントの中の
+# 語も拾う(§1 と同じ。remote/ の外の説明文には「WebRTC」と書く)。
+#
+# STUN / TURN の宛先は remote/ を含む全ソースで許可リストにする(中継サーバーを使わない・STUN は
+# Cloudflare の 1 社だけ、予備の事業者を足さない、という判断の形)。引用符(' " `)の直後に
+# stun: / stuns: / turn: / turns: の URL を書いた行を拾い(大小文字を問わず、引用符の直後の空白も
+# 飛ばす)、許すのは `stun:stun.cloudflare.com:3478` をそのまま 1 つの文字列にした形だけである。
+# ポートを省いた `stun:stun.cloudflare.com` も同じ宛先(STUN の既定のポートは 3478)だが、許さない ——
+# 書き方を 1 つに決めておけば宛先を探す grep が 1 つで済み、別のポート(53 など)や stuns: を
+# 足した行が「似た形」として紛れない。同じ行に許可した URL と別の URL があれば、別の方で赤になる。
+# スキームだけの文字列(`'turn:' + host`、`"stun:"`)も赤にする —— 連結で宛先を組めば、上の
+# 許可リストを素通りするからである。コロンの直後が空白の行(`turn: 1` のようなキー、`turn: …` で
+# 始まる文)は拾わない。
+#
+# ビルド時の注入も塞ぐ: 宛先を .env から VITE_TURN_URL / VITE_ICE_SERVERS のような名前で入れれば、
+# ソースに URL が無くても成果物に入る。VITE_ の後の区切り(_)の頭が TURN / STUN / ICE / RTC /
+# WEBRTC で始まる名前を、remote/ を含む全ソースで禁止する(VITE_SERVICE_… のような語の途中は
+# 拾わない)。
+#
+# 依存も同じ節で見る(WebRTC の SDK・第三者の通信 SDK・native の WebRTC を足さない)。§3 / §3b は
+# トラッキングの語彙で、見出しと例外(§3b の facebook-core)が違うので混ぜない。
+#   - package.json: git 管理下のすべて(ルート、apps/*、packages/*、prototypes/ の下も。node_modules
+#     は管理外なので入らない)のキーに、WebRTC / P2P のライブラリ名が無いこと。照合の形は §3 と同じ
+#     (行頭の "名前": を見る)。
+#   - Android の Gradle(*.gradle / *.gradle.kts / バージョンカタログの *.toml。settings も含む)と
+#     iOS の依存宣言(Podfile / Podfile.lock / Package.swift / Package.resolved / *.pbxproj):
+#     org.webrtc・io.getstream:stream-webrtc・libwebrtc・GoogleWebRTC・WebRTC.xcframework・
+#     stasel/WebRTC・webrtc-sdk を webrtc の 1 語で拾い、libdatachannel と LiveKit / Twilio / Agora の
+#     SDK も拾う。コメントの行も拾う。
+#   - apps/*/android・apps/*/ios の下に git 管理で置いたファイルの名前(libs/ に libwebrtc.aar を
+#     置くと、fileTree の宣言はライブラリの名前を出さない)。
+#
+# この節の限界 —— grep が示すのは「語が無いこと」までである:
+#   - 計算したプロパティ名・文字列から組んだ識別子は見えない(`globalThis['RTCPeer' + 'Connection']`、
+#     `pc[name](…)`)。remote/ に「到達できる経路」は別のゲートが示す ——
+#     src/test/importBoundaries.test.ts の Nearby 規則(nearby/ の外から実行時に届くのは
+#     app/nearbyGate.ts の動的 import() だけ)と、prototypes/nearby/check-isolation.mjs
+#     (Web の成果物に src/nearby/ のモジュールが 1 つも無く、native のエントリの初期グラフにも
+#     無い)。nearby/ の中の import は自由で、remote/ への入口を絞る規則と remote/ を別チャンクに
+#     分ける検査は実装時(Phase 3)に足す(docs/architecture/nearby-multiplayer.md)。
+#   - スキームを含まない断片から組んだ STUN / TURN の URL(`'st' + 'un:' + host` など)は見えない。
+#     出荷した通信の宛先は docs/RELEASE_CHECKLIST.md 5.19 の実測が見る。
+#   - VITE_ 以外の注入(src の外の vite.config の define など)と、依存が推移的に持ち込むもの
+#     (lockfile・プラグイン自身の build.gradle / podspec)は見ない。依存の差分は人が読む
+#     (docs/RELEASE_CHECKLIST.md 5.19)。
+webrtc_api='RTCPeerConnection|RTCDataChannel|RTCIceCandidate|RTCIceServer|RTCSessionDescription|RTCConfiguration|createDataChannel|ondatachannel|onicecandidate|setLocalDescription|setRemoteDescription|addIceCandidate|\bcreateOffer\b|\bcreateAnswer\b|\biceServers|\biceTransportPolicy'
+webrtc_allowed='^apps/simple-games/src/nearby/remote/'
+ice_url="[\"'\`][[:space:]]*(stuns?|turns?):[^[:space:]\"'\`]"
+ice_bare="[\"'\`][[:space:]]*(stuns?|turns?):[\"'\`]"
+stun_allowed="'stun:stun\.cloudflare\.com:3478'|\"stun:stun\.cloudflare\.com:3478\"|\`stun:stun\.cloudflare\.com:3478\`"
+vite_ice='VITE_([A-Z0-9]+_)*(TURN|STUN|ICE|(WEB)?RTC)'
+webrtc_npm='^[[:space:]]*"([^"]*(webrtc|simple-peer|peerjs|datachannel|mediasoup|livekit|twilio-video|agora)[^"]*|(@[^"/]+/)?wrtc)"[[:space:]]*:'
+webrtc_native='webrtc|datachannel|livekit|twilio|agora'
+# 標準入力の行(path:line:content)のうち、許可した 1 つの URL を消してもなお STUN / TURN の
+# URL かスキームだけの文字列が残る行を、元の形のまま出す。
+ice_violations() {
+  local line
+  while IFS= read -r line; do
+    printf '%s\n' "$line" | sed -E "s/${stun_allowed}//g" | grep -qiE "${ice_url}|${ice_bare}" &&
+      printf '%s\n' "$line"
+  done
+  return 0
+}
+webrtc_pkg_jsons=()
+while IFS= read -r f; do webrtc_pkg_jsons+=("$f"); done < <(git ls-files ':(glob)**/package.json')
+webrtc_native_files=()
+while IFS= read -r f; do webrtc_native_files+=("$f"); done < <(
+  git ls-files ':(glob)apps/*/android/**/*.gradle' ':(glob)apps/*/android/**/*.gradle.kts' \
+    ':(glob)apps/*/android/**/*.toml' ':(glob)apps/*/ios/**/Podfile' ':(glob)apps/*/ios/**/Podfile.lock' \
+    ':(glob)apps/*/ios/**/Package.swift' ':(glob)apps/*/ios/**/Package.resolved' ':(glob)apps/*/ios/**/*.pbxproj'
+)
+
+hits="$(grep -rnE "$webrtc_api" "${src_dirs[@]}" | grep -vE "$webrtc_allowed" || true)"
+if [ -n "$hits" ]; then
+  report "nearby/remote/ の外に WebRTC があります(遠隔対戦の transport を書けるのは apps/simple-games/src/nearby/remote/ だけです — docs/PRODUCT_PRINCIPLES.md「遠隔対戦」、docs/architecture/nearby-multiplayer.md)" "$hits"
+else
+  ok "WebRTC なし(例外は apps/simple-games/src/nearby/remote/ のみ)"
+fi
+hits="$(grep -rniE "${ice_url}|${ice_bare}" "${src_dirs[@]}" | ice_violations)"
+if [ -n "$hits" ]; then
+  report "許可していない STUN / TURN の URL か、スキームだけの文字列があります(書けるのは 'stun:stun.cloudflare.com:3478' の 1 つだけで、nearby/remote/ も同じです — docs/PRODUCT_PRINCIPLES.md「遠隔対戦」8)" "$hits"
+else
+  ok "STUN / TURN の URL は stun:stun.cloudflare.com:3478 だけ(TURN なし・スキームの連結なし、nearby/remote/ にも例外なし)"
+fi
+hits="$(grep -rnE "$vite_ice" "${src_dirs[@]}" || true)"
+if [ -n "$hits" ]; then
+  report "STUN / TURN / ICE の宛先をビルド時に注入する名前があります(宛先はソースの 1 つの文字列に固定します — docs/PRODUCT_PRINCIPLES.md「遠隔対戦」8)" "$hits"
+else
+  ok "STUN / TURN / ICE を注入する VITE_ の名前なし"
+fi
+# /dev/null を足すのは、対象が 1 本でも grep が path: を付けるため(空なら何も読まない —— 走査対象が
+# 空でないことは下の自己検査が見る)。
+npm_hits="$(grep -niE "$webrtc_npm" "${webrtc_pkg_jsons[@]}" /dev/null || true)"
+native_hits="$(grep -niE "$webrtc_native" "${webrtc_native_files[@]}" /dev/null || true)"
+path_hits="$(git ls-files ':(glob)apps/*/android/**' ':(glob)apps/*/ios/**' | grep -iE "$webrtc_native" || true)"
+hits="$(printf '%s\n' "$npm_hits" "$native_hits" "$path_hits" | grep -v '^$' || true)"
+if [ -n "$hits" ]; then
+  report "依存に WebRTC / 第三者の通信 SDK があります(使うのは WebView 標準の RTCPeerConnection だけです — docs/PRODUCT_PRINCIPLES.md「遠隔対戦」7)" "$hits"
+else
+  ok "依存に WebRTC / 通信 SDK なし(package.json ${#webrtc_pkg_jsons[@]} 本、Gradle / iOS の依存ファイル ${#webrtc_native_files[@]} 本、native のファイル名)"
+fi
+
+# 自己検査(§1 と同じ理由): トークンごとに既知の違反行を 1 本ずつ当て、除外の効き方を
+# 実データではなく既知の文字列で確かめる。除外の壊れ方は 4 つある —— nearby/ 全体を
+# 飲み込む向き(remote/ の外の nearby/ は Session や Channel が住む、いちばん書かれやすい
+# 場所)、club/ の例外と取り違える向き、末尾の / が落ちて remote で始まる別の名前まで
+# 飲む向き、行の中身に remote/ の文字があるだけで通す向き。STUN / TURN は、許可リストが
+# 緩む向き(別の事業者・別のポート・同じ行の 2 つ目)と、スキームだけの文字列を見落とす向きを
+# 見る。依存は名前の語ごとに 1 本ずつ当て、走査の対象が空(git ls-files の指定が外れた)でない
+# ことも見る。最後に、ゲームの "turn"、端末間の暗号の Channel、似た名前の識別子・依存を
+# 拾わないこと(過剰検出)も見る。
+probe_webrtc_lines=(
+  'apps/simple-games/src/nearby/session.ts:12:  const pc = new RTCPeerConnection(config)'
+  'apps/simple-games/src/nearby/session.ts:12:  const pc = new webkitRTCPeerConnection(config)'
+  'apps/simple-games/src/nearby/session.ts:12:  const open = (e: { channel: RTCDataChannel }) => attach(e.channel)'
+  'apps/simple-games/src/nearby/session.ts:12:  const c = new RTCIceCandidate(init)'
+  'apps/simple-games/src/nearby/session.ts:12:  const servers: RTCIceServer[] = []'
+  'apps/simple-games/src/nearby/session.ts:12:  const d = new RTCSessionDescription(offer)'
+  'apps/simple-games/src/nearby/session.ts:12:  const config: RTCConfiguration = {}'
+  'apps/simple-games/src/nearby/session.ts:12:  const dc = pc.createDataChannel("sg")'
+  'apps/simple-games/src/nearby/session.ts:12:  pc.ondatachannel = (e) => attach(e.channel)'
+  'apps/simple-games/src/nearby/session.ts:12:  pc.onicecandidate = (e) => gather(e.candidate)'
+  'apps/simple-games/src/nearby/session.ts:12:  await pc.setLocalDescription(offer)'
+  'apps/simple-games/src/nearby/session.ts:12:  await pc.setRemoteDescription(answer)'
+  'apps/simple-games/src/nearby/session.ts:12:  await pc.addIceCandidate(candidate)'
+  'apps/simple-games/src/nearby/session.ts:12:  const offer = await pc.createOffer()'
+  'apps/simple-games/src/nearby/session.ts:12:  const answer = await pc.createAnswer()'
+  'apps/simple-games/src/nearby/session.ts:12:  pc.setConfiguration({ iceServers: [] })'
+  "apps/simple-games/src/nearby/session.ts:12:  pc.setConfiguration({ iceTransportPolicy: 'all' })"
+)
+probe_webrtc_outside=(
+  'apps/simple-games/src/club/rtc.ts:1:  const pc = new RTCPeerConnection(config)'
+  'apps/simple-games/src/nearby/remoteInvite.ts:1:  const pc = new RTCPeerConnection(config)'
+  'apps/simple-games/src/nearby/games/remote/chess.ts:1:  const pc = new RTCPeerConnection(config)'
+  'apps/simple-games/src/ui/x.ts:3:  // apps/simple-games/src/nearby/remote/ may call new RTCPeerConnection('
+)
+probe_remote_line='apps/simple-games/src/nearby/remote/peer.ts:1:  const pc = new RTCPeerConnection(config)'
+probe_ice_bad=(
+  "apps/simple-games/src/nearby/remote/ice.ts:3:  urls: ['stun:stun.l.google.com:19302'],"
+  "apps/simple-games/src/nearby/remote/ice.ts:3:  urls: ['stun:stun.cloudflare.com:3478', 'stun:stun.l.google.com:19302'],"
+  "apps/simple-games/src/nearby/remote/ice.ts:3:  urls: ['stun:stun.cloudflare.com'],"
+  "apps/simple-games/src/nearby/remote/ice.ts:3:  urls: ['stun:stun.cloudflare.com:53'],"
+  "apps/simple-games/src/nearby/remote/ice.ts:3:  urls: ['stuns:stun.cloudflare.com:5349'],"
+  "apps/simple-games/src/nearby/remote/ice.ts:3:  urls: ['turn:relay.example.org:3478'],"
+  'apps/simple-games/src/nearby/remote/ice.ts:3:  urls: "turns:relay.example.org:5349?transport=tcp",'
+  "apps/simple-games/src/nearby/remote/ice.ts:3:  urls: [' TURN:relay.example.org:3478'],"
+  "apps/simple-games/src/nearby/remote/ice.ts:3:  urls: ['turn:' + host],"
+  'apps/simple-games/src/nearby/remote/ice.ts:3:  urls: [`turn:${host}`],'
+  "apps/simple-games/src/nearby/remote/ice.ts:3:  urls: ['stun:' + 'stun.cloudflare.com:3478'],"
+)
+probe_ice_ok=(
+  "apps/simple-games/src/nearby/remote/ice.ts:3:  urls: ['stun:stun.cloudflare.com:3478'],"
+  'apps/simple-games/src/nearby/remote/ice.ts:3:  const STUN_URL = "stun:stun.cloudflare.com:3478"'
+)
+probe_vite_lines=(
+  'apps/simple-games/src/nearby/remote/ice.ts:3:  const url = import.meta.env.VITE_TURN_URL'
+  'apps/simple-games/src/nearby/remote/ice.ts:3:  const url = import.meta.env.VITE_REMOTE_STUN_URL'
+  'apps/simple-games/src/nearby/remote/ice.ts:3:  const servers = import.meta.env.VITE_ICE_SERVERS'
+  'apps/simple-games/src/nearby/remote/ice.ts:3:  const config = import.meta.env.VITE_WEBRTC_CONFIG'
+)
+probe_npm_bad=(
+  '    "simple-peer": "^9.11.1",'
+  '    "peerjs": "1.5.4",'
+  '    "react-native-webrtc": "124.0.4",'
+  '    "@capacitor-community/webrtc": "1.0.0",'
+  '    "node-datachannel": "0.12.0",'
+  '    "mediasoup-client": "3.7.17",'
+  '    "livekit-client": "2.5.0",'
+  '    "twilio-video": "2.28.1",'
+  '    "agora-rtc-sdk-ng": "4.22.0",'
+  '    "wrtc": "0.4.7",'
+  '    "@roamhq/wrtc": "0.8.0",'
+)
+probe_native_bad=(
+  "    implementation 'org.webrtc:google-webrtc:1.0.32006'"
+  '    implementation "io.getstream:stream-webrtc-android:1.3.6"'
+  "    implementation files('libs/libwebrtc.aar')"
+  '    implementation "io.livekit:livekit-android:2.10.0"'
+  '    implementation "com.twilio:video-android:7.6.4"'
+  '    implementation "io.agora.rtc:full-sdk:4.5.0"'
+  "  pod 'GoogleWebRTC', '~> 1.1'"
+  '    .package(url: "https://github.com/stasel/WebRTC.git", from: "125.0.0"),'
+  '        "location" : "https://github.com/webrtc-sdk/Specs",'
+  '		A1B2C3D4E5F6A7B8C9D0E1F2 /* WebRTC.xcframework in Frameworks */ = {isa = PBXBuildFile; };'
+  '    implementation "com.github.paullouisageneau:libdatachannel-android:0.1.0"'
+)
+probe_native_path='apps/simple-games/android/app/libs/libwebrtc.aar'
+probe_not_hits=(
+  'apps/simple-games/src/games/tangram/game/pieces.ts:132:  throw new Error(`turn: ${k} is off the turn lattice`)'
+  'apps/simple-games/src/nearby/groupController.ts:46:  turn: (s) => s.turn,'
+  "apps/simple-games/src/games/ludo/i18n.ts:9:  turnLabel: 'turn: ',"
+  'apps/simple-games/src/nearby/channel.ts:40:  const channel = await createChannel(secret)'
+  'apps/simple-games/src/games/shop/game/offers.ts:7:  export function createOfferings(n: number) {'
+  'apps/simple-games/src/games/quick-math/game/round.ts:7:  const choices = createAnswerChoices(q)'
+  'apps/simple-games/src/services/device.ts:7:  const deviceServers = []'
+  'apps/simple-games/src/services/device.ts:8:  const serviceTransportPolicy = defaultPolicy'
+  'apps/simple-games/src/services/ads/env.ts:7:  const notice = import.meta.env.VITE_SERVICE_NOTICE'
+  'apps/simple-games/src/club/managed.ts:7:  const origin = import.meta.env.VITE_MANAGED_CLUB_ORIGIN'
+)
+probe_dep_not_hits=(
+  '  "peerDependencies": {'
+  '    "@capacitor/core": "8.4.2",'
+  "    implementation project(':capacitor-app')"
+)
+dead=""
+for probe in "${probe_webrtc_lines[@]}" "${probe_webrtc_outside[@]}"; do
+  if ! printf '%s' "$probe" | grep -qE "$webrtc_api"; then
+    dead="${dead}webrtc_api がトークンを検出できません: ${probe}"$'\n'
+  elif printf '%s' "$probe" | grep -qE "$webrtc_allowed"; then
+    dead="${dead}remote/ の外の行が誤って除外されています: ${probe}"$'\n'
+  fi
+done
+if ! printf '%s' "$probe_remote_line" | grep -qE "$webrtc_api"; then
+  dead="${dead}webrtc_api がトークンを検出できません: ${probe_remote_line}"$'\n'
+elif ! printf '%s' "$probe_remote_line" | grep -qE "$webrtc_allowed"; then
+  dead="${dead}nearby/remote/ の行が除外されていません: ${probe_remote_line}"$'\n'
+fi
+for probe in "${probe_ice_bad[@]}"; do
+  [ -n "$(printf '%s\n' "$probe" | ice_violations)" ] ||
+    dead="${dead}許可していない STUN / TURN の URL を検出できません: ${probe}"$'\n'
+done
+for probe in "${probe_ice_ok[@]}"; do
+  printf '%s' "$probe" | grep -qiE "$ice_url" ||
+    dead="${dead}ice_url が許可した URL の行を拾えていません(許可リストが何も見ていません): ${probe}"$'\n'
+  [ -z "$(printf '%s\n' "$probe" | ice_violations)" ] ||
+    dead="${dead}許可した 1 つの URL を赤にしています: ${probe}"$'\n'
+done
+for probe in "${probe_vite_lines[@]}"; do
+  printf '%s' "$probe" | grep -qE "$vite_ice" ||
+    dead="${dead}vite_ice が注入の名前を検出できません: ${probe}"$'\n'
+done
+for probe in "${probe_npm_bad[@]}"; do
+  printf '%s' "$probe" | grep -qiE "$webrtc_npm" ||
+    dead="${dead}webrtc_npm が依存を検出できません: ${probe}"$'\n'
+done
+for probe in "${probe_native_bad[@]}" "$probe_native_path"; do
+  printf '%s' "$probe" | grep -qiE "$webrtc_native" ||
+    dead="${dead}webrtc_native が依存を検出できません: ${probe}"$'\n'
+done
+for probe in "${probe_not_hits[@]}"; do
+  if printf '%s' "$probe" | grep -qE "$webrtc_api|$vite_ice" ||
+    [ -n "$(printf '%s\n' "$probe" | ice_violations)" ]; then
+    dead="${dead}WebRTC / STUN / TURN 以外の行を拾っています(過剰検出): ${probe}"$'\n'
+  fi
+done
+for probe in "${probe_dep_not_hits[@]}"; do
+  printf '%s' "$probe" | grep -qiE "$webrtc_npm|$webrtc_native" &&
+    dead="${dead}WebRTC 以外の依存を拾っています(過剰検出): ${probe}"$'\n'
+done
+printf '%s\n' "${webrtc_pkg_jsons[@]}" | grep -qxF 'apps/simple-games/package.json' ||
+  dead="${dead}package.json の走査対象に apps/simple-games/package.json がありません(git ls-files の指定が外れています)"$'\n'
+for f in apps/simple-games/android/app/build.gradle apps/simple-games/ios/App/App.xcodeproj/project.pbxproj; do
+  printf '%s\n' "${webrtc_native_files[@]}" | grep -qxF "$f" ||
+    dead="${dead}native の依存ファイルの走査対象に ${f} がありません(git ls-files の指定が外れています)"$'\n'
+done
+if [ -n "$dead" ]; then
+  report "§1c の検査パターンまたは除外が壊れています(ガードが no-op です)" "$dead"
+else
+  ok "§1c の自己検査(WebRTC トークン別 ${#probe_webrtc_lines[@]} 本 + 除外境界 $(( ${#probe_webrtc_outside[@]} + 1 )) 本 + STUN / TURN の違反 ${#probe_ice_bad[@]} 本・許可 ${#probe_ice_ok[@]} 本 + VITE_ ${#probe_vite_lines[@]} 本 + 依存 $(( ${#probe_npm_bad[@]} + ${#probe_native_bad[@]} + 1 )) 本 + 走査対象 3 本 + 過剰検出なし $(( ${#probe_not_hits[@]} + ${#probe_dep_not_hits[@]} )) 本)"
 fi
 
 # 2. 広告フォーマット ----------------------------------------------------------

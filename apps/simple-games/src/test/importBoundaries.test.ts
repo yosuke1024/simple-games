@@ -25,9 +25,16 @@
  *      catalog-consistency tests and render tests cover club keys. Files
  *      inside `club/` may import each other
  *      freely (and reach games only via the registry, which rule 2 already
- *      enforces). This is what turns the one network exception of
- *      check-principles.sh §1 into code Core cannot load without asking
- *      (docs/PRODUCT_PRINCIPLES.md「Club House」).
+ *      enforces). This is what turns the one fetch-family network exception
+ *      of check-principles.sh §1 into code Core cannot load without asking
+ *      (docs/PRODUCT_PRINCIPLES.md「Club House」). WebRTC is a separate
+ *      vocabulary with its own exception: check-principles.sh §1c confines it
+ *      to `src/nearby/remote/` (remote play, issue #280 — not implemented;
+ *      the gate is declared ahead, as it was for club/). That directory has
+ *      no rule of its own: it inherits the Nearby boundary (`nearbyOffenders`,
+ *      `nearbyRuntimeOffenders`), so nothing outside `src/nearby/` reaches it
+ *      at runtime except through the dynamic `import()`s in
+ *      `app/nearbyGate.ts` (docs/PRODUCT_PRINCIPLES.md「遠隔対戦」).
  *
  * ESLint glob patterns cannot express rule 1 across import depths (a game
  * reaches shared code by '../../../storage' and a sibling game would be
@@ -562,6 +569,46 @@ describe('import boundaries (docs/ARCHITECTURE.md)', () => {
       { file: 'nearby/controller.ts', specifier: './native', kind: 'static', verdict: 'ok' },
     ];
     expect(listed(nearbyOffenders(probeImports(probes)))).toEqual(expectedOffenders(probes));
+  });
+  it('src/nearby/remote/ (remote play, issue #280) inherits the Nearby boundary', () => {
+    // check-principles.sh §1c lets WebRTC appear only under nearby/remote/. The
+    // directory does not exist yet (the gate is declared ahead); these probes pin
+    // that it needs no exception of its own here. Inside nearby/ imports stay
+    // free for now — limiting the way into remote/ to one dynamic import() is
+    // Phase 3 work (docs/architecture/nearby-multiplayer.md).
+    const probes: Probe[] = [
+      {
+        file: 'app/nearbyGate.ts',
+        specifier: '../nearby/remote/peer',
+        kind: 'import()',
+        verdict: 'offender',
+      },
+      {
+        file: 'ui/example.ts',
+        specifier: '../nearby/remote/peer',
+        kind: 'static',
+        verdict: 'offender',
+      },
+      {
+        file: 'club/bridge.ts',
+        specifier: '../nearby/remote/peer',
+        kind: 'import()',
+        verdict: 'offender',
+      },
+      { file: 'nearby/controller.ts', specifier: './remote/peer', kind: 'static', verdict: 'ok' },
+    ];
+    expect(listed(nearbyOffenders(probeImports(probes)))).toEqual(expectedOffenders(probes));
+    const imports = probeImports([
+      {
+        file: 'nearby/remote/peer.ts',
+        specifier: '../../club/api/client',
+        kind: 'static',
+        verdict: 'offender',
+      },
+    ]);
+    expect(nearbyRuntimeOffenders(imports, [join(SRC, 'nearby/remote/peer.ts')])).toEqual([
+      'nearby/remote/peer.ts -> club/api/client',
+    ]);
   });
   it('limits each Nearby adapter to its own pure rules and visual surface', () => {
     const probes: Probe[] = [
