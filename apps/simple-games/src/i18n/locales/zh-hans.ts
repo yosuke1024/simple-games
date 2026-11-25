@@ -147,6 +147,7 @@ export const zhHans: Messages = {
   moreFromPixAppsBody: '同一开发者的独立应用。功能和价格因应用而异。',
   pixMealTagline: '即时记录每一餐。几秒钟就能改正错误。',
   pixWorkTagline: '扫描名片。留下值得信赖的联系人。',
+  pixTaleTagline: '扫描日常物品。把它们变成传说中的 RPG 道具。',
 
   // The optional share on a result screen. {game} is the registry title, a
   // proper noun that is not translated; `cleared` is only used for a real win.

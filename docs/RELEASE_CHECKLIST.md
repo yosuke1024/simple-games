@@ -1625,17 +1625,20 @@ Network Inspector が使えなかったとき、通信の宛先を特定でき�
 
 - [ ] 位置が**最後のカテゴリの後**であること。ヒーロー・お気に入り・最近遊んだ・
       Club House の行・カテゴリの途中には出ない。Web 版では広告枠より上、フッターより上
-- [ ] 検索中(未入力・一致あり・0 件のどれでも)出ない。「PixMeal」で検索しても何も出ない
+- [ ] 検索中(未入力・一致あり・0 件のどれでも)出ない。「PixMeal」「PixTale」で検索しても何も出ない
 - [ ] ゲームの数・カテゴリ・お気に入り・最近遊んだ・Action Sheet・統計に混ざらない
+      (PixTale はゲームだが、Simple Games の収録ゲームではない。2026-11-25 から一覧の 3 行目)
 - [ ] **Android 実機**で各行が Google Play の掲載ページを開き、戻る操作でコレクション
       ホームに戻ること(スクロール位置が飛んでも、ゲーム一覧に戻れればよい)
 - [ ] **iPhone 実機**で各行が App Store の掲載ページを開き、アプリに戻れること
 - [ ] Web 版で、Android のブラウザは Google Play、iPhone / iPad は App Store、
       PC は pixapps.ai の各アプリのページを開く(`services/pixAppsLinks.ts`)
-- [ ] **4 つのストアの掲載ページと 2 つのページが実在する**こと。掲載名・開発者が
-      Simple Games と同じであること(2026-10-29 に HTTP で確認済み。リリースごとに見る)
-- [ ] 2 本の 1 行の説明が、その時点の pixapps.ai の各アプリのタグラインと一致していること
+- [ ] **6 つのストアの掲載ページと 3 つのページが実在する**こと。開発者が
+      Simple Games と同じであること(PixMeal / PixWork は 2026-10-29、PixTale は 2026-11-25 に
+      HTTP で確認済み —— PixTale は両ストアとも 2.0.3。リリースごとに見る)
+- [ ] 3 本の 1 行の説明が、その時点の pixapps.ai の各アプリのタグラインと一致していること
       ([BRAND.md](BRAND.md)「PixApps のほかのアプリの書き方」)
+- [ ] 幅 600px 以上で 3 行が崩れないこと(600〜899px は 2 列で 3 行目が下に回り、900px 以上は 3 列)
 - [ ] 機内モードで出ないこと。出ないだけでゲームは止まらないこと
 - [ ] 行を押すまで追加のネットワークリクエストが出ないこと(DevTools の Network で確認)
 - [ ] 14 言語 × 狭い画面(320 / 360px)× ライト / ダークで崩れず、横スクロールが出ないこと。
@@ -1645,6 +1648,9 @@ Network Inspector が使えなかったとき、通信の宛先を特定でき�
       `pixMealTagline` / `pixWorkTagline` の 12 言語 × 4 キー = 48 件が入っていること。
       2026-10-31 に 48 件とも門を通した(`i18n:gate status` は「Gate complete」、`i18n:gate:check` が緑。
       手順は [I18N_POLICY.md](I18N_POLICY.md)「リリース前の門」)
+- [x] 2026-11-25 に足した `pixTaleTagline` の 12 言語 = 12 件が門を通っていること。
+      同日に 12 件とも通した(独立逆翻訳 → オーナーの読み。`i18n:gate status` は「Gate complete」、
+      `i18n:gate:check` が緑)
 
 ## 5.19 遠隔対戦([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「遠隔対戦」, issue #280)
 

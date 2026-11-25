@@ -151,6 +151,7 @@ export const ja: Messages = {
   moreFromPixAppsBody: '同じ開発者の別のアプリです。料金や機能はアプリごとに異なります。',
   pixMealTagline: '食事を撮る。間違いは自分で直せる。',
   pixWorkTagline: '名刺を撮る。信頼できる連絡先にする。',
+  pixTaleTagline: '日常を撮る。RPGのアイテムになる。',
 
   // The optional share on a result screen. The message and the picture card
   // carry the facts the result screen showed, passed in by the game as

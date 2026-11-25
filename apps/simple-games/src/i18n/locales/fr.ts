@@ -155,6 +155,7 @@ export const fr: Messages = {
     'Des apps distinctes du même développeur. Les fonctionnalités et les tarifs varient selon l’app.',
   pixMealTagline: 'Enregistrez vos repas en un instant. Corrigez les erreurs en quelques secondes.',
   pixWorkTagline: 'Scannez une carte de visite. Gardez un contact fiable.',
+  pixTaleTagline: 'Scannez des objets du quotidien. Transformez-les en objets de RPG légendaires.',
 
   // The optional share on a result screen. {game} is the registry title, a
   // proper noun that is not translated; `cleared` is only used for a real win.

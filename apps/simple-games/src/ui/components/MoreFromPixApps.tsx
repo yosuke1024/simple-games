@@ -24,10 +24,15 @@
  * every game, so a connection that comes back brings the section with it.
  *
  * App names are proper nouns, identical in every language, like the game
- * titles. The heading, the sentence and the two lines come from the
+ * titles. The heading, the sentence and each app's line come from the
  * catalogs.
+ *
+ * The rows follow the order of the PixApps site's own list. PixTale (third,
+ * since 2026-11-25) is a game, but it is not one of this collection's games:
+ * it stays out of the registry, the count and the search like the other two,
+ * and it gets a text row here, never a tile.
  */
-import { PIXMEAL, PIXWORK, type PixAppsApp } from '@simple-games/brand';
+import { PIXMEAL, PIXTALE, PIXWORK, type PixAppsApp } from '@simple-games/brand';
 import type { MessageKey } from '../../i18n';
 import { isOnline } from '../../services/network';
 import { pixAppsAppUrl } from '../../services/pixAppsLinks';
@@ -38,6 +43,7 @@ import { IconExternal } from './icons';
 const APPS: readonly { readonly app: PixAppsApp; readonly taglineKey: MessageKey }[] = [
   { app: PIXMEAL, taglineKey: 'pixMealTagline' },
   { app: PIXWORK, taglineKey: 'pixWorkTagline' },
+  { app: PIXTALE, taglineKey: 'pixTaleTagline' },
 ];
 
 export function MoreFromPixApps() {

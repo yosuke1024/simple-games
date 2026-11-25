@@ -154,6 +154,7 @@ export const id: Messages = {
     'Aplikasi terpisah dari pengembang yang sama. Fitur dan harga berbeda di setiap aplikasi.',
   pixMealTagline: 'Catat makanan seketika. Perbaiki kesalahan dalam hitungan detik.',
   pixWorkTagline: 'Pindai kartu nama. Simpan kontak yang bisa diandalkan.',
+  pixTaleTagline: 'Pindai benda sehari-hari. Ubah menjadi item RPG legendaris.',
 
   // The optional share on a result screen. {game} is the registry title, a
   // proper noun that is not translated; `cleared` is only used for a real win.

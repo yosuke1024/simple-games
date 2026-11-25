@@ -81,7 +81,9 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
     意図どおりで、位置を上げる変更はこの判断の外にある。
   - **ゲームとして数えない。** `GAME_CATEGORIES`・レジストリ・収録数・検索
     (`app/gameSearch.ts` はゲームのタイトルしか見ない)・お気に入り・最近遊んだ・
-    Action Sheet・統計のどれにも入らない。ランドマークは `nav` ではなく
+    Action Sheet・統計のどれにも入らない。2026-11-25 に足した PixTale はゲームだが、
+    Simple Games の収録ゲームではないので同じ扱い(「PixTale」で検索しても何も出ない)。
+    ランドマークは `nav` ではなく
     `section aria-labelledby` —— ゲームのナビゲーションは 3 つのまま
     (`CollectionHomeScreen.test.tsx` が固定する)。
   - **ゲームにも広告にも見せない。** タイル・アクセント色・カードの枠・背景色・
