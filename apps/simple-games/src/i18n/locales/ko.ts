@@ -150,6 +150,7 @@ export const ko: Messages = {
   moreFromPixAppsBody: '같은 개발자가 만든 별도의 앱입니다. 기능과 가격은 앱마다 다릅니다.',
   pixMealTagline: '식사를 바로 기록하세요. 실수는 몇 초 만에 고칠 수 있어요.',
   pixWorkTagline: '명함을 스캔하세요. 믿을 수 있는 연락처로 남겨 두세요.',
+  pixTaleTagline: '일상의 물건을 스캔하세요. 전설의 RPG 아이템으로 바꿔 보세요.',
 
   // The optional share on a result screen. {game} is the registry title, a
   // proper noun that is not translated; `cleared` is only used for a real win.
@@ -158,6 +159,8 @@ export const ko: Messages = {
   sharePlayed: 'Simple Games에서 {game}을(를) 플레이했습니다.',
   shareInvite: 'Simple Games 앱을 다운로드하세요.',
   shareChallenge: '직접 도전해 보세요. Simple Games 앱에서 즐길 수 있어요.',
+  shareInviteBrowser: '브라우저에서 바로 즐길 수 있습니다.',
+  shareChallengeBrowser: '직접 도전해 보세요. 브라우저에서 바로 즐길 수 있어요.',
   shareCardAction: '도전해 보세요',
   shareCardBoard: '이번 게임판',
   shareCardPreview: '게임 미리보기',

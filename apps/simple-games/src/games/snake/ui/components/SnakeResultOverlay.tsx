@@ -11,6 +11,9 @@
  *
  * The share says what this card says and nothing more: a full board is
  * `completed`, every crash is `played` (docs/ARCHITECTURE.md「結果画面の共有」).
+ * The Club House (§18) gets the score from the same field, in the table of
+ * this speed, and every ending — a crash into the wall or the body, or the
+ * full board — is a finished run there: `completed` (club.md §14 判断 57).
  *
  * The stopped board — the × on the head — gets its beat before the card
  * covers it (`useResultReveal`); under Reduced Motion the card is there at
@@ -18,9 +21,10 @@
  * focused button — reaches the focused Retry as repeats the moment the card
  * is up, and a repeat is not a new press, so it starts nothing (§13).
  */
-import type { KeyboardEvent } from 'react';
+import { useMemo, type KeyboardEvent } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
@@ -47,6 +51,11 @@ export function SnakeResultOverlay({
 }: SnakeResultOverlayProps) {
   const { t } = useSettings();
   const revealed = useResultReveal(result !== null);
+  const score = result?.score ?? 0;
+  // The run's facts, once: the share's strings and the Club's figures are
+  // read from the same field (docs/architecture/club.md §6-1). The length is
+  // not sent — it is always the score plus the opening three (§7).
+  const facts = useMemo(() => ({ score }), [score]);
   if (!revealed || result === null) return null;
 
   const cleared = result.outcome === 'cleared';
@@ -58,7 +67,7 @@ export function SnakeResultOverlay({
       : t('snakeOverWall');
   const speed = t(`snakeSpeed_${result.speed}`);
   const details = [
-    { label: t('score'), value: String(result.score) },
+    { label: t('score'), value: String(score) },
     { label: t('snakeSpeed'), value: speed },
   ];
 
@@ -77,7 +86,7 @@ export function SnakeResultOverlay({
         <dl className="result-facts">
           <div>
             <dt>{t('score')}</dt>
-            <dd>{result.score}</dd>
+            <dd>{score}</dd>
           </div>
           <div>
             <dt>{t('snakeLength')}</dt>
@@ -125,6 +134,15 @@ export function SnakeResultOverlay({
           </button>
         </div>
         <ShareAction gameId="snake" outcome={cleared ? 'completed' : 'played'} details={details} />
+        <ClubResultAction
+          gameId="snake"
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed=""
+          params={{ speed: result.speed }}
+          boardDigest={null}
+        />
       </div>
       <ResultAdSlot />
     </div>

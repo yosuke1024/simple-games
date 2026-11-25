@@ -10,11 +10,19 @@
  * one more bounce (§1). Retry is the ↻'s own function — a fresh seed at this
  * width.
  *
+ * In a Club House the card's score goes to this width's table
+ * (`ClubResultAction`, §13): every fall is `completed`, with `{ score }` built
+ * from the same value as the share's details. The best is the player's own
+ * record, not this run's, and is not sent. A run left mid-way never reaches
+ * this card, so it is booked locally (§5) but sent nowhere.
+ *
  * It arrives after the board's beat (`useResultReveal`, 900 ms; at once
  * under Reduced Motion) — the stopped board is worth a look first.
  */
+import { useMemo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
@@ -34,10 +42,18 @@ const WIDTH_KEYS = {
 export function BounceUpResultOverlay({ result, onRetry, onHome }: BounceUpResultOverlayProps) {
   const { t } = useSettings();
   const revealed = useResultReveal(result !== null);
+  const score = result?.score ?? 0;
+  // The run's facts, once: the share's strings and the Club's figure are read
+  // from the same field (docs/architecture/club.md §6-1).
+  const facts = useMemo(() => ({ score }), [score]);
   if (!revealed || result === null) return null;
 
-  const title = t('bounceUpResultTitle', { score: result.score });
+  const title = t('bounceUpResultTitle', { score });
   const width = t(WIDTH_KEYS[result.width]);
+  const details = [
+    { label: t('score'), value: String(score) },
+    { label: t('bounceUpWidth'), value: width },
+  ];
 
   return (
     <div className="overlay overlay-result">
@@ -47,7 +63,7 @@ export function BounceUpResultOverlay({ result, onRetry, onHome }: BounceUpResul
         <dl className="result-facts">
           <div>
             <dt>{t('score')}</dt>
-            <dd>{result.score}</dd>
+            <dd>{score}</dd>
           </div>
           <div>
             <dt>{t('bounceUpWidth')}</dt>
@@ -75,13 +91,15 @@ export function BounceUpResultOverlay({ result, onRetry, onHome }: BounceUpResul
             {t('backHome')}
           </button>
         </div>
-        <ShareAction
+        <ShareAction gameId="bounce-up" outcome="played" details={details} />
+        <ClubResultAction
           gameId="bounce-up"
-          outcome="played"
-          details={[
-            { label: t('score'), value: String(result.score) },
-            { label: t('bounceUpWidth'), value: width },
-          ]}
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed=""
+          params={{ width: result.width }}
+          boardDigest={null}
         />
       </div>
       <ResultAdSlot />

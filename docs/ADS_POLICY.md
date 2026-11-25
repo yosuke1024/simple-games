@@ -283,7 +283,7 @@ Meta の App Events SDK(`facebook-core`)が**明示的に有効化したリリ�
 ## 自社アプリの一覧は広告ではない
 
 2026-10-29(issue #276)。コレクションホームの最後尾に、PixApps の別アプリ
-(PixMeal / PixWork)の名前・1 行の説明・リンクを並べる「PixApps のほかのアプリ」
+(PixMeal / PixWork。2026-11-25 から PixTale も)の名前・1 行の説明・リンクを並べる「PixApps のほかのアプリ」
 (`ui/components/MoreFromPixApps.tsx`)がある。方針は [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)
 「PixApps の自社アプリの一覧は広告ではない」。この文書との関係は次のとおり。
 
@@ -301,6 +301,9 @@ Meta の App Events SDK(`facebook-core`)が**明示的に有効化したリリ�
   [architecture/collection-home.md](architecture/collection-home.md)「PixApps のほかのアプリ」。
 - **載せるのは自社アプリだけ。** 第三者のアプリを載せた時点で、それは広告枠であり、この節の
   外になる(=禁止されている Native 広告と同じ扱い)。
+- **載せたアプリの広告は、そのアプリのもの。** PixTale には報酬つきの広告(見るとエナジーが
+  回復する)がある。一覧はそこへのリンクであって、Simple Games の中に報酬つきの広告は入らない。
+  上の「禁止する広告フォーマット」は Simple Games についての約束で、変わらない。
 
 ## ストア表現
 

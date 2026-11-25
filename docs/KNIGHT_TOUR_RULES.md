@@ -169,3 +169,13 @@ shadow thin there, and the vertical radius was raised from 7% to 9% on that acco
 9% was not rendered again. No device, emulator or Chromium 88 check is claimed, the
 140 ms landing was not watched as motion, and the OS-level Reduced Motion media query
 is covered by the stylesheet test and the shell's pseudo-element test, not by a run.
+
+## Club House
+
+**登録しない**(2026-11-15、[architecture/club.md](architecture/club.md) §14 判断 57。registry の
+`challenge` を持たない)。結果画面は完成した局にだけ出て、出す数字は訪れたマスの数と盤の大きさである。
+訪れたマスはどの完成でも盤のマス数(5×5 なら 25)に等しく、成績を分けない。ほかに数字は出さない —
+盤に時計を出さず(Play)、プレイ秒は統計の累計にだけ残る(Persistence and statistics)。完成の行が
+みな同じ値で送った順に並ぶ表は、完成した回数を数えるのと変わらない(勝った回数は熱心さの数 —
+[PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「順位表」)。結果画面が完成どうしを分ける数字を出す
+ようになれば、そのとき考え直す。

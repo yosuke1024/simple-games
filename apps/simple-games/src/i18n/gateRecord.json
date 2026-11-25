@@ -296,6 +296,12 @@
         "target": "sha256:7ad5e474be192ada7c737d8397394dd3ac393f5ab071782b0fbb6d5b0904757b",
         "reviewedOn": "2026-10-31",
         "by": "claude-blind-agent"
+      },
+      "pixTaleTagline": {
+        "source": "sha256:9c1e3f2dd412a4db689e5a29702a9c5edfbe292f0751233481df092c623328e8",
+        "target": "sha256:a6ab96fbd9f6eb8b27024e32317447ad87413912864eab75a85ad04225619f8e",
+        "reviewedOn": "2026-11-25",
+        "by": "claude-blind-agent"
       }
     },
     "th": {
@@ -573,6 +579,12 @@
         "source": "sha256:8f0d30a70a80ef6b6602f8d01815f8471714ec02f4c06236f2489d8db06b0649",
         "target": "sha256:ef187b1e584f7e2c333075a50fc84b6b50cabde70109099728eaac7dbd3a2b6c",
         "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixTaleTagline": {
+        "source": "sha256:9c1e3f2dd412a4db689e5a29702a9c5edfbe292f0751233481df092c623328e8",
+        "target": "sha256:41532da2d86214aa0279cb16b1cf65d45f6f55161a5fea8d064fa93ac88bd007",
+        "reviewedOn": "2026-11-25",
         "by": "claude-blind-agent"
       }
     },
@@ -852,6 +864,12 @@
         "target": "sha256:42d905b3d2abd1e75556d65b92b8b9ba08e0233152c31c1623e343d5d3cf8238",
         "reviewedOn": "2026-10-31",
         "by": "claude-blind-agent"
+      },
+      "pixTaleTagline": {
+        "source": "sha256:9c1e3f2dd412a4db689e5a29702a9c5edfbe292f0751233481df092c623328e8",
+        "target": "sha256:054fad04a2b8de8b7339b6178c4002d773b2bbc69b2262804161e5fb501854aa",
+        "reviewedOn": "2026-11-25",
+        "by": "claude-blind-agent"
       }
     },
     "vi": {
@@ -1129,6 +1147,12 @@
         "source": "sha256:8f0d30a70a80ef6b6602f8d01815f8471714ec02f4c06236f2489d8db06b0649",
         "target": "sha256:edc84b6ebfe24fcd9cedb24fec56ebb917cc02afe38c30330285a468dc1ca4af",
         "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixTaleTagline": {
+        "source": "sha256:9c1e3f2dd412a4db689e5a29702a9c5edfbe292f0751233481df092c623328e8",
+        "target": "sha256:7c10c735cae7e83d083514b808ae1af63d4b7b6fea22681924d22bd8dd8c84cd",
+        "reviewedOn": "2026-11-25",
         "by": "claude-blind-agent"
       }
     },
@@ -1408,6 +1432,12 @@
         "target": "sha256:f380f518d7fe3a060f655fdd90646ea319575b117cecd38be188a94293fd3086",
         "reviewedOn": "2026-10-31",
         "by": "claude-blind-agent"
+      },
+      "pixTaleTagline": {
+        "source": "sha256:9c1e3f2dd412a4db689e5a29702a9c5edfbe292f0751233481df092c623328e8",
+        "target": "sha256:71da30ef343ec2a06210ff83cd36335d6f662c8a5f8402bdc72d97c9b8b59d84",
+        "reviewedOn": "2026-11-25",
+        "by": "claude-blind-agent"
       }
     },
     "zh-hans": {
@@ -1685,6 +1715,12 @@
         "source": "sha256:8f0d30a70a80ef6b6602f8d01815f8471714ec02f4c06236f2489d8db06b0649",
         "target": "sha256:3260c8fb1855358547a1dbf6af621e9607eb6552bc8087b43b53f1497450d8df",
         "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixTaleTagline": {
+        "source": "sha256:9c1e3f2dd412a4db689e5a29702a9c5edfbe292f0751233481df092c623328e8",
+        "target": "sha256:448b87fa4fd6527de675d8ea8fe6a7dd8af04a76d615d460297d8508147efda7",
+        "reviewedOn": "2026-11-25",
         "by": "claude-blind-agent"
       }
     },
@@ -1964,6 +2000,12 @@
         "target": "sha256:2b51073b492ff6cd5c98bed242cf0ea2a6998691494c0545d786dd3c6358e51b",
         "reviewedOn": "2026-10-31",
         "by": "claude-blind-agent"
+      },
+      "pixTaleTagline": {
+        "source": "sha256:9c1e3f2dd412a4db689e5a29702a9c5edfbe292f0751233481df092c623328e8",
+        "target": "sha256:53e94e28adf6c2c7f85bc38c78f261266f54f840f0cfeef30e78fc61fa9988a7",
+        "reviewedOn": "2026-11-25",
+        "by": "claude-blind-agent"
       }
     },
     "es": {
@@ -2241,6 +2283,12 @@
         "source": "sha256:8f0d30a70a80ef6b6602f8d01815f8471714ec02f4c06236f2489d8db06b0649",
         "target": "sha256:ea41706614e68e14409d694eb866a3eaa854aa02650d739fedd0aa092ff1392b",
         "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixTaleTagline": {
+        "source": "sha256:9c1e3f2dd412a4db689e5a29702a9c5edfbe292f0751233481df092c623328e8",
+        "target": "sha256:4ce984a30fd5b9679317cc4e6b5adf2bc64764a9b44638a55542c05fa3c7c4c8",
+        "reviewedOn": "2026-11-25",
         "by": "claude-blind-agent"
       }
     },
@@ -2520,6 +2568,12 @@
         "target": "sha256:30451eb655f1d60ba2a6cceaa0c7626148c2a040d7e1bf45e7f0a6358ec9595b",
         "reviewedOn": "2026-10-31",
         "by": "claude-blind-agent"
+      },
+      "pixTaleTagline": {
+        "source": "sha256:9c1e3f2dd412a4db689e5a29702a9c5edfbe292f0751233481df092c623328e8",
+        "target": "sha256:d94c4f9fe9e809381eba47c0339f204de71ab9edb5c36b89d5b841a26f20720b",
+        "reviewedOn": "2026-11-25",
+        "by": "claude-blind-agent"
       }
     },
     "fr": {
@@ -2797,6 +2851,12 @@
         "source": "sha256:8f0d30a70a80ef6b6602f8d01815f8471714ec02f4c06236f2489d8db06b0649",
         "target": "sha256:17e4df17c9d4583be03a3ba0cc37550e1970c4a25c2560c0b4ebe46cc1c3def3",
         "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixTaleTagline": {
+        "source": "sha256:9c1e3f2dd412a4db689e5a29702a9c5edfbe292f0751233481df092c623328e8",
+        "target": "sha256:7b73900e2af066585c190f76fadcf82bb96338b1d5ccb46f5d379be9b67b1e37",
+        "reviewedOn": "2026-11-25",
         "by": "claude-blind-agent"
       }
     },
@@ -3076,6 +3136,12 @@
         "target": "sha256:03d13703205aa4d9c1f5252b38467d9b60ad7853acad9656769284a40e357993",
         "reviewedOn": "2026-10-31",
         "by": "claude-blind-agent"
+      },
+      "pixTaleTagline": {
+        "source": "sha256:9c1e3f2dd412a4db689e5a29702a9c5edfbe292f0751233481df092c623328e8",
+        "target": "sha256:9e9ea364be4abe3cb44242219c9124cec9982b9727d5ba4bcc4c70bcb9e73603",
+        "reviewedOn": "2026-11-25",
+        "by": "claude-blind-agent"
       }
     },
     "tr": {
@@ -3353,6 +3419,12 @@
         "source": "sha256:8f0d30a70a80ef6b6602f8d01815f8471714ec02f4c06236f2489d8db06b0649",
         "target": "sha256:e67e99476f624d5528d721c76f4770ec3ccc5c1bcfe3fc3b6c78ba7475e1b40d",
         "reviewedOn": "2026-10-31",
+        "by": "claude-blind-agent"
+      },
+      "pixTaleTagline": {
+        "source": "sha256:9c1e3f2dd412a4db689e5a29702a9c5edfbe292f0751233481df092c623328e8",
+        "target": "sha256:1a811c92e25deb72e296149788e756bb84072c5b7773e51a3195e19f269fe6e7",
+        "reviewedOn": "2026-11-25",
         "by": "claude-blind-agent"
       }
     }

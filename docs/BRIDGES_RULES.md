@@ -1114,6 +1114,18 @@ registry の `storageKeys` はその `Object.values` — `src/app/gameKeys.test.
 
 ## 17. Club House
 
-**登録しない**(registry の `challenge` を持たない)。ベータ中は保存の形も結果の形も
-動きうる。登録しないゲームは Club から見えないだけで、Core は Club に依存しない
-(計画の「決定事項」)。
+正典は [architecture/club.md](architecture/club.md) §6 と §16。ここにはこのゲームの側で決まることだけを書く。
+2026-11-15 に製品オーナーの判断で Club House の挑戦に加わった(club.md §14 判断 57。それまでは
+「登録しない」— ベータ中は保存の形も結果の形も動きえたため。正式収録は 2026-10-29)。
+
+- **順位表の名前(`params`)** は `{ difficulty }`(`easy` / `medium` / `hard`。`paramsKey` は難易度の名前そのもの)。盤面のサイズと島の数は難易度が決める(§7)。デイリーは Today の挑戦へ送るので表には載らない(下記)。
+- **結果画面が送る事実(`facts`)** は `{ elapsedSeconds, hints }`。結果カードの 2 つの値(時間と使った Hint の数 — §11)そのもので、共有(`ShareAction`)の `details` と同じセッションの値(`elapsedSeconds` / `hintCount`)から作り、ここで計算しない。
+- **順位の軸は時間**で、短いほうが上(`order: 'elapsedSeconds'`、`direction: 'asc'`)。Hint の数は表示するだけで順位に使わない(Hint は無料・無制限 — §9)。
+- **送るのはクリアした局だけ**(`outcome: 'completed'`)。Bridges には負けが無い(§3)ので、それ以外の終わり方は無く、途中でやめた局は何も送らない。
+- **デイリーは Today の挑戦へ、それ以外はランキングの表へ**(club.md §6・§16)。デイリーは全員が同じ 1 つの盤面なので、デイリーの局だけ結果画面が `daily`(その日付)と `boardDigest` を付けて送り、その日の挑戦に結果が集まる(順位は日の中だけ)。デイリーは難易度 `medium` 固定(§8)で、`params` の `{ difficulty: 'medium' }` は契約(`challenge/contract.ts`)のまま受け付けられる。デイリーは最初に終えた結果が数えられる(1 メンバー 1 件。club.md §6-3)。デイリー以外の局は、盤面を揃えずに難易度ごとのランキングの表へ送る(`boardDigest` は `null`)。Today の `Play` はこのゲームを普通の入口で開くだけで、盤面は渡されない。
+- **`boardDigest`**(`game/challenge.ts`)は、盤の幅×高さと島の盤面(1 セル 1 文字。`game/serialize.ts` の `encodeBoard`、保存と `compatibility.test.ts` が固定している文字列)を `` `${幅}x${高さ}|${盤面}` `` とつないで `game/rng.ts` の `hashSeed` に通した `bg1:` + 8 桁 hex。答えは混ぜない(出題は一意解なので、島が答えを決める — §6)。遊んで変わるのは橋だけで島は動かないので、途中でも終局後でも、再挑戦や再開の後でも同じ値になる。digest は局の島から作り、seed から盤面を作り直さない(古い生成器の盤面を保存から再開したデイリーは、その盤面の digest のまま — §10)。2 台の端末が同じ盤面を作ったかを確かめるための印で、改ざん防止ではない。生成が版で変わっても、違う盤面が 1 つの挑戦に混ざらない。2026-10-17・2026-11-15・2026-11-16 のデイリーと Easy の golden seed の値は `game/challenge.test.ts` が固定する(動かすと全端末のデイリーが一致しなくなる)。
+- **盤面の golden は凍結する。** `game/compatibility.test.ts` の盤面(デイリーを含む)が動くと、同じ日の Today の挑戦が版の間で 2 つに割れ、その日の結果は比べられなくなる。同ファイルの冒頭がベータ中に許していた盤面の変更は、正式収録(2026-10-29)と Today への参加で、もう許さない。
+- **既知の制限**(Box Regions・Crown Grid と同じで、club.md は扱っていない): デイリーのプレイ中の ↻(再挑戦)は時計を 0 に戻し、その時点ではまだ何も送っていないので、一度見た盤面での 2 度目が最初の結果になりうる。難易度モードでも、解いた盤面を結果カードの再挑戦で解き直せば、覚えた答えの速い時間がその難易度の表に載る。カードが現れる前(解けた一拍 — §13)に戻ると何も送らない(club.md §2-2)。
+- 結果画面の `ClubResultAction` は結果カードの中、`ShareAction` の次に置く。Club に参加していない端末では何も描かない。
+- **ゲーム自体は変わらない。** 統計・自己ベスト・中断と再開・保存データ・結果画面の既存の表示には触れない。
+- **確かめた範囲**: 契約の値と事実の検査(`challenge/contract.test.ts`)、digest の固定と不変(`game/challenge.test.ts`)、結果カードが渡すもの(`ui/components/BridgesResultOverlay.club.test.tsx`)。実際の Club サーバーとの往復と実機は見ていない。サーバー側の契約(`simple-games-club` の `src/contracts/games.ts`)に `bridges` が入るまで、サーバーはフリープレイの結果(`POST /rankings/results`)を知らないゲームとして断り(400。再送しない — club.md §10)、デイリーの Today の挑戦は受け付けるが時間の軸を持たないので到着順に並べる(schema 8 の `upgradeToV8` が並べ直す — club.md §16-1)。どちらもサーバーのデプロイがこの版の出荷より先になる理由になる。

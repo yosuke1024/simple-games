@@ -153,6 +153,7 @@ export const tr: Messages = {
     'Aynı geliştiricinin ayrı uygulamaları. Özellikler ve fiyatlar uygulamaya göre değişir.',
   pixMealTagline: 'Öğünlerini anında kaydet. Hataları saniyeler içinde düzelt.',
   pixWorkTagline: 'Kartvizitini tara. Güvenilir bir kişi kaydı tut.',
+  pixTaleTagline: 'Günlük nesneleri tara. Onları efsanevi RPG eşyalarına dönüştür.',
 
   // The optional share on a result screen. {game} is the registry title, a
   // proper noun that is not translated; `cleared` is only used for a real win.
@@ -161,6 +162,8 @@ export const tr: Messages = {
   sharePlayed: 'Simple Games’te {game} oynadım.',
   shareInvite: 'Simple Games uygulamasını indir.',
   shareChallenge: 'Sıra sende. Simple Games uygulamasında oyna.',
+  shareInviteBrowser: 'Doğrudan tarayıcıda oynayabilirsin.',
+  shareChallengeBrowser: 'Sıra sende. Tarayıcında dene.',
   shareCardAction: 'Sıra sende',
   shareCardBoard: 'Bu oyunun tahtası',
   shareCardPreview: 'Oyun önizlemesi',

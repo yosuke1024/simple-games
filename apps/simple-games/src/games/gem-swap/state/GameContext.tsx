@@ -72,6 +72,11 @@ export type Screen = 'home' | 'tutorial' | 'game';
 export interface LastResult {
   readonly score: number;
   readonly colors: ColorCount;
+  /**
+   * The round's seed — the board's identity the Club House is handed
+   * (docs/architecture/club.md §6-4, §16). Held for the card only, never saved.
+   */
+  readonly seed: string;
   readonly endReason: EndReason;
   /** Ended by 30 swaps or stuck — the rounds a best is made of (§5). */
   readonly counted: boolean;
@@ -253,6 +258,7 @@ export function GemSwapProvider({
       setLastResult({
         score: ended.round.score,
         colors: ended.round.colors,
+        seed: ended.round.seed,
         endReason: ended.round.endReason ?? 'swaps',
         counted: booking.counted,
         best: booking.best,

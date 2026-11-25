@@ -12,7 +12,7 @@ import { Board } from '../components/Board';
 import { ResultOverlay } from '../components/ResultOverlay';
 export function GameScreen() {
   const { t } = useSettings();
-  const { session, stats, play, applyUndo, goHome, restartCurrent, startNewBoard } =
+  const { session, stats, firstClear, play, applyUndo, goHome, restartCurrent, startNewBoard } =
     useColorFlood();
   const [confirmRestart, setConfirmRestart] = useState(false);
   const boardElement = useRef<HTMLDivElement>(null);
@@ -133,6 +133,7 @@ export function GameScreen() {
       <ResultOverlay
         session={session}
         best={stats.boards[session.size].best}
+        firstClear={firstClear}
         onUndo={onUndo}
         onRetry={onRetry}
         onNewBoard={onNewBoard}

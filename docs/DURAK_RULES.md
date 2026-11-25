@@ -26,3 +26,14 @@ throw-in Durak, 36 cards (6–A in each suit), six cards each. No reaction timer
   [shared card art](CARD_DESIGN.md), with both orientations supported.
 
 Reference: [Pagat](https://www.pagat.com/beating/podkidnoy_durak.html).
+
+## Club House
+
+正典は [architecture/club.md](architecture/club.md) §6-0 と §14 の判断 57。
+
+- **登録しない**(registry の `challenge` を持たない。2026-11-15、判断 57)。結果は勝ち / 負け(durak)/ 引き分け
+  だけで、この規則は得点を定めない。結果画面の数字は各席に残った札の枚数で、山札が尽きたあと手札を出し切った側が
+  勝つので、勝った側は必ず 0 枚、負けた側の枚数は終わったときの手札の残りにすぎない。共有の `details` も空で、
+  送れる成績の数字が無い。表が比べられるのは勝った回数だけになり、それは熱心さの数である
+  ([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「順位表」。判断 30 の Checkers / Connect Four / Gomoku / Ludo と同じ理由)。
+- 入るには、結果画面が勝敗のほかに成績を比べられる数字を出すことが要る(club.md §6-0)。

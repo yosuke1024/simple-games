@@ -3422,7 +3422,10 @@ button:disabled {
     max-width: 700px;
   }
 
-  /* The two app rows share one line, like the recent rows above. */
+  /* The app rows sit two to a line, like the recent rows above. Three would
+     squeeze the longer languages' lines to four or five rows of text at
+     600px (measured in French and Spanish), so the third app wraps
+     underneath until the column is wide enough (900px, below). */
   .more-from-pixapps-apps {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -3508,6 +3511,11 @@ button:disabled {
     width: 100%;
     max-width: none;
     margin: 0;
+  }
+
+  /* Wide enough for the three app rows to share one line. */
+  .more-from-pixapps-apps {
+    grid-template-columns: repeat(3, 1fr);
   }
 
   .game-grid {

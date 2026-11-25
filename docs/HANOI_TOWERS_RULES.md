@@ -2,7 +2,7 @@
 
 **2026-10-29 更新(正式収録、v1.7.0):** 製品オーナーの判断で Web 先行公開(ベータ)から正式収録した(registry の `channel` を外した — アプリのホーム・検索・ショートカットにも出る)。保存スキーマはこの収録で凍結し、以後は移行だけで変える — 公開中の Web ビルドが実際に書いた保存を `storage/releasedRecords.test.ts` が今の読み込み経路へ通す([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §0 と 2026-10-29 の節)。以下の「正式収録まで凍結しない」「アプリには出ない」などのベータ段階の記述は当時の記録である。収録は 2 週間の安定稼働・滞在時間の確認・実機での確認を満たしたという意味ではない。
 
-2026-10-23. New Web beta title; no native release or Club House registration.
+2026-10-23. New Web beta title; no native release or Club House registration (Club House: see “Club House” below).
 
 ## Rules and difficulty
 
@@ -207,3 +207,14 @@ typecheck. The rendering itself was not seen when it was written, so the grain
 periods and alphas, the look of the shade lines and the 140 ms motion are
 unobserved, in a browser and on a device; Chromium 88 behaviour of CSS
 transforms on SVG groups is likewise unverified.
+
+## Club House
+
+**登録しない**(2026-11-15、[architecture/club.md](architecture/club.md) §14 判断 57。registry の
+`challenge` を持たない)。結果画面の数字は手数と円盤の数(と自分の最少手数)である。円盤の数ごとに
+始まりは 1 つで、最少手数 2^n − 1(7・15・31)はプレイ中も画面に出ており(Rules and difficulty)、
+Undo は結果カードでも無料で使える(Controls and help)。続ければ誰でも最少手数で終えられるので、表は
+7・15・31 の行が送った順に並び、解いた回数を数えるのと変わらない(勝った回数は熱心さの数 —
+[PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「順位表」)。プレイ秒は統計の累計にだけ残し、プレイ中にも
+結果カードにも出さない(Persistence, statistics and lifecycle)。結果画面が最少手数どうしも分ける数字を
+出すようになれば、そのとき考え直す。

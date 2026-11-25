@@ -113,7 +113,7 @@ export const PLAY_STORE_URL =
 export const APP_STORE_URL = 'https://apps.apple.com/app/id6802321137';
 
 /**
- * PixApps' other apps: the two rows at the very end of the collection home
+ * PixApps' other apps: the rows at the very end of the collection home
  * (issue #276, apps/simple-games/src/ui/components/MoreFromPixApps.tsx;
  * docs/PRODUCT_PRINCIPLES.md「PixApps の自社アプリの一覧は広告ではない」).
  * Names and addresses only. What each app is for is on-screen wording and
@@ -125,6 +125,10 @@ export const APP_STORE_URL = 'https://apps.apple.com/app/id6802321137';
  * 2026-10-29 every one of them resolved, and each listing named the same
  * developer as Simple Games' own. The landing page is for a browser that
  * cannot be told apart (a desktop), which has no store to install from.
+ *
+ * PixTale joined on 2026-11-25 by the owner's decision, once its 2.0.3 was
+ * live in both stores. Its three addresses resolved that day, and both
+ * listings named the same developer.
  */
 export interface PixAppsApp {
   readonly name: string;
@@ -145,6 +149,13 @@ export const PIXWORK: PixAppsApp = {
   playStoreUrl: 'https://play.google.com/store/apps/details?id=com.pixapps.pixwork',
   appStoreUrl: 'https://apps.apple.com/app/id6779703689',
   landingUrl: 'https://pixapps.ai/pixwork/',
+};
+
+export const PIXTALE: PixAppsApp = {
+  name: 'PixTale',
+  playStoreUrl: 'https://play.google.com/store/apps/details?id=com.pixapps.pixtale',
+  appStoreUrl: 'https://apps.apple.com/app/id6778444069',
+  landingUrl: 'https://pixapps.ai/pixtale/',
 };
 
 /**

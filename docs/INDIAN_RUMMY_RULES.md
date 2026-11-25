@@ -60,3 +60,12 @@ One deal is one game. No stakes, drop penalties, betting or reaction timer.
 Reference: [Pagat](https://www.pagat.com/rummy/indian.html).
 No-drop single-deal scoring, the natural-card requirement and invalid-declaration
 handling are explicit house rules.
+
+## Club House
+
+**登録しない**(2026-11-15、[architecture/club.md](architecture/club.md) §14 判断 57。registry の
+`challenge` を持たない)。結果画面の数字は 4 席それぞれの失点で、宣言して勝てば自分の失点は必ず 0
+(Winner has zero penalty)。勝ちの行がみな 0 で並び、同点は先に送った順なので、表は勝った回数を
+数えるのと変わらない(勝った回数は熱心さの数 — [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「順位表」)。
+加えて、結果画面の「同じ盤面で再挑戦」は同じ配り(同じ山の順)をやり直すので、山の順を知ったうえで
+勝ち直せる。結果画面が勝ちどうしを分ける数字を出すようになれば、そのとき考え直す。

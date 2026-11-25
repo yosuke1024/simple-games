@@ -1756,13 +1756,19 @@ describe("PixApps' other apps", () => {
     expect(screen.getAllByRole('navigation').map((nav) => nav.getAttribute('aria-label'))).toEqual([
       'Games',
     ]);
-    // Two rows, each named by its app, and neither wears a game tile.
+    // Three rows, each named by its app, and none wears a game tile. PixTale
+    // is a game, but not one of this collection's: it is a row here, and the
+    // list above is exactly the registry's games (the first assertion).
     const apps = section()!;
     expect(
       within(apps)
         .getAllByRole('button')
         .map((button) => button.textContent),
-    ).toEqual([`PixMeal${en.pixMealTagline}`, `PixWork${en.pixWorkTagline}`]);
+    ).toEqual([
+      `PixMeal${en.pixMealTagline}`,
+      `PixWork${en.pixWorkTagline}`,
+      `PixTale${en.pixTaleTagline}`,
+    ]);
     expect(apps.querySelector('.game-tile, .game-cell')).toBeNull();
   });
 
@@ -1773,6 +1779,11 @@ describe("PixApps' other apps", () => {
     await openSearch(user);
     expect(section()).toBeNull();
     await user.type(searchField(), 'PixMeal');
+    expect(screen.getByRole('status')).toHaveTextContent(en.searchNoResults);
+    expect(section()).toBeNull();
+    // The one listed app that is a game matches no search either.
+    await user.clear(searchField());
+    await user.type(searchField(), 'PixTale');
     expect(screen.getByRole('status')).toHaveTextContent(en.searchNoResults);
     expect(section()).toBeNull();
 

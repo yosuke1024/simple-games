@@ -27,7 +27,7 @@ vi.mock('@capacitor/core', () => ({
 vi.mock('../../services/network', () => ({ isOnline: () => networkMock.online }));
 vi.mock('../openExternal', () => ({ openExternal: openExternalMock }));
 
-import { PIXMEAL, PIXWORK } from '@simple-games/brand';
+import { PIXMEAL, PIXTALE, PIXWORK } from '@simple-games/brand';
 import { catalogs, type Locale } from '../../i18n';
 import { en } from '../../i18n/locales/en';
 import { ja } from '../../i18n/locales/ja';
@@ -89,7 +89,10 @@ describe('what the section says', () => {
     expect(screen.getByRole('button', { name: PIXWORK.name })).toHaveAccessibleDescription(
       en.pixWorkTagline,
     );
-    expect(within(section()!).getAllByRole('button')).toHaveLength(2);
+    expect(screen.getByRole('button', { name: PIXTALE.name })).toHaveAccessibleDescription(
+      en.pixTaleTagline,
+    );
+    expect(within(section()!).getAllByRole('button')).toHaveLength(3);
   });
 
   /**
@@ -105,8 +108,11 @@ describe('what the section says', () => {
         catalog.moreFromPixAppsBody,
         catalog.pixMealTagline,
         catalog.pixWorkTagline,
+        catalog.pixTaleTagline,
       ].join(' ');
       expect(text).not.toMatch(LURES);
+      // One of the apps is a game now, and the heading still does not say so:
+      // these are not this collection's games.
       expect(catalog.moreFromPixAppsTitle).not.toMatch(/game|ゲーム/i);
     }
     for (const locale of Object.keys(catalogs) as Locale[]) {
@@ -116,6 +122,7 @@ describe('what the section says', () => {
         c.moreFromPixAppsBody,
         c.pixMealTagline,
         c.pixWorkTagline,
+        c.pixTaleTagline,
       ]) {
         expect(text, locale).not.toMatch(/[!！]/);
       }
@@ -137,12 +144,14 @@ describe('where a tap goes', () => {
     renderSection();
     expect(await tap(PIXMEAL.name)).toBe(PIXMEAL.playStoreUrl);
     expect(await tap(PIXWORK.name)).toBe(PIXWORK.playStoreUrl);
+    expect(await tap(PIXTALE.name)).toBe(PIXTALE.playStoreUrl);
     cleanup();
 
     capacitorMock.platform = 'ios';
     renderSection();
     expect(await tap(PIXMEAL.name)).toBe(PIXMEAL.appStoreUrl);
     expect(await tap(PIXWORK.name)).toBe(PIXWORK.appStoreUrl);
+    expect(await tap(PIXTALE.name)).toBe(PIXTALE.appStoreUrl);
   });
 
   it('opens the store a phone browser can install from', async () => {
@@ -166,6 +175,17 @@ describe('where a tap goes', () => {
     renderSection();
     expect(await tap(PIXMEAL.name)).toBe(PIXMEAL.landingUrl);
     expect(await tap(PIXWORK.name)).toBe(PIXWORK.landingUrl);
+    expect(await tap(PIXTALE.name)).toBe(PIXTALE.landingUrl);
+  });
+
+  it('keeps every address free of tracking parameters and storefront pins', () => {
+    for (const app of [PIXMEAL, PIXWORK, PIXTALE]) {
+      expect(app.playStoreUrl).toMatch(
+        /^https:\/\/play\.google\.com\/store\/apps\/details\?id=[\w.]+$/,
+      );
+      expect(app.appStoreUrl).toMatch(/^https:\/\/apps\.apple\.com\/app\/id\d+$/);
+      expect(app.landingUrl).toMatch(/^https:\/\/pixapps\.ai\/[a-z]+\/$/);
+    }
   });
 });
 

@@ -20,7 +20,7 @@ CPUはプレイヤーの艦配置を受け取らない射撃選択関数で動�
 ## 共通の契約
 
 No. 69。2026-11-03、オーナーの「3つくらいゲーム追加、UIを揃えてWeb公開まで」の依頼で実装する。
-2026-11-04に正式収録・Nearbyへ追加。Clubへの登録は含めない。`game/` は純粋TS、他ゲームに依存しない。
+2026-11-04に正式収録・Nearbyへ追加。Clubへの登録は含めない(「Club House」)。`game/` は純粋TS、他ゲームに依存しない。
 全機能無料。通信・通知・連続日数・時間制限なし。途中保存は端末内だけ。
 ホーム・Quick RulesのWebBetaNoticeは正式収録では表示しない。GameHomeHeader / GameArtwork / BannerSlot / ResultAdSlot /
 ShareActionを既存と同じ形で使う。タイトルは英語名で統一、1タイトル1アクセント。
@@ -53,6 +53,14 @@ https://www.reddit.com/r/WebGames/comments/1xciaih/ice_trail_slide_until_a_wall_
 ## 検証記録
 
 実装・ブラウザー確認・テストと公開状態は [実装記録](plans/2026-11-03-three-games-68-70.md) に記す。未実施の実機検証と翻訳の人手確認は別扱いとする。
+
+## Club House
+
+**登録しない**(registry の `challenge` を持たない。2026-11-15、[architecture/club.md](architecture/club.md) §14 判断 57)。
+結果画面の数は自分の砲撃数(少ないほどよい)。結果画面は両方の配置を見せ、「同じ盤面で再挑戦」は同じseedで
+同じ局 — CPUの艦も同じ位置 — を始めるので、見た配置の11マスだけを撃てば誰でも最小の11発で勝てる(先手なのでCPUは
+10発しか撃てず、追いつけない)。表は11発に揃い、同値を送った順に並ぶ。入るには、同じ局の再挑戦の結果を表から
+外す形(再挑戦をやめる、または再挑戦の局を送らない)をこの文書で先に決める必要がある。
 
 ## Nearby Play (2026-11-04)
 

@@ -1,5 +1,52 @@
 # Simple Games — リリースチェックリスト
 
+## 2026-11-25: 1.8.6(PixTale の行、Club House 対応 35 → 49 本、共有リンクのリリース門)
+
+オーナー判断(2026-11-25): 次の版を 1.8.6 として iOS と Android の両方に出す。入れるのは次の 4 件で、
+ほかは見送る(遠隔対戦 #280 は PoC 段階、Managed Club の有償化は計画のみ、Android タブレットの回転は
+横画面で収まらないゲームが残る)。
+
+1. **「PixApps のほかのアプリ」に PixTale の行**(§5.18、[PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)
+   「PixApps の自社アプリの一覧は広告ではない」)。新しい文言 `pixTaleTagline` の 12 言語は同日に門を通した。
+2. **Club のテストの固定日付の修正**(テストだけ。`ManagedFlow.test.tsx` の `validUntil` が 2026-11-23 で
+   切れ、全ブランチで 1 件落ちていた)。
+3. **共有リンクの穴埋めとリリース門**(§7 の `share:check`、[共有リンク](architecture/share-links.md)
+   「Release gate」。landing 側は pixapps-landing#239)。利用者に見える変化は無い(Web 先行公開は 0 本)。
+4. **Club House の対応を 35 → 49 本**([architecture/club.md](architecture/club.md) §14 判断 57、
+   計画は [plans/2026-11-14-club-coverage.md](plans/2026-11-14-club-coverage.md)。サーバは
+   simple-games-club#16 の schema 8、landing は pixapps-landing#244)。
+
+版: iOS は 1.8.5 (10805) から、Android は 1.8.4 (10804) から 1.8.6 (10806) へ。Android は 1.8.5 を飛ばす
+(10805 は Play に出していない。1.8.5 の中身は iOS だけの扉で、Android の利用者に見える変化は無い)。
+iOS アプリは 78 本・Android アプリと Web 版は 80 本のまま(ゲームの追加は無い)。
+
+**順番が門**: (1) サーバの PR を main へ → (2) アプリのリリース PR を main へ → (3) オーナーが
+simple-games-club で `pnpm build:web ../simple-games` と `pnpm deploy:production`(サーバと club.pixapps.ai の
+Web 版を同時に。**schema 8 への移行は戻せない**)→ (4) landing の 2 本と Web 版の Publish →
+(5) タグ `v1.8.6` と `share:check` → (6) 端末に入れる(内部テスト / TestFlight)→ (7) ストア。
+**(3) より前に 1.8.6 をどの端末にも入れない** — サーバが新しい 14 本を知る前に送られたランキングの結果は
+`400 invalid_request` で捨てられ、再送されない。
+
+- [ ] simple-games-club#16 をマージ(schema 8。node:sqlite でだけ試した移行で、workerd では走らせていない)
+- [ ] アプリのリリース PR をマージ(PixTale・共有リンク・Club House・iOS の版 1.8.6 / 10806)
+- [ ] オーナー: サーバと club.pixapps.ai の Web 版をデプロイ。デプロイ後、本番の `/api/v1/public` が今までどおり
+      返ること、新しい 14 本のうち 1 本の結果が順位表に載ること
+- [ ] pixapps-landing#244(Club House の節に新しい 14 本の名前)と #239(共有ページを公開済みの全 id に)を
+      マージ、Web 版を Publish。ブラウザ版のホーム末尾に PixTale の行が出ること
+- [ ] タグ `v1.8.6`。`pnpm --filter simple-games share:check --ref v1.8.6` が「All 80 share landings answer 200.」
+      (2026-11-25 に `v1.8.5` に対しては 80 件とも通った)
+- [ ] `pnpm --filter simple-games i18n:gate:check` が緑(2026-11-25、リリース用ブランチで「Gate complete」)
+- [ ] Android の AAB 10806(CI)。iOS のビルド 10806 をアップロード
+- [ ] リリースノート: App Store 14 言語 / Google Play 17 言語タグ(500 字以内)。Club House で比べられるゲームが
+      増えたことを書く。PixTale の行はリリースノートに書かない(送客の文言を増やさない)
+- [ ] §5.18 を PixTale を含めて実機で通す(Android は Google Play、iPhone は App Store の掲載ページが開く)
+- [ ] 実機: 新しい 14 本のうち、時間・手数・スコアの各群から 1 本ずつ結果を Club に送り、順位表に載ること。
+      Today に Unblock Puzzle / Loop Puzzle / Bridges / Pipe Link / Make the Target / Tangram のデイリーが出ること。
+      1.8.5 以前の端末が同じ Club を開いても壊れないこと(自分の契約に無いゲームの表は出ないだけ)
+- [ ] ストアへ提出(App Store は審査、Google Play は製品版)
+
+**未確認は未確認として書く。** 2026-11-25 の時点で、上のどれも実機・本番サーバでは確かめていない。
+
 ## 2026-11-11: iOS 1.8.5(Blackjack / Texas Hold'em を iOS から外して再提出。Android は 1.8.4 のまま)
 
 2026-11-10、App Store の審査が iOS「Simple Games: Offline Games」(`com.pixapps.simplegames`)の 1.8.4 (10804) を
@@ -1625,17 +1672,20 @@ Network Inspector が使えなかったとき、通信の宛先を特定でき�
 
 - [ ] 位置が**最後のカテゴリの後**であること。ヒーロー・お気に入り・最近遊んだ・
       Club House の行・カテゴリの途中には出ない。Web 版では広告枠より上、フッターより上
-- [ ] 検索中(未入力・一致あり・0 件のどれでも)出ない。「PixMeal」で検索しても何も出ない
+- [ ] 検索中(未入力・一致あり・0 件のどれでも)出ない。「PixMeal」「PixTale」で検索しても何も出ない
 - [ ] ゲームの数・カテゴリ・お気に入り・最近遊んだ・Action Sheet・統計に混ざらない
+      (PixTale はゲームだが、Simple Games の収録ゲームではない。2026-11-25 から一覧の 3 行目)
 - [ ] **Android 実機**で各行が Google Play の掲載ページを開き、戻る操作でコレクション
       ホームに戻ること(スクロール位置が飛んでも、ゲーム一覧に戻れればよい)
 - [ ] **iPhone 実機**で各行が App Store の掲載ページを開き、アプリに戻れること
 - [ ] Web 版で、Android のブラウザは Google Play、iPhone / iPad は App Store、
       PC は pixapps.ai の各アプリのページを開く(`services/pixAppsLinks.ts`)
-- [ ] **4 つのストアの掲載ページと 2 つのページが実在する**こと。掲載名・開発者が
-      Simple Games と同じであること(2026-10-29 に HTTP で確認済み。リリースごとに見る)
-- [ ] 2 本の 1 行の説明が、その時点の pixapps.ai の各アプリのタグラインと一致していること
+- [ ] **6 つのストアの掲載ページと 3 つのページが実在する**こと。開発者が
+      Simple Games と同じであること(PixMeal / PixWork は 2026-10-29、PixTale は 2026-11-25 に
+      HTTP で確認済み —— PixTale は両ストアとも 2.0.3。リリースごとに見る)
+- [ ] 3 本の 1 行の説明が、その時点の pixapps.ai の各アプリのタグラインと一致していること
       ([BRAND.md](BRAND.md)「PixApps のほかのアプリの書き方」)
+- [ ] 幅 600px 以上で 3 行が崩れないこと(600〜899px は 2 列で 3 行目が下に回り、900px 以上は 3 列)
 - [ ] 機内モードで出ないこと。出ないだけでゲームは止まらないこと
 - [ ] 行を押すまで追加のネットワークリクエストが出ないこと(DevTools の Network で確認)
 - [ ] 14 言語 × 狭い画面(320 / 360px)× ライト / ダークで崩れず、横スクロールが出ないこと。
@@ -1645,6 +1695,9 @@ Network Inspector が使えなかったとき、通信の宛先を特定でき�
       `pixMealTagline` / `pixWorkTagline` の 12 言語 × 4 キー = 48 件が入っていること。
       2026-10-31 に 48 件とも門を通した(`i18n:gate status` は「Gate complete」、`i18n:gate:check` が緑。
       手順は [I18N_POLICY.md](I18N_POLICY.md)「リリース前の門」)
+- [x] 2026-11-25 に足した `pixTaleTagline` の 12 言語 = 12 件が門を通っていること。
+      同日に 12 件とも通した(独立逆翻訳 → オーナーの読み。`i18n:gate status` は「Gate complete」、
+      `i18n:gate:check` が緑)
 
 ## 5.19 遠隔対戦([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「遠隔対戦」, issue #280)
 
@@ -1779,6 +1832,13 @@ Network Inspector が使えなかったとき、通信の宛先を特定でき�
 - [ ] タグ `v<major>.<minor>.<patch>` を打って push する
       (`android-release.yml` が署名済み AAB + 確認用 APK を出す)
 - [ ] ワークフローが緑(署名 secret が無ければ失敗する)
+- [ ] **どの端末にも入れる前に**(内部テスト・TestFlight も)、そのタグで正式収録(registry に `channel` が
+      無い)の全ゲームの共有 LP が本番で 200 であることを確かめる:
+      `pnpm --filter simple-games share:check --ref v<major>.<minor>.<patch>`
+      (`scripts/share-landing-check.mjs`。リダイレクトなしの 200 で、そのゲームの LP であり、
+      「アプリには入っていません」の LP でないこと)。落ちたら、そのタグから Web 版を Publish してマージし、
+      本番に出てからやり直す。Web 先行から正式収録へ移すゲームがある版では、この順でないと必ず落ちる
+      ([共有リンク](architecture/share-links.md)「Release gate」)
 - [ ] AAB を Play Console の**内部テスト**トラックにアップロード(手動)
 - [ ] 内部テストトラック経由でインストールして動作確認
       (課金とレビュー導線はこの経路でしか確認できない)

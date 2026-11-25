@@ -67,6 +67,14 @@ The title, turn/difficulty strip, board and controls fit above the Web ad reserv
 360×740, while short screens retain scrolling. This changes presentation, not rules,
 CPU choices or the persisted schema.
 
+## Club House
+
+**登録しない**(registry の `challenge` を持たない。2026-11-15、[architecture/club.md](architecture/club.md)
+§14 の判断 57)。結果は勝ち / 負けだけで、結果画面に出るのは勝敗と相手の強さだけである — タイマーもスコアも
+無く(Play)、時間・手数・スコアのどれも出ない。club.md §6-0 が順位表に求める「結果画面の数字」が無く、勝敗で
+並べれば勝った回数の表になり、それは熱心さの数である([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「順位表」)。
+入るには、結果画面が勝敗のほかに成績を比べられる数字を出すことが要る。
+
 ## Nearby Play（2026-10-25）
 
 hostを先手とする。CPU戦と同じ4山の初期配置生成を使うため、完全最善手では先手が勝てる配置であり、公平な勝率を保証するものではない。最後の石を取った側が勝つ。`NimPlaySurface`をCPU戦と共有し、山選択→個数→確認で進める。得点は無く、履歴にも仮の0点を出さない。

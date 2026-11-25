@@ -5,9 +5,9 @@
  * counting up at someone doing a puzzle. There is no losing screen, because
  * there is no losing (§2).
  *
- * No Club House action: Pipe Link is not a Club challenge while it is in
- * early release (the rules' preamble), so the share is the only thing below
- * the buttons.
+ * The Club House action sits next to the share (§16, docs/architecture/club.md
+ * §14 判断 57): the same time and hints as the card, ranked by time; the daily
+ * goes to Today with its board digest, a free board to its difficulty's table.
  *
  * The card does not act on what was meant for the board (§3). The last tile
  * is very often turned in the middle of quick taps, or by a held Enter — and
@@ -15,15 +15,23 @@
  * focused. So for its first RESULT_ARM_MS the card takes no click or tap, and
  * it never takes a held key's repeats. One timer, released with the card.
  */
-import { useCallback, useEffect, useRef, type KeyboardEvent, type MouseEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  type KeyboardEvent,
+  type MouseEvent,
+} from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
 import { useTransientTimeout } from '@/ui/useTransientTimeout';
-import type { PipeLinkSession } from '../../game';
+import { boardDigestOf, type PipeLinkSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
 /**
@@ -81,11 +89,19 @@ function ResultCard({
   const { width, height } = session.board;
   const size = t('pipeLinkBoardNote', { width, height });
 
+  const elapsedSeconds = session.elapsedSeconds;
+  const hints = session.hintCount;
   const details = [
     { label: t('pipeLinkBoardSize'), value: size },
-    { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
-    { label: t('pipeLinkHintsUsed'), value: String(session.hintCount) },
+    { label: t('timeLabel'), value: formatDuration(elapsedSeconds) },
+    { label: t('pipeLinkHintsUsed'), value: String(hints) },
   ];
+  // The same values as `details`: the Club's figures and the share's strings
+  // never disagree (docs/architecture/club.md §6-1). The board size is the
+  // difficulty's (§1), which `params` already names.
+  const facts = useMemo(() => ({ elapsedSeconds, hints }), [elapsedSeconds, hints]);
+  // The daily is one board for everyone: it goes to Today with its digest (§16).
+  const isDaily = session.mode === 'daily';
 
   return (
     <div className="overlay overlay-result">
@@ -151,6 +167,16 @@ function ResultCard({
           </button>
         </div>
         <ShareAction gameId="pipe-link" outcome="completed" details={details} />
+        <ClubResultAction
+          gameId="pipe-link"
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{ difficulty: session.difficulty }}
+          boardDigest={isDaily ? boardDigestOf(session) : null}
+          daily={isDaily ? session.dailyDate : null}
+        />
       </div>
       <ResultAdSlot />
     </div>

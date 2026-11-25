@@ -83,8 +83,8 @@ pause/exit/unmount with the same baseline to avoid duplicate accounting.
 
 Home, three illustrated Quick Rules, game, result and statistics use existing
 shell contracts. An interrupted match may resume from a shortcut. Results offer
-optional sharing using only the displayed score. No Club House, daily mode,
-network, paid features, or new dependency is added.
+optional sharing using only the displayed score. No Club House (see “Club House”
+below), daily mode, network, paid features, or new dependency is added.
 
 App banner (2026-10-29): the reserved `BannerSlot` is now the last child of the
 `.screen`, after the scrolling `.game-content` (as in Color Flood), so on a short
@@ -97,3 +97,12 @@ unchanged (`BannerSlot` renders nothing there).
 Copy in English, Japanese and the other twelve locales is AI-authored; human
 language review and physical-device verification are not claimed. Automated and
 browser evidence will be recorded in the batch publication plan.
+
+## Club House
+
+**登録しない**(registry の `challenge` を持たない。2026-11-15、
+[architecture/club.md](architecture/club.md) §14 判断 57)。結果画面の数は得点「5 – n」だけで、勝てば
+自分の側は必ず 5 になり、変わるのは CPU の得点だけ。CPU の動きに乱数は無く、パドルの CPU から遠い側の
+端で打ち返すだけで Hard でも 5–0 で勝てる(`game/` のエンジンで、球の着く位置に合わせて端で返す模擬を
+3 難易度とも試した。2026-11-15)。表は 5–0 に揃い、同値を送った順に並ぶので、勝った回数と同じく成績を
+比べない。入るには、結果画面が勝ち負けの外で成績を分ける数字を出すようになる必要がある。

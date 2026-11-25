@@ -1,5 +1,7 @@
 # Simple Games — Project Context / Source of Truth
 
+2026-11-25: オーナー判断で、次の版を**1.8.6**としてiOS・Androidの両方に出す。入れるのは4件: (1) コレクションホーム末尾の「PixApps のほかのアプリ」にPixTaleの行を足す(2026-10-29の「PixTaleは入れない」を改めた。PixTale 2.0.3が両ストアで公開されたため。`PRODUCT_PRINCIPLES.md`「PixApps の自社アプリの一覧は広告ではない」)、(2) Clubのテストの固定日付の修正、(3) 共有リンクの穴埋めとリリース門`share:check`(`architecture/share-links.md`「Release gate」)、(4) Club Houseの対応を35本から49本へ(`architecture/club.md` §14 判断57。サーバはschema 8)。ゲームの追加は無く、iOSアプリ78本・Android版とWeb版80本のまま。**出荷はまだしていない。**サーバのデプロイがクライアントより先という順番と手順は`RELEASE_CHECKLIST.md`の2026-11-25の節。遠隔対戦(#280)、Managed Clubの有償化、Androidタブレットの回転は見送り。
+
 2026-11-14: オーナー判断(issue #280)で、Nearby Playの対象ゲーム(Androidアプリ28本・iOSアプリ26本)を招待リンクでインターネット越しに遊ぶ**遠隔対戦**を、Coreの任意モードとして採る方針にした。端末どうしがWebRTC DataChannelで直接つながり、PixAppsは対戦サーバー・シグナリングサーバー・アカウントを持たない(STUNはCloudflareの1社だけ、TURNは使わない。シグナリングの中継は#280のPhase 2で比べる候補として残す)。Android / iOSアプリだけで、Web版には置かない。**方針の採用であり、実装・実機検証・出荷はしていない。** §4の「遠隔対戦を作らない」はこの判断で改めた(フレンドは引き続き作らない)。概要は§3「遠隔対戦 — 採用した方向」、規則は`PRODUCT_PRINCIPLES.md`「遠隔対戦」、技術の契約は`architecture/nearby-multiplayer.md`冒頭の2026-11-14節。
 
 2026-11-11: App Storeの審査が2026-11-10にiOS 1.8.4をリジェクト(Guideline 2.3.6: 模擬ギャンブルのアプリは組織アカウントからだけ受け付け、このアプリは個人アカウント)。オーナー判断で**iOSアプリだけがBlackjack / Texas Hold'emを出さない**(registryの`unavailableOn: 'ios'`と実行時ガードで全扉を閉じ、コードと保存キーは残す。Android版とWeb版は変えない)。iOSアプリは78本・Nearby 26本(4席8本)、Android版は80本・Nearby 28本、Web版は80本のまま。iOSは1.8.5で再提出し、Androidは1.8.4のまま。規則は`PRODUCT_PRINCIPLES.md`「iOS で出さないタイトル」、手順は`RELEASE_CHECKLIST.md`の2026-11-11の節。

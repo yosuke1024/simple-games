@@ -155,6 +155,7 @@ export const fr: Messages = {
     'Des apps distinctes du même développeur. Les fonctionnalités et les tarifs varient selon l’app.',
   pixMealTagline: 'Enregistrez vos repas en un instant. Corrigez les erreurs en quelques secondes.',
   pixWorkTagline: 'Scannez une carte de visite. Gardez un contact fiable.',
+  pixTaleTagline: 'Scannez des objets du quotidien. Transformez-les en objets de RPG légendaires.',
 
   // The optional share on a result screen. {game} is the registry title, a
   // proper noun that is not translated; `cleared` is only used for a real win.
@@ -163,6 +164,8 @@ export const fr: Messages = {
   sharePlayed: 'J’ai joué à {game} sur Simple Games.',
   shareInvite: 'Téléchargez l’application Simple Games.',
   shareChallenge: 'À vous de jouer dans l’application Simple Games.',
+  shareInviteBrowser: 'Vous pouvez y jouer directement dans le navigateur.',
+  shareChallengeBrowser: 'À vous de jouer. Essayez dans votre navigateur.',
   shareCardAction: 'À vous de jouer',
   shareCardBoard: 'Plateau de cette partie',
   shareCardPreview: 'Aperçu du jeu',

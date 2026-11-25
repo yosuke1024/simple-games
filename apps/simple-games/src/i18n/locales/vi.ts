@@ -154,6 +154,7 @@ export const vi: Messages = {
     'Các ứng dụng riêng biệt của cùng nhà phát triển. Tính năng và giá khác nhau tùy ứng dụng.',
   pixMealTagline: 'Ghi lại bữa ăn ngay lập tức. Sửa lỗi chỉ trong vài giây.',
   pixWorkTagline: 'Quét danh thiếp. Lưu liên hệ đáng tin cậy.',
+  pixTaleTagline: 'Quét đồ vật thường ngày. Biến chúng thành vật phẩm RPG huyền thoại.',
 
   // The optional share on a result screen. {game} is the registry title, a
   // proper noun that is not translated; `cleared` is only used for a real win.
@@ -162,6 +163,8 @@ export const vi: Messages = {
   sharePlayed: 'Tôi đã chơi {game} trên Simple Games.',
   shareInvite: 'Tải ứng dụng Simple Games.',
   shareChallenge: 'Đến lượt bạn. Chơi trong ứng dụng Simple Games.',
+  shareInviteBrowser: 'Bạn có thể chơi ngay trong trình duyệt.',
+  shareChallengeBrowser: 'Đến lượt bạn. Chơi thử ngay trong trình duyệt.',
   shareCardAction: 'Đến lượt bạn',
   shareCardBoard: 'Bàn chơi của ván này',
   shareCardPreview: 'Hình minh họa trò chơi',

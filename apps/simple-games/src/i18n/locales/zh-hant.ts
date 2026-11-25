@@ -147,6 +147,7 @@ export const zhHant: Messages = {
   moreFromPixAppsBody: '同一開發者的獨立應用程式。功能與價格因應用程式而異。',
   pixMealTagline: '即時記錄每一餐。幾秒鐘就能修正錯誤。',
   pixWorkTagline: '掃描名片。留下值得信賴的聯絡人。',
+  pixTaleTagline: '掃描日常物品。把它們變成傳說中的 RPG 道具。',
 
   // The optional share on a result screen. {game} is the registry title, a
   // proper noun that is not translated; `cleared` is only used for a real win.
@@ -155,6 +156,8 @@ export const zhHant: Messages = {
   sharePlayed: '我在 Simple Games 裡玩了 {game}。',
   shareInvite: '下載 Simple Games 應用程式。',
   shareChallenge: '換你了，來 Simple Games 應用程式裡玩吧。',
+  shareInviteBrowser: '在瀏覽器裡就能直接玩。',
+  shareChallengeBrowser: '換你了，打開瀏覽器試試吧。',
   shareCardAction: '換你試試',
   shareCardBoard: '本局盤面',
   shareCardPreview: '遊戲示意',

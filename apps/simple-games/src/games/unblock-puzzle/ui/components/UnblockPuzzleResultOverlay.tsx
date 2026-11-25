@@ -21,15 +21,22 @@
  * the instant the target leaves, and a held Enter's repeats would reach the
  * focused first offer and deal a new board over a result not yet seen. A
  * repeat is not a new press.
+ *
+ * On a device in a Club, the clear goes to the Club House as the card appears
+ * (§18): the time, the moves and the hints the card shows, read from the same
+ * facts as the card and the share. A Free Play clear goes to the difficulty's
+ * ranking table; the daily — one board for everyone — goes to that day's
+ * Today challenge with its date and the dealt board's digest.
  */
-import type { KeyboardEvent } from 'react';
+import { useMemo, type KeyboardEvent } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
-import type { UnblockSession } from '../../game';
+import { boardDigestOf, type UnblockSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
 export interface UnblockPuzzleResultOverlayProps {
@@ -55,7 +62,19 @@ export function UnblockPuzzleResultOverlay({
   const { t } = useSettings();
   // The finished board gets its beat before the card covers it (§14).
   const revealed = useResultReveal(session.status === 'solved');
-  if (!revealed || lastResult === null) return null;
+  // The Club's figures (§18), from the same clear facts the card and the share
+  // read below — nothing recomputed (docs/architecture/club.md §6-1). The
+  // fewest moves (the board's, not the run's) and the net cells moved stay on
+  // the card and are not sent.
+  const cleared = lastResult === null ? null : lastResult.facts;
+  const clubFacts = useMemo(
+    () =>
+      cleared === null
+        ? null
+        : { elapsedSeconds: cleared.seconds, moves: cleared.moves, hints: cleared.hints },
+    [cleared],
+  );
+  if (!revealed || lastResult === null || clubFacts === null) return null;
 
   const { facts } = lastResult;
   const canStartNew = session.mode === 'free';
@@ -139,6 +158,16 @@ export function UnblockPuzzleResultOverlay({
           </button>
         </div>
         <ShareAction gameId="unblock-puzzle" outcome="completed" details={details} />
+        <ClubResultAction
+          gameId="unblock-puzzle"
+          outcome="completed"
+          details={details}
+          facts={clubFacts}
+          seed={session.seed}
+          params={{ difficulty: session.difficulty }}
+          boardDigest={session.mode === 'daily' ? boardDigestOf(session) : null}
+          daily={session.mode === 'daily' ? session.dailyDate : null}
+        />
       </div>
       <ResultAdSlot />
     </div>

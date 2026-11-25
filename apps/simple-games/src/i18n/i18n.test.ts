@@ -199,6 +199,14 @@ describe('catalog consistency', () => {
       ['clubTier_qmDivide', 'quick-math', 'qmathBandDivide'],
       ['clubTier_qmMissing', 'quick-math', 'qmathBandMissing'],
       ['clubTier_qmMixed', 'quick-math', 'qmathBandMixed'],
+      ['clubTier_snakeSlow', 'snake', 'snakeSpeed_slow'],
+      ['clubTier_snakeNormal', 'snake', 'snakeSpeed_normal'],
+      ['clubTier_snakeFast', 'snake', 'snakeSpeed_fast'],
+      ['clubTier_bounceUpNormal', 'bounce-up', 'bounceUpWidth_normal'],
+      ['clubTier_bounceUpWide', 'bounce-up', 'bounceUpWidth_wide'],
+      ['clubTier_chainEasy', 'chain-territory', 'chainTerritoryMode_easy'],
+      ['clubTier_chainNormal', 'chain-territory', 'chainTerritoryMode_normal'],
+      ['clubTier_chainHard', 'chain-territory', 'chainTerritoryMode_hard'],
     ];
     const club = set('club');
     for (const locale of locales) {

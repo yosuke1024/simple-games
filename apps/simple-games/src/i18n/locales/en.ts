@@ -182,13 +182,14 @@ export const en = {
   // PixApps' other apps, at the very end of the collection home (issue #276,
   // ui/components/MoreFromPixApps.tsx). The body is what keeps the list from
   // reading as if these apps shared Simple Games' promises: they are separate
-  // apps with their own features and prices. The two lines are each app's own
-  // line from its PixApps page, not new claims (docs/BRAND.md「PixApps の
+  // apps with their own features and prices. The taglines are each app's own
+  // line from the PixApps site, not new claims (docs/BRAND.md「PixApps の
   // ほかのアプリの書き方」). App names are proper nouns and are not translated.
   moreFromPixAppsTitle: 'More from PixApps',
   moreFromPixAppsBody: 'Separate apps from the same developer. Features and pricing differ by app.',
   pixMealTagline: 'Log meals instantly. Correct mistakes in seconds.',
   pixWorkTagline: 'Scan a card. Keep a contact you can trust.',
+  pixTaleTagline: 'Scan daily objects. Turn them into legendary RPG items.',
 
   // The optional share on a result screen (issue #86). The message and the
   // picture card carry the facts the result screen showed — the game passes
@@ -199,7 +200,9 @@ export const en = {
   // noun that is not translated. shareCardCleared is the short word drawn on
   // the picture card, and only appears there for a real win. The invitation
   // asks the reader to play; it does not claim they will get the same board
-  // or that results from different runs can be compared. shareCardBoard
+  // or that results from different runs can be compared. The *Browser pair is
+  // the same invitation for a Web-only (web-beta) game: its link opens the
+  // browser version, because the app does not have it. shareCardBoard
   // captions the board of the sender's finished game, shareCardPreview a fixed
   // example scene: neither says "your", so the reader of the card takes
   // neither picture for their own (docs/BRAND.md, 今回の盤面 / ゲームのイメージ).
@@ -208,6 +211,8 @@ export const en = {
   sharePlayed: 'I played {game} on Simple Games.',
   shareInvite: 'Get the Simple Games app.',
   shareChallenge: 'Your turn. Play in the Simple Games app.',
+  shareInviteBrowser: 'You can play it right in your browser.',
+  shareChallengeBrowser: 'Your turn. Try it in your browser.',
   shareCardAction: 'Your turn',
   shareCardBoard: 'This game’s board',
   shareCardPreview: 'Game preview',

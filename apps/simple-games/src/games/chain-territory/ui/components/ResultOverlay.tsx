@@ -1,4 +1,12 @@
+/**
+ * The end of a game against the CPU: won or lost, in how many of the player's
+ * moves, at which strength. A won game also goes to the Club House's
+ * table for its strength; a loss is `played` and goes nowhere
+ * (docs/CHAIN_TERRITORY_RULES.md「Club House」).
+ */
+import { useMemo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
@@ -34,8 +42,12 @@ function ResultCard({
   useDialogDismiss(onHome);
   const won = session.status === 'won',
     title = t(won ? 'chainTerritoryWon' : 'chainTerritoryLost');
+  // The game's figure, once: the share's string and the Club's number are read
+  // from the same variable (docs/architecture/club.md §6-1).
+  const moves = resultValue(session);
+  const facts = useMemo(() => ({ moves }), [moves]);
   const details = [
-    { label: t('movesLabel'), value: String(resultValue(session)) },
+    { label: t('movesLabel'), value: String(moves) },
     { label: t('difficulty'), value: t(`chainTerritoryMode_${session.mode}`) },
   ];
   return (
@@ -70,6 +82,17 @@ function ResultCard({
           gameId="chain-territory"
           outcome={won ? 'completed' : 'played'}
           details={details}
+        />
+        <ClubResultAction
+          gameId="chain-territory"
+          // Only a win is ranked: a loss's moves measure how long the player
+          // held on, not how well they played.
+          outcome={won ? 'completed' : 'played'}
+          details={details}
+          facts={facts}
+          seed={String(session.seed)}
+          params={{ difficulty: session.mode }}
+          boardDigest={null}
         />
       </div>
       <ResultAdSlot />

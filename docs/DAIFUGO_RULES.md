@@ -57,3 +57,14 @@ Webでは無効ボタンとアプリ専用の説明を表示する。通信・�
 Card faces and backs use the original shared vector artwork described in
 [CARD_DESIGN.md](CARD_DESIGN.md). Rules, saved card IDs, accessible labels and
 selection behavior are unchanged. Both CPU and Nearby use this artwork.
+
+## Club House
+
+正典は [architecture/club.md](architecture/club.md) §6-0と§14の判断57。
+
+- **登録しない**（registryの`challenge`を持たない。2026-11-15、判断57）。結果画面の数字は4席の中の
+  あなたの順位（1〜4位）だけで、1位だけが勝ちになる。順位は勝ち負けを4段に分けたもので、時間・手数・得点の
+  ように成績を比べない。同じ順位は提出順に並ぶので、表は1位の局を届いた順に並べたもの — 勝った回数の表 — になり、
+  それは熱心さの数である（[PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「順位表」。判断30のCheckers /
+  Connect Four / Gomoku / Ludoと同じ理由）。「次のラウンド」は前回の順位で札を交換して始まるので、局ごとに条件も違う。
+- 入るには、結果画面が順位のほかに成績を比べられる数字を出すことが要る（club.md §6-0）。

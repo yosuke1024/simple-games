@@ -50,8 +50,13 @@ const reply = (body: unknown, status = 200) =>
     status,
     headers: { 'X-Club-Api': '1', 'Content-Type': 'application/json' },
   });
+// A plan that is still running whenever the suite runs. This was the fixed
+// date 2026-11-23, and from that day the owner space read the plan as expired
+// (ManagedScreen compares `validUntil` with the real clock) and hid the
+// create form, so the create-a-Club test below failed on every branch.
+const VALID_UNTIL = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 const owner = {
-  owner: { id: 'o_one', plan: 'basic', validUntil: '2026-11-23T00:00:00.000Z', status: 'active' },
+  owner: { id: 'o_one', plan: 'basic', validUntil: VALID_UNTIL, status: 'active' },
   limits: { maxClubs: 3, maxMembersPerClub: 50 },
   clubs: [] as unknown[],
   benefits: {
@@ -59,7 +64,7 @@ const owner = {
       requiredMembers: 50,
       memberCount: 0,
       active: false,
-      validUntil: '2026-11-23T00:00:00.000Z',
+      validUntil: VALID_UNTIL,
     },
   },
 };

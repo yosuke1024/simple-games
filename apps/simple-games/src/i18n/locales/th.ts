@@ -150,6 +150,7 @@ export const th: Messages = {
   moreFromPixAppsBody: 'แอปแยกต่างหากจากผู้พัฒนารายเดียวกัน ฟีเจอร์และราคาแตกต่างกันในแต่ละแอป',
   pixMealTagline: 'บันทึกมื้ออาหารได้ทันที แก้ไขข้อผิดพลาดได้ในไม่กี่วินาที',
   pixWorkTagline: 'สแกนนามบัตร เก็บเป็นรายชื่อติดต่อที่เชื่อถือได้',
+  pixTaleTagline: 'สแกนสิ่งของในชีวิตประจำวัน เปลี่ยนให้เป็นไอเทม RPG ในตำนาน',
 
   // The optional share on a result screen. {game} is the registry title, a
   // proper noun that is not translated; `cleared` is only used for a real win.
@@ -158,6 +159,8 @@ export const th: Messages = {
   sharePlayed: 'ฉันเล่น {game} ใน Simple Games',
   shareInvite: 'ดาวน์โหลดแอป Simple Games',
   shareChallenge: 'ถึงตาคุณแล้ว เล่นในแอป Simple Games ได้เลย',
+  shareInviteBrowser: 'เล่นได้ทันทีในเบราว์เซอร์',
+  shareChallengeBrowser: 'ถึงตาคุณแล้ว ลองเล่นในเบราว์เซอร์ได้เลย',
   shareCardAction: 'ตาคุณแล้ว',
   shareCardBoard: 'กระดานของเกมนี้',
   shareCardPreview: 'ตัวอย่างเกม',

@@ -6,7 +6,6 @@
 この判断が以下の旧来のカード図案の説明より優先する。
 Solitaire・FreeCell・Spider・Three Peaksは縦に重なる列用に横並びインデックスを使う。カードの色、入力、保存規則は維持する。
 
-
 この文書が Scopa の仕様の正本である。実装(`apps/simple-games/src/games/scopa/`)・テスト・Quick Rules は
 ここに従い、コードはここへ `§n` で言及する。挙動を変えるときは、同じコミットでこの文書を直す。着手前の
 計画は [plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md](plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md)
@@ -35,7 +34,9 @@ Web 先行公開は 2026-10-22 に開始したもので、通常の 2 週間の�
 保存スキーマは現在の §9 の形で凍結する。この採用判断は、未実施の実機試験・§14 の出典/題の確認・
 今回変更のストア配信が済んだという意味ではない。既存の検証履歴と未確認事項は §14〜§15 に残す。
 
-**Club House には登録しない。** 近接対応は Club の順位表・結果送信を追加する判断ではない。
+**Club House には、2026-11-15 にマッチの最終点の順位表として加えた**(§17。
+[architecture/club.md](architecture/club.md) §14 判断 57。それまでは登録しなかった)。送るのは CPU との
+通常の対局の結果だけで、近接対応は Club の順位表・結果送信を追加する判断ではない。
 通常のソロ保存・統計と、§16 の近接対戦の端末内履歴は別に扱う。
 
 **採ったルールの出典**: 標準的な 2 人制のスコパ(40 枚・各 3 枚の手札と場 4 枚・同じ数字の優先・スコパ 1 点・
@@ -861,9 +862,11 @@ Quick Rules に `WebBetaNotice` を置く(`src/test/webBetaNoticeWiring.test.ts`
   出さないので、そのディールの清算の `match` も鳴らさない(下の効果音)。
 - **結果カード**は勝ち / 負けの事実と最終点(「あなた 11 – CPU 7」)。ボタンは New game / Home /
   `ShareAction`(`outcome` は勝ちで `completed`、負けで `played` — Hearts / Gin Rummy / Dominoes の結果
-  オーバーレイと同じ。`details` は画面の値 — 両者の最終点 — から作る)。`BestDelta` は使わない(比べる
-  自己記録が無い)。**称賛語も負けを叱る文言も書かない** — スキャフォールドの `scopaResultTitle`
-  "Nice work" は称賛語なので、勝敗の事実の文言で置き換える(Phase 3)。
+  オーバーレイと同じ。`details` は画面の値 — 両者の最終点 — から作る)。その次に `ClubResultAction`
+  (Club に参加した端末だけが状態の 1 行を描く。勝ち負けにかかわらず `completed` で、`facts` は `details` と
+  同じ最終点 — §17)。`BestDelta` は使わない(比べる自己記録が無い)。**称賛語も負けを叱る文言も
+  書かない** — スキャフォールドの `scopaResultTitle` "Nice work" は称賛語なので、勝敗の事実の文言で
+  置き換える(Phase 3)。
 - **ヘッダの ↻ は新しい対局の確認**(`newGame` + `confirmNewGameTitle` の `ConfirmDialog`。Hearts /
   Gin Rummy / Dominoes と同じ)。`src/test/restartDialogWiring.test.ts` の門は `tryAgain` の ↻ にだけかかり、
   これは対象外 — 配札をやり直す「同じ盤面で再挑戦」は無い。ダイアログが開いている間は `.game-content` を
@@ -990,7 +993,9 @@ Quick Rules に `WebBetaNotice` を置く(`src/test/webBetaNoticeWiring.test.ts`
 **ブランド原則により合わせないもの**
 
 - 強さ・助け・「もう 1 ディール」を広告や課金に結び付けない([ADS_POLICY.md](ADS_POLICY.md))。
-- レーティング・ランキング・マッチング型のインターネット対戦は無い。近接対人戦は §16 の例外とする。招待制の遠隔対戦は方針を採用・未実装([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「遠隔対戦」)。記録は端末の中だけにある(§8)。
+- 誰でも見られるレーティング・ランキングと、マッチング型のインターネット対戦は無い。Club House の順位表(§17)は
+  本人が参加した Club の中だけの表で、近接対人戦は §16 の例外とする。招待制の遠隔対戦は方針を採用・未実装
+  ([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「遠隔対戦」)。ゲームの記録(統計)は端末の中だけにある(§8)。
 - デイリーやストリークで毎日呼び戻さない(このゲームにデイリー配札は無い)。
 - 統計は勝敗と時間だけ。ベスト記録も平均点も持たない(§8)。
 - 時計を出さない(§8)。
@@ -1398,3 +1403,36 @@ Bluetooth を優先し、同じ Wi-Fi は任意の別選択。Web の近接通�
 - 通常の `sc.*` 保存と統計、Club House へ近接結果を混ぜない。近接の端末内履歴へ結果を残し、途中の秘密の
   手札・山を保存しない。自動テストでは両席の投影、秘密札の差し替え、補充・配り手交代・11 点までの完走、
   投影 2,300 bytes 未満を確認する。追加版の実機通信・タップ・読み上げは未確認。
+
+## 17. Club House
+
+**2026-11-15 に加えた**([architecture/club.md](architecture/club.md) §14 判断 57。製品オーナーの判断)。
+それまでは冒頭のとおり登録しなかった。正典は club.md §6 と §16。ここにはこのゲームの側で決まることだけを書く。
+
+- **順位の軸は点数**で、高いほうが上(`challenge/contract.ts` の `SCOPA_CHALLENGE` は `order: 'score'`、
+  `direction: 'desc'`)。軸にする値はマッチの最終点(結果カードの自分の点、`LastResult.mine`)。
+- **表を分けるもの。** mode を持たない(`params` は `{}`、`paramsKey` は `standard` の 1 枚)。CPU の強さは
+  1 段階で(冒頭)、難易度もデイリーも無い。
+- **結果画面が送る事実(`facts`)** は `{ score, cpuScore }`。結果カードの 2 つの値(あなたの最終点と CPU の
+  最終点 — §11.2)そのもので、共有(`ShareAction`)の `details` と同じ変数(`LastResult.mine` /
+  `LastResult.theirs`)から作り、ここで計算しない。契約が受け付けるのは 0〜1,000,000,000 の整数(前例と同じ上限。
+  実際のマッチはその数桁下で終わる)。
+- **配札はマッチごとに違うが、それでよい**(club.md §16)。順位表は同じ配札で競わせるものではない。勝利数の
+  表は作らない。
+- **送る終わり方**: 終局したマッチは勝ち負けにかかわらず、自分の最終点で送る(`outcome` は常に `completed`。
+  Gin Rummy §13・Yacht §12 と同じ)。共有の `outcome` は今までどおり(勝ちで `completed`、負けで `played`)で、
+  Club の側だけが負けた試合も数える。ヘッダの ↻ で放棄したマッチは結果カードに届かないので何も送らない。結果
+  カードが現れる前(マッチが決まってからの一拍 — §11.2)に画面を離れても何も送らない(club.md §2-2)。
+- **Today には入らない**(club.md §6-3)。デイリーが無く、全員が同じ配札で遊ぶ局が無いので、`daily` は渡さず
+  `boardDigest` は `null`。送る `seed` は対局の seed(`scopa-` + 対局ごとのトークン。保存から再開した
+  マッチでも 64 文字まで — §9.2 — なので、club.md §5-2 の 80 文字に収まる)。
+- **近接対戦の結果は送らない**(§16)。`ClubResultAction` は結果オーバーレイ
+  (`ui/components/ScopaResultOverlay.tsx`)にだけ置き、近接の画面(`src/nearby/games/scopaView.tsx`)は
+  それを import しない。
+- **ゲーム自体は変わらない。** 統計・保存データ・広告・共有・結果画面の既存の表示には触れない。§8 の
+  「ベスト記録・平均点を持たない」もそのままで、順位表は Club の中だけの表であってゲームの記録ではない。
+- **確かめた範囲**: 契約の値と事実の検査(`challenge/contract.test.ts`)、結果カードが渡すもの
+  (`ui/components/ScopaResultOverlay.club.test.tsx` — 勝ち・負けとも `completed`、`facts` と `details` が同じ値)。
+  実際の Club サーバーとの往復と実機は見ていない。サーバー側の契約(`simple-games-club` の
+  `src/contracts/games.ts`)に `scopa` が入るまで、サーバーは知らないゲームとして結果を断る(400)ので、
+  サーバーのデプロイがこの版の出荷より先になる。

@@ -2,7 +2,7 @@
 
 **2026-10-29 更新(正式収録、v1.7.0):** 製品オーナーの判断で Web 先行公開(ベータ)から正式収録した(registry の `channel` を外した — アプリのホーム・検索・ショートカットにも出る)。保存スキーマはこの収録で凍結し、以後は移行だけで変える — 公開中の Web ビルドが実際に書いた保存を `storage/releasedRecords.test.ts` が今の読み込み経路へ通す([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §0 と 2026-10-29 の節)。以下の「正式収録まで凍結しない」「アプリには出ない」などのベータ段階の記述は当時の記録である。収録は 2 週間の安定稼働・滞在時間の確認・実機での確認を満たしたという意味ではない。
 
-2026-10-23. New Web beta title; no native release or Club House registration.
+2026-10-23. New Web beta title; no native release or Club House registration (Club House: see “Club House” below).
 
 ## Rules and generation
 
@@ -189,3 +189,13 @@ ring's outer stroke is 6.7px in, read by the test from the stylesheet and
 would take the start ring to 2.22:1 and the trail to 2.02:1 (light: 3.18:1 for both),
 so the ring and trail clear 3:1 because the shade does not reach them, not
 because of its alpha. `pnpm size:check` (the lazy chunk's size budget) was not run.
+
+## Club House
+
+**登録しない**(registry の `challenge` を持たない。2026-11-15、
+[architecture/club.md](architecture/club.md) §14 判断 57)。結果画面の数は手数と迷路の大きさで、手数は
+迷路が決める。通路は木なのでスタートからゴールへの道は 1 本しかなく、無料・無制限で手数に数えない Hint が
+その道の次の 1 歩を示し、Undo も無料なので、誰でもその迷路の最短手数で終えられる。迷路は新しいゲームの
+たびに変わり、最短手数は迷路ごとに散らばる(5×5 で 8〜24 手、13% の迷路が 8 手。2026-11-15、20,000 個の
+seed で計測)ので、手数の表は腕前ではなく短い迷路を引いたかを並べる。入るには、結果画面が迷路の運に
+左右されない成績の数字を出すようになる必要がある。
