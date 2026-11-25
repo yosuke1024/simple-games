@@ -37,3 +37,13 @@ No reaction timer, betting currency, cash stakes, purchases or ad-gated refills.
   do not remove that classification; this is not a store-publication approval.
 
 Reference: [Bicycle](https://bicyclecards.com/how-to-play/blackjack/).
+
+## Club House
+
+**登録しない**(registry の `challenge` を持たない。2026-11-15、
+[architecture/club.md](architecture/club.md) §14 判断 57)。結果画面の数は 1 ラウンドの差引得点(1 ハンド 10 点の
+固定の賭けの勝ち負けの合計)で、表にすると疑似ギャンブルの題で賭けの勝ち額を並べることになる(iOS では
+この題を出していない — App Review 2.3.6)。「同じ盤面で再挑戦」は同じ seed で同じ山札を配り直すので、札を
+見たあとに打ち方を選び直せる。差引得点は負にもなり、Club の事実の整数(0 以上。club.md §6-1)に収まらない。
+共有も数字を持たない(`details` が空)。入るには、賭けの勝ち額ではない成績の数字を結果画面が出し、同じ山札の
+再挑戦を表から外す必要がある。

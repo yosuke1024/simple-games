@@ -4,16 +4,19 @@
  * playing would be a clock counting up at someone doing a puzzle. There is no
  * losing screen, because there is no losing (§3).
  *
- * The one place `ShareAction` belongs (docs/ARCHITECTURE.md「結果画面の共有」).
- * No Club House action: this game is not registered with the Club (§15).
+ * The one place `ShareAction` belongs (docs/ARCHITECTURE.md「結果画面の共有」),
+ * and beside it the Club House result (§17): the daily goes to Today's
+ * challenge with its board digest, a Free Play clear to the difficulty's table.
  */
+import { useMemo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
-import type { LoopPuzzleSession } from '../../game';
+import { boardDigestOf, type LoopPuzzleSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
 export interface LoopPuzzleResultOverlayProps {
@@ -34,14 +37,18 @@ export function LoopPuzzleResultOverlay({
   const { t } = useSettings();
   // The finished loop gets its beat before the card covers it (§13).
   const revealed = useResultReveal(session.status === 'solved');
+  const { elapsedSeconds, hintCount } = session;
+  // The same session fields as `details` below: the Club's figures and the
+  // share's strings never disagree (docs/architecture/club.md §6-1).
+  const facts = useMemo(() => ({ elapsedSeconds, hints: hintCount }), [elapsedSeconds, hintCount]);
   if (!revealed) return null;
 
   // A daily is one board a day: there is no other board to offer (§9).
   const canStartNew = session.mode === 'difficulty';
 
   const details = [
-    { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
-    { label: t('loopPuzzleHintsUsed'), value: String(session.hintCount) },
+    { label: t('timeLabel'), value: formatDuration(elapsedSeconds) },
+    { label: t('loopPuzzleHintsUsed'), value: String(hintCount) },
   ];
 
   return (
@@ -58,11 +65,11 @@ export function LoopPuzzleResultOverlay({
         <dl className="result-facts">
           <div>
             <dt>{t('timeLabel')}</dt>
-            <dd>{formatDuration(session.elapsedSeconds)}</dd>
+            <dd>{formatDuration(elapsedSeconds)}</dd>
           </div>
           <div>
             <dt>{t('loopPuzzleHintsUsed')}</dt>
-            <dd>{session.hintCount}</dd>
+            <dd>{hintCount}</dd>
           </div>
         </dl>
 
@@ -112,6 +119,16 @@ export function LoopPuzzleResultOverlay({
           </button>
         </div>
         <ShareAction gameId="loop-puzzle" outcome="completed" details={details} />
+        <ClubResultAction
+          gameId="loop-puzzle"
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{ difficulty: session.difficulty }}
+          boardDigest={session.mode === 'daily' ? boardDigestOf(session) : null}
+          daily={session.mode === 'daily' ? session.dailyDate : null}
+        />
       </div>
       <ResultAdSlot />
     </div>

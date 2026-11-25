@@ -51,6 +51,10 @@ Node + SQLite と Cloudflare Workers + Durable Object の 2 実装が同じ契�
 50 人ずつ押して足す形にし(判断 53)、名前を押すと名前のシートの代わりに、その人が入っている表の一覧(Member 画面)を
 開く(判断 54。同日に製品オーナーが確認)。§5-3・§9・§10・§14・§16-2・§17-2・§17-3 はこの前提で書き換えた。段取りは
 [../plans/2026-10-22-club-member-view.md](../plans/2026-10-22-club-member-view.md)。
+**2026-11-15 の改定(対応ゲーム 49 本)**: 契約を持つゲームを 35 本から 49 本へ、全員同じ盤面のデイリー
+(`Today`)を 21 本から 27 本へ広げ、数字が出ても飽和する軸は入れないという物差しを足した(判断 57。同日に
+製品オーナーが確認)。§2-2・§6-0・§6-1・§6-3・§6-4・§9・§11・§12・§14・§15-2・§16 はこの前提で書き足した。段取りは
+[../plans/2026-11-14-club-coverage.md](../plans/2026-11-14-club-coverage.md)。
 issue #161 / #164 の本文とコメントは提案・検討の記録であり、この文書と食い違う箇所は
 この文書を正とする([../PROJECT_CONTEXT.md](../PROJECT_CONTEXT.md)「Authority」)。
 
@@ -130,9 +134,15 @@ PRODUCT_PRINCIPLES「Core が Shared から受け取る変更は次の 3 つま�
     ある局(全員同じ盤面のデイリー)は、その日の挑戦(`Today`)へ。それ以外の `completed` は、
     そのゲーム × モードのランキングへ。`outcome: 'played'` は**どこへも送らない**
     (デイリーを黙って確定させてしまううえ、ランキングは見ないので)。`played` を渡すのは Minesweeper(地雷)・
-    Number Match(行き止まり)・Dominoes(勝てなかった局)の 3 本だけ。点数を競うほかのゲーム(2048・
+    Number Match(行き止まり)・Dominoes(勝てなかった局)の 3 本だけ(2026-11-15 に Chain Territory の負けた局と
+    Gem Swap の連鎖の段数の上限での終わりが加わって 5 本)。点数を競うほかのゲーム(2048・
     Block Puzzle・Bunny Hop・Sky Fighter・Number Recall と、対 CPU の Yacht・Hearts・Gin Rummy・Mancala・
     Reversi・Dots and Boxes)は、ゲームオーバーや負けの局も `completed` として点数を送る(判断 30)。
+    2026-11-15 に加わった 14 本(判断 57)では、Snake・Gem Swap・Bounce Up・Formation Fire のゲームオーバーと
+    Scopa の負けた試合も同じく `completed` で点数を送る。送らない局は、Chain Territory の負けた局(勝った局だけ
+    送る)、Gem Swap の連鎖の段数の上限(`cap`)での終わり(ゲーム自身も記録に数えない。30 手での終わりと手詰まりは送る)、Light Grid / Color Flood で結果画面の
+    Undo のあとに同じ盤をもう一度クリアした局(ゲームの統計が数える最初のクリアだけ送る)で、どれも各 RULES の
+    Club House の節が持つ。
   - **1 つの Club のとき**: `Sent to Suzuki Family` / `Will send when you open the Club`(端末のキューに
     残った。§4-2、§10)/ `Could not send to Suzuki Family`(最終的に拒まれた)。
     **2 つ以上のとき**: 全部届けば `Sent to 2 Clubs`、一部だけなら `Sent to 1 of 2 Clubs. The rest will
@@ -144,9 +154,11 @@ PRODUCT_PRINCIPLES「Core が Shared から受け取る変更は次の 3 つま�
     前に遊び終えた局は、受け入れたあとにも送られない(参加の前の局と同じ。§10、判断 39)。
   - **接続していない端末では描かない**(下)。結果画面の他の要素の位置は、接続の有無でも状態の
     文言の長さでも変わらない(行は常に 1 行で、`aria-live` の `status`)。
-  - **何も送られない局**: 契約を持たない 6 本(Brick Breaker / Bubble Pop / Checkers / Connect Four /
-    Gomoku / Ludo)は `ClubResultAction` が無く、何も送らず何も言わない。Water Sort は、ティアに一致しない
-    レベルの局(デイリーでもフリープレイでもない)で `ClubResultAction` を描かず、送らない(§6-3、
+  - **何も送られない局**: 契約を持たないゲーム(2026-10-02 は 6 本 — Brick Breaker / Bubble Pop / Checkers /
+    Connect Four / Gomoku / Ludo。2026-11-15 は公開中の 31 本で、一覧は §14 判断 57、理由は各 RULES の
+    Club House の節。`in-development` の 2 本も持たない)は `ClubResultAction` が無く、何も送らず何も
+    言わない。Water Sort は、ティアに一致しないレベルの局(デイリーでもフリープレイでもない)で
+    `ClubResultAction` を描かず、送らない(§6-3、
     [../WATER_SORT_RULES.md](../WATER_SORT_RULES.md) §14)。結果画面はそれを理由つきで言わない
     (「送られなかった」の通知を、対象外のゲームの全プレイに出さないため。ランキングの画面に
     そのゲームの表が無いことで分かる)。
@@ -157,8 +169,9 @@ PRODUCT_PRINCIPLES「Core が Shared から受け取る変更は次の 3 つま�
 - Core が Club から受け取る結果画面の変更は、この**状態 1 行だけ**(PRODUCT_PRINCIPLES「Core が Club House
   から受け取る変更」の 2 番目の「結果画面の副次操作」は、ボタンから状態表示へ読み替えた)。順位・件数・
   「新しい記録」は出さない。
-- 機械的に足さない。置くのは §6-1 の契約を持つゲームだけで(2026-10-02 に 35 本へ広げた。
-  勝ち負けしか無い対 CPU のボードゲームには置かない)、`src/test/shareWiring.test.ts` と
+- 機械的に足さない。置くのは §6-1 の契約を持つゲームだけで(2026-10-02 に 35 本へ、2026-11-15 に
+  49 本へ広げた(判断 57)。勝ち負けしか無いゲーム、成績を比べる数字が結果画面に無いゲーム、数字はあるが
+  比べる表にならないゲームには置かない)、`src/test/shareWiring.test.ts` と
   同型の静的テストが「契約のあるゲームにだけ在り、自分の id を名乗る」ことを見る。
 
 ### 2-3. 接続していない端末 — ホームの静かな入口 1 つ(#164)
@@ -647,9 +660,13 @@ Phase 0 で Sudoku / Minesweeper / Water Sort の 3 本を実装事実で確か�
 3 本で事実の形が 3 通り(時間だけ / 時間と敗北 / 手数と時間)揃うので、envelope が
 この 3 通りを表せれば残りのゲームは同じ形に収まる。**2026-10-02 に「同じ盤面」の条件を
 デイリーに限った**(PRODUCT_PRINCIPLES「順位表」、§16)ので、ランキングには「結果画面に
-数字(時間・手数・スコア)が出る」ことだけが要る — 35 本(§6-1 の表の 4 群)。入れないのは
-勝ち負けしか無い対 CPU のボードゲーム(Checkers / Connect Four / Gomoku / Ludo)と、結果画面に
-数字を出さない Brick Breaker / Bubble Pop(出すようになれば入る)。
+数字(時間・手数・スコア)が出る」ことだけが要る — 35 本(§6-1 の表の 4 群。2026-11-15 に 49 本、
+判断 57)。2026-10-02 に入れなかったのは、勝ち負けしか無い対 CPU のボードゲーム(Checkers / Connect Four /
+Gomoku / Ludo)と、結果画面に数字を出さない Brick Breaker / Bubble Pop(出すようになれば入る、としていた)。
+**数字が出ても、飽和する軸は入れない**(2026-11-15、判断 57): ほぼ全員が同じ値に揃う軸は、同値を提出順で
+並べる表 — 早く送った順の表 — になり、勝った回数と同じく成績を比べない。2026-11-15 に入れないと決めたのは
+公開中の 31 本(勝ち負けしか無い 13 本、成績を比べる数字が結果画面に無い 8 本、数字はあるが比べる表にならない 10 本。
+Brick Breaker / Bubble Pop は最後の群に入った)で、一覧は判断 57、理由は各 RULES の Club House の節が持つ。
 
 **Minesweeper の初手は盤面の一部である**(Phase 0 の発見 1)。同じ seed でも初手が
 違えば地雷が違う(`generateField(seed, difficulty, firstIndex)`)。そのためデイリーは
@@ -716,16 +733,16 @@ interface GameChallengeContract<P, F> {
 }
 ```
 
-**4 群 35 本(2026-10-02)**。契約の葉はゲームごとに `challenge/contract.ts`(§6-2)で、
-params(表を分けるモード)と facts(結果画面の数字)はそのゲームの結果画面がすでに出して
-いるものだけを使う。
+**4 群 35 本(2026-10-02)、49 本(2026-11-15、判断 57)**。契約の葉はゲームごとに
+`challenge/contract.ts`(§6-2)で、params(表を分けるモード)と facts(結果画面の数字)はそのゲームの
+結果画面がすでに出しているものだけを使う。
 
-| 群             | `direction` | ゲーム                                                                                                                                                                                                               |
-| -------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 時間           | `asc`       | Sudoku / Sudoku 6×6 / Minesweeper / Nonogram / Takuzu / Kakuro / Futoshiki / Crown Grid / Number Path / Shape Regions / Schulte Table / Binary Balance / Box Regions / Quick Math / Memory Match / Mahjong Solitaire |
-| 手数           | `asc`       | Water Sort / Sliding Puzzle / Solitaire / Spider Solitaire / FreeCell / Number Match / Hit and Blow(試行回数)                                                                                                        |
-| スコア         | `desc`      | 2048 / Block Puzzle / Bunny Hop / Sky Fighter / Number Recall / Yacht / Gin Rummy / Dominoes / Mancala / Reversi(石数)/ Dots and Boxes(箱数)                                                                         |
-| 低いほど良い点 | `asc`       | Hearts                                                                                                                                                                                                               |
+| 群             | `direction` | ゲーム                                                                                                                                                                                                                                                                                                |
+| -------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 時間           | `asc`       | Sudoku / Sudoku 6×6 / Minesweeper / Nonogram / Takuzu / Kakuro / Futoshiki / Crown Grid / Number Path / Shape Regions / Schulte Table / Binary Balance / Box Regions / Quick Math / Memory Match / Mahjong Solitaire / Unblock Puzzle / Loop Puzzle / Bridges / Pipe Link / Make the Target / Tangram |
+| 手数           | `asc`       | Water Sort / Sliding Puzzle / Solitaire / Spider Solitaire / FreeCell / Number Match / Hit and Blow(試行回数)/ Light Grid / Color Flood / Chain Territory(勝った局だけ)                                                                                                                               |
+| スコア         | `desc`      | 2048 / Block Puzzle / Bunny Hop / Sky Fighter / Number Recall / Yacht / Gin Rummy / Dominoes / Mancala / Reversi(石数)/ Dots and Boxes(箱数)/ Snake / Gem Swap / Bounce Up / Formation Fire / Scopa(自分の得点)                                                                                       |
+| 低いほど良い点 | `asc`       | Hearts                                                                                                                                                                                                                                                                                                |
 
 | ゲーム      | `params`                                                        | `facts`(`completed`)                                 | `facts`(`played`) | `order`          | `paramsKey`  |
 | ----------- | --------------------------------------------------------------- | ---------------------------------------------------- | ----------------- | ---------------- | ------------ |
@@ -755,13 +772,19 @@ params(表を分けるモード)と facts(結果画面の数字)はそのゲー�
   (c) CPU 対戦の Gin Rummy / Hearts / Mancala / Reversi の `easy` / `normal` / `hard` → そのゲームの
   難易度の語(`clubTier_cpuEasy` / `clubTier_cpuNormal` / `clubTier_cpuHard`)。
   (d) Dots and Boxes の `small` / `medium` / `large` → `3×3` / `4×4` / `5×5`(盤の大きさで、難易度ではない)。
-  (e) Quick Math のトラック → ゲームの帯の語(`clubTier_qm*`)。
+  (e) Quick Math のトラック → ゲームの帯の語(`clubTier_qm*`)。同じ形で(2026-11-15、判断 57)、Snake の速さ
+  `slow` / `normal` / `fast` → `clubTier_snakeSlow` / `clubTier_snakeNormal` / `clubTier_snakeFast`、Bounce Up の
+  足場の幅 `normal` / `wide` → `clubTier_bounceUpNormal` / `clubTier_bounceUpWide`、Chain Territory の CPU の強さ
+  `easy` / `normal` / `hard` → `clubTier_chainEasy` / `clubTier_chainNormal` / `clubTier_chainHard`(どれもゲーム
+  自身の語の写し。§11。Chain Territory は CPU 対戦だが、(c) の語ではなく自分の語を使う)。
   (f) Schulte Table の `5x5-odd-then-even` → `5×5 · Odds, then evens`(大きさ + 順序、`clubTier_ascending` /
   `clubTier_descending` / `clubTier_oddThenEven`)。
   (g) それ以外: `easy` / `medium` / `hard`、Hit and Blow の `normal`(`clubTier_normal`)、Solitaire の draw、
   Spider の suit 数、`NxN` → `N×N`。どれにも当たらない値は**書かれたまま**出る(未完成が見える)。
-  契約に値を足したら語も足す: `titles.test.ts` は全契約(35 本)の全値の表を持ち、素の語が残る値と、
-  契約の葉にある値の数と合わない表を落とす。
+  Gem Swap の `easy` / `normal`(宝石 5 種 / 6 種。ホームの切り替えが添える Easy / Normal)もここで読む
+  (汎用の語で、ゲームの語の写しではない。2026-11-15、判断 57)。
+  契約に値を足したら語も足す: `titles.test.ts` は全契約(2026-10-02 に 35 本、2026-11-15 に 49 本)の
+  全値の表を持ち、素の語が残る値と、契約の葉にある値の数と合わない表を落とす。
   **LP(pixapps-landing の `public/simple-games/index.html`)も同じ語で表の見出しを出す**(日英。
   `club-mode-labels:begin` / `end` の区間がこの規則と `clubTier_*` の ja / en を写して持つ)。別のリポジトリなので
   テストではつながらない: `clubTier_*` の語・この規則・契約の値を変えたら、LP のその区間と `tests/ui.test.js` も直す。
@@ -819,7 +842,11 @@ params(表を分けるモード)と facts(結果画面の数字)はそのゲー�
 - **全員同じ盤面のデイリーは、すべて Today へ**(2026-10-02、判断 40)。次の **21 本**: Sudoku / Nonogram /
   Takuzu / Futoshiki / Kakuro / Crown Grid / Number Path / Shape Regions / Binary Balance / Sudoku 6×6 /
   Box Regions / Solitaire / Spider Solitaire / FreeCell / Mahjong Solitaire / Memory Match / Sliding Puzzle /
-  Number Match / Quick Math / Schulte Table / Water Sort。各ゲームは `game/challenge.ts` に
+  Number Match / Quick Math / Schulte Table / Water Sort。**2026-11-15 に次の 6 本を足して 27 本**(判断 57):
+  Unblock Puzzle / Loop Puzzle / Bridges / Pipe Link / Make the Target / Tangram。この 6 本はデイリーを `Today` へ、
+  フリープレイを難易度別の表へ送る(Crown Grid / Box Regions と同じ)。Tangram のデイリーは Medium の 12 図形の
+  1 つでフリープレイでも遊べ、12 日ごとに決まった順で戻るが、その日の盤面は全員同じなので入る(判断 57)。
+  各ゲームは `game/challenge.ts` に
   `boardDigest` / `boardDigestOf(session)`(接頭辞 + 契約版 + `:` + 8 桁 hex。§6-4)を持ち、結果画面が
   `daily` と `boardDigest` を渡す。Solitaire(1 枚 / 3 枚めくり)と Spider(1 / 2 / 4 スート)は
   **版が digest に入る**ので、版ごとに別の挑戦になる。Water Sort のデイリー(6 色・均等な混ぜ)はティアに
@@ -836,8 +863,8 @@ params(表を分けるモード)と facts(結果画面の数字)はそのゲー�
   送った人全員が 1 つの挑戦に集まる — それが Public の順位表である
   (PRODUCT_PRINCIPLES「順位表」)。新しいモードも、サーバ側の盤面生成も要らない。Private でも同じ(友人 2 人が同じデイリーを送れば 1 つ)。
 - **`daily` の印**は、結果画面が、その局がデイリーで、かつ**そのゲームのデイリーが全員同じ盤面**のとき
-  だけ付ける(`ClubResultAction` の `daily`、`POST /challenges` の `daily`)。上の 21 本が付け、
-  Minesweeper と Number Recall は付けない。Club の画面は端末のローカル日付で
+  だけ付ける(`ClubResultAction` の `daily`、`POST /challenges` の `daily`)。上の 27 本(2026-10-02 は
+  21 本)が付け、Minesweeper と Number Recall は付けない。Club の画面は端末のローカル日付で
   `GET /challenges?daily=` を引き、`Today` に並べる(§9)。
 
 ### 6-4. `boardDigest`
@@ -848,8 +875,9 @@ params(表を分けるモード)と facts(結果画面の数字)はそのゲー�
   文字列形 — いずれも golden テストが既に使っている文字列形)を、そのゲームの
   `game/rng.ts` にある xmur3(32 bit。Sudoku / Minesweeper は `hashSeed` として export
   済み、Water Sort は同じ 1 行の export を足す。2026-10-02 に `Today` へ加わった他の 19 本も
-  同じ 1 行を足した。export は列を変えない)に通す。新しい依存も共通ユーティリティも
-  要らず、`games/*/game/` の import ゼロの規則を破らない。
+  同じ 1 行を足した。2026-11-15 に加わった 6 本(判断 57)も同じ `hashSeed` を使い、無ければ同じ
+  1 行を足す。export は列を変えない)に通す。新しい依存も共通ユーティリティも要らず、`games/*/game/` の
+  import ゼロの規則を破らない。
 - 32 bit で足りる — これは改竄対策ではなく**版ずれの検出**であり、偶然の一致は
   比較の意味を損なわない。
 - サーバは文字列として保存・照合するだけで、計算しない(§0「決めないこと」)。
@@ -1155,7 +1183,7 @@ Suzuki Family                                  [Invite] [Settings]
 
 Your rankings                                  ← 自分が入っている表だけ(§16-1 `GET /rankings/mine`)。無ければ節ごと出ない
   [▦] Sudoku · Hard      #3 · 24 entries  4:31   0:33 to the next rank
-Today                                          ← その日のデイリー(§6-3、21 本)。無い日は節ごと出ない
+Today                                          ← その日のデイリー(§6-3、27 本。2026-10-02 は 21 本)。無い日は節ごと出ない
   Sudoku · Hard · Daily                        12 played
 Rankings                                       ← ゲーム単位の棚(§16。2026-10-10)。ホームと同じカテゴリ見出しとタイル
   Logic
@@ -1425,14 +1453,18 @@ Push は後続でも作らない(PRODUCT_PRINCIPLES「Club House」)。**公開�
   **そのまま写した**もの — `clubTier_cpuEasy` / `clubTier_cpuNormal` / `clubTier_cpuHard`(CPU 対戦 4 本は
   14 言語とも同じ語。Gin Rummy の `ginDifficulty_*` から)、`clubTier_normal`(`hitAndBlowDifficulty_normal`)、
   `clubTier_qmAddSub` / `clubTier_qmMultiply` / `clubTier_qmDivide` / `clubTier_qmMissing` / `clubTier_qmMixed`
-  (Quick Math の `qmathBand*`)— と、ゲームの語を持たない新しい語(`clubTier_levels`(`{from}` `{to}`。
+  (Quick Math の `qmathBand*`)、`clubTier_snakeSlow` / `clubTier_snakeNormal` / `clubTier_snakeFast`(Snake の
+  `snakeSpeed_*`)、`clubTier_bounceUpNormal` / `clubTier_bounceUpWide`(Bounce Up の `bounceUpWidth_*`)、
+  `clubTier_chainEasy` / `clubTier_chainNormal` / `clubTier_chainHard`(Chain Territory の `chainTerritoryMode_*`。
+  この 3 組は 2026-11-15、判断 57)— と、ゲームの語を持たない新しい語(`clubTier_levels`(`{from}` `{to}`。
   レベルの語は Core の `levelsTitle` / `modeLevel` に揃える)・`clubTier_ascending` / `clubTier_descending` /
   `clubTier_oddThenEven`)。写すのは、プレイヤーがゲームの画面で見た語と Club の題が食い違わないため
   (言い直した訳を新しく作らない)。写しが元の語からずれたら `src/i18n/i18n.test.ts` が 14 言語で落とす
   (Dots and Boxes の盤の大きさは `titles.test.ts` がゲームのカタログと突き合わせる)。どれも高リスクキーではない
   (題の語で、お金・同意・公開の約束ではない)。既知: 汎用の `clubTier_easy` / `clubTier_medium` は、ゲーム自身の
-  語と 5 か所で違う(th の `medium` が Sudoku・Sudoku 6x6・Water Sort では `ปกติ`、vi の Box Regions の `medium`
-  が `Trung bình`、ja の Sudoku 6x6 の `easy` が `やさしい`)。同じ意味の言い換えで、ゲーム側の語の揃え方は別の判断。
+  語と 11 か所で違う(th の `medium` が Sudoku・Sudoku 6x6・Water Sort では `ปกติ`、vi の `medium` が Box Regions と、
+  2026-11-15 に加わった Unblock Puzzle・Loop Puzzle・Bridges・Pipe Link・Make the Target・Tangram(判断 57)では
+  `Trung bình`、ja の Sudoku 6x6 の `easy` が `やさしい`)。同じ意味の言い換えで、ゲーム側の語の揃え方は別の判断。
 - Core に入るキーは §2 の 4 つ(`advancedTitle` / `clubEntry` / `playTogetherTitle` /
   `playTogetherBody`)と、`ClubResultAction` の**状態の 5 つ**(`clubResultSent`(`{club}`)/
   `clubResultPending` / `clubResultNotSent`(`{club}`)/ `clubResultSentMany`(`{count}`)/
@@ -1513,8 +1545,8 @@ PRODUCT_PRINCIPLES「機械で示すこと」の 3 と 4 を、実装の名前�
    上限、並列に失敗した結果が互いを消さない(lost update)、`attempts` の上限、旧形式の要素も読めて送れる。
    (d) 参加 — 3 経路(Public / 貼った招待リンク / 招待 URL)すべてで `clubAutoSendDisclosure` が出る。
    (e) 各ゲームの `challenge.test.ts` が `boardDigest` を新しい golden として固定し、結果画面が
-   デイリーのときだけ `daily` / `boardDigest` を渡す(§6-3 の 21 本)。(f) `X-Club-Api` の無い応答が
-   非最終であること(§10)。
+   デイリーのときだけ `daily` / `boardDigest` を渡す(§6-3 の 21 本。2026-11-15 に 27 本、判断 57)。
+   (f) `X-Club-Api` の無い応答が非最終であること(§10)。
 6. **保存の門** — `src/backup/keys.test.ts`(`sg.club` / `sg.clubOutbox` が
    `SHELL_KEYS_LEFT_BEHIND` に理由付きで在る)、`src/test/resetLocalDataWiring.test.tsx`
    (削除で消える。この test の `SHELL_SCHEMAS` はシェルの schema を名指しで列挙して
@@ -1695,7 +1727,8 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
     (`sg.clubOutbox`、§4-2)に残る。再送は**次の結果を送るとき**と**Club の画面を開いたとき**だけで、
     **起動時には送らない**。ポーリング・バックグラウンド同期・常時接続は引き続き無い(§10)。
 39. **参加の前の局は送らない。** 接続は送る瞬間に読む(§10)。
-40. **全員同じ盤面のデイリーは、すべて `Today` へ。** 21 本(Sudoku、Water Sort を含む。一覧は §6-3)。
+40. **全員同じ盤面のデイリーは、すべて `Today` へ。** 21 本(Sudoku、Water Sort を含む。一覧は §6-3。
+    2026-11-15 に 27 本、判断 57)。
     デイリーは `Today` の挑戦の中だけで順位が付く(判断 29)。
 41. **LP は各表の上位 3 人を出す**(最大 8 表、プレイの多い順)。今日のデイリーの上位 3 人とメンバー数に
     加えて(§18。判断 35 を広げる)。
@@ -1849,6 +1882,28 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
     (`POST /claim`・`/hosting` を含む §5)と契約テストは変えない(PROJECT_CONTEXT「Managed Club House」)。
     §8-1〜8-4 と §13-3 は作らなかった設計の記録として残し、§8-5 の切断は今の契約のまま。
 
+**2026-11-15 に製品オーナーが確認した判断**(対応ゲームの見直し。計画は
+`docs/plans/2026-11-14-club-coverage.md`):
+
+57. **契約を持つゲームを 35 → 49 本に広げる(2026-11-15、製品オーナー確認)。** 2026-10-17 以降の新作が
+    「結果と比較軸が固まるまで登録しない」としていた保留を解き、結果画面の数字をそのまま使える 14 本に契約を足す:
+    時間群に Unblock Puzzle / Loop Puzzle / Bridges / Pipe Link / Make the Target / Tangram、手数群に Light Grid /
+    Color Flood / Chain Territory、スコア群に Snake / Gem Swap / Bounce Up / Formation Fire / Scopa。時間群の 6 本は
+    デイリーが全員同じ盤面なので `Today` へ(判断 40 の 21 本 → 27 本)。Tangram のデイリーは Medium の 12 図形の
+    1 つでフリープレイでも遊べ、12 日ごとに決まった順で戻るが、その日の盤面が全員同じという `Today` の約束は守れるので入れる。
+    **入れない 31 本**: (a) 勝ち負けしか無い 13 本(判断 30 の 4 本と、同じ理由の Chess / Nested Tic-Tac-Toe / Nim /
+    Backgammon / Daifugo / Sevens / Old Maid / Durak / Texas Hold’em)。(b) 結果画面に成績を比べる数字が無いか、
+    勝てば全員同じ値になる 8 本(Peg Solitaire / Knight’s Tour / Three Peaks / Hanoi Towers / River Cargo /
+    Road Weave / Crazy Eights / Indian Rummy)— 入れるには結果画面に時間や得点を足すことになり、各 RULES の
+    「時計を出さない」などの判断を覆すので、足さない。(c) 数字はあるが比べる表にならない 10 本(Brick Breaker /
+    Bubble Pop / Echo Pads / Maze Escape / Frost Route / Ridge Cannons / Paddle Rally / Fleet Search / Spades /
+    Blackjack)— 表が同じ値で埋まる、抜け道がある、自分の成績だけを表さない、レベルや端末で比べられない、のどれか。
+    (c) で新しく置いた物差しは**飽和**: ほぼ全員が同じ値に揃う軸は、同値を提出順で並べる表になり、勝った回数と
+    同じく成績を比べない(判断 30 の理由と同じ)。理由はゲームごとに各 RULES の Club House の節が持つ。
+    Light Grid / Color Flood は結果画面の Undo で同じ盤をもう一度クリアしても 2 行目を送らない(ゲームの統計が
+    数える最初のクリアだけ)。Scopa は負けた試合も自分の得点で送る(Gin Rummy / Yacht と同じ)。Chain Territory は
+    勝った局だけ送る。Falling Blocks / Marble Weave(`in-development`)は対象外。
+
 **外部の事実確認**(#161 Phase 0 と `simple-games-club#1` の未完了項目。確認できるまで
 文言と数字を出さない。**6〜9 は判断 56 で Host 導線を作らないと決めたので、確かめない**):
 
@@ -1916,11 +1971,11 @@ endpoint 1 つ**だけ。Public にあって Private に無いエンドポイン
 
 §6-3 のとおり。新しいモードもサーバ側の盤面生成も無く、`POST /challenges` が同じ盤面を
 1 つにまとめ、`daily` の印で Club 画面の `Today` に集まる(§9)。`daily` が付くのは、全員同じ盤面の
-デイリーを持つ **21 本**(§6-3、判断 40)。Minesweeper(初手で盤面が変わる)と Number Recall(やり直すたびに
-配置が変わる)のデイリーは、全員同じ盤面ではないので付かず、ランキングへ行く(リードの設計注記)。サーバは
-結果を**ゲームの軸で上位 N 人**に並べて返し(`GET /challenges/:id/results`)、要求した本人の行は
-常に含める — 1 日に多くの人が集まる `Today` で、到着順の先頭 200 件だけでは良い記録が見えなくなる
-ため。
+デイリーを持つ **21 本**(§6-3、判断 40。2026-11-15 に 27 本、判断 57)。Minesweeper(初手で盤面が
+変わる)と Number Recall(やり直すたびに配置が変わる)のデイリーは、全員同じ盤面ではないので付かず、
+ランキングへ行く(リードの設計注記)。サーバは結果を**ゲームの軸で上位 N 人**に並べて返し
+(`GET /challenges/:id/results`)、要求した本人の行は常に含める — 1 日に多くの人が集まる `Today` で、
+到着順の先頭 200 件だけでは良い記録が見えなくなるため。
 
 ### 15-3. 読み量
 
@@ -1965,10 +2020,17 @@ Number Recall のデイリーもここに入る(リードの設計注記。§14 
 entryCount }` — `entry` は入った行、`improved` はこの行がその表での自分の最良か。上限(下)で今入れた行自身が
   落ちたときだけ `entry: null`・`improved: false` で、件数は変わらない。順位は返さない(結果画面は数字を
   **出さない**、§2-2)。
-- サーバは `src/contracts/games.ts` に 35 本の `{ order, direction }` を持ち、ここでだけ
-  `facts` を読む(§5-4)。知らないゲーム、形の悪い `paramsKey`、軸の無い `completed` の
+- サーバは `src/contracts/games.ts` に 49 本(2026-11-15、判断 57。それまでは 35 本)の `{ order, direction }` を
+  持ち、ここでだけ `facts` を読む(§5-4)。知らないゲーム、形の悪い `paramsKey`、軸の無い `completed` の
   facts は `400`。軸の名前は群ごとに固定: 時間は `elapsedSeconds`、手数は `moves`、
-  Hit and Blow は `attempts`、スコアは `score`。
+  Hit and Blow は `attempts`、スコアは `score`(2026-11-15 の 14 本は `elapsedSeconds` / `moves` /
+  `score` のどれか)。
+  **14 本はサーバの schema v8 と一緒に出る**(2026-11-15、判断 57): テーブルは変えず、`upgradeToV8` が
+  `rerankResults` を呼んで、契約の無かったころに軸なしの `completed` として保存されたそのゲームの挑戦の結果を
+  並べ直す(順位の変わった行だけ書き直すので、2 度走っても何も変わらない)。ランキングの行は直す必要が無い —
+  契約の無いゲームの `POST /rankings/results` は `400` で断られていたので、表は空から始まる。出す順は
+  サーバが先: 新しいクライアントが先に出ると、新しいゲームのランキング送信は `400 invalid_request` で
+  捨てられ、再送されない(§10)。
 - 保存(2026-10-10、schema v6): `ranking_entries` は **1 結果 1 行**で、主キーは到着順の `seq`(`Entry.id`)。
   `completed` は必ず入る。**1 人が 1 つの表に持てる行は `rankingRowsPerMember`(50)まで**で、超えた分はその人の
   最も悪い行から落とす(保存量と荒らしの上限。挿入のたびに自分の行数を member 索引で数える — 普段は上限 + 1 行。
@@ -2010,7 +2072,9 @@ entryCount }` — `entry` は入った行、`improved` はこの行がその表�
   モードの並びは `modeOrder`(`club/ui/common.tsx`。2026-10-10): easy < medium = normal < hard、N×N は N の
   昇順、Mahjong は `levelRange` の下限、Solitaire は draw-1 < draw-3、Spider は 1 < 2 < 4 suits、Schulte は大きさ →
   ascending < descending < odd-then-even、Dots and Boxes は small < medium < large、Quick Math は addsub <
-  multiply < divide < missing < mixed、知らないキーは最後に文字順。サーバの `gameId` / `paramsKey` の文字列順は
+  multiply < divide < missing < mixed、Snake は slow < normal < fast、Bounce Up は normal < wide(この 2 つは
+  2026-11-15、判断 57。Chain Territory の easy < normal < hard、Gem Swap の easy < normal、Light Grid /
+  Color Flood の N×N は上の規則のまま)、知らないキーは最後に文字順。サーバの `gameId` / `paramsKey` の文字列順は
   そのままで、並べるのはクライアント(`titles.test.ts` が全キーの順序を固定)。
 - 数字は結果画面の `facts` を `club/ui/common.tsx` の `axisText` / `factsLine` で描く(§11)。
 - 件数(`entryCount`。結果の行数)は自分の 1 行と末尾に出す。Core の画面には出ない(§2-2「数字を出さない」)。
@@ -2049,8 +2113,8 @@ digest 不一致の 1 行画面と、その `*ChallengeMismatch` の 14 言語)�
 ホームへ戻って Daily を選べば挑戦になる。
 spike には「挑戦から開いた局はチュートリアルの後にその盤面へ進む」分岐があったが、挑戦の盤面が
 渡されたときにしか働かず、今の流れでは一度も通っていなかった。直すなら、シェルが「デイリーを
-開く」入口(`GameEntry` の 1 値)を渡し、対応する 35 本がそれを受ける形になる(全ゲームに触れる
-変更なので codemod)。v1.4.0 までに直すかは製品オーナーの判断。
+開く」入口(`GameEntry` の 1 値)を渡し、対応する 35 本(2026-11-15 に 49 本、判断 57)がそれを受ける
+形になる(全ゲームに触れる変更なので codemod)。v1.4.0 までに直すかは製品オーナーの判断。
 
 ## 17. Public の運用 — 表示名・通報・削除・作り直し(2026-10-02、段取りの PR F)
 

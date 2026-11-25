@@ -24,15 +24,23 @@
  * A held key's repeats press nothing on either card (§3): under Reduced
  * Motion the card is up the instant the last tile merges, and a held Enter
  * would otherwise reach its focused first offer.
+ *
+ * On a device in a Club, a clear goes to the Club House as the card appears
+ * (§16): the time the card shows, read from the same clear seconds as the
+ * card and the share. A Free Play clear goes to the difficulty's ranking
+ * table; the daily — one problem for everyone — goes to that day's Today
+ * challenge with its date and the dealt problem's digest. The card after a
+ * shown solution sends nothing: nothing was made.
  */
-import type { KeyboardEvent } from 'react';
+import { useMemo, type KeyboardEvent } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
-import { solutionLines, type MakeTheTargetSession } from '../../game';
+import { boardDigestOf, solutionLines, type MakeTheTargetSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 import { ExpressionList } from './ExpressionList';
 
@@ -59,6 +67,14 @@ export function MakeTheTargetResultOverlay({
   const { t } = useSettings();
   // The made target gets its beat before the card covers it (§4).
   const revealed = useResultReveal(session.status === 'solved');
+  // The Club's one figure (§16), from the same clear seconds the card's time
+  // and the share's `details` read below — nothing recomputed (docs/
+  // architecture/club.md §6-1). Built above every return, as a hook must be.
+  const clearSeconds = lastResult === null ? null : lastResult.seconds;
+  const clubFacts = useMemo(
+    () => (clearSeconds === null ? null : { elapsedSeconds: clearSeconds }),
+    [clearSeconds],
+  );
 
   const mode =
     session.mode === 'daily' ? t('modeDaily') : t(`makeTheTargetDifficulty_${session.difficulty}`);
@@ -114,12 +130,19 @@ export function MakeTheTargetResultOverlay({
     );
   }
 
-  if (!revealed || lastResult === null) return null;
+  if (!revealed || lastResult === null || clubFacts === null) return null;
 
   const time = formatDuration(lastResult.seconds);
   const { comparison } = lastResult;
   const canStartNew = session.mode === 'free';
   const title = t('makeTheTargetSolvedTitle');
+  // The card's lines a share repeats (at most three) — and the Club's proof that
+  // `clubFacts` says what the card says.
+  const details = [
+    { label: t('difficulty'), value: mode },
+    { label: t('timeLabel'), value: time },
+    { label: t('makeTheTargetNumbersLabel'), value: count },
+  ];
 
   return (
     <div className="overlay overlay-result">
@@ -190,14 +213,16 @@ export function MakeTheTargetResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction
+        <ShareAction gameId="make-the-target" outcome="completed" details={details} />
+        <ClubResultAction
           gameId="make-the-target"
           outcome="completed"
-          details={[
-            { label: t('difficulty'), value: mode },
-            { label: t('timeLabel'), value: time },
-            { label: t('makeTheTargetNumbersLabel'), value: count },
-          ]}
+          details={details}
+          facts={clubFacts}
+          seed={session.seed}
+          params={{ difficulty: session.difficulty }}
+          daily={session.mode === 'daily' ? session.dailyDate : null}
+          boardDigest={session.mode === 'daily' ? boardDigestOf(session) : null}
         />
       </div>
       <ResultAdSlot />

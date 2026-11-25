@@ -2,7 +2,8 @@
 
 **2026-10-29 更新(正式収録、v1.7.0):** 製品オーナーの判断で Web 先行公開(ベータ)から正式収録した(registry の `channel` を外した — アプリのホーム・検索・ショートカットにも出る)。保存スキーマはこの収録で凍結し、以後は移行だけで変える — 公開中の Web ビルドが実際に書いた保存を `storage/releasedRecords.test.ts` が今の読み込み経路へ通す([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §0 と 2026-10-29 の節)。以下の「正式収録まで凍結しない」「アプリには出ない」などのベータ段階の記述は当時の記録である。収録は 2 週間の安定稼働・滞在時間の確認・実機での確認を満たしたという意味ではない。
 
-2026-10-23. New Web beta title. No native release or Club House registration.
+2026-10-23. New Web beta title. No native release or Club House registration
+(Club House registration followed on 2026-11-15 — see “Club House”).
 
 ## Rules and boards
 
@@ -28,7 +29,8 @@ Touch and mouse use buttons. Arrow keys move the roving keyboard focus;
 Enter or Space activates the focused cell.
 Ctrl/Cmd+Z undoes. Repeated activation keys do not make repeated moves. Modals
 make the board inert and detach game keys. Result sharing reports only the
-completed board size and moves shown on the card. Shared BannerSlot and
+completed board size and moves shown on the card; the Club House receives the
+same moves (see “Club House”). Shared BannerSlot and
 ResultAdSlot own advertising; no game action depends on them.
 
 The only interval counts visible play seconds in a ref, once a second without
@@ -55,8 +57,47 @@ Per-size statistics: games started, boards cleared, and fewest moves in a clear.
 Resume does not count as a new start; retry does. Abandonment is not a loss. Undo
 from a clear retains the cleared flag so finishing it again cannot double count.
 A replay is a new game. Best scores include games with hints (where available);
-there is no ranking, streak, daily obligation or artificial target. Total play
-time is local only, not displayed as a timer in play.
+there is no streak, daily obligation or artificial target, and no ranking beyond
+the Club House tables of a device that joined a Club (see “Club House”,
+2026-11-15). Total play time is local only, not displayed as a timer in play.
+
+## Club House
+
+**2026-11-15 に加えた**([architecture/club.md](architecture/club.md) §14 判断 57。製品オーナーの判断)。
+それまでは冒頭の 2026-10-23 の行のとおり、Web ベータの新作として登録しなかった(当時の記録に理由は書かれていない)。正典は
+club.md §6 と §16。ここにはこのゲームの側で決まることだけを書く。
+
+- **順位表の名前(`params`)** は `{ size }`(`3` / `4` / `5`)、`paramsKey` は `3x3` / `4x4` / `5x5`。盤の
+  大きさごとに 1 枚の表で、Club の表示は汎用の N×N の規則で `3×3` などと読む(新しいモード語は足さない)。
+- **結果画面が送る事実(`facts`)** は `{ moves }` だけ。結果カードの「手数」の行と、共有(`ShareAction`)の
+  `details` と同じ値(`session.history.length`)から作り、ここで計算しない。カードのもう 1 行の盤の大きさは
+  `params` が名指すので事実には入れない。自己ベストはカードに出るが `details` に無く、時間と Hint は
+  カードに出ないので、どれも送らない。契約(`challenge/contract.ts`)が受け付けるのは 0〜100,000 の整数
+  (保存の防御上限と同じ — 上の「Persistence and statistics」)。
+- **順位の軸は手数**で、少ないほうが上(`order: 'moves'`、`direction: 'asc'`)。
+- **送るのはクリアだけ**(`outcome: 'completed'`)。負けも行き詰まりも無いゲームで、結果カードはクリアでしか
+  出ないので、`played` を渡す場面は無い。
+- **1 つの盤から送るのは、統計の boards cleared(`completed`)が数える最初のクリアだけ。** 結果カードの Undo
+  で盤に戻り、同じ盤をもう一度クリアしても 2 行目は送らない(統計の「Undo from a clear retains the cleared
+  flag」と同じ線。Undo と 1 タップで同じ盤の行が増えるのを防ぐ)。自己ベスト(fewest moves)のほうは既存の
+  統計の規則のままクリアのたびに更新されるので、Undo のあと少ない手数でもう一度クリアするとカードと統計の
+  自己ベストはその手数まで下がるが、Club の表には最初のクリアの手数が残る。`state/GameContext.tsx` が保存しない印 `firstClear`(盤を終えた手の前に
+  局の `cleared` がまだ false だったか)を持ち、結果カードはそれが true のときだけ `ClubResultAction` を
+  置く。印は Retry と New board で false に戻る。保存の形は変わらない。Undo のあと中断して再開した盤も、
+  保存の `cleared` が true なので送らない。
+- **Retry と New board は新しいゲーム**(統計の games started も数える)なので、そのクリアは 1 行として送る。
+  Retry は同じ seed なので、答えを知った盤でもう一度少ない手数を送れる。Sliding Puzzle・Box Regions など
+  同じ形のゲームと同じで、このゲームの側では塞がない(club.md §16)。
+- **Hint は無料・無制限で、回数を数えず、カードにも出ない**ので、Hint を使った行と使わない行は表の上で
+  区別されない。回数を足すと結果画面と保存の形が変わる(移行が要る)ので、足さない。
+- **盤の運**(3×3 には 1 手で消える盤がある — 生成器が暗い盤を返したときは中央を 1 回反転する)は、
+  club.md §14 判断 28(デイリー以外は盤面が揃っていなくてよい。ランダム性はゲームの一部)のまま表を作る。
+  3×3 の表も残す。
+- **デイリーは無いので `Today` には入らない。** `daily` は渡さず、`boardDigest` は `null`。`seed` は局の
+  `session.seed`(符号なし 32 ビット整数)を文字列にしたもので、最大 10 文字。ランキングは同じ盤面で競わせる
+  ものではない(club.md §16)。
+- 結果画面の `ClubResultAction` は `ShareAction` の次に置く。Club に参加していない端末では何も描かない。
+- ゲーム自体は変わらない。統計・自己ベスト・保存データ・結果画面の既存の表示には触れない。
 
 ## Text and verification provenance
 

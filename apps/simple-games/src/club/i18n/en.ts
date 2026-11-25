@@ -187,6 +187,17 @@ export const en = {
   clubTier_qmDivide: 'Dividing',
   clubTier_qmMissing: 'Missing number',
   clubTier_qmMixed: 'Mixed',
+  // Copied word for word too (club.md §6-1 rule (e), decision 57): clubTier_snake* from
+  // snakeSpeed_*, clubTier_bounceUp* from bounceUpWidth_*, clubTier_chain* from
+  // chainTerritoryMode_* (Chain Territory's own CPU words, not clubTier_cpu*).
+  clubTier_snakeSlow: 'Slow',
+  clubTier_snakeNormal: 'Normal',
+  clubTier_snakeFast: 'Fast',
+  clubTier_bounceUpNormal: 'Normal',
+  clubTier_bounceUpWide: 'Wide',
+  clubTier_chainEasy: 'Easy',
+  clubTier_chainNormal: 'Normal',
+  clubTier_chainHard: 'Hard',
   clubTier_levels: 'Levels {from}–{to}',
   clubTier_ascending: 'Ascending',
   clubTier_descending: 'Descending',

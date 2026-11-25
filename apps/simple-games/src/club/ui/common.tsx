@@ -167,6 +167,38 @@ const SCHULTE_ORDERS: Readonly<Record<string, Parameters<T>[0]>> = {
 };
 
 /**
+ * Games whose mode keys are read in that game's own words (club.md §6-1 rule (e), decision 57):
+ * Snake's speeds, Bounce Up's platform widths and Chain Territory's CPU strengths. Chain
+ * Territory is a CPU game but not one of `CPU_GAMES`: its own words differ from theirs in some
+ * locales, so it keeps its own copies.
+ */
+const OWN_WORDS: ReadonlyMap<string, ReadonlyMap<string, Parameters<T>[0]>> = new Map([
+  [
+    'snake',
+    new Map<string, Parameters<T>[0]>([
+      ['slow', 'clubTier_snakeSlow'],
+      ['normal', 'clubTier_snakeNormal'],
+      ['fast', 'clubTier_snakeFast'],
+    ]),
+  ],
+  [
+    'bounce-up',
+    new Map<string, Parameters<T>[0]>([
+      ['normal', 'clubTier_bounceUpNormal'],
+      ['wide', 'clubTier_bounceUpWide'],
+    ]),
+  ],
+  [
+    'chain-territory',
+    new Map<string, Parameters<T>[0]>([
+      ['easy', 'clubTier_chainEasy'],
+      ['normal', 'clubTier_chainNormal'],
+      ['hard', 'clubTier_chainHard'],
+    ]),
+  ],
+]);
+
+/**
  * The mode words of a title (`Sudoku · Hard`), or null when the title is the
  * game alone (club.md §6-1「タイトルのモード語」). The `paramsKey` is the contract's table name and is
  * never shown as it stands: each game's keys are read in that game's own
@@ -204,6 +236,10 @@ export function modeLabel(gameId: string, key: string, t: T, daily = false): str
     const track = QUICK_MATH_TRACKS[key];
     if (track !== undefined) return t(track);
   }
+
+  // Before the generic words below: Bounce Up's `normal` is its own word, not Hit and Blow's.
+  const own = OWN_WORDS.get(gameId)?.get(key);
+  if (own !== undefined) return t(own);
 
   if (gameId === 'schulte-table') {
     const match = /^(\d+)x(\d+)-(ascending|descending|odd-then-even)$/.exec(key);
@@ -356,6 +392,16 @@ const SCHULTE_ORDER: ReadonlyMap<string, number> = new Map([
   ['descending', 1],
   ['odd-then-even', 2],
 ]);
+/** Snake's speeds, slowest first, and Bounce Up's platform widths, narrower first (decision 57). */
+const SNAKE_ORDER: ReadonlyMap<string, number> = new Map([
+  ['slow', 1],
+  ['normal', 2],
+  ['fast', 3],
+]);
+const BOUNCE_UP_ORDER: ReadonlyMap<string, number> = new Map([
+  ['normal', 1],
+  ['wide', 2],
+]);
 /** Solitaire's draw and Spider's suit count, by the number they name. */
 const COUNT_ORDER: ReadonlyMap<string, number> = new Map([
   ['draw-1', 1],
@@ -391,6 +437,8 @@ export function modeOrder(gameId: string, key: string): number {
   }
   if (gameId === 'dots-and-boxes') return DOTS_AND_BOXES_ORDER.get(key) ?? UNKNOWN_ORDER;
   if (gameId === 'quick-math') return QUICK_MATH_ORDER.get(key) ?? UNKNOWN_ORDER;
+  if (gameId === 'snake') return SNAKE_ORDER.get(key) ?? UNKNOWN_ORDER;
+  if (gameId === 'bounce-up') return BOUNCE_UP_ORDER.get(key) ?? UNKNOWN_ORDER;
   if (gameId === 'schulte-table') {
     // Size first, then the order within a size: 3×3 ascending … 5×5 odds-then-evens.
     const match = /^(\d+)x\d+-(.+)$/.exec(key);

@@ -4,8 +4,10 @@
  * would be a clock counting up at someone doing a puzzle. There is no losing
  * screen, because there is no losing (§3).
  *
- * No Club House action: Bridges is not a Club challenge while it is in early
- * release (§17), so the share is the only thing below the buttons.
+ * Below the buttons, the share and the Club House action (§17): a daily goes
+ * to that day's Today challenge with its date and board digest, a free board
+ * to its difficulty's ranking table. Both read the same two figures the card
+ * shows.
  *
  * The card does not act on what was meant for the board (§13). The last
  * bridge is very often a second tap on the partner just tapped, or an Enter
@@ -19,12 +21,13 @@
 import { useCallback, useEffect, useRef, type KeyboardEvent, type MouseEvent } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
 import { useTransientTimeout } from '@/ui/useTransientTimeout';
-import type { BridgesSession } from '../../game';
+import { boardDigestOf, type BridgesSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
 /**
@@ -99,6 +102,12 @@ function ResultCard({
     { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
     { label: t('bridgesHintsUsed'), value: String(session.hintCount) },
   ];
+  // The same session fields as `details`: the Club's figures and the share's strings
+  // never disagree (docs/architecture/club.md §6-1).
+  const facts = {
+    elapsedSeconds: session.elapsedSeconds,
+    hints: session.hintCount,
+  };
 
   return (
     <div className="overlay overlay-result">
@@ -160,6 +169,16 @@ function ResultCard({
           </button>
         </div>
         <ShareAction gameId="bridges" outcome="completed" details={details} />
+        <ClubResultAction
+          gameId="bridges"
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{ difficulty: session.difficulty }}
+          boardDigest={session.mode === 'daily' ? boardDigestOf(session) : null}
+          daily={session.mode === 'daily' ? session.dailyDate : null}
+        />
       </div>
       <ResultAdSlot />
     </div>

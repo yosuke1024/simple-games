@@ -113,6 +113,24 @@ describe('mode words', () => {
     expect(rankingTitle('quick-math', 'addsub', t)).toBe('Quick Math · clubTier_qmAddSub');
   });
 
+  it('e. names Snake’s speeds, Bounce Up’s widths and Chain Territory’s CPU in their own words', () => {
+    expect(modeLabel('snake', 'slow', t)).toBe('clubTier_snakeSlow');
+    expect(modeLabel('snake', 'normal', t)).toBe('clubTier_snakeNormal');
+    expect(modeLabel('snake', 'fast', t)).toBe('clubTier_snakeFast');
+    // Bounce Up's `normal` is its width word, not Hit and Blow's difficulty.
+    expect(modeLabel('bounce-up', 'normal', t)).toBe('clubTier_bounceUpNormal');
+    expect(modeLabel('bounce-up', 'wide', t)).toBe('clubTier_bounceUpWide');
+    // A CPU game, but not one of the four that share clubTier_cpu*.
+    expect(modeLabel('chain-territory', 'easy', t)).toBe('clubTier_chainEasy');
+    expect(modeLabel('chain-territory', 'normal', t)).toBe('clubTier_chainNormal');
+    expect(modeLabel('chain-territory', 'hard', t)).toBe('clubTier_chainHard');
+    expect(rankingTitle('snake', 'fast', t)).toBe('Snake · clubTier_snakeFast');
+    expect(rankingTitle('invaders', 'standard', t)).toBe('Formation Fire');
+    // Gem Swap's kinds read the generic words its own toggle uses (rule (g)).
+    expect(modeLabel('gem-swap', 'easy', t)).toBe('clubTier_easy');
+    expect(modeLabel('gem-swap', 'normal', t)).toBe('clubTier_normal');
+  });
+
   it('f. writes a Schulte Table as its size and its order', () => {
     expect(modeLabel('schulte-table', '5x5-odd-then-even', t)).toBe('5×5 · clubTier_oddThenEven');
     expect(modeLabel('schulte-table', '3x3-ascending', t)).toBe('3×3 · clubTier_ascending');
@@ -182,17 +200,32 @@ const EVERY_KEY: Readonly<Record<string, readonly { params: unknown; key: string
   '2048': STANDARD,
   'binary-balance': difficulties(EASY_MEDIUM_HARD),
   'block-puzzle': STANDARD,
+  'bounce-up': [
+    { params: { width: 'normal' }, key: 'normal' },
+    { params: { width: 'wide' }, key: 'wide' },
+  ],
   'box-regions': difficulties(EASY_MEDIUM_HARD),
+  bridges: difficulties(EASY_MEDIUM_HARD),
   'bunny-hop': STANDARD,
+  'chain-territory': difficulties(CPU),
+  'color-flood': squares([6, 10, 14]),
   'crown-grid': difficulties(EASY_MEDIUM_HARD),
   dominoes: STANDARD,
   'dots-and-boxes': ['small', 'medium', 'large'].map((size) => ({ params: { size }, key: size })),
   freecell: STANDARD,
   futoshiki: squares([4, 5, 6, 7]),
+  // Gem Swap's 5 and 6 kinds of gem are the Easy and Normal of its own toggle (rule (g)).
+  'gem-swap': [
+    { params: { colors: 5 }, key: 'easy' },
+    { params: { colors: 6 }, key: 'normal' },
+  ],
   'gin-rummy': difficulties(CPU),
   hearts: difficulties(CPU),
   'hit-and-blow': difficulties(CPU),
+  invaders: STANDARD,
   kakuro: squares([6, 8, 10]),
+  'light-grid': squares([3, 4, 5]),
+  'loop-puzzle': difficulties(EASY_MEDIUM_HARD),
   'mahjong-solitaire': [
     'sprout',
     'steps',
@@ -205,6 +238,7 @@ const EVERY_KEY: Readonly<Record<string, readonly { params: unknown; key: string
     'garden',
     'turtle',
   ].map((layout) => ({ params: { layout }, key: layout })),
+  'make-the-target': difficulties(EASY_MEDIUM_HARD),
   mancala: difficulties(CPU),
   'memory-match': difficulties(EASY_MEDIUM_HARD),
   minesweeper: difficulties(EASY_MEDIUM_HARD, { firstIndex: 0 }),
@@ -212,6 +246,7 @@ const EVERY_KEY: Readonly<Record<string, readonly { params: unknown; key: string
   'number-match': STANDARD,
   'number-path': difficulties(EASY_MEDIUM_HARD),
   'number-recall': STANDARD,
+  'pipe-link': difficulties(EASY_MEDIUM_HARD),
   'quick-math': [
     ['addSub', 'addsub'],
     ['multiply', 'multiply'],
@@ -228,9 +263,11 @@ const EVERY_KEY: Readonly<Record<string, readonly { params: unknown; key: string
       ['oddThenEven', 'odd-then-even'],
     ].map(([order, name]) => ({ params: { size, order }, key: `${size}x${size}-${name}` })),
   ),
+  scopa: STANDARD,
   'shape-regions': difficulties(EASY_MEDIUM_HARD),
   'sky-fighter': STANDARD,
   'sliding-puzzle': squares([3, 4, 5]),
+  snake: ['slow', 'normal', 'fast'].map((speed) => ({ params: { speed }, key: speed })),
   solitaire: [
     { params: { drawThree: false }, key: 'draw-1' },
     { params: { drawThree: true }, key: 'draw-3' },
@@ -243,6 +280,9 @@ const EVERY_KEY: Readonly<Record<string, readonly { params: unknown; key: string
   'sudoku-6x6': difficulties(EASY_MEDIUM_HARD),
   sudoku: difficulties(EASY_MEDIUM_HARD),
   takuzu: squares([6, 8, 10]),
+  // Tangram's params name the tier `tier`, not `difficulty`.
+  tangram: EASY_MEDIUM_HARD.map((tier) => ({ params: { tier }, key: tier })),
+  'unblock-puzzle': difficulties(EASY_MEDIUM_HARD),
   'water-sort': ['easy', 'medium', 'hard', 'daily'].map((tier) => ({
     params: { tier },
     key: tier,
@@ -259,7 +299,8 @@ describe('every mode the contracts can produce reads as a word, never as the raw
       .map((game) => game.id as string)
       .sort();
     expect(Object.keys(EVERY_KEY).sort()).toEqual(withContract);
-    expect(withContract).toHaveLength(35);
+    // 35 on 2026-10-02, 49 from 2026-11-15 (club.md §14 decision 57).
+    expect(withContract).toHaveLength(49);
   });
 
   it('lists every value the contract sources declare (a new value must be added here)', () => {

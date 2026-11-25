@@ -15,14 +15,21 @@
  * The share says what this card says: every round is `played` — a round has
  * a score, not a win (docs/ARCHITECTURE.md「結果画面の共有」).
  *
+ * The Club House (§16) gets the score from the same field, in the table of
+ * this gem count. A round that ended by 30 swaps or stuck is `completed`
+ * there, the same rounds the best is made of; a round the cascade cap stopped
+ * is `played` and goes nowhere — its board never settled, so its score is not
+ * one the rules define (§5; docs/architecture/club.md §14 判断 57).
+ *
  * The finished board gets its beat before the card covers it
  * (`useResultReveal`, after the last move's replay); under Reduced Motion the
  * card is there at once. A held Enter or Space presses a button once.
  */
-import type { KeyboardEvent } from 'react';
+import { useMemo, type KeyboardEvent } from 'react';
 import type { MessageKey } from '@/i18n';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
@@ -59,12 +66,17 @@ export function GemSwapResultOverlay({
 }: GemSwapResultOverlayProps) {
   const { t } = useSettings();
   const revealed = useResultReveal(result !== null);
+  const score = result?.score ?? 0;
+  // The round's facts, once: the share's strings and the Club's figures are
+  // read from the same field (docs/architecture/club.md §6-1). The gem count
+  // names the table (params), not a fact.
+  const facts = useMemo(() => ({ score }), [score]);
   if (!revealed || result === null) return null;
 
   const title = t('gemSwapResultTitle');
   const kinds = t('gemSwapKindsCount', { count: result.colors });
   const details = [
-    { label: t('score'), value: String(result.score) },
+    { label: t('score'), value: String(score) },
     { label: t('gemSwapKinds'), value: kinds },
   ];
 
@@ -83,7 +95,7 @@ export function GemSwapResultOverlay({
         <dl className="result-facts">
           <div>
             <dt>{t('score')}</dt>
-            <dd>{result.score}</dd>
+            <dd>{score}</dd>
           </div>
           <div>
             <dt>{t('gemSwapKinds')}</dt>
@@ -129,6 +141,15 @@ export function GemSwapResultOverlay({
           </button>
         </div>
         <ShareAction gameId="gem-swap" outcome="played" details={details} />
+        <ClubResultAction
+          gameId="gem-swap"
+          outcome={result.counted ? 'completed' : 'played'}
+          details={details}
+          facts={facts}
+          seed={result.seed}
+          params={{ colors: result.colors }}
+          boardDigest={null}
+        />
       </div>
       <ResultAdSlot />
     </div>
