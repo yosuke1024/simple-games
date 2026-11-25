@@ -27,25 +27,34 @@ Web 版を同時に。**schema 8 への移行は戻せない**)→ (4) landing �
 **(3) より前に 1.8.6 をどの端末にも入れない** — サーバが新しい 14 本を知る前に送られたランキングの結果は
 `400 invalid_request` で捨てられ、再送されない。
 
-- [ ] simple-games-club#16 をマージ(schema 8。node:sqlite でだけ試した移行で、workerd では走らせていない)
-- [ ] アプリのリリース PR をマージ(PixTale・共有リンク・Club House・iOS の版 1.8.6 / 10806)
-- [ ] オーナー: サーバと club.pixapps.ai の Web 版をデプロイ。デプロイ後、本番の `/api/v1/public` が今までどおり
-      返ること、新しい 14 本のうち 1 本の結果が順位表に載ること
-- [ ] pixapps-landing#244(Club House の節に新しい 14 本の名前)と #239(共有ページを公開済みの全 id に)を
-      マージ、Web 版を Publish。ブラウザ版のホーム末尾に PixTale の行が出ること
-- [ ] タグ `v1.8.6`。`pnpm --filter simple-games share:check --ref v1.8.6` が「All 80 share landings answer 200.」
-      (2026-11-25 に `v1.8.5` に対しては 80 件とも通った)
-- [ ] `pnpm --filter simple-games i18n:gate:check` が緑(2026-11-25、リリース用ブランチで「Gate complete」)
-- [ ] Android の AAB 10806(CI)。iOS のビルド 10806 をアップロード
-- [ ] リリースノート: App Store 14 言語 / Google Play 17 言語タグ(500 字以内)。Club House で比べられるゲームが
-      増えたことを書く。PixTale の行はリリースノートに書かない(送客の文言を増やさない)
+- [x] simple-games-club#16 をマージ(2026-11-25、`71c721b`。schema 8。node:sqlite でだけ試した移行で、workerd では
+      走らせていない)
+- [x] アプリのリリース PR をマージ(2026-11-25、#332 を merge commit で。main は `ed52cb52`、CI 緑。#331 と #324 も
+      merged になった)
+- [x] オーナー: サーバと club.pixapps.ai の Web 版をデプロイ(2026-11-25 01:19Z、Worker の版 `80249d65` が 100%)。
+      デプロイ後に確かめたこと: `wrangler deployments list` の最新がこの版、club.pixapps.ai が配る `index-*.js` が
+      `ed52cb52` から組んだ `web/` と同じファイル名、`/api/v1/health` と `/api/v1/public` が 200
+- [ ] デプロイ後、新しい 14 本のうち 1 本の結果が本番の順位表に載ること(メンバーとして送る必要がある。実機で見る)
+- [ ] pixapps-landing#245(#244 の Club House の節・#239 の共有ページ・Web 版 `v1.8.6` のビルド・LP のカードの絵を
+      1 本にまとめたもの)をマージ。Publish は 2026-11-25 に成功し、ビルドのコミット `568bb66a` が載っている。
+      マージ後、ブラウザ版のホーム末尾に PixTale の行が出ること、LP のカードがゲームごとの絵になっていること
+- [x] タグ `v1.8.6`(2026-11-25、`ed52cb52`)。`share:check --ref v1.8.6` は「All 80 share landings answer 200.」
+- [x] `i18n:gate` は「Gate complete」(2026-11-25、12 言語とも 47 / 47)
+- [x] Android の AAB 10806(CI の run 45523483232。APK で versionCode 10806 / versionName 1.8.6 を確認)。
+      iOS のビルド 10806 を 2026-11-25 にアップロード(Delivery UUID `d5293ca1-b705-4f08-943f-1a299092c12a`、
+      サーバのデプロイ後。`altool --validate-app` はエラーなし・警告は「2027 年 4 月から iOS 27 SDK が必要」の 1 件)。
+      App Store Connect の版 1.8.6 に紐づけ済み
+- [x] リリースノート: App Store Connect に 14 言語で書き込み、読み戻して一致(2026-11-25)。Google Play 用の
+      17 言語タグ(最長 394 字)はオーナーへ渡した。Club House で比べられるゲームが 35 本から 49 本に増えたことだけを
+      書き、PixTale の行は書いていない(送客の文言を増やさない)。審査メモも 1.8.6 用に書き換えた
 - [ ] §5.18 を PixTale を含めて実機で通す(Android は Google Play、iPhone は App Store の掲載ページが開く)
 - [ ] 実機: 新しい 14 本のうち、時間・手数・スコアの各群から 1 本ずつ結果を Club に送り、順位表に載ること。
       Today に Unblock Puzzle / Loop Puzzle / Bridges / Pipe Link / Make the Target / Tangram のデイリーが出ること。
       1.8.5 以前の端末が同じ Club を開いても壊れないこと(自分の契約に無いゲームの表は出ないだけ)
 - [ ] ストアへ提出(App Store は審査、Google Play は製品版)
 
-**未確認は未確認として書く。** 2026-11-25 の時点で、上のどれも実機・本番サーバでは確かめていない。
+**未確認は未確認として書く。** 2026-11-25 の時点で、実機ではどれも確かめていない。本番サーバについて確かめたのは
+上の「デプロイ後に確かめたこと」だけで、新しい 14 本の結果が実際に順位表に載るところは見ていない。
 
 ## 2026-11-11: iOS 1.8.5(Blackjack / Texas Hold'em を iOS から外して再提出。Android は 1.8.4 のまま)
 
