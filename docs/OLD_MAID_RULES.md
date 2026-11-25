@@ -43,3 +43,14 @@ Webでは無効ボタンとアプリ専用の説明を表示する。通信・�
 Card faces and backs use the original shared vector artwork described in
 [CARD_DESIGN.md](CARD_DESIGN.md). Rules, saved card IDs, accessible labels and
 selection behavior are unchanged. Both CPU and Nearby use this artwork.
+
+## Club House
+
+正典は [architecture/club.md](architecture/club.md) §6-0と§14の判断57。
+
+- **登録しない**（registryの`challenge`を持たない。2026-11-15、判断57）。結果画面の数字はあなたが何番目に
+  上がったか（1〜4位）だけで、1〜3位が上がり、4位はジョーカーが残った負けである。引く札は伏せたまま選び、
+  CPUも無作為に引く運のゲームなので（CPUの難易度も置かない）、順位は成績より配札と引きの運を映す。同じ順位は
+  提出順に並ぶので、表は上がった局を届いた順に並べたものになり、勝った回数と同じく成績を比べない
+  （[PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「順位表」。判断30のCheckers / Connect Four / Gomoku / Ludoと同じ理由）。
+- 入るには、結果画面が順位のほかに成績を比べられる数字を出すことが要る（club.md §6-0）。

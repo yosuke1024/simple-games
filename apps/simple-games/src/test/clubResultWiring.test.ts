@@ -18,7 +18,10 @@ import { GAMES } from '../app/registry';
 const SRC = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const GAMES_DIR = join(SRC, 'games');
 
-/** The games whose daily is one board for everyone (club.md §14 判断 40). */
+/**
+ * The games whose daily is one board for everyone (club.md §14 判断 40): 21,
+ * and 27 from 2026-11-15 with the last six (判断 57).
+ */
 const SHARED_DAILY_GAMES = [
   'sudoku',
   'nonogram',
@@ -41,6 +44,12 @@ const SHARED_DAILY_GAMES = [
   'quick-math',
   'schulte-table',
   'water-sort',
+  'unblock-puzzle',
+  'loop-puzzle',
+  'bridges',
+  'pipe-link',
+  'make-the-target',
+  'tangram',
 ] as const;
 
 /** Attributes the Club layer needs on every usage (club.md §9). */

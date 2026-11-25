@@ -14,15 +14,22 @@
  * (§6, interim until the owner decides). The finished figure gets its beat
  * before the card covers it (`useResultReveal`, immediate under Reduced
  * Motion). A held key's repeats press nothing on the card.
+ *
+ * On a device that has joined a Club, the completion also goes to the Club
+ * House (§14, docs/architecture/club.md §14 判断 57): the card's time, in the
+ * tier's ranking table for Free Play; the daily — one figure for everyone
+ * that day — goes to that day's Today challenge with its date and the
+ * figure's digest instead.
  */
-import type { KeyboardEvent } from 'react';
+import { useMemo, type KeyboardEvent } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
-import type { TangramSession } from '../../game';
+import { boardDigestOf, type TangramSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 import { figureTitle } from '../labels';
 
@@ -48,9 +55,18 @@ export function TangramResultOverlay({
 }: TangramResultOverlayProps) {
   const { t } = useSettings();
   const revealed = useResultReveal(session.status === 'complete');
-  if (!revealed || lastResult === null) return null;
+  // The Club's one figure (§14), from the same completion seconds the card's
+  // time and the share's `details` read below — nothing recomputed (docs/
+  // architecture/club.md §6-1). Built above every return, as a hook must be.
+  const seconds = lastResult === null ? null : lastResult.seconds;
+  const facts = useMemo(() => (seconds === null ? null : { elapsedSeconds: seconds }), [seconds]);
+  if (!revealed || lastResult === null || facts === null) return null;
 
   const daily = lastResult.mode === 'daily';
+  // The daily's date: the Today challenge it meets in (§14). The figure comes
+  // back after a round of the Medium list, so the seed carries the date — the
+  // digest alone would pair this day with the last time the figure was dealt.
+  const dailyDate = daily ? lastResult.dailyDate : null;
   const time = formatDuration(lastResult.seconds);
   const title = figureTitle(
     t,
@@ -115,6 +131,16 @@ export function TangramResultOverlay({
           </button>
         </div>
         <ShareAction gameId="tangram" outcome="completed" details={details} />
+        <ClubResultAction
+          gameId="tangram"
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed={dailyDate === null ? session.figure.id : `tangram-daily-${dailyDate}`}
+          params={{ tier: lastResult.tier }}
+          boardDigest={dailyDate === null ? null : boardDigestOf(session)}
+          daily={dailyDate}
+        />
       </div>
       <ResultAdSlot />
     </div>

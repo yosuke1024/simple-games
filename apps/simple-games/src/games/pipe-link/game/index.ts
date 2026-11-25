@@ -1,5 +1,6 @@
 export * from './board';
 export * from './bundled';
+export * from './challenge';
 export * from './daily';
 export * from './generator';
 export * from './hint';

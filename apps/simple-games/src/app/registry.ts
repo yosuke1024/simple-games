@@ -113,34 +113,48 @@ import { WATER_SORT_CHALLENGE } from '../games/water-sort/challenge/contract';
 import { GAME_2048_CHALLENGE } from '../games/2048/challenge/contract';
 import { BINARY_BALANCE_CHALLENGE } from '../games/binary-balance/challenge/contract';
 import { BLOCK_PUZZLE_CHALLENGE } from '../games/block-puzzle/challenge/contract';
+import { BOUNCE_UP_CHALLENGE } from '../games/bounce-up/challenge/contract';
 import { BOX_REGIONS_CHALLENGE } from '../games/box-regions/challenge/contract';
+import { BRIDGES_CHALLENGE } from '../games/bridges/challenge/contract';
 import { BUNNY_HOP_CHALLENGE } from '../games/bunny-hop/challenge/contract';
+import { CHAIN_TERRITORY_CHALLENGE } from '../games/chain-territory/challenge/contract';
+import { COLOR_FLOOD_CHALLENGE } from '../games/color-flood/challenge/contract';
 import { CROWN_GRID_CHALLENGE } from '../games/crown-grid/challenge/contract';
 import { DOMINOES_CHALLENGE } from '../games/dominoes/challenge/contract';
 import { DOTS_AND_BOXES_CHALLENGE } from '../games/dots-and-boxes/challenge/contract';
 import { FREECELL_CHALLENGE } from '../games/freecell/challenge/contract';
 import { FUTOSHIKI_CHALLENGE } from '../games/futoshiki/challenge/contract';
+import { GEM_SWAP_CHALLENGE } from '../games/gem-swap/challenge/contract';
 import { GIN_RUMMY_CHALLENGE } from '../games/gin-rummy/challenge/contract';
 import { HEARTS_CHALLENGE } from '../games/hearts/challenge/contract';
 import { HIT_AND_BLOW_CHALLENGE } from '../games/hit-and-blow/challenge/contract';
+import { INVADERS_CHALLENGE } from '../games/invaders/challenge/contract';
 import { KAKURO_CHALLENGE } from '../games/kakuro/challenge/contract';
+import { LIGHT_GRID_CHALLENGE } from '../games/light-grid/challenge/contract';
+import { LOOP_PUZZLE_CHALLENGE } from '../games/loop-puzzle/challenge/contract';
 import { MAHJONG_SOLITAIRE_CHALLENGE } from '../games/mahjong-solitaire/challenge/contract';
+import { MAKE_THE_TARGET_CHALLENGE } from '../games/make-the-target/challenge/contract';
 import { MANCALA_CHALLENGE } from '../games/mancala/challenge/contract';
 import { MEMORY_MATCH_CHALLENGE } from '../games/memory-match/challenge/contract';
 import { NONOGRAM_CHALLENGE } from '../games/nonogram/challenge/contract';
 import { NUMBER_MATCH_CHALLENGE } from '../games/number-match/challenge/contract';
 import { NUMBER_PATH_CHALLENGE } from '../games/number-path/challenge/contract';
 import { NUMBER_RECALL_CHALLENGE } from '../games/number-recall/challenge/contract';
+import { PIPE_LINK_CHALLENGE } from '../games/pipe-link/challenge/contract';
 import { QUICK_MATH_CHALLENGE } from '../games/quick-math/challenge/contract';
 import { REVERSI_CHALLENGE } from '../games/reversi/challenge/contract';
 import { SCHULTE_TABLE_CHALLENGE } from '../games/schulte-table/challenge/contract';
+import { SCOPA_CHALLENGE } from '../games/scopa/challenge/contract';
 import { SHAPE_REGIONS_CHALLENGE } from '../games/shape-regions/challenge/contract';
 import { SKY_FIGHTER_CHALLENGE } from '../games/sky-fighter/challenge/contract';
 import { SLIDING_PUZZLE_CHALLENGE } from '../games/sliding-puzzle/challenge/contract';
+import { SNAKE_CHALLENGE } from '../games/snake/challenge/contract';
 import { SOLITAIRE_CHALLENGE } from '../games/solitaire/challenge/contract';
 import { SPIDER_SOLITAIRE_CHALLENGE } from '../games/spider-solitaire/challenge/contract';
 import { SUDOKU_6X6_CHALLENGE } from '../games/sudoku-6x6/challenge/contract';
 import { TAKUZU_CHALLENGE } from '../games/takuzu/challenge/contract';
+import { TANGRAM_CHALLENGE } from '../games/tangram/challenge/contract';
+import { UNBLOCK_PUZZLE_CHALLENGE } from '../games/unblock-puzzle/challenge/contract';
 import { YACHT_CHALLENGE } from '../games/yacht/challenge/contract';
 
 export type GameId =
@@ -1051,8 +1065,11 @@ export const GAMES: readonly GameDefinition[] = [
   // (docs/WEB_VERSION.md「先行公開」) from 2026-10-19, they graduated into the app
   // on 2026-10-29 by the product owner's decision (v1.7.0;
   // docs/RELEASE_CHECKLIST.md §0), and their schemas froze with it
-  // (storage/releasedRecords.test.ts). None is a Club House challenge (no
-  // `challenge`).
+  // (storage/releasedRecords.test.ts). Four have been Club House challenges
+  // since 2026-11-15 (docs/architecture/club.md §14 decision 57): Unblock
+  // Puzzle, Loop Puzzle and Bridges by time, their dailies going to Today, and
+  // Snake by score. Peg Solitaire has no `challenge`: its result screen shows
+  // no number that compares one clear with another (docs/PEG_SOLITAIRE_RULES.md).
   //
   // The glyphs were checked rather than hoped at, as Futoshiki's was: the
   // bundled Nunito subset (latin-700/800, 230 code points) carries none of
@@ -1084,6 +1101,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '⇥',
     // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(UB_STORAGE_KEYS),
+    challenge: UNBLOCK_PUZZLE_CHALLENGE,
     loadRoot: () =>
       import('../games/unblock-puzzle/ui/UnblockPuzzleRoot').then((m) => ({
         default: m.UnblockPuzzleRoot,
@@ -1106,6 +1124,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '∿',
     // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(SN_STORAGE_KEYS),
+    challenge: SNAKE_CHALLENGE,
     loadRoot: () => import('../games/snake/ui/SnakeRoot').then((m) => ({ default: m.SnakeRoot })),
     loadStorageSchemas: () => import('../games/snake/storage/schemas'),
   },
@@ -1137,6 +1156,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '⬚',
     // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(LP_STORAGE_KEYS),
+    challenge: LOOP_PUZZLE_CHALLENGE,
     loadRoot: () =>
       import('../games/loop-puzzle/ui/LoopPuzzleRoot').then((m) => ({ default: m.LoopPuzzleRoot })),
     loadStorageSchemas: () => import('../games/loop-puzzle/storage/schemas'),
@@ -1158,6 +1178,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '⊶',
     // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(BG_STORAGE_KEYS),
+    challenge: BRIDGES_CHALLENGE,
     loadRoot: () =>
       import('../games/bridges/ui/BridgesRoot').then((m) => ({ default: m.BridgesRoot })),
     loadStorageSchemas: () => import('../games/bridges/storage/schemas'),
@@ -1205,8 +1226,11 @@ export const GAMES: readonly GameDefinition[] = [
   // never wait on it) is met because all five finished together, so the five
   // shipped in one PR (#253) and none waited. None has been tried on a real
   // device, and each title's name and trademark check is still to come before
-  // graduation (its rules document). None is a Club House challenge (no
-  // `challenge`) while its saves and results may still change.
+  // graduation (its rules document). Three have been Club House challenges
+  // since 2026-11-15 (docs/architecture/club.md §14 decision 57): Pipe Link by
+  // time, its daily going to Today, and Gem Swap and Bounce Up by score. Chess
+  // (a win or a loss, nothing more) and Echo Pads (a number that saturates)
+  // have no `challenge`; their rules documents say why.
   //
   // The glyphs were measured as Nos. 42–46's were above: none is in the bundled
   // Nunito subset, so each resolves through the tail of --font-display.
@@ -1250,6 +1274,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '❖',
     // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(GS_STORAGE_KEYS),
+    challenge: GEM_SWAP_CHALLENGE,
     loadRoot: () =>
       import('../games/gem-swap/ui/GemSwapRoot').then((m) => ({ default: m.GemSwapRoot })),
     loadStorageSchemas: () => import('../games/gem-swap/storage/schemas'),
@@ -1270,6 +1295,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '┣',
     // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(PN_STORAGE_KEYS),
+    challenge: PIPE_LINK_CHALLENGE,
     loadRoot: () =>
       import('../games/pipe-link/ui/PipeLinkRoot').then((m) => ({ default: m.PipeLinkRoot })),
     loadStorageSchemas: () => import('../games/pipe-link/storage/schemas'),
@@ -1292,6 +1318,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '⇡',
     // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(BO_STORAGE_KEYS),
+    challenge: BOUNCE_UP_CHALLENGE,
     loadRoot: () =>
       import('../games/bounce-up/ui/BounceUpRoot').then((m) => ({ default: m.BounceUpRoot })),
     loadStorageSchemas: () => import('../games/bounce-up/storage/schemas'),
@@ -1339,8 +1366,12 @@ export const GAMES: readonly GameDefinition[] = [
   // landing #205 moved them to beta). Nested Tic-Tac-Toe and Scopa graduated
   // into the app on 2026-10-25, the other three on 2026-10-29, each by the
   // product owner's decision (docs/RELEASE_CHECKLIST.md §0). Nos. 47–51 above
-  // followed them onto the channel on 2026-10-22. None is a Club House
-  // challenge (no `challenge`) while its saves and results may still change.
+  // followed them onto the channel on 2026-10-22. Three have been Club House
+  // challenges since 2026-11-15 (docs/architecture/club.md §14 decision 57):
+  // Make the Target and Tangram by time, their dailies going to Today, and
+  // Scopa by score, a lost match included. Road Weave (`overtake`: no number
+  // that compares one run with another) and Nested Tic-Tac-Toe (a win or a
+  // loss, nothing more) have no `challenge`; their rules documents say why.
   //
   // The glyphs were measured as Nos. 42–51's were above: none is in the bundled
   // Nunito subset, so each resolves through the tail of --font-display, except
@@ -1413,6 +1444,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '=',
     // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(TG_STORAGE_KEYS),
+    challenge: MAKE_THE_TARGET_CHALLENGE,
     loadRoot: () =>
       import('../games/make-the-target/ui/MakeTheTargetRoot').then((m) => ({
         default: m.MakeTheTargetRoot,
@@ -1469,6 +1501,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '♧',
     // Promoted by explicit owner decision on 2026-10-25; nearby 1v1 scope.
     storageKeys: Object.values(SC_STORAGE_KEYS),
+    challenge: SCOPA_CHALLENGE,
     loadRoot: () => import('../games/scopa/ui/ScopaRoot').then((m) => ({ default: m.ScopaRoot })),
     loadStorageSchemas: () => import('../games/scopa/storage/schemas'),
   },
@@ -1494,13 +1527,17 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '⊿',
     // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(TN_STORAGE_KEYS),
+    challenge: TANGRAM_CHALLENGE,
     loadRoot: () =>
       import('../games/tangram/ui/TangramRoot').then((m) => ({ default: m.TangramRoot })),
     loadStorageSchemas: () => import('../games/tangram/storage/schemas'),
   },
   // Nos. 57–61: Web early release from 2026-10-23; Nim graduated into the app on
   // 2026-10-25, the other four on 2026-10-29 (owner decisions,
-  // docs/RELEASE_CHECKLIST.md §0). Separate saves, no Club contracts.
+  // docs/RELEASE_CHECKLIST.md §0). Separate saves. Light Grid and Color Flood
+  // have been Club House challenges by moves since 2026-11-15, the first clear
+  // of a board only (docs/architecture/club.md §14 decision 57); Three Peaks,
+  // Nim and Knight's Tour have no `challenge`, and their rules documents say why.
   {
     id: 'light-grid',
     title: 'Light Grid',
@@ -1508,6 +1545,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '✚',
     // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(LG_STORAGE_KEYS),
+    challenge: LIGHT_GRID_CHALLENGE,
     loadRoot: () =>
       import('../games/light-grid/ui/LightGridRoot').then((m) => ({ default: m.LightGridRoot })),
     loadStorageSchemas: () => import('../games/light-grid/storage/schemas'),
@@ -1519,6 +1557,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '▧',
     // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(CF_STORAGE_KEYS),
+    challenge: COLOR_FLOOD_CHALLENGE,
     loadRoot: () =>
       import('../games/color-flood/ui/ColorFloodRoot').then((m) => ({ default: m.ColorFloodRoot })),
     loadStorageSchemas: () => import('../games/color-flood/storage/schemas'),
@@ -1557,7 +1596,10 @@ export const GAMES: readonly GameDefinition[] = [
   },
   // Nos. 62–66: independent games, Web early release from 2026-10-23. Four
   // graduated into the app on 2026-10-29 (owner decision, v1.7.0); Falling
-  // Blocks was withdrawn instead (below).
+  // Blocks was withdrawn instead (below). Formation Fire (`invaders`) has been
+  // a Club House challenge by score since 2026-11-15 (docs/architecture/club.md
+  // §14 decision 57); Paddle Rally, Hanoi Towers and Maze Escape have no
+  // `challenge`, and their rules documents say why.
   {
     id: 'invaders',
     title: 'Formation Fire',
@@ -1565,6 +1607,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '⌁',
     // Promoted by explicit owner decision on 2026-10-29 (v1.7.0).
     storageKeys: Object.values(IV_STORAGE_KEYS),
+    challenge: INVADERS_CHALLENGE,
     loadRoot: () =>
       import('../games/invaders/ui/InvadersRoot').then((m) => ({ default: m.InvadersRoot })),
     loadStorageSchemas: () => import('../games/invaders/storage/schemas'),
@@ -1681,6 +1724,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'board',
     glyph: '✣',
     storageKeys: Object.values(CT_STORAGE_KEYS),
+    challenge: CHAIN_TERRITORY_CHALLENGE,
     loadRoot: () =>
       import('../games/chain-territory/ui/ChainTerritoryRoot').then((m) => ({
         default: m.ChainTerritoryRoot,

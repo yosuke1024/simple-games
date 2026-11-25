@@ -5,6 +5,7 @@
  * problem), and newSession.ts — the state layer imports that one by name, the
  * single door to the generator. searchBoundary.test.ts holds these lines.
  */
+export * from './challenge';
 export * from './daily';
 export * from './engine';
 export * from './restore';

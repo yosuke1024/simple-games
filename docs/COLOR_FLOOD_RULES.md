@@ -2,7 +2,8 @@
 
 **2026-10-29 更新(正式収録、v1.7.0):** 製品オーナーの判断で Web 先行公開(ベータ)から正式収録した(registry の `channel` を外した — アプリのホーム・検索・ショートカットにも出る)。保存スキーマはこの収録で凍結し、以後は移行だけで変える — 公開中の Web ビルドが実際に書いた保存を `storage/releasedRecords.test.ts` が今の読み込み経路へ通す([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §0 と 2026-10-29 の節)。以下の「正式収録まで凍結しない」「アプリには出ない」などのベータ段階の記述は当時の記録である。収録は 2 週間の安定稼働・滞在時間の確認・実機での確認を満たしたという意味ではない。
 
-2026-10-23. New Web beta title. No native release or Club House registration.
+2026-10-23. New Web beta title. No native release or Club House registration
+(Club House registration followed on 2026-11-15 — see “Club House”).
 
 ## Rules and boards
 
@@ -33,7 +34,8 @@ Touch and mouse use buttons. Light Grid additionally has arrow-key roving focus;
 Color Flood has six keyboard-accessible palette buttons and 1–6 shortcuts.
 Ctrl/Cmd+Z undoes. Repeated activation keys do not make repeated moves. Modals
 make the board inert and detach game keys. Result sharing reports only the
-completed board size and moves shown on the card. Shared BannerSlot and
+completed board size and moves shown on the card; the Club House receives the
+same moves (see “Club House”). Shared BannerSlot and
 ResultAdSlot own advertising; no game action depends on them.
 
 The only interval counts visible play seconds in a ref, once a second without
@@ -59,8 +61,53 @@ Per-size statistics: games started, boards cleared, and fewest moves in a clear.
 Resume does not count as a new start; retry does. Abandonment is not a loss. Undo
 from a clear retains the cleared flag so finishing it again cannot double count.
 A replay is a new game. Best scores include games with hints (where available);
-there is no ranking, streak, daily obligation or artificial target. Total play
-time is local only, not displayed as a timer in play.
+there is no streak, daily obligation or artificial target, and no ranking inside
+the game — the only ranking is the Club House tables of a device that joined a
+Club (see “Club House”, 2026-11-15). Total play time is local only, not displayed
+as a timer in play.
+
+## Club House
+
+**2026-11-15 に加えた**([architecture/club.md](architecture/club.md) §14 判断 57。製品オーナーの判断)。
+それまでは冒頭の 2026-10-23 の行のとおり、Web ベータの新作として登録しなかった(当時の記録に理由は
+書かれていない)。正典は club.md §6 と §16。ここにはこのゲームの側で決まることだけを書く。
+
+- **順位表の名前(`params`)** は `{ size }`(`6` / `10` / `14`)、`paramsKey` は `6x6` / `10x10` / `14x14`。
+  盤の大きさごとに 1 枚の表で、3 枚とも置く。Club の表示は汎用の N×N の規則で `6×6` などと読む(新しい
+  モード語は足さない)。
+- **結果画面が送る事実(`facts`)** は `{ moves }` だけ。結果カードの「手数」の行と、共有(`ShareAction`)の
+  `details` と同じ値(`session.history.length`)から作り、ここで計算しない。プレイ中の Undo で取り消した手は
+  履歴から外れるので数えない — カードの数字と同じである。カードのもう 1 行の盤の大きさは `params` が名指す
+  ので事実には入れない。自己ベスト(Fewest moves)はカードに出るが `details` に無く、時間はカードに出ない
+  ので、どちらも送らない。契約(`challenge/contract.ts`)が受け付けるのは 0〜100,000 の整数。受け入れた手は
+  必ず領域を広げるので、クリアまでの手数は多くても size²−1(14×14 で 195。上の「Rules and boards」)で、
+  上限はどの盤も届かない値である。
+- **順位の軸は手数**で、少ないほうが上(`order: 'moves'`、`direction: 'asc'`)。
+- **送るのはクリアだけ**(`outcome: 'completed'`)。負けも手数の上限も無いゲームで、結果カードはクリアで
+  しか出ないので、`played` を渡す場面は無い。
+- **1 つの盤から送るのは、統計が数える最初のクリアだけ。** 結果カードの Undo で盤に戻り、同じ盤をもう一度
+  クリアしても 2 行目は送らない(統計の「Undo from a clear retains the cleared flag」と同じ線。Undo と 1 手
+  で同じ盤の行が増えるのを防ぐ)。`state/GameContext.tsx` が保存しない印 `firstClear`(盤を終えた手の前に
+  局の `cleared` がまだ false だったか)を持ち、結果カードはそれが true のときだけ `ClubResultAction` を
+  置く。印は Retry と New Game で false に戻る。保存の形は変わらない。Undo のあと中断して再開した盤も、
+  保存の `cleared` が true なので送らない。
+- **Retry と New Game は新しいゲーム**(統計の games started も数える)なので、そのクリアは 1 行として送る。
+  Retry は同じ seed なので、手順を知った盤でもう一度少ない手数を送れる。Sliding Puzzle・Light Grid など
+  同じ形のゲームと同じで、このゲームの側では塞がない(club.md §16)。
+- **自動の解答も Hint も無い**(上の「Rules and boards」)。助けは Undo と同じ盤のやり直しで、Undo は無料・
+  無制限、回数を数えずカードにも出ないので、Undo を使った行と使わない行は表の上で区別されない。回数を
+  足すと結果画面と保存の形が変わる(移行が要る)ので、足さない。
+- **盤の運**: 盤は seed ごとに 6 色を並べたもので、同じ大きさでもクリアに要る手数は盤ごとに違う。
+  club.md §14 判断 28「運も含めて比べる」のまま表を作る。
+- **デイリーは無いので `Today` には入らない。** `daily` は渡さず、`boardDigest` は `null`。`seed` は局の
+  `session.seed`(符号なし 32 ビット整数)を文字列にしたもので、最大 10 文字。ランキングは同じ盤面で競わせる
+  ものではない(club.md §16)。
+- 結果画面の `ClubResultAction` は `ShareAction` の次に置く。Club に参加していない端末では何も描かない。
+- ゲーム自体は変わらない。統計・自己ベスト・保存データ・結果画面の既存の表示には触れない。
+- 確認(2026-11-15): このゲームの Vitest(8 ファイル 59 件。契約の `challenge/contract.test.ts` と、結果
+  カードが Club に渡すものとゲームを通した 1 行目・Undo 後の再クリア・Retry・New Game を見る
+  `ui/components/ResultOverlay.club.test.tsx` を含む)、触ったファイルの ESLint、アプリ全体の TypeScript が
+  通った。端末・エミュレータ・本物の Club への送信では確かめていない。
 
 ## Text and verification provenance
 

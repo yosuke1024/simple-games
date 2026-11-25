@@ -31,6 +31,13 @@ interface ContextValue {
   preferredSize: Size;
   tutorialCompleted: boolean;
   canResume: boolean;
+  /**
+   * True while the board on screen was finished by its first clear — the one
+   * the statistics count. A clear reached again after Undo on the result card
+   * is false, so the Club House gets one row per game (docs/COLOR_FLOOD_RULES.md,
+   * Club House). Not persisted: a resumed board is still playing.
+   */
+  firstClear: boolean;
   navigate: (screen: Screen) => void;
   startBoard: (size: Size) => void;
   resumeGame: () => void;
@@ -73,6 +80,7 @@ export function ColorFloodProvider({
   const [stats, setStats] = useState(initialStats);
   const [flags, setFlags] = useState(initialFlags);
   const [prefs, setPrefs] = useState(initialPrefs);
+  const [firstClear, setFirstClear] = useState(false);
   const sessionRef = useRef(session);
   sessionRef.current = session;
   const statsRef = useRef(stats);
@@ -127,6 +135,7 @@ export function ColorFloodProvider({
       const next = createSession(size, seed);
       elapsedRef.current = 0;
       bookedRef.current = 0;
+      setFirstClear(false);
       putSession(next);
       const nextPrefs: Prefs = { schemaVersion: 1, size };
       setPrefs(nextPrefs);
@@ -161,6 +170,7 @@ export function ColorFloodProvider({
       if (!current) return false;
       const next = move(withElapsed(current), action);
       if (!next) return false;
+      if (next.status === 'over') setFirstClear(!current.cleared);
       putSession(next);
       // Every save carries only seconds already booked to avoid a crash losing time.
       bookPlayTime();
@@ -258,6 +268,7 @@ export function ColorFloodProvider({
         preferredSize: prefs.size,
         tutorialCompleted: flags.tutorialCompleted,
         canResume: session?.status === 'playing',
+        firstClear,
         navigate: setScreen,
         startBoard,
         resumeGame,

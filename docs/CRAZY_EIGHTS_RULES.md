@@ -25,3 +25,11 @@ Adopted 2026-11-05; implemented for CPU and native Nearby play. Four seats, one 
 
 Reference: [Bicycle](https://bicyclecards.com/how-to-play/crazy-eights/).
 The four-pass blocked-deal settlement and discard recycling are explicit house rules.
+
+## Club House
+
+**登録しない**(2026-11-15、[architecture/club.md](architecture/club.md) §14 判断 57。registry の
+`challenge` を持たない)。結果画面の数字は 4 席それぞれの残り札の失点で、自分の失点は手札を出し切って
+勝てば必ず 0 になる。勝ちの行がみな 0 で並び、同点は先に送った順なので、表は勝った回数を数えるのと
+変わらない(勝った回数は熱心さの数 — [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「順位表」)。
+結果画面が勝ちどうしを分ける数字を出すようになれば、そのとき考え直す。

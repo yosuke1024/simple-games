@@ -1,4 +1,14 @@
+/**
+ * The clear card (docs/LIGHT_GRID_RULES.md): the moves and the board size, the
+ * personal best quietly, and the ways on. Undo stays here too. The Club House
+ * gets the moves of the board's first clear only (the one the boards-cleared
+ * count counts), in that size's table; there is no daily, so nothing goes to
+ * Today. The personal best can still drop on a re-clear after Undo (the
+ * statistics rule is unchanged), but the Club keeps the first clear's moves.
+ */
+import { useMemo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { useResultReveal } from '@/ui/useResultReveal';
@@ -6,6 +16,7 @@ import type { Session } from '../../game';
 export function ResultOverlay({
   session,
   best,
+  firstClear,
   onUndo,
   onRetry,
   onNewBoard,
@@ -13,6 +24,8 @@ export function ResultOverlay({
 }: {
   session: Session;
   best: number | null;
+  /** False for a clear reached again after Undo on this card: it is not sent to the Club. */
+  firstClear: boolean;
   onUndo: () => void;
   onRetry: () => void;
   onNewBoard: () => void;
@@ -20,9 +33,13 @@ export function ResultOverlay({
 }) {
   const { t } = useSettings();
   const revealed = useResultReveal(session.status === 'over');
+  // The clear's facts, once: the share's strings and the Club's figures are
+  // read from the same value (docs/architecture/club.md §6-1).
+  const moves = session.history.length;
+  const facts = useMemo(() => ({ moves }), [moves]);
   if (!revealed) return null;
   const details = [
-    { label: t('movesLabel'), value: String(session.history.length) },
+    { label: t('movesLabel'), value: String(moves) },
     { label: t('lightGridBoard'), value: `${session.size} × ${session.size}` },
   ];
   return (
@@ -67,6 +84,17 @@ export function ResultOverlay({
           </button>
         </div>
         <ShareAction gameId="light-grid" outcome="completed" details={details} />
+        {firstClear ? (
+          <ClubResultAction
+            gameId="light-grid"
+            outcome="completed"
+            details={details}
+            facts={facts}
+            seed={String(session.seed)}
+            params={{ size: session.size }}
+            boardDigest={null}
+          />
+        ) : null}
       </div>
       <ResultAdSlot />
     </div>

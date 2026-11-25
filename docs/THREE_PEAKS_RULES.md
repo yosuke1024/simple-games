@@ -11,7 +11,7 @@ Solitaire・FreeCell・Spider・Three Peaksは縦に重なる列用に横並び�
 
 **2026-10-29 更新(正式収録、v1.7.0):** 製品オーナーの判断で Web 先行公開(ベータ)から正式収録した(registry の `channel` を外した — アプリのホーム・検索・ショートカットにも出る)。保存スキーマはこの収録で凍結し、以後は移行だけで変える — 公開中の Web ビルドが実際に書いた保存を `storage/releasedRecords.test.ts` が今の読み込み経路へ通す([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §0 と 2026-10-29 の節)。以下の「正式収録まで凍結しない」「アプリには出ない」などのベータ段階の記述は当時の記録である。収録は 2 週間の安定稼働・滞在時間の確認・実機での確認を満たしたという意味ではない。
 
-2026-10-23. Web beta, not part of the native released collection or Club House.
+2026-10-23. Web beta, not part of the native released collection or Club House (Club House: see §7).
 
 Rules checked against publisher [Solitaire City: How to Play Tri-Peaks](https://www.solitairecity.com/iPhone/Tri-Peaks.shtml) and its [face-down variant](https://www.solitairecity.com/iPhone/Tri-Peaks_Rules.shtml) on 2026-10-23. This implementation automatically reveals newly uncovered cards and uses no speed bonuses or scoring. It is an independent implementation; no source code or artwork was copied.
 
@@ -66,3 +66,12 @@ No real-device checks, trademark clearance or independent translation audit are 
 Implementation checks on 2026-10-23: 18 Vitest tests passed across engine, persistence and UI lifecycle, with scoped ESLint passing. These cover a 47-action winning fixture, complete undo, exhausted stock with a legal move, corrupt saves, shortcut resume, clock cleanup, confirmation isolation, a win counted once after undo/reload, and same-deal replay as a new attempt. A separate pure-engine run checked 1,000 unique 52-card deals and the complete winning-fixture undo chain. Whole-app types, structural gates, builds and browser checks are integration responsibilities.
 
 Implementation checks on 2026-10-29 (the look above): 33 Vitest tests passed in `src/games/three-peaks` (the 18 earlier ones, a lifecycle test that the waste settles on a draw and on Undo but not when the screen opens, and 14 in `ui/contrast.test.ts`), with scoped ESLint and the whole-app type check passing. The contrast test fails if a colour literal appears outside the two token blocks, if a pair above drops under its floor, if the status label stops being `--ink`, or if the focus band is missing from the focused, hovered or pressed card's shadow (checked by temporarily changing a value in the stylesheet and restoring it). The rendering was not looked at in a browser or on a device by the implementer: the shadows, the lamp, the paper margin of the backs at 26px card width, the stock's three edges and the two-tone ring on a 26px card are unverified by eye. A review rendered a static harness of the real stylesheets at 320px in headless Chrome and saw the dark ring vanish on neighbouring paper before the band was added; the band was seen to fix it there, and that harness is the only look at it.
+
+## 7. Club House
+
+**登録しない**(2026-11-15、[architecture/club.md](architecture/club.md) §14 判断 57。registry の
+`challenge` を持たない)。結果画面の数字は残った札の数(Cards left)だけで(§4)、勝った局では
+いつも 0 になる。勝ちの行がみな 0 で並び、同点は先に送った順なので、表は勝った回数を数えるのと
+変わらない(勝った回数は熱心さの数 — [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「順位表」)。
+このゲームは速さの加点も得点も持たず(冒頭)、プレイ時間は端末の統計にだけ使う(§4)ので、表のために
+数字を足すことはしない。結果画面が勝ちどうしを分ける数字を出すようになれば、そのとき考え直す。

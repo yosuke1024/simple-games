@@ -1,9 +1,11 @@
 /**
  * What ui/, state/ and storage/ may use. There is no search, no generator
  * and no randomness at play time (docs/TANGRAM_RULES.md §2, §5): rng.ts and
- * test-helpers.ts serve the tests only and are left out on purpose.
+ * test-helpers.ts serve the tests only and are left out on purpose (the Club
+ * House digest in challenge.ts reads rng.ts's hash, not its sequences — §14).
  */
 export * from './catalog';
+export * from './challenge';
 export * from './daily';
 export * from './geometry';
 export * from './keyboard';

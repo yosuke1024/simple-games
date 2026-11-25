@@ -1,6 +1,6 @@
 # River Cargo (No. 73)
 
-2026-11-07: オーナーの指示によりアプリに正式収録(1.8.1)。Club House・Nearbyには加えない。
+2026-11-07: オーナーの指示によりアプリに正式収録(1.8.1)。Club House・Nearbyには加えない(Club Houseは「Club House」の節)。
 
 ## ルール
 
@@ -44,7 +44,7 @@ v1の統計も同じ1問目に引き継ぎ、別の問題の記録と混ぜな�
 ## 共通契約
 
 2026-11-03、製品オーナーの追加3本とWeb公開の依頼、および候補3本への承認による。
-2026-11-07に正式収録。Club House・Nearbyには加えない。
+2026-11-07に正式収録。Club House・Nearbyには加えない(Club Houseは「Club House」の節)。
 純粋TypeScriptのゲーム層、ゲームごとの保存、14言語、図解3ステップを持つ。
 GameHomeHeader / GameArtwork / WebBetaNotice(正式収録では表示しない) / BannerSlot / ResultAdSlot / ShareActionを使う。
 操作中の確認は背景をinertにし、キー入力・CPU・再生を停止する。非表示・退出時は保存する。
@@ -72,3 +72,12 @@ GameHomeHeader / GameArtwork / WebBetaNotice(正式収録では表示しない) 
 ゲーム状態は絵とラベル・選択枠・位置で伝え、色だけに依存しない。
 
 さらに「可愛くない」というフィードバックを受け、輪郭を丸くし、大きな目・小さな笑顔・頬の色を追加。キャベツにも顔を描いた。
+
+## Club House
+
+**登録しない**(2026-11-15、[architecture/club.md](architecture/club.md) §14 判断 57。registryの`challenge`を持たない)。
+結果画面の数字は渡河数で、横にその問題の最短渡河数を並べる。12問はどれも最短手順が決まっていて、
+Hintは無料・回数なしで最短手順の次に乗せる荷物を示す(ルール)ので、誰でも最短で渡り切れる。
+表は最短渡河数の行が送った順に並び、解いた回数を数えるのと変わらない(勝った回数は熱心さの数 —
+[PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「順位表」)。結果画面が最短で解いた人どうしも分ける数字を
+出すようになれば、そのとき考え直す。

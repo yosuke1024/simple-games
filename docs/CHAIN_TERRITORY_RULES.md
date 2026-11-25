@@ -21,7 +21,7 @@ CPUは同じ公開盤面だけを見る。待ったは自分の直前手まで(�
 ## 共通契約
 
 2026-11-03、製品オーナーの追加3本とWeb公開の依頼、および候補3本への承認による。
-2026-11-04に正式収録・Nearbyへ追加。Club Houseには加えない。
+2026-11-04に正式収録・Nearbyへ追加。2026-11-15にClub Houseへ加えた(下の「Club House」節)。
 純粋TypeScriptのゲーム層、ゲームごとの保存、14言語、図解3ステップを持つ。
 GameHomeHeader / GameArtwork / WebBetaNotice / BannerSlot / ResultAdSlot / ShareActionを使う。
 操作中の確認は背景をinertにし、キー入力・CPU・再生を停止する。非表示・退出時は保存する。
@@ -37,7 +37,29 @@ GameHomeHeader / GameArtwork / WebBetaNotice / BannerSlot / ResultAdSlot / Share
 同名ゲームは確認できなかった。Prism LinesとRiver Passageは同名アプリがあったため採用しない。
 検索は商標クリアランスではなく、商標DB・両ストアの全件調査は正式収録前に行う。2026-11-07: 1.8.2 の本番公開前に商標DB・両ストアを調べた(両ストアの検索、USPTO、J-PlatPat、TMview、WIPO は一部。各DBは既知の名前で検索が効くことを確かめてから0件と判断)。同名・紛らわしい名前のアプリ・ゲーム・商標は見つからず、題はそのまま使う(低リスク。法的クリアランスではない。WIPO の完全一致検索・EUIPO の直接検索など、エラーで実行できなかったものがある)。
 盤面・キャラクター・図は自作SVG/CSS、音は既存サービスのみ。既存作品の素材・コードは使わない。
-検証・公開記録は docs/plans/2026-11-03-three-more-games-71-73.md に残す。
+検証・公開記録は [docs/plans/2026-11-03-three-games-71-73.md](plans/2026-11-03-three-games-71-73.md) に残す。
+
+## Club House (2026-11-15)
+
+2026-11-15、製品オーナーの決定([club.md](architecture/club.md) §14 判断 57)により順位表へ加えた。
+正典は club.md §6・§16。ここにはこのゲームの側で決まることだけを書く。
+
+- **順位の軸は勝った局の手数。** `challenge/contract.ts`は`order: 'moves'`・`direction: 'asc'`で、少ないほど上。
+  軸にする値は結果画面の「手数」(`resultValue(session)`。局に残った合法手列の長さの半分を切り上げた、自分の着手数)。
+- **表を分けるのはCPUの強さ。** `params`は`{ difficulty }`(`easy` / `normal` / `hard`)、`paramsKey`はその値そのまま。
+  表は3枚で、seedごとには分けない。Clubでの表の名前は、ゲーム自身の語`chainTerritoryMode_*`の写し
+  (`clubTier_chainEasy` / `clubTier_chainNormal` / `clubTier_chainHard`)で読む。CPU対戦の共通の語は使わない
+  (言語によってこのゲームの語と違うため)。
+- **結果画面が送る事実**は`{ moves }`だけ。共有(`ShareAction`)の`details`と同じ変数から作り、Clubのために計算しない。
+  経過秒数・玉の数は結果のカードに無いので送らない。`seed`は局の`session.seed`を文字列にして渡す。
+- **送るのは勝った局だけ。** 負けた局は`outcome: 'played'`で、Clubへは何も送らない。負けた局の手数は粘った長さで
+  成績ではなく、少ない順の表に早い負けが勝ちより上に並んでしまう。
+- **Todayには入らない。** デイリーが無く、局ごとにCPUの応手が違うので、`daily`は渡さず`boardDigest`は`null`。
+  順位表は同じ盤面で競わせるものではない(club.md §16)。Easy では盤によって(実測で約 3 割)2 手で勝つ筋があり、Undo で角の打ち方を試せば見つけられる。そうした盤の運も、判断 28 のとおり含めて比べる(表の上は 2 の同点が到着順に並ぶ)。
+- 待ったは対局中にしか使えず、使った局も送る。戻した手は手数に数えない(手数は局に残った合法手列から数える)。
+  終局後は盤を戻せないので、結果画面1枚につき送るのは1回。「もう一度」は同じseedの新しい局で、勝てばその局も送る。
+- Nearby Playの対局は送らない(Nearbyの表示は結果画面の`ResultOverlay`を読み込まない)。
+- それ以外は変わらない。統計・最短手数・保存データ・広告・共有の挙動に触れない。
 
 ## Nearby Play (2026-11-04)
 

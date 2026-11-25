@@ -1125,6 +1125,10 @@ min(列の幅, 上限, (画面の高さ − 305px) × 盤の縦横比))`(`peg-so
 
 ## 17. Club House
 
-登録しない(registry の `challenge` を持たない)。ベータの間は結果の形も保存の形も動きうる
-ため([plans/2026-10-17-unblock-snake-loop-bridges-peg.md](plans/2026-10-17-unblock-snake-loop-bridges-peg.md)
-「決定事項」)。Core はこのゲームについて Club House に何も依存しない。
+**登録しない**(2026-11-15、[architecture/club.md](architecture/club.md) §14 判断 57。registry の
+`challenge` を持たない)。結果カードの数字は残ったコマの数(とこの盤の自分の最少)だけで(§3・§5)、配る問題はどれも完全クリア
+できると確かめてあり(§8)、Undo は無料・無制限である(§6)。続ければ誰でも 1 個(完全クリア)に
+たどり着くので、表は 1 の行が送った順に並び、クリアした回数を数えるのと変わらない(勝った回数は熱心さの
+数 — [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「順位表」)。時計も手数も出さないと決めている(§5)ので、
+表のためにそれを出すことはしない。結果カードが完全クリアどうしも分ける数字を出すようになれば、そのとき
+考え直す。Core はこのゲームについて Club House に何も依存しない。

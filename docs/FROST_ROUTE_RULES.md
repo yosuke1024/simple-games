@@ -1,6 +1,7 @@
 # Frost Route
 
 2026-11-07: オーナーの指示によりアプリに正式収録(1.8.1)。Club/Nearbyへの登録は含めない。
+Club Houseには登録しないと2026-11-15に決めた(末尾の「Club House」)。
 
 ## ルール
 
@@ -20,7 +21,7 @@ Undoは位置と回収状態を戻す。ヒントは現在位置から最短解�
 ## 共通の契約
 
 No. 70。2026-11-03、オーナーの「3つくらいゲーム追加、UIを揃えてWeb公開まで」の依頼で実装する。
-2026-11-07に正式収録。Club/Nearbyは含めない。`game/` は純粋TS、他ゲームに依存しない。
+2026-11-07に正式収録。Club/Nearbyは含めない(Clubは「Club House」)。`game/` は純粋TS、他ゲームに依存しない。
 全機能無料。通信・通知・連続日数・時間制限なし。途中保存は端末内だけ。
 ホーム・Quick RulesのWebBetaNoticeは正式収録では表示しない。GameHomeHeader / GameArtwork / BannerSlot / ResultAdSlot /
 ShareActionを既存と同じ形で使う。タイトルは英語名で統一、1タイトル1アクセント。
@@ -53,3 +54,11 @@ https://www.reddit.com/r/WebGames/comments/1xciaih/ice_trail_slide_until_a_wall_
 ## 検証記録
 
 実装・ブラウザー確認・テストと公開状態は [実装記録](plans/2026-11-03-three-games-68-70.md) に記す。未実施の実機検証と翻訳の人手確認は別扱いとする。
+
+## Club House
+
+**登録しない**(registry の `challenge` を持たない。2026-11-15、[architecture/club.md](architecture/club.md) §14 判断 57)。
+結果画面の数は手数と最短手数。ヒントは無料・無制限で、押すたびに今の位置からの最短解(BFS)の最初の方向を示す。
+ヒントに従えば誰でも最短手数で終わり、ヒントの回数は結果画面に出ないので、手数の表は最短手数に揃い、同値を
+送った順に並ぶ。最短手数そのものも新しい盤ごとに変わる盤の運である。入るには、助けを使ったかを含めて成績を
+分ける数字を結果画面が出すようになる必要がある。

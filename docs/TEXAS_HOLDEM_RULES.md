@@ -45,3 +45,14 @@ as currency between games. No ante, rake, timed blinds, reaction timer or rebuy.
 Reference: [Bicycle](https://bicyclecards.com/how-to-play/texas-holdem-poker).
 
 Betting and blind reference: [Poker TDA 2026 rules 21, 23, 34–36, 45 and 49](https://www.pokertda.com/view-poker-tda-rules/).
+
+## Club House
+
+正典は [architecture/club.md](architecture/club.md) §6-0 と §14 の判断 57。
+
+- **登録しない**(registry の `challenge` を持たない。2026-11-15、判断 57)。結果は卓に最後に残った 1 席が
+  あなたかどうか — 勝ち / 負け — だけである。結果画面の数字は各席のチップと最後のハンドの配当で、チップは卓の外へ
+  出入りしない(4 席 × 1,000、アンティもレーキも無い)ので、勝てば必ず 4,000、負ければ 0 になる。共有の `details`
+  も空で、送れる成績の数字が無い。表が比べられるのは勝った回数だけになり、それは熱心さの数である
+  ([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「順位表」。判断 30 の Checkers / Connect Four / Gomoku / Ludo と同じ理由)。
+- 入るには、結果画面が勝敗のほかに成績を比べられる数字を出すことが要る(club.md §6-0)。
