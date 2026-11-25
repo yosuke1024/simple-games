@@ -27,25 +27,61 @@ Web 版を同時に。**schema 8 への移行は戻せない**)→ (4) landing �
 **(3) より前に 1.8.6 をどの端末にも入れない** — サーバが新しい 14 本を知る前に送られたランキングの結果は
 `400 invalid_request` で捨てられ、再送されない。
 
-- [ ] simple-games-club#16 をマージ(schema 8。node:sqlite でだけ試した移行で、workerd では走らせていない)
-- [ ] アプリのリリース PR をマージ(PixTale・共有リンク・Club House・iOS の版 1.8.6 / 10806)
-- [ ] オーナー: サーバと club.pixapps.ai の Web 版をデプロイ。デプロイ後、本番の `/api/v1/public` が今までどおり
-      返ること、新しい 14 本のうち 1 本の結果が順位表に載ること
-- [ ] pixapps-landing#244(Club House の節に新しい 14 本の名前)と #239(共有ページを公開済みの全 id に)を
-      マージ、Web 版を Publish。ブラウザ版のホーム末尾に PixTale の行が出ること
-- [ ] タグ `v1.8.6`。`pnpm --filter simple-games share:check --ref v1.8.6` が「All 80 share landings answer 200.」
-      (2026-11-25 に `v1.8.5` に対しては 80 件とも通った)
-- [ ] `pnpm --filter simple-games i18n:gate:check` が緑(2026-11-25、リリース用ブランチで「Gate complete」)
-- [ ] Android の AAB 10806(CI)。iOS のビルド 10806 をアップロード
-- [ ] リリースノート: App Store 14 言語 / Google Play 17 言語タグ(500 字以内)。Club House で比べられるゲームが
-      増えたことを書く。PixTale の行はリリースノートに書かない(送客の文言を増やさない)
-- [ ] §5.18 を PixTale を含めて実機で通す(Android は Google Play、iPhone は App Store の掲載ページが開く)
+- [x] simple-games-club#16 をマージ(2026-11-25、`71c721b`。schema 8。node:sqlite でだけ試した移行で、workerd では
+      走らせていない)
+- [x] アプリのリリース PR をマージ(2026-11-25、#332 を merge commit で。main は `ed52cb52`、CI 緑。#331 と #324 も
+      merged になった)
+- [x] オーナー: サーバと club.pixapps.ai の Web 版をデプロイ(2026-11-25 01:19Z、Worker の版 `80249d65` が 100%)。
+      デプロイ後に確かめたこと: `wrangler deployments list` の最新がこの版、club.pixapps.ai が配る `index-*.js` が
+      `ed52cb52` から組んだ `web/` と同じファイル名、`/api/v1/health` と `/api/v1/public` が 200
+- [x] デプロイ後、新しい 14 本のうち 1 本の結果が本番の順位表に載ること。2026-11-25 にオーナーが iPhone の
+      TestFlight 1.8.6 (10806) で確認できたと報告した(頼んだのは「Club House に参加した状態で Snake か Light Grid を
+      1 局終えると、そのゲームの順位表に結果が載る」。どちらのゲームで見たかは聞いていない)
+- [x] pixapps-landing#245(#244 の Club House の節・#239 の共有ページ・Web 版 `v1.8.6` のビルド・LP のカードの絵を
+      1 本にまとめたもの)をマージ(2026-11-25 01:29Z、`64fcc664`。#244 と #239 も merged になった)。Publish の
+      ビルドのコミットは `568bb66a`。マージ後に本番で確かめたこと: `/simple-games/` のカード 80 枚が
+      ゲームごとの絵(`share/<id>/artwork.svg`)を指して表示されること、`/simple-games/play/` の `index-*.js` が
+      Publish のビルドと同じファイル名でホーム末尾に PixMeal・PixWork・PixTale の 3 行が出ること(PC のブラウザ)、
+      `share:check --ref v1.8.6` が 80 件とも 200、存在しない共有 id が 404 を返すこと
+- [x] タグ `v1.8.6`(2026-11-25、`ed52cb52`)。`share:check --ref v1.8.6` は「All 80 share landings answer 200.」
+- [x] `i18n:gate` は「Gate complete」(2026-11-25、12 言語とも 47 / 47)
+- [x] Android の AAB 10806(CI の run 45523483232。APK で versionCode 10806 / versionName 1.8.6 を確認)。
+      iOS のビルド 10806 を 2026-11-25 にアップロード(Delivery UUID `d5293ca1-b705-4f08-943f-1a299092c12a`、
+      サーバのデプロイ後。`altool --validate-app` はエラーなし・警告は「2027 年 4 月から iOS 27 SDK が必要」の 1 件)。
+      App Store Connect の版 1.8.6 に紐づけ済み
+- [x] リリースノート: App Store Connect に 14 言語で書き込み、読み戻して一致(2026-11-25)。Google Play 用の
+      17 言語タグ(最長 394 字)はオーナーへ渡した。Club House で比べられるゲームが 35 本から 49 本に増えたことだけを
+      書き、PixTale の行は書いていない(送客の文言を増やさない)。審査メモも 1.8.6 用に書き換えた
+- [x] PixTale の行が両方の実機でストアの掲載ページを開くこと(§5.18)。iPhone は 2026-11-25 にオーナーが TestFlight
+      10806 で確認できたと報告した(頼んだのは「ホーム最下部に 3 行が並ぶ・PixTale の行が App Store の掲載ページを開いて
+      アプリに戻れる・機内モードでは一覧ごと出ない」)。Android は同日、オーナーが Google Play の内部テスト版 10806 で
+      確認できたと報告した(頼んだのは「PixTale の行が Google Play の掲載ページを開き、戻るとホームに戻れる」)。
+      §5.18 のほかの項目(検索に出ない・14 言語 × 狭い画面・Web 版の広告との間隔など)は、この版では実機で通し直していない
+- [x] Android の更新と変わっていないこと: 同じ内部テスト版で、1.8.4 からの更新でホームが開き途中の局や記録が残ること、
+      Blackjack と Texas Hold'em が今までどおり出ること(80 本)を、オーナーが確認できたと報告した
 - [ ] 実機: 新しい 14 本のうち、時間・手数・スコアの各群から 1 本ずつ結果を Club に送り、順位表に載ること。
       Today に Unblock Puzzle / Loop Puzzle / Bridges / Pipe Link / Make the Target / Tangram のデイリーが出ること。
-      1.8.5 以前の端末が同じ Club を開いても壊れないこと(自分の契約に無いゲームの表は出ないだけ)
-- [ ] ストアへ提出(App Store は審査、Google Play は製品版)
+      1.8.5 以前の端末が同じ Club を開いても壊れないこと(自分の契約に無いゲームの表は出ないだけ)。
+      確かめたのは iPhone で 1 本、Android で 1 本(どちらもオーナーの報告。どのゲームかは聞いていない)で、
+      3 群すべて・Today・古い版の端末は未確認
+- [x] App Store: 2026-11-25 01:33Z に 1.8.6 (10806) を審査へ提出(reviewSubmission `44d7d076`、WAITING_FOR_REVIEW、
+      承認後に自動公開)。オーナーの TestFlight での確認のあとに出した
+- [x] Google Play: 内部テスト版に 10806 を上げ、オーナーが実機で確認した(2026-11-25)。同日、オーナーが製品版へ出し、
+      公開されたと報告した。Play Console の製品版トラックは「有効・最新リリース: 10806 (1.8.6)・178 か国 / 地域」
+      (オーナーのスクリーンショット)。リリースノートは Console の 17 言語タグの並びに合わせてオーナーへ渡した。
+      登録された文面・公開の割合・Google Play の掲載ページに 1.8.6 が出ていることは、私は見ていない
+- [ ] Play Console のリリース ダッシュボードが 10806 (1.8.6) に「推奨」を 3 件出している(要修正ではない。2026-11-25、
+      同じスクリーンショット): 「一部のユーザーでエッジ ツー エッジ表示が有効にならないことがあります」
+      「エッジ ツー エッジで非推奨の API またはパラメータを使用しています」「R8 の最適化でアプリのメモリと
+      パフォーマンスを改善する」。各項目の中身は開いておらず、1.8.6 で増えたものかどうかも分からない。
+      リリースビルドは `minifyEnabled` / `shrinkResources` と `proguard-android-optimize.txt` をすでに使っているので、
+      R8 の項目が何を指しているかは Console の詳細を読まないと言えない
+- [ ] App Store: 審査の結果(2026-11-25 の Play 公開の時点で WAITING_FOR_REVIEW のまま。承認されれば自動で公開される)
 
-**未確認は未確認として書く。** 2026-11-25 の時点で、上のどれも実機・本番サーバでは確かめていない。
+**未確認は未確認として書く。** 2026-11-25 の時点で、実機の確認はすべてオーナーの報告による(iPhone は TestFlight、Android は
+内部テスト版)。Google Play の製品版の公開も、オーナーの報告と Console のスクリーンショットによる。私は実機でも
+エミュレータでも動かしていない。本番サーバについて私が確かめたのは「デプロイ後に確かめたこと」と landing のマージ後の
+項目までである。
 
 ## 2026-11-11: iOS 1.8.5(Blackjack / Texas Hold'em を iOS から外して再提出。Android は 1.8.4 のまま)
 
